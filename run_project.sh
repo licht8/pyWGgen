@@ -1,5 +1,5 @@
 #!/bin/bash
-# run_project.py
+# run_project.sh
 
 # Название репозитория и директории
 GITHUB_REPO="https://github.com/licht8/wg_qr_generator.git"
