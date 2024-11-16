@@ -19,14 +19,14 @@
 Для установки проекта, настройки окружения и запуска используйте одну строку:
 
 ```bash
-git clone https://github.com/licht8/wg_qr_generator.git && cd wg_qr_generator && chmod +x run_project.py && ./run_project.py
+git clone https://github.com/licht8/wg_qr_generator.git && cd wg_qr_generator && chmod +x run_project.sh && ./run_project.sh
 ```
 
 ### Что делает эта команда:
 1. Клонирует репозиторий с проектом.
 2. Переходит в директорию проекта.
-3. Делает исполняемым Bash-скрипт `run_project.py`.
-4. Запускает скрипт `run_project.py`, который:
+3. Делает исполняемым Bash-скрипт `run_project.sh`.
+4. Запускает скрипт `run_project.sh`, который:
    - Проверяет наличие необходимых инструментов (Git, Python 3.8+).
    - Создает виртуальное окружение и устанавливает зависимости.
    - Предлагает удобное меню для работы с проектом.
@@ -35,7 +35,7 @@ git clone https://github.com/licht8/wg_qr_generator.git && cd wg_qr_generator &&
 
 ## Использование меню
 
-После запуска `run_project.py` вы получите удобное меню:
+После запуска `run_project.sh` вы получите удобное меню:
 
 1. **Запуск тестов**: Проверяет основные модули проекта.
 2. **Генерация конфигураций**: Создает новые конфигурации для пользователей.
