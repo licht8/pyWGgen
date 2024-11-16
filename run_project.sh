@@ -23,12 +23,12 @@ if ! command -v python3 &>/dev/null; then
 fi
 
 # Проверяем версию Python3
-PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-if (( $(echo "$PYTHON_VERSION < 3.8" | bc -l) )); then
+PYTHON_VERSION=$(python3 -c 'import sys; print(sys.version_info >= (3, 8))')
+if [ "$PYTHON_VERSION" != "True" ]; then
   echo "❌ Требуется Python версии 3.8 или выше. Установите соответствующую версию."
   exit 1
 else
-  echo "✅ Обнаружен Python версии $PYTHON_VERSION"
+  echo "✅ Python версии 3.8 или выше обнаружен."
 fi
 
 # Клонируем или обновляем репозиторий
