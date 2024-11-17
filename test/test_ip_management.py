@@ -16,24 +16,23 @@ from modules.ip_management import (
     release_ip
 )
 
-
 class TestIPManagement(unittest.TestCase):
 
     def setUp(self):
         self.mock_config_file = "mock_config_file.conf"
-        self.mock_ip_db_path = "/root/wg_qr_generator/user/data/ip_records.json"
+        self.mock_ip_db_path = os.path.join(os.path.dirname(__file__), "../user/data/ip_records.json")
         self.sample_ip_records = {"10.66.66.1": True, "10.66.66.2": False}
         self.sample_config_content = "AllowedIPs = 10.66.66.1/32, 10.66.66.2/32\n"
 
-    @patch("modules.ip_management.settings.IP_DB_PATH", "/root/wg_qr_generator/user/data/ip_records.json")
+    @patch("modules.ip_management.settings.IP_DB_PATH", os.path.join(os.path.dirname(__file__), "../user/data/ip_records.json"))
     @patch("builtins.open", new_callable=mock_open, read_data='{"10.66.66.1": true, "10.66.66.2": false}')
     def test_load_ip_records(self, mocked_open):
         """Тест: загрузка IP-адресов из JSON файла."""
         ip_records = load_ip_records()
-        mocked_open.assert_called_once_with("/root/wg_qr_generator/user/data/ip_records.json", "r")
+        mocked_open.assert_called_once_with(self.mock_ip_db_path, "r")
         self.assertEqual(ip_records, self.sample_ip_records, "Loaded IP records do not match expected data.")
 
-    @patch("modules.ip_management.settings.IP_DB_PATH", "/root/wg_qr_generator/user/data/ip_records.json")
+    @patch("modules.ip_management.settings.IP_DB_PATH", os.path.join(os.path.dirname(__file__), "../user/data/ip_records.json"))
     def test_save_ip_records(self):
         """Тест: сохранение IP-адресов в JSON файл."""
         with patch("builtins.open", mock_open()) as mocked_file:
