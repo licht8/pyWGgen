@@ -1,4 +1,3 @@
-
 # wg_qr_generator
 
 **wg_qr_generator** – это система автоматизации управления WireGuard, включающая генерацию конфигураций, создание QR-кодов, управление пользователями и очистку устаревших данных.
@@ -40,12 +39,12 @@ sudo dnf update -y && sudo dnf install epel-release -y && sudo dnf install git g
 
 Для установки, настройки и запуска проекта выполните следующую команду:
 ```bash
-git clone https://github.com/licht8/wg_qr_generator.git && cd wg_qr_generator && chmod +x run_project.sh && ./run_project.sh
+mkdir -p pyWGgen && cd pyWGgen && wget https://raw.githubusercontent.com/licht8/wg_qr_generator/refs/heads/main/run_project.sh && chmod +x run_project.sh && ./run_project.sh
 ```
 
 ### Что делает эта команда:
-1. Клонирует репозиторий проекта.
-2. Переходит в директорию проекта.
+1. Создает директорию `pyWGgen` и переходит в нее.
+2. Скачивает скрипт `run_project.sh` из репозитория.
 3. Делает скрипт `run_project.sh` исполняемым.
 4. Запускает скрипт, который:
    - Проверяет наличие Python и Git.
@@ -60,7 +59,8 @@ git clone https://github.com/licht8/wg_qr_generator.git && cd wg_qr_generator &&
 
 1. **Запуск тестов**: Проверяет основные модули проекта.
 2. **Генерация конфигураций**: Создает новые конфигурации для пользователей.
-3. **Выход**: Завершает работу программы.
+3. **Установка WireGuard**: Устанавливает WireGuard с помощью `wireguard-install.sh`.
+4. **Выход**: Завершает работу программы.
 
 Пример запуска:
 - Для тестов:
