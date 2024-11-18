@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# main_interface.py
+## Главный интерфейс Gradio для управления проектом wg_qr_generator
+
 import sys
 import os
 
@@ -13,34 +17,45 @@ from gradio_admin.search_user import search_user
 import gradio as gr
 
 with gr.Blocks() as admin_interface:
-    with gr.Tab("Создание и список"):
+    with gr.Tab("Создание пользователя"):
+        # Заголовок вкладки
         with gr.Row():
-            username_input = gr.Textbox(label="Имя пользователя")
-            create_button = gr.Button("Создать")
-            create_output = gr.Textbox(label="Результат создания")
+            gr.Markdown("## Создать нового пользователя")
+        # Поля для создания
+        with gr.Column(scale=1, min_width=300):
+            username_input = gr.Textbox(label="Имя пользователя", placeholder="Введите имя пользователя...")
+            create_button = gr.Button("Создать пользователя")
+            create_output = gr.Textbox(label="Результат создания", interactive=False)
             create_button.click(create_user, inputs=username_input, outputs=create_output)
-        
+
+    with gr.Tab("Список пользователей"):
+        # Список пользователей
         with gr.Row():
+            gr.Markdown("## Показать список пользователей")
+        with gr.Column(scale=1, min_width=300):
             list_button = gr.Button("Показать пользователей")
             list_output = gr.Textbox(label="Список пользователей", interactive=False)
             list_button.click(list_users, outputs=list_output)
 
     with gr.Tab("Удаление пользователей"):
-        delete_input = gr.Textbox(label="Имя пользователя для удаления")
-        delete_button = gr.Button("Удалить")
-        delete_output = gr.Textbox(label="Результат удаления")
-        delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
-        
+        # Удаление пользователей
         with gr.Row():
-            list_button = gr.Button("Показать пользователей")
-            list_output = gr.Textbox(label="Список пользователей", interactive=False)
-            list_button.click(list_users, outputs=list_output)
+            gr.Markdown("## Удалить пользователя")
+        with gr.Column(scale=1, min_width=300):
+            delete_input = gr.Textbox(label="Имя пользователя для удаления", placeholder="Введите имя пользователя...")
+            delete_button = gr.Button("Удалить пользователя")
+            delete_output = gr.Textbox(label="Результат удаления", interactive=False)
+            delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
 
     with gr.Tab("Поиск пользователей"):
-        search_input = gr.Textbox(label="Введите имя или IP")
-        search_button = gr.Button("Поиск")
-        search_output = gr.Textbox(label="Результат поиска")
-        search_button.click(search_user, inputs=search_input, outputs=search_output)
+        # Поиск пользователей
+        with gr.Row():
+            gr.Markdown("## Поиск пользователей")
+        with gr.Column(scale=1, min_width=300):
+            search_input = gr.Textbox(label="Введите имя или IP", placeholder="Введите строку для поиска...")
+            search_button = gr.Button("Поиск")
+            search_output = gr.Textbox(label="Результат поиска", interactive=False)
+            search_button.click(search_user, inputs=search_input, outputs=search_output)
 
 if __name__ == "__main__":
     admin_interface.launch(server_name="0.0.0.0", server_port=7860, share=True)
