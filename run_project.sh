@@ -5,7 +5,7 @@
 # Название репозитория и директории
 GITHUB_REPO="https://github.com/licht8/wg_qr_generator.git"
 PROJECT_DIR="wg_qr_generator"
-VENV_DIR="venv"
+VENV_DIR="$PROJECT_DIR/venv"
 WIREGUARD_INSTALL_SCRIPT="wireguard-install.sh"
 WIREGUARD_BINARY="/usr/bin/wg"
 
@@ -57,6 +57,9 @@ else
   git -C "$PROJECT_DIR" pull
 fi
 
+# Переходим в папку проекта
+cd "$PROJECT_DIR" || exit
+
 # Создаем и активируем виртуальное окружение
 if [ ! -d "$VENV_DIR" ]; then
   echo "🔧 Создание виртуального окружения..."
@@ -69,10 +72,14 @@ source "$VENV_DIR/bin/activate"
 # Устанавливаем зависимости
 echo "📦 Установка зависимостей..."
 pip install --upgrade pip
-if [ -f "$PROJECT_DIR/requirements.txt" ]; then
-  pip install -r "$PROJECT_DIR/requirements.txt"
+if [ -f "requirements.txt" ]; then
+  pip install -r "requirements.txt"
 else
   echo "⚠️ Файл requirements.txt не найден. Проверьте проект."
 fi
 
+# Выводим сообщение об успешной установке
 echo "✅ Установка завершена. Проект готов к работе."
+
+# Запускаем меню
+python3 menu.py
