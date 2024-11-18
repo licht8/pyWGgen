@@ -10,6 +10,7 @@ WIREGUARD_BINARY = "/usr/bin/wg"
 WIREGUARD_INSTALL_SCRIPT = "wireguard-install.sh"
 CONFIG_DIR = "user/data"
 TEST_USER = "test_user"
+ADMIN_PORT = 7860
 
 def check_wireguard_installed():
     """Проверка, установлен ли WireGuard."""
@@ -39,6 +40,27 @@ def ensure_test_config_exists():
     else:
         print(f"✅ Тестовая конфигурация '{TEST_USER}' уже существует.")
 
+def open_port(port):
+    """Открытие порта."""
+    print(f"🔓 Открытие порта {port}...")
+    subprocess.run(["iptables", "-I", "INPUT", "-p", "tcp", "--dport", str(port), "-j", "ACCEPT"])
+    print(f"✅ Порт {port} открыт.")
+
+def close_port(port):
+    """Закрытие порта."""
+    print(f"🔒 Закрытие порта {port}...")
+    subprocess.run(["iptables", "-D", "INPUT", "-p", "tcp", "--dport", str(port), "-j", "ACCEPT"])
+    print(f"✅ Порт {port} закрыт.")
+
+def run_admin_interface():
+    """Запуск админки."""
+    try:
+        open_port(ADMIN_PORT)
+        print(f"🌐 Запуск админки на порту {ADMIN_PORT}...")
+        subprocess.run(["python3", "admin_interface.py"])
+    finally:
+        close_port(ADMIN_PORT)
+
 def show_menu():
     """Отображение меню."""
     while True:
@@ -64,8 +86,7 @@ def show_menu():
             nickname = input("Введите имя пользователя (nickname): ").strip()
             subprocess.run(["python3", "main.py", nickname])
         elif choice == "3":
-            print("🌐 Запуск админки...")
-            subprocess.run(["python3", "admin_interface.py"])
+            run_admin_interface()
         elif choice == "4":
             install_wireguard()
         elif choice == "5":
