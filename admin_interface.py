@@ -42,24 +42,21 @@ def list_users():
 
     except json.JSONDecodeError:
         return "❌ Ошибка чтения файла user_records.json. Проверьте его формат."
-def delete_user(username):
-    """Ручное удаление пользователя с пошаговым выводом в терминал."""
-    user_records_path = os.path.join("user", "data", "user_records.json")
-    stale_records_path = os.path.join("user", "stale_user_records.json")
-    user_file = os.path.join("user", "data", f"{username}.conf")
-    stale_config_dir = os.path.join("user", "stale_config")
-    ip_records_path = os.path.join("user", "data", "ip_records.json")
-    wg_config_path = os.path.join("user", "data", "wg_configs")
+ddef delete_user(username):
+    """Ручное удаление пользователя с корректными путями к файлам."""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    user_records_path = os.path.join(base_dir, "user", "data", "user_records.json")
+    stale_records_path = os.path.join(base_dir, "user", "stale_user_records.json")
+    user_file = os.path.join(base_dir, "user", "data", f"{username}.conf")
+    stale_config_dir = os.path.join(base_dir, "user", "stale_config")
+    ip_records_path = os.path.join(base_dir, "user", "data", "ip_records.json")
+    wg_config_path = os.path.join(base_dir, "user", "data", "wg_configs")
 
     print(f"=== Удаление пользователя {username} ===")
 
     if not os.path.exists(user_records_path):
         print("❌ Файл user_records.json не найден.")
         return "❌ Файл user_records.json не найден."
-
-    if not os.path.exists(user_file):
-        print(f"❌ Конфигурационный файл пользователя {username} не найден.")
-        return f"❌ Конфигурационный файл пользователя {username} не найден."
 
     try:
         # Читаем записи о пользователях
@@ -98,9 +95,12 @@ def delete_user(username):
 
         # Перемещаем файл конфигурации
         stale_config_path = os.path.join(stale_config_dir, f"{username}.conf")
-        print(f"📂 Перемещение конфигурационного файла в {stale_config_path}...")
-        os.makedirs(stale_config_dir, exist_ok=True)
-        os.rename(user_file, stale_config_path)
+        if os.path.exists(user_file):
+            print(f"📂 Перемещение конфигурационного файла в {stale_config_path}...")
+            os.makedirs(stale_config_dir, exist_ok=True)
+            os.rename(user_file, stale_config_path)
+        else:
+            print(f"⚠️ Конфигурационный файл {user_file} отсутствует. Пропускаем шаг перемещения.")
 
         # Удаляем пользователя из WireGuard
         if os.path.exists(wg_config_path):
@@ -134,6 +134,7 @@ def delete_user(username):
     except Exception as e:
         print(f"❌ Ошибка при удалении пользователя: {str(e)}")
         return f"❌ Ошибка при удалении пользователя: {str(e)}"
+
 
 
 
