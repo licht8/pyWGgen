@@ -6,8 +6,8 @@
 # Название репозитория и директории
 GITHUB_REPO="https://github.com/licht8/wg_qr_generator.git"
 PROJECT_DIR="wg_qr_generator"
-VENV_DIR="$PROJECT_DIR/venv"
-WIREGUARD_INSTALL_SCRIPT="$PROJECT_DIR/wireguard-install.sh"
+VENV_DIR="venv"
+WIREGUARD_INSTALL_SCRIPT="wireguard-install.sh"
 WIREGUARD_BINARY="/usr/bin/wg"
 
 echo "=== Установка проекта wg_qr_generator ==="
