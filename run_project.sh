@@ -1,14 +1,12 @@
 #!/bin/bash
 # run_project.sh
-## Установочный и стартовый скрипт проекта wg_qr_generator
-# Этот скрипт автоматически устанавливает проект, настраивает виртуальное окружение и предоставляет удобное меню для управления.
+## Установочный скрипт для проекта wg_qr_generator
+# Этот скрипт устанавливает проект, создаёт виртуальное окружение и запускает меню.
 
 # Название репозитория и директории
 GITHUB_REPO="https://github.com/licht8/wg_qr_generator.git"
 PROJECT_DIR="wg_qr_generator"
 VENV_DIR="venv"
-WIREGUARD_INSTALL_SCRIPT="wireguard-install.sh"
-WIREGUARD_BINARY="/usr/bin/wg"
 
 echo "=== Установка проекта wg_qr_generator ==="
 
@@ -65,77 +63,5 @@ fi
 
 echo "✅ Установка завершена. Проект готов к работе."
 
-# Проверяем наличие WireGuard
-function check_wireguard_installed() {
-  if [ -f "$WIREGUARD_BINARY" ]; then
-    echo "True"
-  else
-    echo "False"
-  fi
-}
-
-# Установка WireGuard
-function install_wireguard() {
-  if [ -f "$WIREGUARD_INSTALL_SCRIPT" ]; then
-    echo "🔧 Запуск скрипта установки WireGuard..."
-    bash "$WIREGUARD_INSTALL_SCRIPT"
-  else
-    echo "❌ Скрипт $WIREGUARD_INSTALL_SCRIPT не найден. Положите его в текущую директорию и повторите попытку."
-  fi
-}
-
-# Удаление WireGuard
-function remove_wireguard() {
-  echo "❌ Удаление WireGuard..."
-  yum remove wireguard -y 2>/dev/null || apt remove wireguard -y 2>/dev/null
-}
-
-# Меню для запуска
-while true; do
-  WIREGUARD_STATUS=$(check_wireguard_installed)
-  echo "================== Меню =================="
-  if [ "$WIREGUARD_STATUS" == "True" ]; then
-    echo "✅ WireGuard установлен"
-    echo "3. Переустановить WireGuard ♻️"
-    echo "4. Удалить WireGuard 🗑️"
-  else
-    echo "3. Установить WireGuard ⚙️"
-  fi
-  echo "1. Запустить тесты"
-  echo "2. Запустить основной скрипт (main.py)"
-  echo "0. Выход"
-  echo "=========================================="
-  read -rp "Выберите действие: " choice
-  case $choice in
-    1)
-      echo "🔍 Запуск тестов..."
-      pytest
-      ;;
-    2)
-      read -rp "Введите имя пользователя (nickname): " nickname
-      python3 "main.py" "$nickname"
-      ;;
-    3)
-      if [ "$WIREGUARD_STATUS" == "True" ]; then
-        install_wireguard
-      else
-        install_wireguard
-      fi
-      ;;
-    4)
-      if [ "$WIREGUARD_STATUS" == "True" ]; then
-        remove_wireguard
-      else
-        echo "⚠️ WireGuard не установлен."
-      fi
-      ;;
-    0)
-      echo "👋 Выход. До свидания!"
-      deactivate
-      exit 0
-      ;;
-    *)
-      echo "⚠️ Некорректный выбор. Попробуйте еще раз."
-      ;;
-  esac
-done
+# Запускаем меню
+python3 menu.py
