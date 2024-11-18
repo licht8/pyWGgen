@@ -57,4 +57,5 @@ with gr.Blocks() as admin_interface:
         delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
 
 if __name__ == "__main__":
-    admin_interface.launch()
+    admin_interface.launch(server_name="0.0.0.0", server_port=7860)
+
