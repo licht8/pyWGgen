@@ -32,14 +32,13 @@ def show_menu():
     while True:
         wireguard_installed = check_wireguard_installed()
         print("================== Меню ==================")
+        print("1. Запустить тесты")
+        print("2. Запустить основной скрипт (main.py)")
         if wireguard_installed:
-            print("✅ WireGuard установлен")
             print("3. Переустановить WireGuard ♻️")
             print("4. Удалить WireGuard 🗑️")
         else:
             print("3. Установить WireGuard ⚙️")
-        print("1. Запустить тесты")
-        print("2. Запустить основной скрипт (main.py)")
         print("0. Выход")
         print("==========================================")
         choice = input("Выберите действие: ").strip()
@@ -50,10 +49,7 @@ def show_menu():
             nickname = input("Введите имя пользователя (nickname): ").strip()
             subprocess.run(["python3", "main.py", nickname])
         elif choice == "3":
-            if wireguard_installed:
-                install_wireguard()
-            else:
-                install_wireguard()
+            install_wireguard()
         elif choice == "4":
             if wireguard_installed:
                 remove_wireguard()
