@@ -4,6 +4,13 @@ from gradio_admin.list_users import list_users
 from gradio_admin.delete_user import delete_user
 from gradio_admin.search_user import search_user
 
+import sys
+import os
+
+# Добавляем текущую директорию в PYTHONPATH
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+
 with gr.Blocks() as admin_interface:
     with gr.Tab("Создание и список"):
         with gr.Row():
