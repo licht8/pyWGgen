@@ -1,17 +1,16 @@
-import gradio as gr
+import sys
+import os
+
+# Добавляем путь к корневой директории проекта
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, project_root)
+
 from gradio_admin.create_user import create_user
 from gradio_admin.list_users import list_users
 from gradio_admin.delete_user import delete_user
 from gradio_admin.search_user import search_user
 
-import sys
-import os
-
-# Получаем абсолютный путь к корневой директории проекта
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(project_root)
-
-
+import gradio as gr
 
 with gr.Blocks() as admin_interface:
     with gr.Tab("Создание и список"):
