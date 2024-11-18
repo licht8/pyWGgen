@@ -8,6 +8,8 @@ import subprocess
 
 WIREGUARD_BINARY = "/usr/bin/wg"
 WIREGUARD_INSTALL_SCRIPT = "wireguard-install.sh"
+CONFIG_DIR = "user/data"
+TEST_USER = "test_user"
 
 def check_wireguard_installed():
     """Проверка, установлен ли WireGuard."""
@@ -27,6 +29,16 @@ def remove_wireguard():
     subprocess.run(["yum", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL) or \
     subprocess.run(["apt", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL)
 
+def ensure_test_config_exists():
+    """Создание тестовой конфигурации, если она отсутствует."""
+    config_path = os.path.join(CONFIG_DIR, f"{TEST_USER}.conf")
+    if not os.path.exists(config_path):
+        print("⚙️  Тестовая конфигурация отсутствует. Создаём тестового пользователя...")
+        subprocess.run(["python3", "main.py", TEST_USER])
+        print(f"✅ Тестовый пользователь '{TEST_USER}' успешно создан.")
+    else:
+        print(f"✅ Тестовая конфигурация '{TEST_USER}' уже существует.")
+
 def show_menu():
     """Отображение меню."""
     while True:
@@ -43,6 +55,8 @@ def show_menu():
         print("==========================================")
         choice = input("Выберите действие: ").strip()
         if choice == "1":
+            # Проверяем наличие тестовой конфигурации перед тестами
+            ensure_test_config_exists()
             print("🔍 Запуск тестов...")
             subprocess.run(["pytest"])
         elif choice == "2":
