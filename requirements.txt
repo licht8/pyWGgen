@@ -5,4 +5,5 @@ cryptography>=41.0.0
 pytest>=7.4.0
 requests>=2.31.0
 pyqrcode==1.2.1
+gradio>=3.36.0
 pypng
