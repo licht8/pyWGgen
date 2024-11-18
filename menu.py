@@ -13,6 +13,7 @@ WIREGUARD_INSTALL_SCRIPT = "wireguard-install.sh"
 CONFIG_DIR = "user/data"
 TEST_USER = "test_user"
 ADMIN_PORT = 7860
+GRADIO_ADMIN_SCRIPT = "gradio_admin/main_interface.py"  # Указываем путь к интерфейсу Gradio
 
 def check_wireguard_installed():
     """Проверка, установлен ли WireGuard."""
@@ -56,20 +57,24 @@ def close_firewalld_port(port):
     subprocess.run(["sudo", "firewall-cmd", "--reload"])
     print(f"✅ Порт {port} закрыт через firewalld.")
 
-def run_admin_interface():
-    """Запуск админки с корректной обработкой Ctrl+C."""
+def run_gradio_admin_interface():
+    """Запуск Gradio интерфейса с корректной обработкой Ctrl+C."""
     def handle_exit_signal(sig, frame):
         """Обработчик сигнала для закрытия порта."""
         close_firewalld_port(ADMIN_PORT)
         sys.exit(0)
+
+    if not os.path.exists(GRADIO_ADMIN_SCRIPT):
+        print(f"❌ Скрипт {GRADIO_ADMIN_SCRIPT} не найден.")
+        return
 
     # Проверка и открытие порта
     open_firewalld_port(ADMIN_PORT)
     signal.signal(signal.SIGINT, handle_exit_signal)  # Обработка Ctrl+C
 
     try:
-        print(f"🌐 Запуск админки на порту {ADMIN_PORT}...")
-        subprocess.run(["python3", "admin_interface.py"])
+        print(f"🌐 Запуск Gradio интерфейса на порту {ADMIN_PORT}...")
+        subprocess.run(["python3", GRADIO_ADMIN_SCRIPT])
     finally:
         close_firewalld_port(ADMIN_PORT)
 
@@ -80,7 +85,7 @@ def show_menu():
         print("================== Меню ==================")
         print("1. Запустить тесты")
         print("2. Запустить основной скрипт (main.py)")
-        print("3. Открыть админку")
+        print("3. Открыть Gradio админку")
         if wireguard_installed:
             print("4. Переустановить WireGuard ♻️")
             print("5. Удалить WireGuard 🗑️")
@@ -98,7 +103,7 @@ def show_menu():
             nickname = input("Введите имя пользователя (nickname): ").strip()
             subprocess.run(["python3", "main.py", nickname])
         elif choice == "3":
-            run_admin_interface()
+            run_gradio_admin_interface()
         elif choice == "4":
             install_wireguard()
         elif choice == "5":
