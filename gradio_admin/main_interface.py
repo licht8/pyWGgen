@@ -7,8 +7,10 @@ from gradio_admin.search_user import search_user
 import sys
 import os
 
-# Добавляем текущую директорию в PYTHONPATH
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Получаем абсолютный путь к корневой директории проекта
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(project_root)
+
 
 
 with gr.Blocks() as admin_interface:
