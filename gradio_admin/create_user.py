@@ -16,8 +16,9 @@ def create_user(username):
         
         # Путь к QR-коду
         qr_code_path = os.path.join("user", "data", "qrcodes", f"{username}.png")
-        if os.path.exists(qr_code_path):
-            return f"✅ Пользователь {username} успешно создан.", qr_code_path
+        absolute_path = os.path.abspath(qr_code_path)
+        if os.path.exists(absolute_path):
+            return f"✅ Пользователь {username} успешно создан.", absolute_path
         else:
             return f"✅ Пользователь {username} успешно создан, но QR-код не найден.", None
     except Exception as e:
