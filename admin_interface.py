@@ -43,14 +43,14 @@ def list_users():
     except json.JSONDecodeError:
         return "❌ Ошибка чтения файла user_records.json. Проверьте его формат."
 def delete_user(username):
-    """Ручное удаление пользователя с корректными путями к файлам."""
+    """Ручное удаление пользователя с обработкой ошибок."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
     user_records_path = os.path.join(base_dir, "user", "data", "user_records.json")
     stale_records_path = os.path.join(base_dir, "user", "stale_user_records.json")
     user_file = os.path.join(base_dir, "user", "data", f"{username}.conf")
     stale_config_dir = os.path.join(base_dir, "user", "stale_config")
     ip_records_path = os.path.join(base_dir, "user", "data", "ip_records.json")
-    wg_config_path = os.path.join(base_dir, "user", "data", "wg_configs")
+    wg_config_path = os.path.join(base_dir, "user", "data", "wg_configs/wg0.conf")  # Указываем точное имя файла
 
     print(f"=== Удаление пользователя {username} ===")
 
@@ -104,7 +104,7 @@ def delete_user(username):
 
         # Удаляем пользователя из WireGuard
         if os.path.exists(wg_config_path):
-            print("📂 Удаление пользователя из WireGuard...")
+            print(f"📂 Чтение конфигурации WireGuard из {wg_config_path}...")
             with open(wg_config_path, "r") as f:
                 wg_config = f.read()
             updated_config = "\n".join(
@@ -112,10 +112,13 @@ def delete_user(username):
                 for line in wg_config.splitlines()
                 if username not in line
             )
+            print("💾 Сохранение обновлённой конфигурации WireGuard...")
             with open(wg_config_path, "w") as f:
                 f.write(updated_config)
             print("🔄 Синхронизация конфигурации WireGuard...")
             subprocess.run(["wg", "syncconf", "wg0", wg_config_path])
+        else:
+            print(f"⚠️ Конфигурация WireGuard {wg_config_path} не найдена. Пропускаем обновление.")
 
         # Сохраняем обновлённые данные
         print("💾 Сохранение обновлений...")
@@ -134,8 +137,6 @@ def delete_user(username):
     except Exception as e:
         print(f"❌ Ошибка при удалении пользователя: {str(e)}")
         return f"❌ Ошибка при удалении пользователя: {str(e)}"
-
-
 
 
 # Gradio interface
