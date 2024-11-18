@@ -42,7 +42,7 @@ def list_users():
 
     except json.JSONDecodeError:
         return "❌ Ошибка чтения файла user_records.json. Проверьте его формат."
-ddef delete_user(username):
+def delete_user(username):
     """Ручное удаление пользователя с корректными путями к файлам."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
     user_records_path = os.path.join(base_dir, "user", "data", "user_records.json")
