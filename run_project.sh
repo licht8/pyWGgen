@@ -6,8 +6,8 @@
 # Название репозитория и директории
 GITHUB_REPO="https://github.com/licht8/wg_qr_generator.git"
 PROJECT_DIR="wg_qr_generator"
-VENV_DIR="venv"
-WIREGUARD_INSTALL_SCRIPT="wireguard-install.sh"
+VENV_DIR="$PROJECT_DIR/venv"
+WIREGUARD_INSTALL_SCRIPT="$PROJECT_DIR/wireguard-install.sh"
 WIREGUARD_BINARY="/usr/bin/wg"
 
 echo "=== Установка проекта wg_qr_generator ==="
@@ -33,19 +33,19 @@ else
   echo "✅ Python версии 3.8 или выше обнаружен."
 fi
 
-
-
 # Клонируем или обновляем репозиторий
-
 if [ ! -d "$PROJECT_DIR" ]; then
   echo "🔄 Клонирование репозитория..."
-  git clone "$GITHUB_REPO"
+  git clone "$GITHUB_REPO" "$PROJECT_DIR"
 else
   echo "🔄 Репозиторий уже существует. Обновляем..."
   git -C "$PROJECT_DIR" pull
 fi
 
-# Создаем и активируем виртуальное окружение
+# Переходим в директорию проекта
+cd "$PROJECT_DIR" || exit
+
+# Создаем виртуальное окружение внутри папки проекта
 if [ ! -d "$VENV_DIR" ]; then
   echo "🔧 Создание виртуального окружения..."
   python3 -m venv "$VENV_DIR"
@@ -57,8 +57,8 @@ source "$VENV_DIR/bin/activate"
 # Устанавливаем зависимости
 echo "📦 Установка зависимостей..."
 pip install --upgrade pip
-if [ -f "$PROJECT_DIR/requirements.txt" ]; then
-  pip install -r "$PROJECT_DIR/requirements.txt"
+if [ -f "requirements.txt" ]; then
+  pip install -r "requirements.txt"
 else
   echo "⚠️ Файл requirements.txt не найден. Проверьте проект."
 fi
@@ -109,11 +109,11 @@ while true; do
   case $choice in
     1)
       echo "🔍 Запуск тестов..."
-      pytest "$PROJECT_DIR"
+      pytest
       ;;
     2)
       read -rp "Введите имя пользователя (nickname): " nickname
-      python3 "$PROJECT_DIR/main.py" "$nickname"
+      python3 "main.py" "$nickname"
       ;;
     3)
       if [ "$WIREGUARD_STATUS" == "True" ]; then
