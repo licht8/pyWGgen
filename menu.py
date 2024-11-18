@@ -5,6 +5,8 @@
 
 import os
 import subprocess
+import signal
+import sys
 
 WIREGUARD_BINARY = "/usr/bin/wg"
 WIREGUARD_INSTALL_SCRIPT = "wireguard-install.sh"
@@ -40,26 +42,36 @@ def ensure_test_config_exists():
     else:
         print(f"✅ Тестовая конфигурация '{TEST_USER}' уже существует.")
 
-def open_port(port):
-    """Открытие порта."""
-    print(f"🔓 Открытие порта {port}...")
-    subprocess.run(["iptables", "-I", "INPUT", "-p", "tcp", "--dport", str(port), "-j", "ACCEPT"])
-    print(f"✅ Порт {port} открыт.")
+def open_firewalld_port(port):
+    """Открытие порта через firewalld."""
+    print(f"🔓 Открытие порта {port} через firewalld...")
+    subprocess.run(["sudo", "firewall-cmd", "--add-port", f"{port}/tcp", "--permanent"])
+    subprocess.run(["sudo", "firewall-cmd", "--reload"])
+    print(f"✅ Порт {port} открыт через firewalld.")
 
-def close_port(port):
-    """Закрытие порта."""
-    print(f"🔒 Закрытие порта {port}...")
-    subprocess.run(["iptables", "-D", "INPUT", "-p", "tcp", "--dport", str(port), "-j", "ACCEPT"])
-    print(f"✅ Порт {port} закрыт.")
+def close_firewalld_port(port):
+    """Закрытие порта через firewalld."""
+    print(f"🔒 Закрытие порта {port} через firewalld...")
+    subprocess.run(["sudo", "firewall-cmd", "--remove-port", f"{port}/tcp", "--permanent"])
+    subprocess.run(["sudo", "firewall-cmd", "--reload"])
+    print(f"✅ Порт {port} закрыт через firewalld.")
 
 def run_admin_interface():
-    """Запуск админки."""
+    """Запуск админки с корректной обработкой Ctrl+C."""
+    def handle_exit_signal(sig, frame):
+        """Обработчик сигнала для закрытия порта."""
+        close_firewalld_port(ADMIN_PORT)
+        sys.exit(0)
+
+    # Проверка и открытие порта
+    open_firewalld_port(ADMIN_PORT)
+    signal.signal(signal.SIGINT, handle_exit_signal)  # Обработка Ctrl+C
+
     try:
-        open_port(ADMIN_PORT)
         print(f"🌐 Запуск админки на порту {ADMIN_PORT}...")
         subprocess.run(["python3", "admin_interface.py"])
     finally:
-        close_port(ADMIN_PORT)
+        close_firewalld_port(ADMIN_PORT)
 
 def show_menu():
     """Отображение меню."""
