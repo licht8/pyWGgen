@@ -43,7 +43,7 @@ def list_users():
     except json.JSONDecodeError:
         return "❌ Ошибка чтения файла user_records.json. Проверьте его формат."
 def delete_user(username):
-    """Ручное удаление пользователя, с учётом всех операций."""
+    """Ручное удаление пользователя с пошаговым выводом в терминал."""
     user_records_path = os.path.join("user", "data", "user_records.json")
     stale_records_path = os.path.join("user", "stale_user_records.json")
     user_file = os.path.join("user", "data", f"{username}.conf")
@@ -51,28 +51,90 @@ def delete_user(username):
     ip_records_path = os.path.join("user", "data", "ip_records.json")
     wg_config_path = os.path.join("user", "data", "wg_configs")
 
+    print(f"=== Удаление пользователя {username} ===")
+
     if not os.path.exists(user_records_path):
+        print("❌ Файл user_records.json не найден.")
         return "❌ Файл user_records.json не найден."
 
     if not os.path.exists(user_file):
+        print(f"❌ Конфигурационный файл пользователя {username} не найден.")
         return f"❌ Конфигурационный файл пользователя {username} не найден."
 
     try:
         # Читаем записи о пользователях
+        print("📂 Чтение user_records.json...")
         with open(user_records_path, "r") as f:
             user_data = json.load(f)
 
-        print(f"DEBUG: Список пользователей из user_records.json: {list(user_data.keys())}")
-
         if username not in user_data:
+            print(f"❌ Пользователь {username} не найден в user_records.json.")
             return f"❌ Пользователь {username} не найден в user_records.json."
 
-        # Остальной код удаления...
-        # (перемещение в архив, обновление ip_records и т.д.)
+        # Читаем IP-адреса
+        print("📂 Чтение ip_records.json...")
+        with open(ip_records_path, "r") as f:
+            ip_data = json.load(f)
+
+        # Читаем записи об устаревших пользователях
+        print("📂 Чтение stale_user_records.json...")
+        if os.path.exists(stale_records_path):
+            with open(stale_records_path, "r") as f:
+                stale_data = json.load(f)
+        else:
+            stale_data = {}
+
+        # Переносим данные в архив
+        print(f"📦 Перемещение данных пользователя {username} в архив...")
+        user_info = user_data.pop(username)
+        user_info["removed_at"] = datetime.now().isoformat()
+        stale_data[username] = user_info
+
+        # Освобождаем IP-адрес
+        ip_address = user_info.get("address", "").split("/")[0]
+        if ip_address in ip_data:
+            print(f"🌐 Освобождение IP-адреса {ip_address}...")
+            ip_data[ip_address] = False
+
+        # Перемещаем файл конфигурации
+        stale_config_path = os.path.join(stale_config_dir, f"{username}.conf")
+        print(f"📂 Перемещение конфигурационного файла в {stale_config_path}...")
+        os.makedirs(stale_config_dir, exist_ok=True)
+        os.rename(user_file, stale_config_path)
+
+        # Удаляем пользователя из WireGuard
+        if os.path.exists(wg_config_path):
+            print("📂 Удаление пользователя из WireGuard...")
+            with open(wg_config_path, "r") as f:
+                wg_config = f.read()
+            updated_config = "\n".join(
+                line
+                for line in wg_config.splitlines()
+                if username not in line
+            )
+            with open(wg_config_path, "w") as f:
+                f.write(updated_config)
+            print("🔄 Синхронизация конфигурации WireGuard...")
+            subprocess.run(["wg", "syncconf", "wg0", wg_config_path])
+
+        # Сохраняем обновлённые данные
+        print("💾 Сохранение обновлений...")
+        with open(user_records_path, "w") as f:
+            json.dump(user_data, f, indent=4)
+
+        with open(stale_records_path, "w") as f:
+            json.dump(stale_data, f, indent=4)
+
+        with open(ip_records_path, "w") as f:
+            json.dump(ip_data, f, indent=4)
+
+        print(f"✅ Пользователь {username} успешно удалён и перемещён в архив.")
         return f"✅ Пользователь {username} успешно удалён и перемещён в архив."
 
     except Exception as e:
+        print(f"❌ Ошибка при удалении пользователя: {str(e)}")
         return f"❌ Ошибка при удалении пользователя: {str(e)}"
+
 
 
 # Gradio interface
