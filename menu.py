@@ -13,7 +13,9 @@ WIREGUARD_INSTALL_SCRIPT = "wireguard-install.sh"
 CONFIG_DIR = "user/data"
 TEST_USER = "test_user"
 ADMIN_PORT = 7860
-GRADIO_ADMIN_SCRIPT = "gradio_admin/main_interface.py"  # Указываем путь к интерфейсу Gradio
+#GRADIO_ADMIN_SCRIPT = "gradio_admin/main_interface.py"  # Указываем путь к интерфейсу Gradio
+GRADIO_ADMIN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "gradio_admin/main_interface.py"))
+
 
 def check_wireguard_installed():
     """Проверка, установлен ли WireGuard."""
