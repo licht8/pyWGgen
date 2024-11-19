@@ -10,16 +10,24 @@ def get_existing_ips(config_file):
     """
     Получить список всех IP-адресов из конфигурации сервера WireGuard.
     :param config_file: Путь к конфигурационному файлу WireGuard.
-    :return: Список занятых IP-адресов.
+    :return: Список занятых IP-адресов из текущей подсети.
     """
     try:
+        subnet = get_wireguard_subnet()
+        network = ipaddress.ip_network(subnet, strict=False)
+
         with open(config_file, "r") as file:
             lines = file.readlines()
+
         existing_ips = []
         for line in lines:
             if line.strip().startswith("AllowedIPs"):
                 ip = line.split("=")[-1].strip().split(",")[0]  # Берём только IPv4
-                existing_ips.append(ip.split("/")[0])  # Убираем маску подсети
+                ip_no_mask = ip.split("/")[0]  # Убираем маску подсети
+                # Фильтруем только IP из текущей подсети
+                if ip_no_mask in network:
+                    existing_ips.append(ip_no_mask)
+
         return existing_ips
     except FileNotFoundError:
         return []
