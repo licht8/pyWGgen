@@ -39,7 +39,7 @@ if [ -f "$PYTHON_PATH" ]; then
   echo "✅ Python 3.11 настроен как основная версия."
 else
   echo "❌ Python 3.11 не найден. Установите его вручную."
-  #exit 1
+  exit 1
 fi
 
 
@@ -55,12 +55,12 @@ install_bc_if_not_found() {
 install_bc_if_not_found
 
 # Проверяем версию Python
-PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-if (( $(echo "$PYTHON_VERSION < 3.8" | bc -l) )); then
+PYTHON_VERSION=$(python3 -c 'import sys; print(sys.version_info.major, sys.version_info.minor)')
+if [[ "$PYTHON_VERSION" < "3 8" ]]; then
   echo "❌ Требуется Python версии 3.8 или выше. Установите соответствующую версию."
   exit 1
 else
-  echo "✅ Python версии $PYTHON_VERSION обнаружен."
+  echo "✅ Python версии 3.$(echo $PYTHON_VERSION | awk '{print $2}') обнаружен."
 fi
 
 # Клонируем или обновляем репозиторий
