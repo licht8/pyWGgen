@@ -20,17 +20,19 @@ class TestIPManagement(unittest.TestCase):
 
     def setUp(self):
         self.mock_config_file = "mock_config_file.conf"
-        self.sample_config_content = (
+        self.mock_wireguard_config = (
             "Address = 10.96.96.1/24,fd42:42:42::1/64\n"
             "AllowedIPs = 10.96.96.2/32\n"
             "AllowedIPs = 10.96.96.3/32\n"
         )
 
-    @patch("builtins.open", new_callable=mock_open, read_data="Address = 10.96.96.1/24\nAllowedIPs = 10.96.96.2/32\nAllowedIPs = 10.96.96.3/32\n")
+    @patch("modules.utils.parse_wireguard_config")
+    @patch("builtins.open", new_callable=mock_open, read_data="AllowedIPs = 10.96.96.2/32\nAllowedIPs = 10.96.96.3/32\n")
     @patch("os.path.exists", return_value=True)
     @patch("modules.utils.get_wireguard_subnet", return_value="10.96.96.1/24")
-    def test_get_existing_ips(self, mocked_get_subnet, mocked_exists, mocked_open):
+    def test_get_existing_ips(self, mocked_get_subnet, mocked_exists, mocked_open, mocked_parse_wireguard_config):
         """Тест: извлечение существующих IP из конфигурационного файла."""
+        mocked_parse_wireguard_config.return_value = self.mock_wireguard_config
         existing_ips = get_existing_ips(self.mock_config_file)
         mocked_open.assert_called_once_with(self.mock_config_file, "r")
         self.assertEqual(
