@@ -49,7 +49,7 @@ install_bc_if_not_found() {
         echo "Утилита 'bc' не найдена. Устанавливаю..."
         sudo dnf install bc -y
     else
-        echo "Утилита 'bc' уже установлена."
+        echo "✅ Утилита 'bc' уже установлена."
     fi
 }
 
