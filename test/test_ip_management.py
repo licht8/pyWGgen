@@ -24,15 +24,26 @@ class TestIPManagement(unittest.TestCase):
         """Тест: извлечение существующих IP из конфигурационного файла."""
         existing_ips = get_existing_ips(self.mock_config_file)
         mocked_open.assert_called_once_with(self.mock_config_file, "r")
-        self.assertEqual(existing_ips, {"10.96.96.2", "10.96.96.3"}, "Extracted IPs do not match expected data.")
+        self.assertEqual(
+            existing_ips,
+            {"10.96.96.2/32", "10.96.96.3/32"},
+            "Extracted IPs do not match expected data."
+        )
 
-    @patch("modules.ip_management.get_existing_ips", return_value={"10.96.96.2", "10.96.96.3"})
+    @patch("modules.ip_management.get_existing_ips", return_value={"10.96.96.2/32", "10.96.96.3/32"})
     @patch("modules.utils.get_wireguard_subnet", return_value="10.96.96.1/24")
     def test_generate_ip(self, mocked_get_subnet, mocked_get_existing_ips):
         """Тест: генерация нового IP."""
         new_ip, _ = generate_ip(self.mock_config_file)
-        self.assertTrue(new_ip.startswith("10.96.96."), "Generated IP must be in the correct subnet.")
-        self.assertNotIn(new_ip, mocked_get_existing_ips.return_value, "Generated IP must not be in existing IPs.")
+        expected_prefix = "10.96.96."
+        self.assertTrue(
+            new_ip.startswith(expected_prefix),
+            f"Generated IP must be in the correct subnet ({expected_prefix})."
+        )
+        self.assertNotIn(
+            new_ip + "/32", mocked_get_existing_ips.return_value,
+            "Generated IP must not be in existing IPs."
+        )
 
 if __name__ == "__main__":
     unittest.main()
