@@ -17,21 +17,25 @@ if ! command -v git &>/dev/null; then
   exit 1
 fi
 
-# Установка Node.js
-echo "🔄 Установка Node.js..."
-curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-sudo dnf install -y nodejs
-if command -v node &>/dev/null; then
-  echo "✅ Node.js установлен. Версия: $(node --version)"
+# Проверяем и при необходимости устанавливаем Node.js
+if ! command -v node &>/dev/null; then
+  echo "🔄 Node.js не установлен. Устанавливаю..."
+  curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - &>/dev/null
+  sudo dnf install -y nodejs &>/dev/null
+  if command -v node &>/dev/null; then
+    echo "✅ Node.js успешно установлен."
+  else
+    echo "❌ Ошибка при установке Node.js."
+    exit 1
+  fi
 else
-  echo "❌ Ошибка при установке Node.js."
- exit 1
+  echo "✅ Node.js уже установлен. Версия: $(node --version)"
 fi
 
 # Проверяем и восстанавливаем приоритет Python 3.11, если он сбит
-echo --- 
-python3 --version 
-echo ---
+echo "---"
+python3 --version
+echo "---"
 PYTHON_PATH="/usr/bin/python3.11"
 if [ -f "$PYTHON_PATH" ]; then
   # Устанавливаем Python 3.11 как основную версию
@@ -42,9 +46,9 @@ else
   exit 1
 fi
 
-
+# Проверяем наличие утилиты bc
 install_bc_if_not_found() {
-    if ! command -v bc &> /dev/null; then
+    if ! command -v bc &>/dev/null; then
         echo "Утилита 'bc' не найдена. Устанавливаю..."
         sudo dnf install bc -y
     else
@@ -55,18 +59,18 @@ install_bc_if_not_found() {
 install_bc_if_not_found
 
 # Проверяем версию Python
-echo --- 
-python3 --version 
-echo ---
-PYTHON_VERSION=$(python3 -c 'import sys; print(sys.version_info.major, sys.version_info.minor)')
-if [[ "$PYTHON_VERSION" < "3 8" ]]; then
+echo "---"
+python3 --version
+echo "---"
+
+PYTHON_MAJOR=$(python3 -c 'import sys; print(sys.version_info.major)')
+PYTHON_MINOR=$(python3 -c 'import sys; print(sys.version_info.minor)')
+
+if (( PYTHON_MAJOR < 3 || (PYTHON_MAJOR == 3 && PYTHON_MINOR < 8) )); then
   echo "❌ Требуется Python версии 3.8 или выше. Установите соответствующую версию."
-  echo --- 
-python3 --version 
-echo ---
   exit 1
 else
-  echo "✅ Python версии 3.$(echo $PYTHON_VERSION | awk '{print $2}') обнаружен."
+  echo "✅ Python версии $PYTHON_MAJOR.$PYTHON_MINOR обнаружен."
 fi
 
 # Клонируем или обновляем репозиторий
