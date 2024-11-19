@@ -1,18 +1,24 @@
+#!/usr/bin/env python3
+# list_users.py
+## Скрипт для отображения списка пользователей с информацией о сроке действия и IP-адресе.
+
 import os
 import json
 from datetime import datetime
+from modules.utils import read_json
 
 USER_RECORDS_PATH = os.path.join("user", "data", "user_records.json")
 
 def list_users():
-    """Чтение списка пользователей с остатком времени."""
+    """
+    Чтение списка пользователей и отображение информации о них.
+    :return: Список пользователей или сообщение об ошибке.
+    """
     if not os.path.exists(USER_RECORDS_PATH):
         return "❌ Файл user_records.json не найден."
 
     try:
-        with open(USER_RECORDS_PATH, "r") as f:
-            user_data = json.load(f)
-
+        user_data = read_json(USER_RECORDS_PATH)
         if not user_data:
             return "❌ Нет зарегистрированных пользователей."
 
@@ -44,3 +50,5 @@ def list_users():
 
     except json.JSONDecodeError:
         return "❌ Ошибка чтения файла user_records.json. Проверьте его формат."
+    except Exception as e:
+        return f"❌ Ошибка: {str(e)}"
