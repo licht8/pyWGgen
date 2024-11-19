@@ -25,7 +25,7 @@ def get_existing_ips(config_file):
                 ip = line.split("=")[-1].strip().split(",")[0]  # Берём только IPv4
                 ip_no_mask = ip.split("/")[0]  # Убираем маску подсети
                 # Фильтруем только IP из текущей подсети
-                if ip_no_mask in network:
+                if ipaddress.ip_address(ip_no_mask) in network:
                     existing_ips.append(ip_no_mask)
 
         return existing_ips
