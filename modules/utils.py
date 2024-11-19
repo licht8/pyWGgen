@@ -63,9 +63,9 @@ def get_wireguard_subnet(config_path=None):
 
     config_content = parse_wireguard_config(config_path)
     for line in config_content.splitlines():
-        if line.startswith("Address"):
+        if line.strip().startswith("Address"):
             addresses = line.split('=')[1].strip().split(',')
             for address in addresses:
-                if '/' in address and '.' in address:  # Убедимся, что это IPv4
+                if '/' in address and '.' in address:  # IPv4
                     return address.strip()
     raise ValueError("Не удалось найти подсеть WireGuard в конфигурационном файле.")
