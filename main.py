@@ -35,8 +35,14 @@ def generate_config(nickname, params, config_file):
     preshared_key = generate_preshared_key()
 
     # Получение существующих IP-адресов из конфигурации сервера
+    from utils import get_wireguard_subnet
+    
+    # Получение текущей подсети из конфигурационного файла WireGuard
+    subnet = get_wireguard_subnet()
+    
     existing_ips = get_existing_ips(config_file)
-    address, new_ipv4 = generate_ip(existing_ips)
+    address, new_ipv4 = generate_ip(existing_ips, subnet=subnet)
+
 
     # Генерация конфигурации клиента
     client_config = create_client_config(
