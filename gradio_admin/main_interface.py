@@ -4,18 +4,19 @@
 
 import sys
 import os
+import gradio as gr
 
 # Добавляем путь к корневой директории проекта
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
+# Импортируем функции для работы с пользователями
 from gradio_admin.create_user import create_user
 from gradio_admin.list_users import list_users
 from gradio_admin.delete_user import delete_user
 from gradio_admin.search_user import search_user
 
-import gradio as gr
-
+# Основной интерфейс
 with gr.Blocks(css="style.css") as admin_interface:
     # Вкладка для создания пользователя
     with gr.Tab("Создание пользователя"):
@@ -74,5 +75,6 @@ with gr.Blocks(css="style.css") as admin_interface:
             search_output = gr.Textbox(label="Результат поиска", interactive=False)
             search_button.click(search_user, inputs=search_input, outputs=search_output)
 
+# Запуск интерфейса
 if __name__ == "__main__":
     admin_interface.launch(server_name="0.0.0.0", server_port=7860, share=True)
