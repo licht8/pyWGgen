@@ -68,4 +68,4 @@ def get_wireguard_subnet(config_path=None):
             for address in addresses:
                 if '/' in address and '.' in address:  # IPv4
                     return address.strip()
-    raise ValueError("Не удалось найти подсеть WireGuard в конфигурационном файле.")
+    raise ValueError(f"Не удалось найти подсеть WireGuard в конфигурационном файле {config_path}.")
