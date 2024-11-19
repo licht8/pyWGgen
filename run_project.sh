@@ -55,9 +55,15 @@ install_bc_if_not_found() {
 install_bc_if_not_found
 
 # Проверяем версию Python
+echo --- 
+python3 --version 
+echo ---
 PYTHON_VERSION=$(python3 -c 'import sys; print(sys.version_info.major, sys.version_info.minor)')
 if [[ "$PYTHON_VERSION" < "3 8" ]]; then
   echo "❌ Требуется Python версии 3.8 или выше. Установите соответствующую версию."
+  echo --- 
+python3 --version 
+echo ---
   exit 1
 else
   echo "✅ Python версии 3.$(echo $PYTHON_VERSION | awk '{print $2}') обнаружен."
