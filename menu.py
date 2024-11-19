@@ -91,7 +91,7 @@ def show_menu():
     """Отображение меню."""
     while True:
         wireguard_installed = check_wireguard_installed()
-        print("================== Меню ==================")
+        print("\n================== Меню ==================")
         print("1. Запустить тесты")
         print("2. Запустить основной скрипт (main.py)")
         print("3. Открыть Gradio админку")
