@@ -10,7 +10,6 @@ from unittest.mock import patch, mock_open
 # Добавляем корень проекта в sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Импортируем тестируемый модуль
 from modules.ip_management import (
     generate_ip,
     get_existing_ips,
@@ -27,7 +26,7 @@ class TestIPManagement(unittest.TestCase):
             "AllowedIPs = 10.96.96.3/32\n"
         )
 
-    @patch("builtins.open", new_callable=mock_open, read_data="AllowedIPs = 10.96.96.2/32\nAllowedIPs = 10.96.96.3/32\n")
+    @patch("builtins.open", new_callable=mock_open, read_data="Address = 10.96.96.1/24\nAllowedIPs = 10.96.96.2/32\nAllowedIPs = 10.96.96.3/32\n")
     @patch("os.path.exists", return_value=True)
     @patch("modules.utils.get_wireguard_subnet", return_value="10.96.96.1/24")
     def test_get_existing_ips(self, mocked_get_subnet, mocked_exists, mocked_open):
