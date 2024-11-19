@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # test_ip_management.py
-## Тесты для модуля ip_management.py
+## Модульные тесты для модуля управления IP-адресами.
 
 import unittest
 import os
@@ -16,11 +16,16 @@ from modules.ip_management import (
     get_existing_ips,
 )
 
+
 class TestIPManagement(unittest.TestCase):
 
     def setUp(self):
         self.mock_config_file = "mock_config_file.conf"
-        self.sample_config_content = "AllowedIPs = 10.96.96.2/32\nAllowedIPs = 10.96.96.3/32\n"
+        self.sample_config_content = (
+            "Address = 10.96.96.1/24,fd42:42:42::1/64\n"
+            "AllowedIPs = 10.96.96.2/32\n"
+            "AllowedIPs = 10.96.96.3/32\n"
+        )
 
     @patch("builtins.open", new_callable=mock_open, read_data="AllowedIPs = 10.96.96.2/32\nAllowedIPs = 10.96.96.3/32\n")
     @patch("os.path.exists", return_value=True)
@@ -35,7 +40,7 @@ class TestIPManagement(unittest.TestCase):
             "Extracted IPs do not match expected data."
         )
 
-    @patch("modules.ip_management.get_existing_ips", return_value=["10.96.96.2", "10.96.96.3"])
+    @patch("modules.ip_management.get_existing_ips", return_value={"10.96.96.2", "10.96.96.3"})
     @patch("modules.utils.get_wireguard_subnet", return_value="10.96.96.0/24")
     def test_generate_ip(self, mocked_get_subnet, mocked_get_existing_ips):
         """Тест: генерация нового IP."""
@@ -46,9 +51,10 @@ class TestIPManagement(unittest.TestCase):
             f"Generated IP must be in the correct subnet ({expected_prefix})."
         )
         self.assertNotIn(
-            new_ip, mocked_get_existing_ips.return_value,
+            new_ip + "/32", mocked_get_existing_ips.return_value,
             "Generated IP must not be in existing IPs."
         )
+
 
 if __name__ == "__main__":
     unittest.main()
