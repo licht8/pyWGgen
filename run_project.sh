@@ -33,9 +33,6 @@ else
 fi
 
 # Проверяем и восстанавливаем приоритет Python 3.11, если он сбит
-echo "---"
-python3 --version
-echo "---"
 PYTHON_PATH="/usr/bin/python3.11"
 if [ -f "$PYTHON_PATH" ]; then
   # Устанавливаем Python 3.11 как основную версию
@@ -59,10 +56,6 @@ install_bc_if_not_found() {
 install_bc_if_not_found
 
 # Проверяем версию Python
-echo "---"
-python3 --version
-echo "---"
-
 PYTHON_MAJOR=$(python3 -c 'import sys; print(sys.version_info.major)')
 PYTHON_MINOR=$(python3 -c 'import sys; print(sys.version_info.minor)')
 
@@ -119,5 +112,5 @@ fi
 echo "✅ Установка завершена. Проект готов к работе."
 
 # Запускаем меню
-echo "🔄 Запуск меню..."
+echo "🔄 Запуск меню...\n"
 python3 menu.py || { echo "❌ Ошибка при запуске меню."; exit 1; }
