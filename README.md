@@ -62,8 +62,7 @@ http://127.0.0.1:7860
 Для установки выполните команду:
 
 ```bash
-sudo dnf update -y && sudo dnf install epel-release -y && sudo dnf install git gcc curl openssl-devel bzip2-devel libffi-devel zlib-devel -y && sudo dnf install python3.11 -y && python3 --version
-curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - && sudo dnf install -y nodejs && node --version
+sudo dnf update -y && sudo dnf install epel-release -y && curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - && sudo dnf install -y nodejs && node --version  && sudo dnf update -y && sudo dnf install git mc tar gcc curl openssl-devel bzip2-devel libffi-devel zlib-devel -y && sudo dnf install net-tools -y && sudo dnf install python3.11 -y && sudo alternatives --set python3 /usr/bin/python3.11 && python3 --version
 ```
 
 Эта команда:
