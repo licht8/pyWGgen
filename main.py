@@ -5,7 +5,7 @@
 import sys
 import os
 import settings
-from utils import get_wireguard_subnet
+from modules.utils import get_wireguard_subnet
 
 from modules.config import load_params
 from modules.keygen import generate_private_key, generate_public_key, generate_preshared_key
