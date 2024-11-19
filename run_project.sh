@@ -9,7 +9,7 @@ VENV_DIR="$PROJECT_DIR/venv"
 WIREGUARD_INSTALL_SCRIPT="wireguard-install.sh"
 WIREGUARD_BINARY="/usr/bin/wg"
 
-echo "=== Установка проекта wg_qr_generator ==="
+echo -e "\n=== Установка проекта wg_qr_generator ==="
 
 # Проверяем наличие Git
 if ! command -v git &>/dev/null; then
@@ -112,5 +112,5 @@ fi
 echo "✅ Установка завершена. Проект готов к работе."
 
 # Запускаем меню
-echo "🔄 Запуск меню...\n"
+echo -e "🔄 Запуск меню...\n"
 python3 menu.py || { echo "❌ Ошибка при запуске меню."; exit 1; }
