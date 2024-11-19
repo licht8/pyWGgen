@@ -1,7 +1,6 @@
-
 # wg_qr_generator
 
-**wg_qr_generator** – это система автоматизации управления WireGuard, включающая генерацию конфигураций, создание QR-кодов, управление пользователями и очистку устаревших данных. 
+**wg_qr_generator** – это система автоматизации управления WireGuard, включающая генерацию конфигураций, создание QR-кодов, управление пользователями и очистку устаревших данных.
 
 Система включает веб-интерфейс на базе **Gradio** для удобного управления пользователями и конфигурациями через браузер.
 
@@ -107,12 +106,49 @@ mkdir -p pyWGgen && cd pyWGgen && wget https://raw.githubusercontent.com/licht8/
 
 ## Структура проекта
 
-- `main.py` – основной скрипт для генерации конфигураций.
-- `cleanup.py` – удаление устаревших записей.
-- `manage_expiry.py` – управление сроками действия аккаунтов.
-- `admin_interface.py` – запуск веб-интерфейса на Gradio.
-- `modules/` – вспомогательные модули (работа с ключами, IP-адресами и QR-кодами).
-- `tests/` – тесты для проверки корректности работы модулей.
+```plaintext
+wg_qr_generator-main
+├── LICENSE
+├── README.md
+├── cleanup.py
+├── main.py
+├── manage_expiry.py
+├── menu.py
+├── requirements.txt
+├── run_project.sh
+├── settings.py
+├── wireguard-install.sh
+├── gradio_admin
+│   ├── __init__.py
+│   ├── create_user.py
+│   ├── delete_user.py
+│   ├── list_users.py
+│   ├── main_interface.py
+│   ├── search_user.py
+├── modules
+│   ├── account_expiry.py
+│   ├── check_user.py
+│   ├── client_config.py
+│   ├── config.py
+│   ├── config_writer.py
+│   ├── directory_setup.py
+│   ├── ip_management.py
+│   ├── keygen.py
+│   ├── qr_generator.py
+│   ├── sync.py
+│   ├── user_management.py
+│   ├── utils.py
+└── test
+    ├── test_account_expiry.py
+    ├── test_check_user.py
+    ├── test_config_writer.py
+    ├── test_directory_setup.py
+    ├── test_ip_management.py
+    ├── test_keygen.py
+    ├── test_qr_generator.py
+    ├── test_sync.py
+    └── test_user_management.py
+```
 
 ---
 
