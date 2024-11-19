@@ -24,9 +24,10 @@ class TestIPManagement(unittest.TestCase):
         """Тест: извлечение существующих IP из конфигурационного файла."""
         existing_ips = get_existing_ips(self.mock_config_file)
         mocked_open.assert_called_once_with(self.mock_config_file, "r")
+        # Преобразуем результат в список для строгого сравнения
         self.assertEqual(
-            existing_ips,
-            {"10.96.96.2/32", "10.96.96.3/32"},
+            sorted(existing_ips),
+            sorted(["10.96.96.2/32", "10.96.96.3/32"]),
             "Extracted IPs do not match expected data."
         )
 
