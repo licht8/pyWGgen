@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # utils.py
-## Содержит вспомогательные функции для работы с проектом wg_qr_generator.
+## Вспомогательные функции для работы с проектом wg_qr_generator.
 
 import json
 import os
@@ -56,7 +56,7 @@ def get_wireguard_subnet(config_path=None):
     """
     Извлечение подсети WireGuard из конфигурационного файла.
     :param config_path: Путь к конфигурационному файлу.
-    :return: Подсеть в формате строки (например, "10.96.96.0/24").
+    :return: Подсеть в формате строки (например, "10.96.96.1/24").
     """
     if config_path is None:
         config_path = get_wireguard_config_path()
@@ -67,5 +67,5 @@ def get_wireguard_subnet(config_path=None):
             addresses = line.split('=')[1].strip().split(',')
             for address in addresses:
                 if '/' in address and '.' in address:  # Убедимся, что это IPv4
-                    return address
+                    return address.strip()
     raise ValueError("Не удалось найти подсеть WireGuard в конфигурационном файле.")
