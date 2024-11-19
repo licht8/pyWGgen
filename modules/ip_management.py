@@ -20,10 +20,22 @@ def get_existing_ips(config_file):
         return []
 
 
-def generate_ip(existing_ips, subnet="10.66.66.0"):
-    """Генерирует новый IP-адрес в указанной подсети."""
-    base_ip = ipaddress.IPv4Network(subnet, strict=False)
-    for ip in base_ip.hosts():
-        if str(ip) not in existing_ips:
-            return f"{ip}/32", str(ip)
-    raise RuntimeError("Нет доступных IP-адресов в подсети.")
+def generate_ip(config_file):
+    """
+    Генерация нового IP-адреса в подсети WireGuard.
+    :param config_file: Путь к файлу конфигурации WireGuard.
+    :return: Новый IP-адрес и список существующих адресов.
+    """
+    existing_ips = get_existing_ips(config_file)
+    subnet = get_wireguard_subnet()
+
+    # Получаем базовый IP-адрес подсети (например, 10.96.96.0/24 -> 10.96.96.)
+    prefix = ".".join(subnet.split(".")[:3]) + "."
+
+    # Проверяем возможные адреса
+    for i in range(2, 255):  # 10.96.96.2 - 10.96.96.254
+        candidate = f"{prefix}{i}"
+        if candidate not in existing_ips and f"{candidate}/32" not in existing_ips:
+            return candidate, existing_ips
+
+    raise RuntimeError("Нет доступных IP-адресов в подсети WireGuard.")
