@@ -56,13 +56,16 @@ def get_wireguard_subnet(config_path=None):
     """
     Извлечение подсети WireGuard из конфигурационного файла.
     :param config_path: Путь к конфигурационному файлу.
-    :return: Подсеть в формате строки.
+    :return: Подсеть в формате строки (например, "10.96.96.0/24").
     """
+    if config_path is None:
+        config_path = get_wireguard_config_path()
+
     config_content = parse_wireguard_config(config_path)
     for line in config_content.splitlines():
         if line.startswith("Address"):
             addresses = line.split('=')[1].strip().split(',')
             for address in addresses:
-                if '/' in address and '.' in address:
-                    return address.split('/')[0]
+                if '/' in address and '.' in address:  # Убедимся, что это IPv4
+                    return address
     raise ValueError("Не удалось найти подсеть WireGuard в конфигурационном файле.")
