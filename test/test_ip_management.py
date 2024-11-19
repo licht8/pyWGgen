@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# test_ip_management.py
+## Тесты для модуля ip_management.py
+
 import unittest
 import os
 import sys
@@ -13,7 +17,6 @@ from modules.ip_management import (
 )
 
 class TestIPManagement(unittest.TestCase):
-
     def setUp(self):
         self.mock_config_file = "mock_config_file.conf"
         self.sample_config_content = "AllowedIPs = 10.96.96.2/32\nAllowedIPs = 10.96.96.3/32\n"
@@ -24,7 +27,6 @@ class TestIPManagement(unittest.TestCase):
         """Тест: извлечение существующих IP из конфигурационного файла."""
         existing_ips = get_existing_ips(self.mock_config_file)
         mocked_open.assert_called_once_with(self.mock_config_file, "r")
-        # Преобразуем результат в список для строгого сравнения
         self.assertEqual(
             sorted(existing_ips),
             sorted(["10.96.96.2/32", "10.96.96.3/32"]),
@@ -45,6 +47,7 @@ class TestIPManagement(unittest.TestCase):
             new_ip + "/32", mocked_get_existing_ips.return_value,
             "Generated IP must not be in existing IPs."
         )
+
 
 if __name__ == "__main__":
     unittest.main()
