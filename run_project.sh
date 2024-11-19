@@ -29,6 +29,9 @@ else
 fi
 
 # Проверяем и восстанавливаем приоритет Python 3.11, если он сбит
+echo --- 
+python3 --version 
+echo ---
 PYTHON_PATH="/usr/bin/python3.11"
 if [ -f "$PYTHON_PATH" ]; then
   # Устанавливаем Python 3.11 как основную версию
