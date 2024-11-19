@@ -29,7 +29,7 @@ class TestIPManagement(unittest.TestCase):
 
     @patch("builtins.open", new_callable=mock_open, read_data="AllowedIPs = 10.96.96.2/32\nAllowedIPs = 10.96.96.3/32\n")
     @patch("os.path.exists", return_value=True)
-    @patch("modules.utils.get_wireguard_subnet", return_value="10.96.96.0/24")
+    @patch("modules.utils.get_wireguard_subnet", return_value="10.96.96.1/24")
     def test_get_existing_ips(self, mocked_get_subnet, mocked_exists, mocked_open):
         """Тест: извлечение существующих IP из конфигурационного файла."""
         existing_ips = get_existing_ips(self.mock_config_file)
@@ -41,7 +41,7 @@ class TestIPManagement(unittest.TestCase):
         )
 
     @patch("modules.ip_management.get_existing_ips", return_value={"10.96.96.2", "10.96.96.3"})
-    @patch("modules.utils.get_wireguard_subnet", return_value="10.96.96.0/24")
+    @patch("modules.utils.get_wireguard_subnet", return_value="10.96.96.1/24")
     def test_generate_ip(self, mocked_get_subnet, mocked_get_existing_ips):
         """Тест: генерация нового IP."""
         new_ip, _ = generate_ip(self.mock_config_file)
