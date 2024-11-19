@@ -1,25 +1,26 @@
 #!/usr/bin/env python3
 # menu.py
 ## Меню для управления проектом wg_qr_generator
-# Этот скрипт предоставляет интерфейс для запуска тестов, основного скрипта, админки и управления WireGuard.
+# Предоставляет интерфейс для управления VPN, запуска тестов, основного скрипта и Gradio админки.
 
 import os
 import subprocess
 import signal
 import sys
 
+# Константы
 WIREGUARD_BINARY = "/usr/bin/wg"
 WIREGUARD_INSTALL_SCRIPT = "wireguard-install.sh"
 CONFIG_DIR = "user/data"
 TEST_USER = "test_user"
 ADMIN_PORT = 7860
-#GRADIO_ADMIN_SCRIPT = "gradio_admin/main_interface.py"  # Указываем путь к интерфейсу Gradio
 GRADIO_ADMIN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "gradio_admin/main_interface.py"))
 
 
 def check_wireguard_installed():
     """Проверка, установлен ли WireGuard."""
     return os.path.isfile(WIREGUARD_BINARY)
+
 
 def install_wireguard():
     """Установка WireGuard."""
@@ -29,11 +30,13 @@ def install_wireguard():
     else:
         print(f"❌ Скрипт {WIREGUARD_INSTALL_SCRIPT} не найден. Положите его в текущую директорию.")
 
+
 def remove_wireguard():
     """Удаление WireGuard."""
     print("❌ Удаление WireGuard...")
     subprocess.run(["yum", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL) or \
     subprocess.run(["apt", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL)
+
 
 def ensure_test_config_exists():
     """Создание тестовой конфигурации, если она отсутствует."""
@@ -45,6 +48,7 @@ def ensure_test_config_exists():
     else:
         print(f"✅ Тестовая конфигурация '{TEST_USER}' уже существует.")
 
+
 def open_firewalld_port(port):
     """Открытие порта через firewalld."""
     print(f"🔓 Открытие порта {port} через firewalld...")
@@ -52,12 +56,14 @@ def open_firewalld_port(port):
     subprocess.run(["sudo", "firewall-cmd", "--reload"])
     print(f"✅ Порт {port} открыт через firewalld.")
 
+
 def close_firewalld_port(port):
     """Закрытие порта через firewalld."""
     print(f"🔒 Закрытие порта {port} через firewalld...")
     subprocess.run(["sudo", "firewall-cmd", "--remove-port", f"{port}/tcp", "--permanent"])
     subprocess.run(["sudo", "firewall-cmd", "--reload"])
     print(f"✅ Порт {port} закрыт через firewalld.")
+
 
 def run_gradio_admin_interface():
     """Запуск Gradio интерфейса с корректной обработкой Ctrl+C."""
@@ -79,6 +85,7 @@ def run_gradio_admin_interface():
         subprocess.run(["python3", GRADIO_ADMIN_SCRIPT])
     finally:
         close_firewalld_port(ADMIN_PORT)
+
 
 def show_menu():
     """Отображение меню."""
@@ -118,6 +125,7 @@ def show_menu():
             break
         else:
             print("⚠️ Некорректный выбор. Попробуйте еще раз.")
+
 
 if __name__ == "__main__":
     show_menu()
