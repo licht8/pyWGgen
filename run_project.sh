@@ -32,7 +32,8 @@ fi
 PYTHON_PATH="/usr/bin/python3.11"
 if [ -f "$PYTHON_PATH" ]; then
   sudo alternatives --install /usr/bin/python3 python3 $PYTHON_PATH 2
-  sudo alternatives --set python3 $PYTHON_PATH
+  # sudo alternatives --set python3 $PYTHON_PATH
+  sudo alternatives --set python3 /usr/bin/python3.11
   echo "✅ Python 3.11 настроен как основная версия."
 else
   echo "❌ Python 3.11 не найден. Установите его вручную."
