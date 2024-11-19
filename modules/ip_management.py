@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 # ip_management.py
-## Скрипт для управления IP-адресами в проекте WireGuard
+## Скрипт для управления IP-адресами в проекте WireGuard.
 
 import ipaddress
+from modules.utils import get_wireguard_subnet  # Импорт функции из utils
 
 
 def get_existing_ips(config_file):
-    """Получить список всех IP-адресов из конфигурации сервера WireGuard."""
+    """
+    Получить список всех IP-адресов из конфигурации сервера WireGuard.
+    :param config_file: Путь к конфигурационному файлу WireGuard.
+    :return: Список существующих IP-адресов.
+    """
     try:
         with open(config_file, "r") as file:
             lines = file.readlines()
@@ -29,13 +34,13 @@ def generate_ip(config_file):
     existing_ips = get_existing_ips(config_file)
     subnet = get_wireguard_subnet()
 
-    # Получаем базовый IP-адрес подсети (например, 10.96.96.0/24 -> 10.96.96.)
-    prefix = ".".join(subnet.split(".")[:3]) + "."
+    # Получаем базовый IP-адрес подсети
+    network = ipaddress.ip_network(subnet, strict=False)
 
     # Проверяем возможные адреса
-    for i in range(2, 255):  # 10.96.96.2 - 10.96.96.254
-        candidate = f"{prefix}{i}"
-        if candidate not in existing_ips and f"{candidate}/32" not in existing_ips:
-            return candidate, existing_ips
+    for candidate in network.hosts():
+        candidate_str = str(candidate)
+        if candidate_str not in existing_ips and f"{candidate_str}/32" not in existing_ips:
+            return candidate_str, existing_ips
 
     raise RuntimeError("Нет доступных IP-адресов в подсети WireGuard.")
