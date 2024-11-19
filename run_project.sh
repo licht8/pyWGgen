@@ -39,6 +39,17 @@ else
   exit 1
 fi
 
+install_bc_if_not_found() {
+    if ! command -v bc &> /dev/null; then
+        echo "Утилита 'bc' не найдена. Устанавливаю..."
+        sudo dnf install bc -y
+    else
+        echo "Утилита 'bc' уже установлена."
+    fi
+}
+
+install_bc_if_not_found
+
 # Проверяем версию Python
 PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
 if (( $(echo "$PYTHON_VERSION < 3.8" | bc -l) )); then
