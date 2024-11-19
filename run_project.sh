@@ -25,7 +25,7 @@ if command -v node &>/dev/null; then
   echo "✅ Node.js установлен. Версия: $(node --version)"
 else
   echo "❌ Ошибка при установке Node.js."
- #exit 1
+ exit 1
 fi
 
 # Проверяем и восстанавливаем приоритет Python 3.11, если он сбит
@@ -39,7 +39,7 @@ if [ -f "$PYTHON_PATH" ]; then
   echo "✅ Python 3.11 настроен как основная версия."
 else
   echo "❌ Python 3.11 не найден. Установите его вручную."
-  exit 1
+  #exit 1
 fi
 
 
