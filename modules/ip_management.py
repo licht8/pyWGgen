@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # ip_management.py
-## Скрипт для управления IP-адресами в проекте WireGuard.
+## Скрипт для управления IP-адресами в проекте WireGuard
 
 import ipaddress
-from modules.utils import get_wireguard_subnet  # Импорт функции из utils
+from modules.utils import get_wireguard_subnet
 
 
 def get_existing_ips(config_file):
     """
     Получить список всех IP-адресов из конфигурации сервера WireGuard.
     :param config_file: Путь к конфигурационному файлу WireGuard.
-    :return: Список существующих IP-адресов.
+    :return: Список занятых IP-адресов.
     """
     try:
         with open(config_file, "r") as file:
@@ -19,7 +19,7 @@ def get_existing_ips(config_file):
         for line in lines:
             if line.strip().startswith("AllowedIPs"):
                 ip = line.split("=")[-1].strip().split(",")[0]  # Берём только IPv4
-                existing_ips.append(ip)
+                existing_ips.append(ip.split("/")[0])  # Убираем маску подсети
         return existing_ips
     except FileNotFoundError:
         return []
@@ -34,13 +34,18 @@ def generate_ip(config_file):
     existing_ips = get_existing_ips(config_file)
     subnet = get_wireguard_subnet()
 
-    # Получаем базовый IP-адрес подсети
+    # Лог отладки
+    print(f"Существующие IP: {existing_ips}")
+    print(f"Подсеть WireGuard: {subnet}")
+
+    # Преобразуем подсеть в объект ip_network
     network = ipaddress.ip_network(subnet, strict=False)
 
-    # Проверяем возможные адреса
-    for candidate in network.hosts():
-        candidate_str = str(candidate)
-        if candidate_str not in existing_ips and f"{candidate_str}/32" not in existing_ips:
-            return candidate_str, existing_ips
+    # Проходим по всем IP-адресам в подсети, начиная с первого доступного
+    for ip in network.hosts():  # Исключает адреса сети и широковещательный
+        ip_str = str(ip)
+        if ip_str not in existing_ips:
+            return ip_str, existing_ips
 
+    # Если все IP-адреса заняты, выбрасываем исключение
     raise RuntimeError("Нет доступных IP-адресов в подсети WireGuard.")
