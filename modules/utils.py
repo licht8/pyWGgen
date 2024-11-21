@@ -4,6 +4,7 @@
 
 import json
 import os
+import datetime
 
 
 def read_json(file_path):
@@ -69,3 +70,15 @@ def get_wireguard_subnet(config_path=None):
                 if '/' in address and '.' in address:  # IPv4
                     return address.strip()
     raise ValueError(f"Не удалось найти подсеть WireGuard в конфигурационном файле {config_path}.")
+
+
+def log_debug(message):
+    """
+    Логирование отладочных сообщений.
+    :param message: Сообщение для логирования.
+    """
+    timestamp = datetime.datetime.now().isoformat()
+    log_file_path = "debug.log"
+    with open(log_file_path, "a", encoding="utf-8") as log_file:
+        log_file.write(f"[DEBUG] {timestamp} - {message}\n")
+    print(f"[DEBUG] {timestamp} - {message}")
