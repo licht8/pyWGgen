@@ -76,7 +76,7 @@ def extract_public_key(username, config_path):
 
 def remove_peer_from_config(public_key, config_path):
     """
-    Удаление записи [Peer] с указанным публичным ключом из конфигурационного файла WireGuard.
+    Удаление записи [Peer] с указанным публичным ключом и соответствующего комментария из конфигурационного файла WireGuard.
     """
     log_debug(f"Удаляем [Peer] с ключом {public_key} из {config_path}.")
     with open(config_path, "r") as f:
@@ -84,10 +84,18 @@ def remove_peer_from_config(public_key, config_path):
 
     updated_lines = []
     inside_peer_block = False
+    skip_next_comment = False
+
     for line in lines:
+        if line.strip().startswith("### Client ") and skip_next_comment:
+            # Если встречается комментарий клиента и мы собираемся его удалить
+            skip_next_comment = False
+            continue
+
         if line.strip() == f"PublicKey = {public_key}":
             # Начало блока [Peer], связанного с указанным ключом
             inside_peer_block = True
+            skip_next_comment = True  # Удалить предыдущий комментарий
             continue
         if inside_peer_block and line.strip() == "":
             # Конец блока [Peer]
@@ -98,4 +106,4 @@ def remove_peer_from_config(public_key, config_path):
 
     with open(config_path, "w") as f:
         f.writelines(updated_lines)
-    log_debug(f"Удаление [Peer] с ключом {public_key} завершено.")
+    log_debug(f"Удаление [Peer] с ключом {public_key} и комментария завершено.")
