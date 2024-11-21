@@ -9,11 +9,17 @@ from datetime import datetime
 from modules.utils import read_json, write_json, get_wireguard_config_path
 
 
+def log_debug(message):
+    """Логирование отладочной информации в консоль."""
+    print(f"[DEBUG] {datetime.now().isoformat()} - {message}")
+
+
 def format_wireguard_config(config_path):
     """
     Приведение конфигурации WireGuard к корректному формату.
     Исправляет строки Address, разделяя их на отдельные строки.
     """
+    log_debug(f"Форматируем файл конфигурации: {config_path}")
     with open(config_path, "r") as f:
         lines = f.readlines()
 
@@ -28,15 +34,19 @@ def format_wireguard_config(config_path):
 
     with open(config_path, "w") as f:
         f.writelines(formatted_lines)
+    log_debug("Форматирование файла завершено.")
 
 
 def validate_wireguard_config(config_path):
     """
     Проверяет конфигурацию WireGuard на наличие ошибок.
     """
+    log_debug(f"Проверяем конфигурацию WireGuard: {config_path}")
     try:
         subprocess.run(["wg", "showconf", config_path], check=True, text=True, stderr=subprocess.PIPE)
+        log_debug("Конфигурация WireGuard прошла проверку.")
     except subprocess.CalledProcessError as e:
+        log_debug(f"Ошибка проверки конфигурации: {e.stderr.strip()}")
         raise ValueError(f"Ошибка в файле конфигурации WireGuard: {e.stderr.strip()}")
 
 
@@ -46,7 +56,7 @@ def delete_user(username):
     :param username: Имя пользователя для удаления.
     :return: Сообщение об успехе или ошибке.
     """
-    # Пути к файлам и директориям
+    log_debug(f"Начало удаления пользователя: {username}")
     base_dir = os.getcwd()
     user_records_path = os.path.join(base_dir, "user", "data", "user_records.json")
     ip_records_path = os.path.join(base_dir, "user", "data", "ip_records.json")
@@ -56,17 +66,19 @@ def delete_user(username):
     wg_config_path = get_wireguard_config_path()
 
     if not os.path.exists(user_records_path):
+        log_debug("Файл user_records.json не найден.")
         return "❌ Файл user_records.json не найден."
 
     try:
-        # Чтение записей пользователей
         user_data = read_json(user_records_path)
         if username not in user_data:
+            log_debug(f"Пользователь {username} не найден в user_records.json.")
             return f"❌ Пользователь {username} не найден."
 
         # Удаление записи пользователя
         user_info = user_data.pop(username)
         user_info["removed_at"] = datetime.now().isoformat()
+        log_debug(f"Удалена запись пользователя: {user_info}")
 
         # Чтение и обновление записей IP-адресов
         if os.path.exists(ip_records_path):
@@ -75,17 +87,20 @@ def delete_user(username):
             if ip_address in ip_data:
                 ip_data[ip_address] = False
             write_json(ip_records_path, ip_data)
+            log_debug(f"IP-адрес {ip_address} освобожден.")
 
         # Перемещение конфигурации пользователя в архив
         if os.path.exists(user_file):
             stale_file = os.path.join(stale_config_dir, f"{username}.conf")
             os.makedirs(stale_config_dir, exist_ok=True)
             os.rename(user_file, stale_file)
+            log_debug(f"Файл конфигурации пользователя перемещен в архив: {stale_file}")
 
         # Сохранение устаревших записей
         stale_data = read_json(stale_records_path)
         stale_data[username] = user_info
         write_json(stale_records_path, stale_data)
+        log_debug(f"Запись пользователя сохранена в архиве.")
 
         # Обновление записей пользователей
         write_json(user_records_path, user_data)
@@ -100,7 +115,6 @@ def delete_user(username):
             current_block = []
 
             for line in config_lines:
-                # Определяем начало блока [Peer]
                 if line.strip() == "[Peer]":
                     if current_block and username not in "".join(current_block):
                         updated_lines.extend(current_block)
@@ -108,10 +122,9 @@ def delete_user(username):
                     current_block = [line]
                     continue
 
-                # Если мы внутри блока [Peer], собираем строки
                 if inside_peer_block:
                     current_block.append(line)
-                    if line.strip() == "":  # Конец блока
+                    if line.strip() == "":
                         inside_peer_block = False
                 else:
                     updated_lines.append(line)
@@ -119,19 +132,20 @@ def delete_user(username):
             if current_block and username not in "".join(current_block):
                 updated_lines.extend(current_block)
 
-            # Обновляем конфигурацию WireGuard
             with open(wg_config_path, "w") as f:
                 f.writelines(updated_lines)
+            log_debug(f"Конфигурация WireGuard обновлена: {wg_config_path}")
 
-            # Форматируем конфигурацию и проверяем её
             format_wireguard_config(wg_config_path)
             validate_wireguard_config(wg_config_path)
 
-            # Синхронизация конфигурации
             subprocess.run(["wg", "syncconf", "wg0", wg_config_path], check=True)
+            log_debug("Конфигурация WireGuard успешно синхронизирована.")
 
         return f"✅ Пользователь {username} успешно удалён."
     except subprocess.CalledProcessError as e:
+        log_debug(f"Ошибка при синхронизации WireGuard: {e.stderr.strip()}")
         return f"❌ Ошибка при синхронизации WireGuard: {e.stderr.strip()}"
     except Exception as e:
+        log_debug(f"Ошибка при удалении пользователя {username}: {str(e)}")
         return f"❌ Ошибка при удалении пользователя {username}: {str(e)}"
