@@ -12,15 +12,14 @@ from modules.utils import read_json, write_json, get_wireguard_config_path
 def format_wireguard_config(config_path):
     """
     Приведение конфигурации WireGuard к корректному формату.
-    :param config_path: Путь к файлу конфигурации.
+    Исправляет строки Address, разделяя их на отдельные строки.
     """
     with open(config_path, "r") as f:
         lines = f.readlines()
 
     formatted_lines = []
     for line in lines:
-        if line.startswith("Address ="):
-            # Исправляем строки с адресами, разделяя IPv4 и IPv6
+        if line.startswith("Address="):  # Исправляем строки с Address
             addresses = line.split("=")[1].strip().split(",")
             for address in addresses:
                 formatted_lines.append(f"Address = {address.strip()}\n")
@@ -29,6 +28,16 @@ def format_wireguard_config(config_path):
 
     with open(config_path, "w") as f:
         f.writelines(formatted_lines)
+
+
+def validate_wireguard_config(config_path):
+    """
+    Проверяет конфигурацию WireGuard на наличие ошибок.
+    """
+    try:
+        subprocess.run(["wg", "showconf", config_path], check=True, text=True, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        raise ValueError(f"Ошибка в файле конфигурации WireGuard: {e.stderr.strip()}")
 
 
 def delete_user(username):
@@ -93,7 +102,6 @@ def delete_user(username):
             for line in config_lines:
                 # Определяем начало блока [Peer]
                 if line.strip() == "[Peer]":
-                    # Если предыдущий блок завершён и не содержит пользователя, добавляем его
                     if current_block and username not in "".join(current_block):
                         updated_lines.extend(current_block)
                     inside_peer_block = True
@@ -103,15 +111,11 @@ def delete_user(username):
                 # Если мы внутри блока [Peer], собираем строки
                 if inside_peer_block:
                     current_block.append(line)
-                    # Если конец блока, завершаем его обработку
-                    if line.strip() == "":
+                    if line.strip() == "":  # Конец блока
                         inside_peer_block = False
-
                 else:
-                    # Если строка не относится к текущему блоку, добавляем её
                     updated_lines.append(line)
 
-            # Проверяем последний блок
             if current_block and username not in "".join(current_block):
                 updated_lines.extend(current_block)
 
@@ -119,14 +123,15 @@ def delete_user(username):
             with open(wg_config_path, "w") as f:
                 f.writelines(updated_lines)
 
-            # Форматируем конфигурацию перед синхронизацией
+            # Форматируем конфигурацию и проверяем её
             format_wireguard_config(wg_config_path)
+            validate_wireguard_config(wg_config_path)
 
             # Синхронизация конфигурации
             subprocess.run(["wg", "syncconf", "wg0", wg_config_path], check=True)
 
         return f"✅ Пользователь {username} успешно удалён."
     except subprocess.CalledProcessError as e:
-        return f"❌ Ошибка при синхронизации WireGuard: {str(e)}"
+        return f"❌ Ошибка при синхронизации WireGuard: {e.stderr.strip()}"
     except Exception as e:
         return f"❌ Ошибка при удалении пользователя {username}: {str(e)}"
