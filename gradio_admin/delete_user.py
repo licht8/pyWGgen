@@ -79,7 +79,8 @@ def remove_peer_from_config(public_key, config_path):
     Удаление записи [Peer] с указанным публичным ключом и соответствующего комментария из конфигурационного файла WireGuard.
     Также удаляет пустые блоки [Peer] и связанные комментарии.
     """
-    log_debug(f"Удаляем [Peer] с ключом {public_key} из {config_path}.")
+    log_debug(f"Начало удаления [Peer] с ключом {public_key} из {config_path}.")
+
     with open(config_path, "r") as f:
         lines = f.readlines()
 
@@ -87,36 +88,47 @@ def remove_peer_from_config(public_key, config_path):
     inside_peer_block = False
     remove_comment = False
 
-    for line in lines:
+    for i, line in enumerate(lines):
+        log_debug(f"Обрабатывается строка {i}: {line.strip()}")
+
+        # Если это комментарий клиента
         if line.strip().startswith("### Client "):
-            # Если мы нашли комментарий клиента
+            log_debug(f"Найден комментарий клиента: {line.strip()}")
             if remove_comment:
-                # Пропускаем строку комментария, связанную с предыдущим [Peer]
+                log_debug(f"Комментарий '{line.strip()}' будет удален, так как связан с удаляемым [Peer].")
                 remove_comment = False
                 continue
             else:
-                # Сохраняем комментарий, если не связан с удалением
+                log_debug(f"Комментарий '{line.strip()}' сохранен, так как не связан с удаляемым [Peer].")
                 updated_lines.append(line)
                 continue
 
+        # Если строка содержит PublicKey
         if line.strip() == f"PublicKey = {public_key}":
-            # Найден блок с указанным публичным ключом
+            log_debug(f"Найден публичный ключ: {line.strip()}, начинаем удаление блока.")
             inside_peer_block = True
             remove_comment = True
             continue
 
+        # Конец или начало следующего блока
         if inside_peer_block and (line.strip() == "" or line.strip().startswith("[Peer]")):
-            # Конец или начало следующего блока [Peer]
+            log_debug(f"Конец блока для ключа {public_key}, блок будет удален.")
             inside_peer_block = False
             continue
 
+        # Сохраняем строку, если не внутри удаляемого блока
         if not inside_peer_block:
-            # Сохраняем строки, если они не в удаляемом блоке
+            log_debug(f"Строка '{line.strip()}' сохранена.")
             updated_lines.append(line)
 
     # Удаляем возможные пустые строки между блоками
-    cleaned_lines = [line for i, line in enumerate(updated_lines) if not (line.strip() == "" and (i == 0 or updated_lines[i - 1].strip() == ""))]
+    cleaned_lines = []
+    for i, line in enumerate(updated_lines):
+        if line.strip() == "" and (i == 0 or updated_lines[i - 1].strip() == ""):
+            log_debug(f"Удаление лишней пустой строки на позиции {i}.")
+            continue
+        cleaned_lines.append(line)
 
     with open(config_path, "w") as f:
         f.writelines(cleaned_lines)
-    log_debug(f"Удаление [Peer] с ключом {public_key} и комментария завершено.")
+    log_debug(f"Удаление [Peer] с ключом {public_key} завершено. Конфигурация обновлена.")
