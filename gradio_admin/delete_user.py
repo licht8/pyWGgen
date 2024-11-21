@@ -77,7 +77,6 @@ def extract_public_key(username, config_path):
 def remove_peer_from_config(public_key, config_path):
     """
     Удаление записи [Peer] с указанным публичным ключом и соответствующего комментария из конфигурационного файла WireGuard.
-    Также удаляет пустые блоки [Peer] и связанные комментарии.
     """
     log_debug(f"Начало удаления [Peer] с ключом {public_key} из {config_path}.")
 
@@ -99,7 +98,7 @@ def remove_peer_from_config(public_key, config_path):
                 remove_comment = False
                 continue
             else:
-                log_debug(f"Комментарий '{line.strip()}' сохранен, так как не связан с удаляемым [Peer].")
+                log_debug(f"Комментарий '{line.strip()}' сохранен.")
                 updated_lines.append(line)
                 continue
 
@@ -116,12 +115,17 @@ def remove_peer_from_config(public_key, config_path):
             inside_peer_block = False
             continue
 
+        # Удаление строк внутри блока [Peer]
+        if inside_peer_block:
+            log_debug(f"Строка '{line.strip()}' удалена, так как относится к удаляемому [Peer].")
+            continue
+
         # Сохраняем строку, если не внутри удаляемого блока
         if not inside_peer_block:
             log_debug(f"Строка '{line.strip()}' сохранена.")
             updated_lines.append(line)
 
-    # Удаляем возможные пустые строки между блоками
+    # Удаляем возможные лишние пустые строки между блоками
     cleaned_lines = []
     for i, line in enumerate(updated_lines):
         if line.strip() == "" and (i == 0 or updated_lines[i - 1].strip() == ""):
