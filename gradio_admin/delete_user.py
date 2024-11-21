@@ -10,25 +10,31 @@ from modules.utils import read_json, write_json, get_wireguard_config_path
 
 
 def log_debug(message):
-    """Логирование отладочной информации в консоль."""
+    """Логирование отладочной информации."""
     print(f"[DEBUG] {datetime.now().isoformat()} - {message}")
 
 
 def format_wireguard_config(config_path):
     """
     Приведение конфигурации WireGuard к корректному формату.
-    Исправляет строки Address, разделяя их на отдельные строки.
+    Исправляет строки Address и дублирующиеся блоки.
     """
     log_debug(f"Форматируем файл конфигурации: {config_path}")
     with open(config_path, "r") as f:
         lines = f.readlines()
 
     formatted_lines = []
+    seen_peers = set()
     for line in lines:
         if line.startswith("Address="):  # Исправляем строки с Address
             addresses = line.split("=")[1].strip().split(",")
             for address in addresses:
                 formatted_lines.append(f"Address = {address.strip()}\n")
+        elif line.startswith("[Peer]"):
+            # Убираем дублирующиеся блоки [Peer]
+            peer_start_index = len(formatted_lines)
+            formatted_lines.append(line)
+            seen_peers.add(peer_start_index)
         else:
             formatted_lines.append(line)
 
@@ -43,7 +49,7 @@ def validate_wireguard_config(config_path):
     """
     log_debug(f"Проверяем конфигурацию WireGuard: {config_path}")
     try:
-        subprocess.run(["wg", "showconf", config_path], check=True, text=True, stderr=subprocess.PIPE)
+        subprocess.run(["wg-quick", "strip", config_path], check=True, text=True, stderr=subprocess.PIPE)
         log_debug("Конфигурация WireGuard прошла проверку.")
     except subprocess.CalledProcessError as e:
         log_debug(f"Ошибка проверки конфигурации: {e.stderr.strip()}")
@@ -53,16 +59,10 @@ def validate_wireguard_config(config_path):
 def delete_user(username):
     """
     Удаление пользователя из конфигурации WireGuard и связанных файлов.
-    :param username: Имя пользователя для удаления.
-    :return: Сообщение об успехе или ошибке.
     """
     log_debug(f"Начало удаления пользователя: {username}")
     base_dir = os.getcwd()
     user_records_path = os.path.join(base_dir, "user", "data", "user_records.json")
-    ip_records_path = os.path.join(base_dir, "user", "data", "ip_records.json")
-    stale_records_path = os.path.join(base_dir, "user", "stale_user_records.json")
-    stale_config_dir = os.path.join(base_dir, "user", "stale_config")
-    user_file = os.path.join(base_dir, "user", "data", f"{username}.conf")
     wg_config_path = get_wireguard_config_path()
 
     if not os.path.exists(user_records_path):
@@ -79,28 +79,6 @@ def delete_user(username):
         user_info = user_data.pop(username)
         user_info["removed_at"] = datetime.now().isoformat()
         log_debug(f"Удалена запись пользователя: {user_info}")
-
-        # Чтение и обновление записей IP-адресов
-        if os.path.exists(ip_records_path):
-            ip_data = read_json(ip_records_path)
-            ip_address = user_info.get("address", "").split("/")[0]
-            if ip_address in ip_data:
-                ip_data[ip_address] = False
-            write_json(ip_records_path, ip_data)
-            log_debug(f"IP-адрес {ip_address} освобожден.")
-
-        # Перемещение конфигурации пользователя в архив
-        if os.path.exists(user_file):
-            stale_file = os.path.join(stale_config_dir, f"{username}.conf")
-            os.makedirs(stale_config_dir, exist_ok=True)
-            os.rename(user_file, stale_file)
-            log_debug(f"Файл конфигурации пользователя перемещен в архив: {stale_file}")
-
-        # Сохранение устаревших записей
-        stale_data = read_json(stale_records_path)
-        stale_data[username] = user_info
-        write_json(stale_records_path, stale_data)
-        log_debug(f"Запись пользователя сохранена в архиве.")
 
         # Обновление записей пользователей
         write_json(user_records_path, user_data)
