@@ -5,7 +5,7 @@
 # Название репозитория и директории
 GITHUB_REPO="https://github.com/licht8/wg_qr_generator.git"
 PROJECT_DIR="wg_qr_generator"
-VENV_DIR="$PROJECT_DIR/venv"
+VENV_DIR="venv" # Убедимся, что путь относительный, для создания в $PROJECT_DIR
 WIREGUARD_INSTALL_SCRIPT="wireguard-install.sh"
 WIREGUARD_BINARY="/usr/bin/wg"
 
