@@ -90,13 +90,16 @@ source "$VENV_DIR/bin/activate" || { echo "❌ Не удалось активи�
 
 # Устанавливаем зависимости
 echo "📦 Установка зависимостей..."
-pip install --upgrade pip &>/dev/null
 if [ -f "requirements.txt" ]; then
-  MISSING_DEPENDENCIES=$(pip install -r "requirements.txt" 2>&1 | grep -v "Requirement already satisfied")
-  if [ -z "$MISSING_DEPENDENCIES" ]; then
-    echo "✅ Все зависимости уже установлены."
+  INSTALL_LOG=$(pip install --upgrade pip && pip install -r "requirements.txt" 2>&1)
+  if echo "$INSTALL_LOG" | grep -q "Requirement already satisfied"; then
+    if echo "$INSTALL_LOG" | grep -qv "Requirement already satisfied"; then
+      echo "$INSTALL_LOG" | grep -v "Requirement already satisfied"
+    else
+      echo "✅ Все зависимости уже установлены."
+    fi
   else
-    echo "$MISSING_DEPENDENCIES"
+    echo "$INSTALL_LOG"
   fi
 else
   echo "⚠️ Файл requirements.txt не найден. Проверьте проект."
