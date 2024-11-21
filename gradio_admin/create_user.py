@@ -4,6 +4,7 @@
 
 import os
 import subprocess
+import json
 
 
 def create_user(username):
@@ -15,6 +16,21 @@ def create_user(username):
     """
     if not username:
         return "Ошибка: имя пользователя не может быть пустым.", None
+
+    # Путь к JSON-файлу с записями пользователей
+    user_records_path = os.path.join("user", "data", "user_records.json")
+
+    # Проверка на существование файла записей пользователей
+    if os.path.exists(user_records_path):
+        with open(user_records_path, "r", encoding="utf-8") as f:
+            try:
+                user_data = json.load(f)
+            except json.JSONDecodeError:
+                return "❌ Ошибка чтения файла user_records.json. Проверьте его формат.", None
+
+        # Проверяем, существует ли пользователь
+        if username in user_data:
+            return f"❌ Пользователь {username} уже существует.", None
 
     try:
         # Запускаем процесс создания пользователя
