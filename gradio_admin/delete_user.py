@@ -65,29 +65,32 @@ def delete_user(username):
 
             updated_lines = []
             inside_peer_block = False
+            current_block = []
 
             for line in config_lines:
                 # Определяем начало блока [Peer]
                 if line.strip() == "[Peer]":
+                    # Если предыдущий блок завершён и не содержит пользователя, добавляем его
+                    if current_block and username not in "".join(current_block):
+                        updated_lines.extend(current_block)
                     inside_peer_block = True
-                    current_block = []
+                    current_block = [line]
+                    continue
 
                 # Если мы внутри блока [Peer], собираем строки
                 if inside_peer_block:
                     current_block.append(line)
-                    # Если строка содержит имя пользователя, блок удаляется
-                    if f"### Client {username}" in line:
-                        inside_peer_block = False  # Завершаем блок и не добавляем его в updated_lines
-                    continue  # Пропускаем обработку строк текущего блока
+                    # Если конец блока, завершаем его обработку
+                    if line.strip() == "":
+                        inside_peer_block = False
 
-                # Если блок закончился и не содержит имени пользователя, добавляем его в результат
-                if not inside_peer_block and current_block:
-                    updated_lines.extend(current_block)
-                    current_block = []
-
-                # Добавляем строки, не входящие в блок [Peer]
-                if not inside_peer_block:
+                else:
+                    # Если строка не относится к текущему блоку, добавляем её
                     updated_lines.append(line)
+
+            # Проверяем последний блок
+            if current_block and username not in "".join(current_block):
+                updated_lines.extend(current_block)
 
             # Обновляем конфигурацию WireGuard
             with open(wg_config_path, "w") as f:
@@ -99,4 +102,3 @@ def delete_user(username):
         return f"✅ Пользователь {username} успешно удалён."
     except Exception as e:
         return f"❌ Ошибка при удалении пользователя {username}: {str(e)}"
-
