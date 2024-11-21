@@ -1,3 +1,4 @@
+
 # wg_qr_generator
 
 **wg_qr_generator** – это система автоматизации управления WireGuard, включающая генерацию конфигураций, создание QR-кодов, управление пользователями и очистку устаревших данных.
@@ -12,6 +13,7 @@
 - **Управление сроком действия**: Проверка, продление, сброс срока действия аккаунтов.
 - **Удаление устаревших данных**: Автоматическое удаление просроченных аккаунтов, IP-адресов и QR-кодов.
 - **Синхронизация конфигураций**: Интеграция с сервером WireGuard.
+- **Проверка перед созданием**: Проверяет существование пользователя перед созданием нового.
 - **Веб-интерфейс**: Простая и удобная админка на базе Gradio для управления пользователями.
 
 ---
@@ -55,19 +57,20 @@ http://127.0.0.1:7860
 1. **Python 3.8+** (рекомендуется Python 3.11).
 2. **Git** для клонирования репозитория.
 3. **Node.js** для работы Gradio (устанавливается автоматически).
+4. **lsof** для проверки портов.
 
 ### Установка Python, Git и Node.js на CentOS Stream 8
 
 Для установки выполните команду:
 
 ```bash
-sudo dnf update -y && sudo dnf install epel-release -y && curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - && sudo dnf install -y nodejs && node --version  && sudo dnf update -y && sudo dnf install git mc tar gcc curl openssl-devel bzip2-devel libffi-devel zlib-devel -y && sudo dnf install net-tools -y && sudo dnf install python3.11 -y && sudo alternatives --set python3 /usr/bin/python3.11 && python3 --version
+sudo dnf update -y && sudo dnf install epel-release -y && curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - && sudo dnf install -y nodejs && node --version && sudo dnf update -y && sudo dnf install git mc tar gcc curl openssl-devel bzip2-devel libffi-devel zlib-devel -y && sudo dnf install net-tools lsof -y && sudo dnf install python3.11 -y && sudo alternatives --set python3 /usr/bin/python3.11 && python3 --version
 ```
 
 Эта команда:
 - Обновляет систему.
 - Устанавливает необходимые зависимости.
-- Устанавливает Python 3.11, Git и Node.js.
+- Устанавливает Python 3.11, Git, Node.js и сетевые инструменты.
 
 ---
 
@@ -85,7 +88,7 @@ mkdir -p pyWGgen && cd pyWGgen && wget https://raw.githubusercontent.com/licht8/
 2. Скачивает скрипт `run_project.sh` из репозитория.
 3. Делает скрипт `run_project.sh` исполняемым.
 4. Запускает скрипт, который:
-   - Проверяет наличие Python, Git и Node.js.
+   - Проверяет наличие Python, Git, Node.js и `lsof`.
    - Создает виртуальное окружение и устанавливает зависимости.
    - Открывает меню для работы с проектом.
 
