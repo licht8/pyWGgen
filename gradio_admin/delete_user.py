@@ -1,3 +1,14 @@
+#!/usr/bin/env python3
+# delete_user.py
+## Скрипт для удаления пользователей из WireGuard и связанных записей.
+
+import os
+import json
+import subprocess
+from datetime import datetime
+from modules.utils import read_json, write_json, get_wireguard_config_path
+
+
 def format_wireguard_config(config_path):
     """
     Приведение конфигурации WireGuard к корректному формату.
@@ -18,6 +29,7 @@ def format_wireguard_config(config_path):
 
     with open(config_path, "w") as f:
         f.writelines(formatted_lines)
+
 
 def delete_user(username):
     """
