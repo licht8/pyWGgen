@@ -5,6 +5,7 @@ import subprocess
 from datetime import datetime
 from modules.utils import read_json, write_json, get_wireguard_config_path, log_debug
 
+
 def delete_user(username):
     """
     Удаление пользователя из конфигурации WireGuard и связанных файлов.
@@ -45,7 +46,7 @@ def delete_user(username):
         log_debug(f"Пользователь {username} с публичным ключом {public_key} удален из WireGuard.")
 
         # Обновляем конфигурацию
-        remove_peer_from_config(public_key, wg_config_path)
+        remove_peer_from_config(public_key, wg_config_path, username)
         log_debug(f"Конфигурация WireGuard обновлена: {wg_config_path}")
 
         return f"✅ Пользователь {username} успешно удалён."
