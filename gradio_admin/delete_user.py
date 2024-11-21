@@ -62,11 +62,41 @@ def delete_user(username):
         if os.path.exists(wg_config_path):
             with open(wg_config_path, "r") as f:
                 config_lines = f.readlines()
-            updated_lines = [line for line in config_lines if username not in line]
+
+            updated_lines = []
+            inside_peer_block = False
+
+            for line in config_lines:
+                # Определяем начало блока [Peer]
+                if line.strip() == "[Peer]":
+                    inside_peer_block = True
+                    current_block = []
+
+                # Если мы внутри блока [Peer], собираем строки
+                if inside_peer_block:
+                    current_block.append(line)
+                    # Если строка содержит имя пользователя, блок удаляется
+                    if f"### Client {username}" in line:
+                        inside_peer_block = False  # Завершаем блок и не добавляем его в updated_lines
+                    continue  # Пропускаем обработку строк текущего блока
+
+                # Если блок закончился и не содержит имени пользователя, добавляем его в результат
+                if not inside_peer_block and current_block:
+                    updated_lines.extend(current_block)
+                    current_block = []
+
+                # Добавляем строки, не входящие в блок [Peer]
+                if not inside_peer_block:
+                    updated_lines.append(line)
+
+            # Обновляем конфигурацию WireGuard
             with open(wg_config_path, "w") as f:
                 f.writelines(updated_lines)
+
+            # Синхронизация конфигурации
             subprocess.run(["wg", "syncconf", "wg0", wg_config_path], check=True)
 
         return f"✅ Пользователь {username} успешно удалён."
     except Exception as e:
         return f"❌ Ошибка при удалении пользователя {username}: {str(e)}"
+
