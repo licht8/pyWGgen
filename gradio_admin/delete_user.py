@@ -21,18 +21,18 @@ def delete_user(username):
     stale_records_path = os.path.join(base_dir, "user", "stale_user_records.json")
     stale_config_dir = os.path.join(base_dir, "user", "stale_config")
     user_file = os.path.join(base_dir, "user", "data", f"{username}.conf")
-    wg_config_path = get_wireguard_config_path()
-
+    
     if not os.path.exists(user_records_path):
         return "❌ Файл user_records.json не найден."
 
     try:
         log_debug(f"Начало удаления пользователя: {username}")
+        
         # Чтение записей пользователей
         user_data = read_json(user_records_path)
         if username not in user_data:
             return f"❌ Пользователь {username} не найден."
-
+        
         # Удаление записи пользователя
         user_info = user_data.pop(username)
         user_info["removed_at"] = datetime.now().isoformat()
@@ -56,98 +56,34 @@ def delete_user(username):
         stale_data[username] = user_info
         write_json(stale_records_path, stale_data)
 
+        # Удаление пользователя из WireGuard
+        public_key = extract_public_key(user_file)
+        if public_key:
+            subprocess.run(["sudo", "wg", "set", "wg0", "peer", public_key, "remove"], check=True)
+            log_debug(f"Пользователь {username} с ключом {public_key} удален из WireGuard.")
+
         # Обновление записей пользователей
         write_json(user_records_path, user_data)
 
-        # Удаление пользователя из конфигурации WireGuard
-        if os.path.exists(wg_config_path):
-            with open(wg_config_path, "r") as f:
-                config_lines = f.readlines()
-
-            updated_lines = [line for line in config_lines if username not in line]
-            with open(wg_config_path, "w") as f:
-                f.writelines(updated_lines)
-
-            log_debug(f"Конфигурация WireGuard обновлена: {wg_config_path}")
-            format_wireguard_config(wg_config_path)
-
-            log_debug(f"Проверяем конфигурацию WireGuard: {wg_config_path}")
-            validate_wireguard_config(wg_config_path)
-
-            subprocess.run(["wg", "syncconf", "wg0", wg_config_path], check=True)
-
         return f"✅ Пользователь {username} успешно удалён."
     except subprocess.CalledProcessError as e:
-        log_debug(f"Ошибка при синхронизации WireGuard: {e.stderr.strip() if e.stderr else 'Unknown error'}")
-        return f"❌ Ошибка при удалении пользователя {username}: Ошибка при синхронизации WireGuard: {e.stderr.strip() if e.stderr else 'Unknown error'}"
+        log_debug(f"Ошибка при удалении пользователя {username}: {e.stderr.strip() if e.stderr else 'Unknown error'}")
+        return f"❌ Ошибка при удалении пользователя {username}: {e.stderr.strip() if e.stderr else 'Unknown error'}"
     except Exception as e:
         log_debug(f"Ошибка при удалении пользователя {username}: {str(e)}")
         return f"❌ Ошибка при удалении пользователя {username}: {str(e)}"
 
 
-def format_wireguard_config(config_path):
+def extract_public_key(user_file):
     """
-    Приведение конфигурации WireGuard к корректному формату.
-    Удаляет лишние записи и дублирующиеся блоки.
+    Извлечение публичного ключа из конфигурации пользователя.
+    :param user_file: Путь к файлу конфигурации пользователя.
+    :return: Публичный ключ или None.
     """
-    log_debug(f"Форматируем файл конфигурации: {config_path}")
-    with open(config_path, "r") as f:
-        lines = f.readlines()
-
-    formatted_lines = []
-    seen_peers = set()
-    current_peer = []
-    addresses = []
-
-    for line in lines:
-        # Сбор всех строк Address
-        if line.strip().startswith("Address ="):
-            address = line.split("=", 1)[1].strip()
-            addresses.append(address)
-            continue
-
-        # Обработка блоков [Peer]
-        if line.strip() == "[Peer]":
-            if current_peer:
-                peer_key = "".join(current_peer)
-                if peer_key not in seen_peers:
-                    formatted_lines.extend(current_peer)
-                    seen_peers.add(peer_key)
-            current_peer = [line]
-        elif current_peer:
-            current_peer.append(line)
-            if line.strip() == "":
-                peer_key = "".join(current_peer)
-                if peer_key not in seen_peers:
-                    formatted_lines.extend(current_peer)
-                    seen_peers.add(peer_key)
-                current_peer = []
-        else:
-            formatted_lines.append(line)
-
-    # Добавление последнего блока [Peer], если он уникален
-    if current_peer:
-        peer_key = "".join(current_peer)
-        if peer_key not in seen_peers:
-            formatted_lines.extend(current_peer)
-
-    # Форматирование строки Address
-    if addresses:
-        formatted_lines.insert(1, f"Address = {', '.join(addresses)}\n")
-
-    with open(config_path, "w") as f:
-        f.writelines(formatted_lines)
-    log_debug("Форматирование файла завершено.")
-
-
-def validate_wireguard_config(config_path):
-    """
-    Проверка корректности конфигурации WireGuard.
-    """
-    with open(config_path, "r") as f:
-        lines = f.readlines()
-    for line in lines:
-        if line.startswith("Address =") and not " " in line.split("=")[1]:
-            raise ValueError(f"Неправильный формат строки: {line.strip()}")
-
-    log_debug("Конфигурация WireGuard прошла проверку.")
+    if not os.path.exists(user_file):
+        return None
+    with open(user_file, "r") as f:
+        for line in f:
+            if line.strip().startswith("PublicKey"):
+                return line.split("=", 1)[1].strip()
+    return None
