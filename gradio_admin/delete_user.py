@@ -76,22 +76,24 @@ def extract_public_key(username, config_path):
 
 def remove_peer_from_config(public_key, config_path):
     """
-    Удаление записи [Peer] из конфигурационного файла WireGuard.
+    Удаление записи [Peer] с указанным публичным ключом из конфигурационного файла WireGuard.
     """
     log_debug(f"Удаляем [Peer] с ключом {public_key} из {config_path}.")
     with open(config_path, "r") as f:
         lines = f.readlines()
 
     updated_lines = []
-    skip_peer = False
+    inside_peer_block = False
     for line in lines:
-        if "PublicKey" in line and public_key in line:
-            skip_peer = True
+        if line.strip() == f"PublicKey = {public_key}":
+            # Начало блока [Peer], связанного с указанным ключом
+            inside_peer_block = True
             continue
-        if skip_peer and line.strip() == "":
-            skip_peer = False
+        if inside_peer_block and line.strip() == "":
+            # Конец блока [Peer]
+            inside_peer_block = False
             continue
-        if not skip_peer:
+        if not inside_peer_block:
             updated_lines.append(line)
 
     with open(config_path, "w") as f:
