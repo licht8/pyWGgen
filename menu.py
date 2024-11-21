@@ -74,9 +74,6 @@ def run_gradio_admin_interface():
     def handle_exit_signal(sig, frame):
         """Обработчик сигнала для закрытия порта."""
         close_firewalld_port(ADMIN_PORT)
-        # Перезапускаем WireGuard, чтобы восстановить временные правила
-        print("🔄 Перезапуск WireGuard...")
-        subprocess.run(["sudo", "systemctl", "restart", "wg-quick@wg0"])
         sys.exit(0)
 
     if not os.path.exists(GRADIO_ADMIN_SCRIPT):
@@ -92,8 +89,6 @@ def run_gradio_admin_interface():
         subprocess.run(["python3", GRADIO_ADMIN_SCRIPT])
     finally:
         close_firewalld_port(ADMIN_PORT)
-        print("🔄 Перезапуск WireGuard после закрытия Gradio...")
-        subprocess.run(["sudo", "systemctl", "restart", "wg-quick@wg0"])
 
 
 def show_menu():
