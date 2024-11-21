@@ -70,9 +70,11 @@ fi
 if [ ! -d "$PROJECT_DIR" ]; then
   echo "🔄 Клонирование репозитория..."
   git clone "$GITHUB_REPO"
+  FIRST_INSTALL=true
 else
   echo "🔄 Репозиторий уже существует. Обновляем..."
   git -C "$PROJECT_DIR" pull
+  FIRST_INSTALL=false
 fi
 
 # Переходим в папку проекта
@@ -90,19 +92,15 @@ source "$VENV_DIR/bin/activate" || { echo "❌ Не удалось активи�
 
 # Устанавливаем зависимости
 echo "📦 Установка зависимостей..."
-if [ -f "requirements.txt" ]; then
-  INSTALL_LOG=$(pip install --upgrade pip && pip install -r "requirements.txt" 2>&1)
-  if echo "$INSTALL_LOG" | grep -q "Requirement already satisfied"; then
-    if echo "$INSTALL_LOG" | grep -qv "Requirement already satisfied"; then
-      echo "$INSTALL_LOG" | grep -v "Requirement already satisfied"
-    else
-      echo "✅ Все зависимости уже установлены."
-    fi
-  else
-    echo "$INSTALL_LOG"
-  fi
+if [ "$FIRST_INSTALL" = true ]; then
+  # Если установка проекта впервые, показываем весь лог
+  pip install --upgrade pip
+  pip install -r "requirements.txt"
 else
-  echo "⚠️ Файл requirements.txt не найден. Проверьте проект."
+  # Если проект уже установлен, скрываем лишний вывод
+  pip install --upgrade pip &>/dev/null
+  pip install -r "requirements.txt" &>/dev/null
+  echo "✅ Все зависимости уже установлены."
 fi
 
 # Проверяем наличие menu.py
