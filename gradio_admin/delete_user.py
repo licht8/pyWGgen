@@ -1,12 +1,23 @@
-#!/usr/bin/env python3
-# delete_user.py
-## Скрипт для удаления пользователей из WireGuard и связанных записей.
+def format_wireguard_config(config_path):
+    """
+    Приведение конфигурации WireGuard к корректному формату.
+    :param config_path: Путь к файлу конфигурации.
+    """
+    with open(config_path, "r") as f:
+        lines = f.readlines()
 
-import os
-import json
-import subprocess
-from datetime import datetime
-from modules.utils import read_json, write_json, get_wireguard_config_path
+    formatted_lines = []
+    for line in lines:
+        if line.startswith("Address="):
+            # Разделяем адреса на отдельные строки
+            addresses = line.split("=")[1].strip().split(",")
+            for address in addresses:
+                formatted_lines.append(f"Address = {address.strip()}\n")
+        else:
+            formatted_lines.append(line)
+
+    with open(config_path, "w") as f:
+        f.writelines(formatted_lines)
 
 def delete_user(username):
     """
@@ -95,6 +106,9 @@ def delete_user(username):
             # Обновляем конфигурацию WireGuard
             with open(wg_config_path, "w") as f:
                 f.writelines(updated_lines)
+
+            # Форматируем конфигурацию перед синхронизацией
+            format_wireguard_config(wg_config_path)
 
             # Синхронизация конфигурации
             subprocess.run(["wg", "syncconf", "wg0", wg_config_path], check=True)
