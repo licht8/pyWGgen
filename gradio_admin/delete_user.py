@@ -19,8 +19,8 @@ def format_wireguard_config(config_path):
 
     formatted_lines = []
     for line in lines:
-        if line.startswith("Address="):
-            # Разделяем адреса на отдельные строки
+        if line.startswith("Address ="):
+            # Исправляем строки с адресами, разделяя IPv4 и IPv6
             addresses = line.split("=")[1].strip().split(",")
             for address in addresses:
                 formatted_lines.append(f"Address = {address.strip()}\n")
@@ -126,5 +126,7 @@ def delete_user(username):
             subprocess.run(["wg", "syncconf", "wg0", wg_config_path], check=True)
 
         return f"✅ Пользователь {username} успешно удалён."
+    except subprocess.CalledProcessError as e:
+        return f"❌ Ошибка при синхронизации WireGuard: {str(e)}"
     except Exception as e:
         return f"❌ Ошибка при удалении пользователя {username}: {str(e)}"
