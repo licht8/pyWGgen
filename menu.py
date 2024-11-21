@@ -52,17 +52,21 @@ def ensure_test_config_exists():
 def open_firewalld_port(port):
     """Открытие порта через firewalld."""
     print(f"🔓 Открытие порта {port} через firewalld...")
-    subprocess.run(["sudo", "firewall-cmd", "--add-port", f"{port}/tcp", "--permanent"])
-    subprocess.run(["sudo", "firewall-cmd", "--reload"])
-    print(f"✅ Порт {port} открыт через firewalld.")
+    try:
+        subprocess.run(["sudo", "firewall-cmd", "--add-port", f"{port}/tcp"], check=True)
+        print(f"✅ Порт {port} добавлен через firewalld (временные правила).")
+    except subprocess.CalledProcessError:
+        print(f"❌ Не удалось добавить порт {port} через firewalld.")
 
 
 def close_firewalld_port(port):
     """Закрытие порта через firewalld."""
     print(f"🔒 Закрытие порта {port} через firewalld...")
-    subprocess.run(["sudo", "firewall-cmd", "--remove-port", f"{port}/tcp", "--permanent"])
-    subprocess.run(["sudo", "firewall-cmd", "--reload"])
-    print(f"✅ Порт {port} закрыт через firewalld.")
+    try:
+        subprocess.run(["sudo", "firewall-cmd", "--remove-port", f"{port}/tcp"], check=True)
+        print(f"✅ Порт {port} удален через firewalld (временные правила).")
+    except subprocess.CalledProcessError:
+        print(f"❌ Не удалось удалить порт {port} через firewalld.")
 
 
 def run_gradio_admin_interface():
@@ -70,6 +74,9 @@ def run_gradio_admin_interface():
     def handle_exit_signal(sig, frame):
         """Обработчик сигнала для закрытия порта."""
         close_firewalld_port(ADMIN_PORT)
+        # Перезапускаем WireGuard, чтобы восстановить временные правила
+        print("🔄 Перезапуск WireGuard...")
+        subprocess.run(["sudo", "systemctl", "restart", "wg-quick@wg0"])
         sys.exit(0)
 
     if not os.path.exists(GRADIO_ADMIN_SCRIPT):
@@ -85,6 +92,8 @@ def run_gradio_admin_interface():
         subprocess.run(["python3", GRADIO_ADMIN_SCRIPT])
     finally:
         close_firewalld_port(ADMIN_PORT)
+        print("🔄 Перезапуск WireGuard после закрытия Gradio...")
+        subprocess.run(["sudo", "systemctl", "restart", "wg-quick@wg0"])
 
 
 def show_menu():
