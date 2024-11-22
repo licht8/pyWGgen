@@ -24,6 +24,11 @@ def statistics_tab():
         with gr.Row():
             selected_user_info = gr.Textbox(label="User Information", interactive=False)
 
+        # Кнопки действий
+        with gr.Row():
+            block_button = gr.Button("Block")
+            delete_button = gr.Button("Delete")
+
         # Поле поиска
         with gr.Row():
             search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True)
@@ -48,7 +53,8 @@ def statistics_tab():
             const searchInput = document.querySelector('input[type="text"]');
             if (searchInput) {
                 searchInput.addEventListener('focus', function() {
-                    window.scrollTo({ top: 0, behavior: 'smooth' }); // Переместить поле выше
+                    const topOffset = searchInput.getBoundingClientRect().top - 20;
+                    window.scrollBy({ top: topOffset, behavior: 'smooth' }); // Переместить поле выше
                 });
             }
         </script>
