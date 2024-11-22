@@ -135,7 +135,7 @@ with gr.Blocks(css="style.css") as admin_interface:
             )
 
         def show_user_info(selected_data, query):
-            """Показывает информацию о выбранном пользователе."""
+            """Показывает подробную информацию о выбранном пользователе."""
             # Проверяем, был ли выполнен поиск
             if not query.strip():
                 return "Сначала введите в поиск любые данные для фильтра пользовательских данных и затем нажмите на данные в ячейке чтобы посмотреть информацию о пользователе и иметь возможность производить действия над выбранным аккаунтом"
@@ -144,15 +144,39 @@ with gr.Blocks(css="style.css") as admin_interface:
             if selected_data is None or (isinstance(selected_data, pd.DataFrame) and selected_data.empty):
                 return "Выберите строку из таблицы!"
             try:
-                # Если данные предоставлены в виде списка
+                # Если данные предоставлены в формате списка
                 if isinstance(selected_data, list):
-                    user_info = "\n".join(str(item) for item in selected_data)
+                    row = selected_data
                 # Если данные предоставлены в формате DataFrame
                 elif isinstance(selected_data, pd.DataFrame):
-                    user_info = "\n".join(str(item) for item in selected_data.iloc[0])
+                    row = selected_data.iloc[0].values
                 else:
                     return "Неподдерживаемый формат данных!"
-                return user_info
+                
+                # Извлекаем известные данные
+                username = row[0].replace("👤 User account : ", "")
+                email = "user@mail.wg"  # Заглушка
+                created = row[1].replace("🌱 Created : ", "N/A")
+                expires = row[2].replace("🔥 Expires : ", "N/A")
+                int_ip = row[3].replace("🌐 intIP : ", "N/A")
+                ext_ip = row[4].replace("🌎 extIP : ", "N/A")
+                up = row[5].replace("⬆️ up : ", "N/A")
+                down = row[6].replace("⬇️ dw : ", "N/A")
+                state = row[7].replace("State : ", "N/A")
+
+                # Формируем текстовый вывод
+                user_info = f"""
+                👤 Имя пользователя: {username}
+                📧 Электронная почта: {email}
+                🌱 Создан: {created}
+                🔥 Истекает: {expires}
+                🌐 Внутренний IP: {int_ip}
+                🌎 Внешний IP: {ext_ip}
+                ⬆️ Отправлено данных: {up}
+                ⬇️ Принято данных: {down}
+                ✅ Статус: {state}
+                """
+                return user_info.strip()
             except Exception as e:
                 return f"Ошибка обработки данных: {str(e)}"
 
