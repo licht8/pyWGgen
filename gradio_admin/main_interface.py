@@ -1,75 +1,101 @@
 #!/usr/bin/env python3
-"""
-gradio_admin/wg_users_stats.py
+# main_interface.py
+## Главный интерфейс Gradio для управления проектом wg_qr_generator
 
-Функции для получения статистики пользователей WireGuard.
-"""
-
+import sys
 import os
-import json
+import gradio as gr
 
-# Путь к файлу JSON
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-JSON_LOG_PATH = os.path.join(PROJECT_ROOT, "logs/wg_users.json")
+# Добавляем путь к корневой директории проекта
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, project_root)
 
+# Импортируем функции для работы с пользователями
+from gradio_admin.create_user import create_user
+from gradio_admin.list_users import list_users
+from gradio_admin.delete_user import delete_user
+from gradio_admin.search_user import search_user
+from gradio_admin.wg_users_stats import load_data  # Новый импорт
 
-def load_data(show_inactive):
-    """
-    Загружает данные пользователей WireGuard из JSON-файла и фильтрует их.
-    
-    :param show_inactive: Флаг, показывать ли неактивных пользователей.
-    :return: Таблица для отображения в Gradio.
-    """
-    try:
-        # Печатаем путь для отладки
-        print(f"Путь к JSON: {JSON_LOG_PATH}")
-        
-        # Открываем и читаем JSON-файл
-        with open(JSON_LOG_PATH, "r") as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        print("JSON-файл не найден!")
-        # Возвращаем сообщение, если файл отсутствует
-        return [["Нет данных о пользователях"]]
-    except json.JSONDecodeError as e:
-        print(f"Ошибка декодирования JSON: {e}")
-        # Возвращаем сообщение об ошибке JSON
-        return [["Ошибка чтения JSON-файла"]]
+# Основной интерфейс
+with gr.Blocks(css="style.css") as admin_interface:
+    # Вкладка для создания пользователя
+    with gr.Tab("Создание пользователя"):
+        with gr.Row():
+            gr.Markdown("## Создать нового пользователя")
+        with gr.Column(scale=1, min_width=300):
+            username_input = gr.Textbox(label="Имя пользователя", placeholder="Введите имя пользователя...")
+            create_button = gr.Button("Создать пользователя")
+            create_output = gr.Textbox(label="Результат создания", interactive=False)
+            qr_code_image = gr.Image(label="QR-код", visible=False)
 
-    # Извлекаем список пользователей из JSON
-    users = data.get("users", {})
-    print(f"Загруженные пользователи: {users}")  # Отладка
+            def handle_create_user(username):
+                """Обработчик для создания пользователя и отображения QR-кода."""
+                result, qr_code_path = create_user(username)
+                if qr_code_path:
+                    return result, gr.update(visible=True, value=qr_code_path)
+                return result, gr.update(visible=False)
 
-    # Инициализируем таблицу
-    table = []
+            create_button.click(
+                handle_create_user,
+                inputs=username_input,
+                outputs=[create_output, qr_code_image]
+            )
 
-    # Формируем данные для таблицы
-    for username, user_data in users.items():
-        # Пропускаем неактивных пользователей, если show_inactive == False
-        if not show_inactive and user_data["status"] == "inactive":
-            continue
-        
-        # Добавляем пользователя в таблицу
-        table.append([
-            username or "Неизвестно",  # Имя пользователя или "Неизвестно"
-            ", ".join(user_data.get("endpoints", ["Нет данных"])),  # Список endpoints
-            user_data.get("allowed_ips", "Нет данных"),  # Разрешенные IPs
-            user_data["total_transfer"]["received"],  # Принятый трафик
-            user_data["total_transfer"]["sent"],  # Отправленный трафик
-            user_data["last_handshake"] or "Никогда",  # Последний Handshake или "Никогда"
-            "Активен" if user_data["status"] == "active" else "Неактивен"  # Статус пользователя
-        ])
+    # Вкладка для списка пользователей
+    with gr.Tab("Список пользователей"):
+        with gr.Row():
+            gr.Markdown("## Показать список пользователей")
+        with gr.Column(scale=1, min_width=300):
+            list_button = gr.Button("Показать пользователей")
+            list_output = gr.Textbox(label="Список пользователей", interactive=False)
+            list_button.click(list_users, outputs=list_output)
 
-    print(f"Форматированная таблица перед возвратом: {table}")  # Отладка
-    return table
+    # Вкладка для удаления пользователей
+    with gr.Tab("Удаление пользователей"):
+        with gr.Row():
+            gr.Markdown("## Удалить пользователя")
+        with gr.Column(scale=1, min_width=300):
+            delete_input = gr.Textbox(label="Имя пользователя для удаления", placeholder="Введите имя пользователя...")
+            delete_button = gr.Button("Удалить пользователя")
+            delete_output = gr.Textbox(label="Результат удаления", interactive=False)
+            delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
 
+            # Добавляем кнопку для отображения списка пользователей
+            list_button = gr.Button("Показать пользователей")
+            list_output = gr.Textbox(label="Список пользователей", interactive=False)
+            list_button.click(list_users, outputs=list_output)
 
-# Тестовая функция для локального запуска и проверки
+    # Вкладка для поиска пользователей
+    with gr.Tab("Поиск пользователей"):
+        with gr.Row():
+            gr.Markdown("## Поиск пользователей")
+        with gr.Column(scale=1, min_width=300):
+            search_input = gr.Textbox(label="Введите имя или IP", placeholder="Введите строку для поиска...")
+            search_button = gr.Button("Поиск")
+            search_output = gr.Textbox(label="Результат поиска", interactive=False)
+            search_button.click(search_user, inputs=search_input, outputs=search_output)
+
+    # Вкладка для статистики пользователей WireGuard
+    with gr.Tab("Статистика пользователей"):
+        with gr.Row():
+            gr.Markdown("## Статистика пользователей WireGuard")
+        with gr.Column(scale=1, min_width=300):
+            show_inactive = gr.Checkbox(label="Показать неактивных пользователей", value=True)
+            stats_table = gr.Dataframe(
+                headers=["Пользователь", "Endpoints", "Разрешенные IPs", "Принято", "Отправлено", "Handshake", "Статус"],
+                value=load_data(True),  # Инициализация таблицы с данными
+                interactive=False
+            )
+
+            # Обновление таблицы при изменении состояния чекбокса
+            def update_table(show_inactive):
+                table = load_data(show_inactive)
+                print(f"Таблица для обновления: {table}")  # Отладка
+                return table
+
+            show_inactive.change(fn=update_table, inputs=[show_inactive], outputs=[stats_table])
+
+# Запуск интерфейса
 if __name__ == "__main__":
-    print("Тест загрузки данных с фильтрацией активных пользователей:")
-    result = load_data(show_inactive=False)  # Только активные пользователи
-    print(result)
-
-    print("\nТест загрузки всех данных:")
-    result = load_data(show_inactive=True)  # Все пользователи
-    print(result)
+    admin_interface.launch(server_name="0.0.0.0", server_port=7860, share=True)
