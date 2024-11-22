@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# gradio_admin/functions/user_records.py
+# Утилиты для работы с пользовательскими данными в проекте wg_qr_generator
+
 import json
 import os
 
