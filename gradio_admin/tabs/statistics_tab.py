@@ -40,7 +40,7 @@ def statistics_tab():
 
         # Надпись над таблицей
         with gr.Row():
-            gr.Markdown("Click a cell to view user details", elem_id="table-help-text", elem_classes=["small-text"])
+            gr.Markdown("Click a cell to view user details after the search.", elem_id="table-help-text", elem_classes=["small-text"])
 
         # Таблица с данными
         with gr.Row():
@@ -59,7 +59,7 @@ def statistics_tab():
 
             # Проверяем, был ли выполнен поиск
             if not query.strip():
-                return "Please enter a query to filter user data and then click a cell to view user details and perform actions."
+                return "Please enter a query to filter user data and then Click a cell to view user details after the search. after the search. and perform actions."
 
             # Проверяем, есть ли данные
             print(f"[DEBUG] Selected data: {selected_data}")  # Отладка
@@ -101,7 +101,7 @@ def statistics_tab():
         # Обновление данных при нажатии кнопки "Refresh"
         def refresh_table(show_inactive):
             """Очищает строку поиска, сбрасывает информацию о пользователе и обновляет таблицу."""
-            return "", "Please enter a query to filter user data and then click a cell to view user details and perform actions.", update_table(show_inactive)
+            return "", "Please enter a query to filter user data and then Click a cell to view user details after the search. and perform actions.", update_table(show_inactive)
 
         refresh_button.click(
             fn=refresh_table,
