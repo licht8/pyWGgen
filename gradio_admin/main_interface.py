@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""
-main_interface.py
-Главный интерфейс Gradio для управления проектом wg_qr_generator.
-"""
+# main_interface.py
+## Главный интерфейс Gradio для управления проектом wg_qr_generator
 
 import sys
 import os
 import gradio as gr
-from gradio_admin.functions.table_helpers import update_table, search_and_update_table
-from gradio_admin.functions.format_helpers import format_user_info
-from gradio_admin.wg_users_stats import load_user_records
+import pandas as pd
 
-# Добавляем путь к корневой директории проекта
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+# Добавляем путь к корню проекта
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
+
+# Импортируем функции
+from gradio_admin.functions.table_helpers import update_table
+from gradio_admin.functions.format_helpers import format_user_info
+from gradio_admin.functions.user_records import load_user_records
 
 # Основной интерфейс
 with gr.Blocks(css="style.css") as admin_interface:
@@ -29,6 +30,7 @@ with gr.Blocks(css="style.css") as admin_interface:
 
             def handle_create_user(username):
                 """Обработчик для создания пользователя и отображения QR-кода."""
+                from gradio_admin.create_user import create_user
                 result, qr_code_path = create_user(username)
                 if qr_code_path:
                     return result, gr.update(visible=True, value=qr_code_path)
@@ -48,7 +50,13 @@ with gr.Blocks(css="style.css") as admin_interface:
             delete_input = gr.Textbox(label="Username to delete", placeholder="Enter username...")
             delete_button = gr.Button("Delete User")
             delete_output = gr.Textbox(label="Result", interactive=False)
-            delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
+
+            def handle_delete_user(username):
+                """Обработчик для удаления пользователя."""
+                from gradio_admin.delete_user import delete_user
+                return delete_user(username)
+
+            delete_button.click(handle_delete_user, inputs=delete_input, outputs=delete_output)
 
     # Вкладка для статистики пользователей WireGuard
     with gr.Tab("🔍 Statistics"):
@@ -102,32 +110,13 @@ with gr.Blocks(css="style.css") as admin_interface:
 
                 print(f"[DEBUG] Extracted row: {row}")  # Отладка
 
-                # Безопасно извлекаем данные, проверяя длину строки
+                # Загружаем информацию о пользователе
                 username = row[0].replace("👤 User account : ", "") if len(row) > 0 else "N/A"
-                email = "user@mail.wg"  # Заглушка
                 records = load_user_records()
                 user_data = records.get(username, {})
 
-                created = user_data.get("created_at", "N/A")
-                expires = user_data.get("expires_at", "N/A")
-                int_ip = user_data.get("address", "N/A")
-                ext_ip = "N/A" if len(row) <= 4 else row[4].replace("🌎 extIP : ", "N/A")
-                up = "N/A" if len(row) <= 5 else row[5].replace("⬆️ up : ", "N/A")
-                down = "N/A" if len(row) <= 6 else row[6].replace("⬇️ dw : ", "N/A")
-                state = "N/A" if len(row) <= 7 else row[7].replace("State : ", "N/A")
-
-                # Формируем текстовый вывод
-                user_info = f"""
-👤 User: {username}
-📧 Email: {email}
-🌱 Created: {format_time(created)}
-🔥 Expires: {format_time(expires)}
-🌐 Internal IP: {int_ip}
-🌎 External IP: {ext_ip}
-⬆️ Uploaded: {up}
-⬇️ Downloaded: {down}
-✅ Status: {state}
-"""
+                # Форматируем данные для вывода
+                user_info = format_user_info(username, user_data, row)
                 print(f"[DEBUG] User info:\n{user_info}")  # Отладка
                 return user_info.strip()
             except Exception as e:
@@ -142,16 +131,25 @@ with gr.Blocks(css="style.css") as admin_interface:
 
         # Обновление данных при нажатии кнопки "Refresh"
         def refresh_table(show_inactive):
-            """Очищает строку поиска и обновляет таблицу."""
-            return "", update_table(show_inactive)
+            """Очищает строку поиска, сбрасывает информацию о пользователе и обновляет таблицу."""
+            return "", "", update_table(show_inactive)
 
         refresh_button.click(
             fn=refresh_table,
             inputs=[show_inactive],
-            outputs=[search_input, stats_table]
+            outputs=[search_input, selected_user_info, stats_table]
         )
 
         # Поиск
+        def search_and_update_table(query, show_inactive):
+            """Фильтрует данные таблицы по запросу."""
+            table = update_table(show_inactive)
+            if query:
+                table = [
+                    row for row in table if query.lower() in " ".join(map(str, row)).lower()
+                ]
+            return table
+
         search_input.change(
             fn=search_and_update_table,
             inputs=[search_input, show_inactive],
