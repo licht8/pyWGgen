@@ -4,19 +4,24 @@ from gradio_admin.functions.table_helpers import update_table
 from gradio_admin.functions.format_helpers import format_user_info
 from gradio_admin.functions.user_records import load_user_records
 
+
 def statistics_tab():
     """Возвращает вкладку статистики пользователей WireGuard."""
     with gr.Tab("🔍 Statistics"):
         with gr.Row():
             gr.Markdown("## Statistics")
-        with gr.Column(scale=1, min_width=300):
-            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...")
+
+        # Верхние элементы: Рефреш, Чекбокс Show inactive, Поиск
+        with gr.Row():
             refresh_button = gr.Button("Refresh")
             show_inactive = gr.Checkbox(label="Show inactive", value=True)
+            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...")
 
         # Область для отображения информации о выбранном пользователе
         with gr.Row():
             selected_user_info = gr.Textbox(label="User Information", interactive=False)
+
+        # Кнопки действий
         with gr.Row():
             block_button = gr.Button("Block")
             delete_button = gr.Button("Delete")
