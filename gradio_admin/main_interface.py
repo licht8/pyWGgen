@@ -22,6 +22,7 @@ from gradio_admin.wg_users_stats import load_data  # Импорт статист
 def update_table(show_inactive):
     """Форматирует данные таблицы в соответствии с новой структурой."""
     table = load_data(show_inactive)
+    print(f"[DEBUG] Загружены данные: {table}")  # Отладка
     formatted_table = []
 
     for row in table:
@@ -41,6 +42,7 @@ def update_table(show_inactive):
         first_col = f"{username}\n{allowed_ips} {recent_emoji}\n{endpoint}"
         second_col = f"Up: {up}\nDown: {down}\nState: {state_emoji}"
 
+        print(f"[DEBUG] Форматированная строка: {first_col} | {second_col}")  # Отладка
         formatted_table.append([first_col, second_col])
 
     return formatted_table
@@ -90,6 +92,11 @@ with gr.Blocks(css="style.css") as admin_interface:
             delete_output = gr.Textbox(label="Результат удаления", interactive=False)
             delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
 
+            # Добавляем кнопку для отображения списка пользователей
+            list_button = gr.Button("Показать пользователей")
+            list_output = gr.Textbox(label="Список пользователей", interactive=False)
+            list_button.click(list_users, outputs=list_output)
+
     # Вкладка для поиска пользователей
     with gr.Tab("Поиск пользователей"):
         with gr.Row():
@@ -121,6 +128,7 @@ with gr.Blocks(css="style.css") as admin_interface:
                 table = update_table(show_inactive)
                 if query:
                     table = [row for row in table if query.lower() in " ".join(map(str, row)).lower()]
+                print(f"[DEBUG] Обновленная таблица после поиска: {table}")  # Отладка
                 return table
 
             search_input.change(
