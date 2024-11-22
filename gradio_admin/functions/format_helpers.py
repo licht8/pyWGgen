@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""
-format_helpers.py
-Функции для форматирования данных пользователя.
-"""
+# gradio_admin/functions/format_helpers.py
+# Вспомогательные функции для форматирования данных в проекте wg_qr_generator
+
 
 from datetime import datetime
 
