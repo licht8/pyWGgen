@@ -6,6 +6,7 @@ import sys
 import os
 import gradio as gr
 from datetime import datetime
+import pandas as pd
 
 # Добавляем путь к корневой директории проекта
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -135,10 +136,17 @@ with gr.Blocks(css="style.css") as admin_interface:
 
         def show_user_info(selected_data):
             """Показывает информацию о выбранном пользователе."""
-            if selected_data is None or not selected_data:
+            if selected_data is None or (isinstance(selected_data, pd.DataFrame) and selected_data.empty):
                 return "Выберите строку из таблицы!"
             try:
-                user_info = "\n".join(str(item) for item in selected_data)  # Форматируем данные строки
+                # Если данные предоставлены в виде списка
+                if isinstance(selected_data, list):
+                    user_info = "\n".join(str(item) for item in selected_data)
+                # Если данные предоставлены в формате DataFrame
+                elif isinstance(selected_data, pd.DataFrame):
+                    user_info = "\n".join(str(item) for item in selected_data.iloc[0])
+                else:
+                    return "Неподдерживаемый формат данных!"
                 return user_info
             except Exception as e:
                 return f"Ошибка обработки данных: {str(e)}"
