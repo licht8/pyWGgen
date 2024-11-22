@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# gradio_admin/tabs/delete_user_tab.py
+# Вкладка "Delete User" для Gradio-интерфейса проекта wg_qr_generator
+
 import gradio as gr
 from gradio_admin.delete_user import delete_user
 
