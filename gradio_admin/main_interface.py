@@ -34,8 +34,8 @@ def calculate_time_remaining(expiry_time):
         dt_expiry = datetime.fromisoformat(expiry_time)
         delta = dt_expiry - datetime.now()
         if delta.days >= 0:
-            return f"{delta.days} дней"
-        return "Истёк"
+            return f"{delta.days} days"
+        return "Expired"
     except Exception:
         return "N/A"
 
@@ -77,14 +77,14 @@ def update_table(show_inactive):
 # Основной интерфейс
 with gr.Blocks(css="style.css") as admin_interface:
     # Вкладка для создания пользователя
-    with gr.Tab("🌱 Создать"):
+    with gr.Tab("🌱 Create"):
         with gr.Row():
-            gr.Markdown("## Создать нового пользователя")
+            gr.Markdown("## Create a new user")
         with gr.Column(scale=1, min_width=300):
-            username_input = gr.Textbox(label="Имя пользователя", placeholder="Введите имя пользователя...")
-            create_button = gr.Button("Создать пользователя")
-            create_output = gr.Textbox(label="Результат создания", interactive=False)
-            qr_code_image = gr.Image(label="QR-код", visible=False)
+            username_input = gr.Textbox(label="Username", placeholder="Enter username...")
+            create_button = gr.Button("Create User")
+            create_output = gr.Textbox(label="Result", interactive=False)
+            qr_code_image = gr.Image(label="QR Code", visible=False)
 
             def handle_create_user(username):
                 """Обработчик для создания пользователя и отображения QR-кода."""
@@ -100,30 +100,30 @@ with gr.Blocks(css="style.css") as admin_interface:
             )
 
     # Вкладка для удаления пользователей
-    with gr.Tab("🔥 Удалить"):
+    with gr.Tab("🔥 Delete"):
         with gr.Row():
-            gr.Markdown("## Удалить пользователя")
+            gr.Markdown("## Delete a user")
         with gr.Column(scale=1, min_width=300):
-            delete_input = gr.Textbox(label="Имя пользователя для удаления", placeholder="Введите имя пользователя...")
-            delete_button = gr.Button("Удалить пользователя")
-            delete_output = gr.Textbox(label="Результат удаления", interactive=False)
+            delete_input = gr.Textbox(label="Username to delete", placeholder="Enter username...")
+            delete_button = gr.Button("Delete User")
+            delete_output = gr.Textbox(label="Result", interactive=False)
             delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
 
     # Вкладка для статистики пользователей WireGuard
-    with gr.Tab("🔍 Статистика"):
+    with gr.Tab("🔍 Statistics"):
         with gr.Row():
-            gr.Markdown("## Статистика")
+            gr.Markdown("## Statistics")
         with gr.Column(scale=1, min_width=300):
-            search_input = gr.Textbox(label="Поиск", placeholder="Введите данные для фильтрации...")
-            refresh_button = gr.Button("Обновить")
-            show_inactive = gr.Checkbox(label="Показать неактивных", value=True)
+            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...")
+            refresh_button = gr.Button("Refresh")
+            show_inactive = gr.Checkbox(label="Show inactive", value=True)
 
         # Область для отображения информации о выбранном пользователе
         with gr.Row():
-            selected_user_info = gr.Textbox(label="Информация о пользователе", interactive=False)
+            selected_user_info = gr.Textbox(label="User Information", interactive=False)
         with gr.Row():
-            block_button = gr.Button("Заблокировать")
-            delete_button = gr.Button("Удалить")
+            block_button = gr.Button("Block")
+            delete_button = gr.Button("Delete")
 
         # Таблица с данными
         with gr.Row():
@@ -134,46 +134,46 @@ with gr.Blocks(css="style.css") as admin_interface:
                 wrap=True
             )
 
-def show_user_info(selected_data, query):
-    """Показывает подробную информацию о выбранном пользователе."""
-    print("[DEBUG] Вызов функции show_user_info")  # Отладка
-    print(f"[DEBUG] Запрос (query): {query}")  # Отладка
+        def show_user_info(selected_data, query):
+            """Показывает подробную информацию о выбранном пользователе."""
+            print("[DEBUG] Вызов функции show_user_info")  # Отладка
+            print(f"[DEBUG] Query: {query}")  # Отладка
 
-    # Проверяем, был ли выполнен поиск
-    if not query.strip():
-        return "Please enter a query to filter user data and then click a cell to view user details and perform actions."
+            # Проверяем, был ли выполнен поиск
+            if not query.strip():
+                return "Please enter a query to filter user data and then click a cell to view user details and perform actions."
 
-    # Проверяем, есть ли данные
-    print(f"[DEBUG] Данные selected_data: {selected_data}")  # Отладка
-    if selected_data is None or (isinstance(selected_data, pd.DataFrame) and selected_data.empty):
-        return "Select a row from the table!"
-    try:
-        # Если данные предоставлены в формате списка
-        if isinstance(selected_data, list):
-            print(f"[DEBUG] Формат данных: list, данные: {selected_data}")  # Отладка
-            row = selected_data
-        # Если данные предоставлены в формате DataFrame
-        elif isinstance(selected_data, pd.DataFrame):
-            print(f"[DEBUG] Формат данных: DataFrame, данные:\n{selected_data}")  # Отладка
-            row = selected_data.iloc[0].values
-        else:
-            return "Unsupported data format!"
+            # Проверяем, есть ли данные
+            print(f"[DEBUG] Selected data: {selected_data}")  # Отладка
+            if selected_data is None or (isinstance(selected_data, pd.DataFrame) and selected_data.empty):
+                return "Select a row from the table!"
+            try:
+                # Если данные предоставлены в формате списка
+                if isinstance(selected_data, list):
+                    print(f"[DEBUG] Data format: list, data: {selected_data}")  # Отладка
+                    row = selected_data
+                # Если данные предоставлены в формате DataFrame
+                elif isinstance(selected_data, pd.DataFrame):
+                    print(f"[DEBUG] Data format: DataFrame, data:\n{selected_data}")  # Отладка
+                    row = selected_data.iloc[0].values
+                else:
+                    return "Unsupported data format!"
 
-        print(f"[DEBUG] Извлечённая строка (row): {row}")  # Отладка
+                print(f"[DEBUG] Extracted row: {row}")  # Отладка
 
-        # Безопасно извлекаем данные, проверяя длину строки
-        username = row[0].replace("👤 User account : ", "") if len(row) > 0 else "N/A"
-        email = "user@mail.wg"  # Заглушка
-        created = "N/A" if len(row) <= 1 else row[1].replace("🌱 Created : ", "N/A")
-        expires = "N/A" if len(row) <= 2 else row[2].replace("🔥 Expires : ", "N/A")
-        int_ip = "N/A" if len(row) <= 3 else row[3].replace("🌐 intIP : ", "N/A")
-        ext_ip = "N/A" if len(row) <= 4 else row[4].replace("🌎 extIP : ", "N/A")
-        up = "N/A" if len(row) <= 5 else row[5].replace("⬆️ up : ", "N/A")
-        down = "N/A" if len(row) <= 6 else row[6].replace("⬇️ dw : ", "N/A")
-        state = "N/A" if len(row) <= 7 else row[7].replace("State : ", "N/A")
+                # Безопасно извлекаем данные, проверяя длину строки
+                username = row[0].replace("👤 User account : ", "") if len(row) > 0 else "N/A"
+                email = "user@mail.wg"  # Заглушка
+                created = "N/A" if len(row) <= 1 else row[1].replace("🌱 Created : ", "N/A")
+                expires = "N/A" if len(row) <= 2 else row[2].replace("🔥 Expires : ", "N/A")
+                int_ip = "N/A" if len(row) <= 3 else row[3].replace("🌐 intIP : ", "N/A")
+                ext_ip = "N/A" if len(row) <= 4 else row[4].replace("🌎 extIP : ", "N/A")
+                up = "N/A" if len(row) <= 5 else row[5].replace("⬆️ up : ", "N/A")
+                down = "N/A" if len(row) <= 6 else row[6].replace("⬇️ dw : ", "N/A")
+                state = "N/A" if len(row) <= 7 else row[7].replace("State : ", "N/A")
 
-        # Формируем текстовый вывод
-        user_info = f"""
+                # Формируем текстовый вывод
+                user_info = f"""
 👤 User: {username}
 📧 Email: {email}
 🌱 Created: {created}
@@ -184,11 +184,11 @@ def show_user_info(selected_data, query):
 ⬇️ Downloaded: {down}
 ✅ Status: {state}
 """
-        print(f"[DEBUG] Сформированная информация о пользователе:\n{user_info}")  # Отладка
-        return user_info.strip()
-    except Exception as e:
-        print(f"[DEBUG] Ошибка: {e}")  # Отладка
-        return f"Error processing data: {str(e)}"
+                print(f"[DEBUG] User info:\n{user_info}")  # Отладка
+                return user_info.strip()
+            except Exception as e:
+                print(f"[DEBUG] Error: {e}")  # Отладка
+                return f"Error processing data: {str(e)}"
 
         # Обновление выбранного пользователя
         stats_table.select(
@@ -197,7 +197,7 @@ def show_user_info(selected_data, query):
             outputs=[selected_user_info]
         )
 
-        # Обновление данных при нажатии кнопки "Обновить"
+        # Обновление данных при нажатии кнопки "Refresh"
         refresh_button.click(
             fn=update_table,
             inputs=[show_inactive],
