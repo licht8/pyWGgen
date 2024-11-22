@@ -33,15 +33,15 @@ def statistics_tab():
         with gr.Row():
             search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True)
 
-        # Вставка кастомного JavaScript
+        # Вставка кастомного JavaScript для обработки Enter
         custom_js = """
         <script>
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
-                    event.preventDefault();
+                    event.preventDefault(); // Предотвращаем стандартное поведение Enter
                     const searchInput = document.querySelector('input[type="text"]');
                     if (searchInput) {
-                        searchInput.blur(); // Скрыть клавиатуру
+                        searchInput.blur(); // Скрываем клавиатуру
                         const table = document.querySelector('table');
                         if (table) {
                             table.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -53,8 +53,10 @@ def statistics_tab():
             const searchInput = document.querySelector('input[type="text"]');
             if (searchInput) {
                 searchInput.addEventListener('focus', function() {
-                    const topOffset = searchInput.getBoundingClientRect().top - 20;
-                    window.scrollBy({ top: topOffset, behavior: 'smooth' }); // Переместить поле выше
+                    setTimeout(() => {
+                        const topOffset = searchInput.getBoundingClientRect().top - 20;
+                        window.scrollBy({ top: topOffset, behavior: 'smooth' }); // Переместить поле выше
+                    }, 200); // Задержка для предотвращения конфликта с клавиатурой
                 });
             }
         </script>
