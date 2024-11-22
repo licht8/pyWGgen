@@ -135,24 +135,44 @@ with gr.Blocks(css="style.css") as admin_interface:
                 wrap=True
             )
 
-        def show_user_info(selected_data):
+        def show_user_info(selected_index, table_data):
             """Показывает информацию о выбранном пользователе."""
-            if selected_data is None or selected_data.empty:
+            if selected_index is None or selected_index < 0:
                 return "Выберите строку из таблицы!"
-            user_info = "\n".join(selected_data.iloc[0].tolist())  # Получаем данные из первой строки
-            return user_info
+            try:
+                selected_user_data = table_data[selected_index]
+                user_info = "\n".join(selected_user_data)  # Форматируем данные строки
+                return user_info
+            except IndexError:
+                return "Ошибка: выбранный индекс вне диапазона данных!"
 
         # Обновление выбранного пользователя
         stats_table.select(
-            fn=show_user_info,
-            inputs=[stats_table],
+            fn=lambda selected_index: show_user_info(selected_index, update_table(True)),
+            inputs=[],
             outputs=[selected_user_info]
         )
 
         # Обновление данных при нажатии кнопки "Обновить"
         refresh_button.click(
-            fn=update_table,
+            fn=lambda show_inactive: update_table(show_inactive),
             inputs=[show_inactive],
+            outputs=[stats_table]
+        )
+
+        # Поиск
+        def search_and_update_table(query, show_inactive):
+            """Фильтрует данные таблицы по запросу."""
+            table = update_table(show_inactive)
+            if query:
+                table = [
+                    row for row in table if query.lower() in " ".join(map(str, row)).lower()
+                ]
+            return table
+
+        search_input.change(
+            fn=search_and_update_table,
+            inputs=[search_input, show_inactive],
             outputs=[stats_table]
         )
 
