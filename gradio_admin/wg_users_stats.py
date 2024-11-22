@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
+# gradio_admin/wg_users_stats.py
 """
-gradio_admin/wg_users_stats.py
-
-Gradio-интерфейс для отображения состояния WireGuard:
-- Фильтрация активных и неактивных пользователей.
-- Отображение трафика, подключения и других данных.
+Функции для получения статистики пользователей WireGuard.
 """
 
 import json
-import gradio as gr
 
 JSON_LOG_PATH = "/var/log/wg_users.json"
 
-
 def load_data(show_inactive):
-    """Загружает данные из JSON и фильтрует активных пользователей."""
-    with open(JSON_LOG_PATH, "r") as f:
-        data = json.load(f)
+    """
+    Загружает данные пользователей WireGuard из JSON-файла и фильтрует их.
+    
+    :param show_inactive: Флаг, показывать ли неактивных пользователей.
+    :return: Отформатированный список данных для отображения.
+    """
+    try:
+        with open(JSON_LOG_PATH, "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        return [["Нет данных о пользователях"]]
 
     users = data.get("users", {})
     table = []
@@ -35,22 +38,3 @@ def load_data(show_inactive):
         ])
 
     return table
-
-
-def interface():
-    """Создает Gradio-интерфейс."""
-    with gr.Blocks() as app:
-        gr.Markdown("### WireGuard Пользователи")
-
-        show_inactive = gr.Checkbox(label="Показать неактивных пользователей", value=True)
-        table = gr.Dataframe(headers=["Пользователь", "Endpoints", "Разрешенные IPs", "Принято", "Отправлено", "Handshake", "Статус"], 
-                             interactive=False)
-        
-        show_inactive.change(fn=load_data, inputs=[show_inactive], outputs=[table])
-
-    return app
-
-
-if __name__ == "__main__":
-    admin_interface = interface()
-    admin_interface.launch(server_name="0.0.0.0", server_port=7860, share=True)
