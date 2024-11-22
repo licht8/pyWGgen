@@ -15,11 +15,12 @@ import subprocess
 import json
 from datetime import datetime
 
-
 # Пути к файлам
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+LOG_DIR = os.path.join(PROJECT_ROOT, "logs")
 WG_CONFIG_PATH = "/etc/wireguard/wg0.conf"
-JSON_LOG_PATH = "/var/log/wg_users.json"
-TEXT_LOG_PATH = "/var/log/wg_activity.log"
+JSON_LOG_PATH = os.path.join(LOG_DIR, "wg_users.json")
+TEXT_LOG_PATH = os.path.join(LOG_DIR, "wg_activity.log")
 
 
 def parse_wg_show():
@@ -79,6 +80,9 @@ def parse_wg_conf():
 
 def update_data():
     """Обновляет JSON и текстовый лог на основе текущих данных `wg`."""
+    # Создаем папку logs, если она отсутствует
+    os.makedirs(LOG_DIR, exist_ok=True)
+
     wg_show = parse_wg_show()
     wg_conf = parse_wg_conf()
 
