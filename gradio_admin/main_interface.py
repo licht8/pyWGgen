@@ -150,79 +150,55 @@ with gr.Blocks(css="style.css") as admin_interface:
                 interactive=True,
                 wrap=True
             )
+def show_user_info(selected_data):
+    """Показывает информацию о выбранном пользователе."""
+    try:
+        print("[DEBUG] Вызов функции show_user_info")
+        if selected_data is None or not selected_data:
+            return "Сначала выберите данные из таблицы!"
 
-        def show_user_info(selected_data, query):
-            """Показывает подробную информацию о выбранном пользователе."""
-            print("[DEBUG] Вызов функции show_user_info")  # Отладка
-            print(f"[DEBUG] Query: {query}")  # Отладка
+        # Получаем индекс выбранной строки
+        row_index = selected_data[0]  # Gradio передаёт индекс строки
+        print(f"[DEBUG] Selected row index: {row_index}")
 
-            # Проверяем, был ли выполнен поиск
-            if not query.strip():
-                return "Please enter a query to filter user data and then click a cell to view user details and perform actions."
+        # Получаем данные всей таблицы
+        table = update_table(show_inactive=True)  # Подгружаем текущую таблицу
 
-            # Проверяем, есть ли данные
-            print(f"[DEBUG] Selected data: {selected_data}")  # Отладка
-            if selected_data is None or (isinstance(selected_data, pd.DataFrame) and selected_data.empty):
-                return "Select a row from the table!"
-            try:
-                # Если данные предоставлены в формате списка
-                if isinstance(selected_data, list):
-                    print(f"[DEBUG] Data format: list, data: {selected_data}")  # Отладка
-                    clicked_cell = selected_data[0] if selected_data else "N/A"
-                # Если данные предоставлены в формате DataFrame
-                elif isinstance(selected_data, pd.DataFrame):
-                    print(f"[DEBUG] Data format: DataFrame, data:\n{selected_data}")  # Отладка
-                    clicked_cell = selected_data.iloc[0, 0]  # Первая ячейка первой строки
-                else:
-                    return "Unsupported data format!"
+        if row_index >= len(table):
+            return "Ошибка: выбранная строка за пределами таблицы."
 
-                print(f"[DEBUG] Clicked cell: {clicked_cell}")  # Отладка
+        # Данные выбранной строки
+        row_data = table[row_index]
+        print(f"[DEBUG] Selected row data: {row_data}")
 
-                # Попытка извлечь имя пользователя из кликаемой строки
-                if clicked_cell.startswith("👤 User account : "):
-                    username = clicked_cell.replace("👤 User account : ", "")
-                elif clicked_cell.startswith("🌐 intIP "):
-                    # Если клик был на строке IP, найти имя пользователя по IP
-                    ip = clicked_cell.split(":")[-1].strip()
-                    records = load_user_records()
-                    username = next(
-                        (name for name, data in records.items() if data.get("address") == ip), "N/A"
-                    )
-                else:
-                    username = "N/A"
+        username = row_data[0].replace("👤 User account : ", "").strip()
+        created = row_data[7] if len(row_data) > 7 else "N/A"
+        expires = row_data[8] if len(row_data) > 8 else "N/A"
+        int_ip = row_data[2]
+        ext_ip = row_data[1]
+        up = row_data[4]
+        down = row_data[3]
+        state = row_data[6]
 
-                print(f"[DEBUG] Extracted username: {username}")  # Отладка
-
-                # Получаем данные о пользователе
-                email = "user@mail.wg"  # Заглушка
-                records = load_user_records()
-                user_data = records.get(username, {})
-
-                created = user_data.get("created_at", "N/A")
-                expires = user_data.get("expires_at", "N/A")
-                int_ip = user_data.get("address", "N/A")
-                ext_ip = "N/A"
-                up = "N/A"
-                down = "N/A"
-                state = "N/A"
-
-                # Формируем текстовый вывод
-                user_info = f"""
+        # Форматирование информации
+        user_info = f"""
 👤 User: {username}
-📧 Email: {email}
-🌱 Created: {format_time(created)}
-🔥 Expires: {format_time(expires)}
+📧 Email: user@mail.wg
+🌱 Created: {created}
+🔥 Expires: {expires}
 🌐 Internal IP: {int_ip}
 🌎 External IP: {ext_ip}
 ⬆️ Uploaded: {up}
 ⬇️ Downloaded: {down}
 ✅ Status: {state}
 """
-                print(f"[DEBUG] User info:\n{user_info}")  # Отладка
-                return user_info.strip()
-            except Exception as e:
-                print(f"[DEBUG] Error: {e}")  # Отладка
-                return f"Error processing data: {str(e)}"
+        print(f"[DEBUG] User info:\n{user_info}")  # Отладка
+        return user_info.strip()
+
+    except Exception as e:
+        print(f"[DEBUG] Error: {e}")  # Отладка
+        return f"Error processing data: {str(e)}"
+
 
         stats_table.select(
             fn=show_user_info,
