@@ -12,7 +12,6 @@ sys.path.insert(0, project_root)
 
 # Импортируем функции для работы с пользователями
 from gradio_admin.create_user import create_user
-from gradio_admin.list_users import list_users
 from gradio_admin.delete_user import delete_user
 from gradio_admin.search_user import search_user
 from gradio_admin.wg_users_stats import load_data  # Импорт статистики пользователей
@@ -71,15 +70,6 @@ with gr.Blocks(css="style.css") as admin_interface:
                 outputs=[create_output, qr_code_image]
             )
 
-    # Вкладка для списка пользователей
-    with gr.Tab("Список пользователей"):
-        with gr.Row():
-            gr.Markdown("## Показать список пользователей")
-        with gr.Column(scale=1, min_width=300):
-            list_button = gr.Button("Показать пользователей")
-            list_output = gr.Textbox(label="Список пользователей", interactive=False)
-            list_button.click(list_users, outputs=list_output)
-
     # Вкладка для удаления пользователей
     with gr.Tab("Удаление пользователей"):
         with gr.Row():
@@ -89,11 +79,6 @@ with gr.Blocks(css="style.css") as admin_interface:
             delete_button = gr.Button("Удалить пользователя")
             delete_output = gr.Textbox(label="Результат удаления", interactive=False)
             delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
-
-            # Добавляем кнопку для отображения списка пользователей
-            list_button = gr.Button("Показать пользователей")
-            list_output = gr.Textbox(label="Список пользователей", interactive=False)
-            list_button.click(list_users, outputs=list_output)
 
     # Вкладка для поиска пользователей
     with gr.Tab("Поиск пользователей"):
