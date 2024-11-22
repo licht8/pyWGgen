@@ -16,9 +16,6 @@ JSON_LOG_PATH = os.path.join(PROJECT_ROOT, "logs/wg_users.json")
 def load_data(show_inactive):
     """
     Загружает данные пользователей WireGuard из JSON-файла и фильтрует их.
-
-    :param show_inactive: Флаг, показывать ли неактивных пользователей.
-    :return: Таблица для отображения в Gradio.
     """
     try:
         print(f"Путь к JSON: {JSON_LOG_PATH}")  # Отладка
@@ -37,17 +34,21 @@ def load_data(show_inactive):
     table = []
 
     for username, user_data in users.items():
-        # Если show_inactive == False, пропускаем неактивных пользователей
         if not show_inactive and user_data["status"] == "inactive":
             continue
+        
+        # Стилизация статуса
+        status_color = "green" if user_data["status"] == "active" else "red"
+        status_html = f"<span style='color: {status_color}'>{user_data['status']}</span>"
+
         table.append([
-            username or "Неизвестно",  # Имя пользователя
-            ", ".join(user_data.get("endpoints", ["Нет данных"])),  # Список Endpoints
-            user_data.get("allowed_ips", "Нет данных"),  # Разрешенные IPs
-            user_data["total_transfer"]["received"],  # Принятый трафик
-            user_data["total_transfer"]["sent"],  # Отправленный трафик
-            user_data["last_handshake"] or "Никогда",  # Последний Handshake
-            "Активен" if user_data["status"] == "active" else "Неактивен"  # Статус пользователя
+            username or "Неизвестно",
+            ", ".join(user_data.get("endpoints", ["Нет данных"])),
+            user_data.get("allowed_ips", "Нет данных"),
+            user_data["total_transfer"]["received"],
+            user_data["total_transfer"]["sent"],
+            user_data["last_handshake"] or "Никогда",
+            status_html  # HTML для статуса
         ])
 
     print(f"Форматированная таблица перед возвратом: {table}")  # Отладка
