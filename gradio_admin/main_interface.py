@@ -63,7 +63,7 @@ def update_table(show_inactive):
 
         # Формирование строк для пользователя
         formatted_rows.append([f"👤 User account : {username}", f"📧 User e-mail : user@mail.wg"])
-        formatted_rows.append([f"📅 Created : {format_time(created)}", f"⌚ Ex : {format_time(expires)}"])
+        formatted_rows.append([f"📅 Created : {format_time(created)}", f"⌚ Expires : {format_time(expires)}"])
         formatted_rows.append([f"🌐 intIP {recent_emoji}  : {allowed_ips}", f"⬆️ up : {up}"])
         formatted_rows.append([f"🌎 extIP {recent_emoji}  : {endpoint}", f"⬇️ dw : {down}"])
         formatted_rows.append([f"⏳ TimeLeft : {calculate_time_remaining(expires)}", f"State : {state_emoji}"])
@@ -157,7 +157,7 @@ with gr.Blocks(css="style.css") as admin_interface:
 
                     # Формирование строк для пользователя
                     formatted_rows.append([f"👤 User account : {username}", f"📧 User e-mail : user@mail.wg"])
-                    formatted_rows.append([f"📅 Created : {format_time(created)}", f"⌚ Ex : {format_time(expires)}"])
+                    formatted_rows.append([f"📅 Created : {format_time(created)}", f"⌚ Expires : {format_time(expires)}"])
                     formatted_rows.append([f"🌐 int. {recent_emoji}  : {allowed_ips}", f"⬆️ up : {up}"])
                     formatted_rows.append([f"🌎 ext. {recent_emoji}  : {endpoint}", f"⬇️ dw : {down}"])
                     formatted_rows.append([f"⏳ TimeLeft : {calculate_time_remaining(expires)}", f"State : {state_emoji}"])
