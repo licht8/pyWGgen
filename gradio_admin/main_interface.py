@@ -156,7 +156,7 @@ with gr.Blocks(css="style.css") as admin_interface:
                     state_emoji = "✅" if status == "active" else "❌"
 
                     # Формирование строк для пользователя
-                    formatted_rows.append([f"👤 User account : {username}", f"📧 User mail : user@mail.wg"])
+                    formatted_rows.append([f"👤 User account : {username}", f"📧 User e-mail : user@mail.wg"])
                     formatted_rows.append([f"📅 Created : {format_time(created)}", f"⌚ Ex : {format_time(expires)}"])
                     formatted_rows.append([f"🌐 int. {recent_emoji}  : {allowed_ips}", f"⬆️ up : {up}"])
                     formatted_rows.append([f"🌎 ext. {recent_emoji}  : {endpoint}", f"⬇️ dw : {down}"])
