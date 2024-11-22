@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+"""
+gradio_admin/wg_users_stats.py
+
+Функции для получения статистики пользователей WireGuard.
+"""
+
 import json
 import os
 
