@@ -62,10 +62,10 @@ def update_table(show_inactive):
         state_emoji = "✅" if status == "active" else "❌"
 
         # Формирование строк для пользователя
-        formatted_rows.append([f"👤: {username}", f"📧: user@mail.wg"])
-        formatted_rows.append([f"📅 Создан : {format_time(created)}", f"⏳ Истекает : {format_time(expires)}"])
-        formatted_rows.append([f"🌐 int.IP : {allowed_ips} {recent_emoji}", f"⬆️ {up}"])
-        formatted_rows.append([f"🌐 ext.IP : {endpoint}", f"⬇️ {down}"])
+        formatted_rows.append([f"👤 User    : {username}", f"📧: user@mail.wg"])
+        formatted_rows.append([f"📅 Создан  : {format_time(created)}", f"⏳ Истекает : {format_time(expires)}"])
+        formatted_rows.append([f"🌐 int.IP  : {allowed_ips} {recent_emoji}", f"⬆️ {up}"])
+        formatted_rows.append([f"🌐 ext.IP  : {endpoint}", f"⬇️ {down}"])
         formatted_rows.append([f"⏳ Осталось: {calculate_time_remaining(expires)}", f"State: {state_emoji}"])
 
         # Добавление пустой строки между пользователями
