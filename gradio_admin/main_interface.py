@@ -1,3 +1,10 @@
+import sys
+import os
+
+# Устанавливаем путь к корню проекта
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, project_root)
+
 import gradio as gr
 from gradio_admin.functions.table_helpers import update_table
 from gradio_admin.functions.show_user_info import show_user_info
@@ -5,6 +12,8 @@ from gradio_admin.functions.user_records import load_user_records
 from gradio_admin.create_user import create_user
 from gradio_admin.delete_user import delete_user
 from gradio_admin.functions.format_helpers import format_time, calculate_time_remaining
+
+
 
 
 with gr.Blocks() as admin_interface:
