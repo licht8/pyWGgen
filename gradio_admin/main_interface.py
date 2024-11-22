@@ -135,18 +135,12 @@ with gr.Blocks(css="style.css") as admin_interface:
             )
 
         def show_user_info(selected_data):
-            """Показывает информацию о выбранном пользователе."""
-            if not selected_data:
-                return "Выберите строку из таблицы!"
-            user_info = "\n".join(selected_data[0])  # Форматируем данные строки
-            return user_info
+    """Показывает информацию о выбранном пользователе."""
+    if selected_data is None or selected_data.empty:
+        return "Выберите строку из таблицы!"
+    user_info = "\n".join(selected_data.iloc[0].values)  # Получаем данные из первой строки
+    return user_info
 
-        # Обновление выбранного пользователя
-        stats_table.select(
-            fn=show_user_info,
-            inputs=[stats_table],
-            outputs=[selected_user_info]
-        )
 
         # Обновление данных при нажатии кнопки "Обновить"
         refresh_button.click(
