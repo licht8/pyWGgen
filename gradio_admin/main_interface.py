@@ -6,6 +6,7 @@ import sys
 import os
 import gradio as gr
 from datetime import datetime
+import pandas as pd
 
 # Добавляем путь к корневой директории проекта
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -135,12 +136,18 @@ with gr.Blocks(css="style.css") as admin_interface:
             )
 
         def show_user_info(selected_data):
-    """Показывает информацию о выбранном пользователе."""
-    if selected_data is None or selected_data.empty:
-        return "Выберите строку из таблицы!"
-    user_info = "\n".join(selected_data.iloc[0].values)  # Получаем данные из первой строки
-    return user_info
+            """Показывает информацию о выбранном пользователе."""
+            if selected_data is None or selected_data.empty:
+                return "Выберите строку из таблицы!"
+            user_info = "\n".join(selected_data.iloc[0].tolist())  # Получаем данные из первой строки
+            return user_info
 
+        # Обновление выбранного пользователя
+        stats_table.select(
+            fn=show_user_info,
+            inputs=[stats_table],
+            outputs=[selected_user_info]
+        )
 
         # Обновление данных при нажатии кнопки "Обновить"
         refresh_button.click(
