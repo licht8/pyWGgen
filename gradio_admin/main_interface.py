@@ -129,11 +129,43 @@ with gr.Blocks(css="style.css") as admin_interface:
             show_inactive = gr.Checkbox(label="Показать неактивных", value=True)
         with gr.Row():
             stats_table = gr.Dataframe(
-                headers=["User/IPs", "Up/Down"],
+                headers=["👤: 📅 : 🌐 : 🌎 : ⏳", "📧 : ⌚: ⬆️ : ⬇️ : ✅"],
                 value=update_table(True),
                 interactive=False,
                 wrap=True
             )
+
+            def update_table(show_inactive):
+                """Форматирует данные таблицы с шестью строками на пользователя."""
+                table = load_data(show_inactive)
+                formatted_rows = []
+
+                for row in table:
+                    username = row[0]
+                    allowed_ips = row[2]
+                    recent = row[5]
+                    endpoint = row[1] or "N/A"
+                    up = row[4]
+                    down = row[3]
+                    status = row[6]
+                    created = row[7] if len(row) > 7 else "N/A"
+                    expires = row[8] if len(row) > 8 else "N/A"
+
+                    # Эмодзи для состояния
+                    recent_emoji = "🟢" if status == "active" else "🔴"
+                    state_emoji = "✅" if status == "active" else "❌"
+
+                    # Формирование строк для пользователя
+                    formatted_rows.append([f"👤 User : {username}", f"📧 User mail : user@mail.wg"])
+                    formatted_rows.append([f"📅 Создан : {format_time(created)}", f"⌚ Истекает : {format_time(expires)}"])
+                    formatted_rows.append([f"🌐 int.IP : {allowed_ips} {recent_emoji}", f"⬆️ {up}"])
+                    formatted_rows.append([f"🌎 ext.IP : {endpoint}", f"⬇️ {down}"])
+                    formatted_rows.append([f"⏳ Осталось: {calculate_time_remaining(expires)}", f"State: {state_emoji}"])
+
+                    # Добавление пустой строки между пользователями
+                    formatted_rows.append(["", ""])
+
+                return formatted_rows
 
             def search_and_update_table(query, show_inactive):
                 """Фильтрует данные таблицы по запросу."""
