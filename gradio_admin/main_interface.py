@@ -86,7 +86,16 @@ with gr.Blocks(css="style.css") as admin_interface:
                 headers=["Пользователь", "Endpoints", "Разрешенные IPs", "Принято", "Отправлено", "Handshake", "Статус"],
                 interactive=False
             )
-            show_inactive.change(fn=load_data, inputs=[show_inactive], outputs=[stats_table])
+
+            # Добавляем обработчик для обновления таблицы
+            def update_table(show_inactive):
+                # Загружаем данные из файла
+                table = load_data(show_inactive)
+                print(f"Таблица для обновления: {table}")  # Отладка
+                return table
+
+            # Привязываем функцию к изменению чекбокса
+            show_inactive.change(fn=update_table, inputs=[show_inactive], outputs=[stats_table])
 
 # Запуск интерфейса
 if __name__ == "__main__":
