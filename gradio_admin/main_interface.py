@@ -63,7 +63,7 @@ def update_table(show_inactive):
 
         # Формирование строк для пользователя
         formatted_rows.append([f"👤 User account : {username}", f"📧 User e-mail : user@mail.wg"])
-        formatted_rows.append([f"📅 Created : {format_time(created)}", f"⌚ Expires : {format_time(expires)}"])
+        formatted_rows.append([f"📅 Created : {format_time(created)}", f"🔥 Expires : {format_time(expires)}"])
         formatted_rows.append([f"🌐 intIP {recent_emoji}  : {allowed_ips}", f"⬆️ up : {up}"])
         formatted_rows.append([f"🌎 extIP {recent_emoji}  : {endpoint}", f"⬇️ dw : {down}"])
         formatted_rows.append([f"⏳ TimeLeft : {calculate_time_remaining(expires)}", f"State : {state_emoji}"])
@@ -77,7 +77,7 @@ def update_table(show_inactive):
 # Основной интерфейс
 with gr.Blocks(css="style.css") as admin_interface:
     # Вкладка для создания пользователя
-    with gr.Tab("Создать"):
+    with gr.Tab("🌱 Создать"):
         with gr.Row():
             gr.Markdown("## Создать нового пользователя")
         with gr.Column(scale=1, min_width=300):
@@ -100,7 +100,7 @@ with gr.Blocks(css="style.css") as admin_interface:
             )
 
     # Вкладка для удаления пользователей
-    with gr.Tab("Удалить"):
+    with gr.Tab("🔥 Удалить"):
         with gr.Row():
             gr.Markdown("## Удалить пользователя")
         with gr.Column(scale=1, min_width=300):
@@ -120,7 +120,7 @@ with gr.Blocks(css="style.css") as admin_interface:
 #            search_button.click(search_user, inputs=search_input, outputs=search_output)
 
     # Вкладка для статистики пользователей WireGuard
-    with gr.Tab("Статистика"):
+    with gr.Tab("🔍 Статистика"):
         with gr.Row():
             gr.Markdown("## Статистика")
         with gr.Column(scale=1, min_width=300):
@@ -157,7 +157,7 @@ with gr.Blocks(css="style.css") as admin_interface:
 
                     # Формирование строк для пользователя
                     formatted_rows.append([f"👤 User account : {username}", f"📧 User e-mail : user@mail.wg"])
-                    formatted_rows.append([f"📅 Created : {format_time(created)}", f"⌚ Expires : {format_time(expires)}"])
+                    formatted_rows.append([f"📅 Created : {format_time(created)}", f"🔥 Expires : {format_time(expires)}"])
                     formatted_rows.append([f"🌐 int. {recent_emoji}  : {allowed_ips}", f"⬆️ up : {up}"])
                     formatted_rows.append([f"🌎 ext. {recent_emoji}  : {endpoint}", f"⬇️ dw : {down}"])
                     formatted_rows.append([f"⏳ TimeLeft : {calculate_time_remaining(expires)}", f"State : {state_emoji}"])
