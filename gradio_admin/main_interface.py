@@ -109,7 +109,8 @@ with gr.Blocks(css="style.css") as admin_interface:
             delete_output = gr.Textbox(label="Результат удаления", interactive=False)
             delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
 
-'''    # Вкладка для поиска пользователей
+'''
+# Вкладка для поиска пользователей
     with gr.Tab("Поиск пользователей"):
         with gr.Row():
             gr.Markdown("## Поиск пользователей")
