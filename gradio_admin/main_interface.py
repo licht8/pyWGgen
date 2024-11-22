@@ -6,7 +6,7 @@ gradio_admin/wg_users_stats.py
 """
 
 import os
-import json  # Убедимся, что модуль json импортирован
+import json
 
 # Путь к файлу JSON
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -21,34 +21,55 @@ def load_data(show_inactive):
     :return: Таблица для отображения в Gradio.
     """
     try:
-        print(f"Путь к JSON: {JSON_LOG_PATH}")  # Отладка
+        # Печатаем путь для отладки
+        print(f"Путь к JSON: {JSON_LOG_PATH}")
+        
+        # Открываем и читаем JSON-файл
         with open(JSON_LOG_PATH, "r") as f:
             data = json.load(f)
     except FileNotFoundError:
         print("JSON-файл не найден!")
+        # Возвращаем сообщение, если файл отсутствует
         return [["Нет данных о пользователях"]]
     except json.JSONDecodeError as e:
         print(f"Ошибка декодирования JSON: {e}")
+        # Возвращаем сообщение об ошибке JSON
         return [["Ошибка чтения JSON-файла"]]
 
+    # Извлекаем список пользователей из JSON
     users = data.get("users", {})
     print(f"Загруженные пользователи: {users}")  # Отладка
 
+    # Инициализируем таблицу
     table = []
 
+    # Формируем данные для таблицы
     for username, user_data in users.items():
-        # Если show_inactive == False, пропускаем неактивных пользователей
+        # Пропускаем неактивных пользователей, если show_inactive == False
         if not show_inactive and user_data["status"] == "inactive":
             continue
+        
+        # Добавляем пользователя в таблицу
         table.append([
-            username or "Неизвестно",
-            ", ".join(user_data.get("endpoints", ["Нет данных"])),
-            user_data.get("allowed_ips", "Нет данных"),
-            user_data["total_transfer"]["received"],
-            user_data["total_transfer"]["sent"],
-            user_data["last_handshake"] or "Никогда",
-            "Активен" if user_data["status"] == "active" else "Неактивен"
+            username or "Неизвестно",  # Имя пользователя или "Неизвестно"
+            ", ".join(user_data.get("endpoints", ["Нет данных"])),  # Список endpoints
+            user_data.get("allowed_ips", "Нет данных"),  # Разрешенные IPs
+            user_data["total_transfer"]["received"],  # Принятый трафик
+            user_data["total_transfer"]["sent"],  # Отправленный трафик
+            user_data["last_handshake"] or "Никогда",  # Последний Handshake или "Никогда"
+            "Активен" if user_data["status"] == "active" else "Неактивен"  # Статус пользователя
         ])
 
     print(f"Форматированная таблица перед возвратом: {table}")  # Отладка
     return table
+
+
+# Тестовая функция для локального запуска и проверки
+if __name__ == "__main__":
+    print("Тест загрузки данных с фильтрацией активных пользователей:")
+    result = load_data(show_inactive=False)  # Только активные пользователи
+    print(result)
+
+    print("\nТест загрузки всех данных:")
+    result = load_data(show_inactive=True)  # Все пользователи
+    print(result)
