@@ -25,13 +25,16 @@ def statistics_tab():
             selected_user_info = gr.Textbox(
                 label="User Information", 
                 interactive=False, 
-                value="Use the search below for filtering."
+                value="Use the search below for filtering.",
+                elem_id="user-info-block"  # Добавляем ID для CSS
             )
 
         # Кнопки действий на одной строке
-        with gr.Row(equal_height=True):
-            block_button = gr.Button("Block", elem_id="block-button")
-            delete_button = gr.Button("Delete", elem_id="delete-button")
+        with gr.Row():
+            with gr.Column(scale=1):
+                block_button = gr.Button("Block")
+            with gr.Column(scale=1):
+                delete_button = gr.Button("Delete")
 
         # Поле поиска
         with gr.Row():
@@ -86,7 +89,9 @@ def statistics_tab():
                 # Форматируем данные для вывода
                 user_info = format_user_info(username, user_data, row)
                 print(f"[DEBUG] User info:\n{user_info}")  # Отладка
-                return user_info.strip()
+
+                # Переводим фокус на блок User Information
+                return gr.update(value=user_info.strip(), visible=True, focus=True)
             except Exception as e:
                 print(f"[DEBUG] Error: {e}")  # Отладка
                 return f"Error processing data: {str(e)}"
