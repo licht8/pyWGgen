@@ -29,7 +29,7 @@ def statistics_tab():
             block_button = gr.Button("Block")
             delete_button = gr.Button("Delete")
 
-        # Поиск во всю ширину
+        # Поле поиска
         with gr.Row():
             search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True)
 
@@ -41,17 +41,6 @@ def statistics_tab():
                 interactive=False,  # Таблица только для чтения
                 wrap=True
             )
-
-        # Добавляем кастомный JavaScript
-        search_input.style(js="""
-            document.querySelector("textarea").addEventListener("keydown", function(event) {
-                if (event.key === "Enter") {
-                    event.preventDefault();
-                    document.querySelector("textarea").blur(); // Снимает фокус с текстового поля
-                    document.querySelector("[data-testid='datatable']").scrollIntoView({ behavior: "smooth" }); // Скроллит к таблице
-                }
-            });
-        """)
 
         # Функция для показа информации о пользователе
         def show_user_info(selected_data, query):
