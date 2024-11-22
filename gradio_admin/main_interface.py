@@ -7,10 +7,14 @@ import os
 import gradio as gr
 from datetime import datetime
 import pandas as pd
+import json
 
 # Добавляем путь к корневой директории проекта
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
+
+# Пути к файлам
+USER_RECORDS_PATH = os.path.join(project_root, "user/data/user_records.json")
 
 # Импортируем функции для работы с пользователями
 from gradio_admin.create_user import create_user
@@ -38,6 +42,19 @@ def calculate_time_remaining(expiry_time):
         return "Expired"
     except Exception:
         return "N/A"
+
+
+def load_user_records():
+    """Загружает данные о пользователях из файла user_records.json."""
+    try:
+        with open(USER_RECORDS_PATH, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print("[DEBUG] user_records.json not found!")
+        return {}
+    except json.JSONDecodeError as e:
+        print(f"[DEBUG] JSON decode error in user_records.json: {e}")
+        return {}
 
 
 # Функция для обновления таблицы
@@ -164,9 +181,12 @@ with gr.Blocks(css="style.css") as admin_interface:
                 # Безопасно извлекаем данные, проверяя длину строки
                 username = row[0].replace("👤 User account : ", "") if len(row) > 0 else "N/A"
                 email = "user@mail.wg"  # Заглушка
-                created = "N/A" if len(row) <= 1 else row[1].replace("🌱 Created : ", "N/A")
-                expires = "N/A" if len(row) <= 2 else row[2].replace("🔥 Expires : ", "N/A")
-                int_ip = "N/A" if len(row) <= 3 else row[3].replace("🌐 intIP : ", "N/A")
+                records = load_user_records()
+                user_data = records.get(username, {})
+
+                created = user_data.get("created_at", "N/A")
+                expires = user_data.get("expires_at", "N/A")
+                int_ip = user_data.get("address", "N/A")
                 ext_ip = "N/A" if len(row) <= 4 else row[4].replace("🌎 extIP : ", "N/A")
                 up = "N/A" if len(row) <= 5 else row[5].replace("⬆️ up : ", "N/A")
                 down = "N/A" if len(row) <= 6 else row[6].replace("⬇️ dw : ", "N/A")
@@ -176,8 +196,8 @@ with gr.Blocks(css="style.css") as admin_interface:
                 user_info = f"""
 👤 User: {username}
 📧 Email: {email}
-🌱 Created: {created}
-🔥 Expires: {expires}
+🌱 Created: {format_time(created)}
+🔥 Expires: {format_time(expires)}
 🌐 Internal IP: {int_ip}
 🌎 External IP: {ext_ip}
 ⬆️ Uploaded: {up}
@@ -190,7 +210,6 @@ with gr.Blocks(css="style.css") as admin_interface:
                 print(f"[DEBUG] Error: {e}")  # Отладка
                 return f"Error processing data: {str(e)}"
 
-        # Обновление выбранного пользователя
         stats_table.select(
             fn=show_user_info,
             inputs=[stats_table, search_input],
