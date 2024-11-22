@@ -20,10 +20,10 @@ from gradio_admin.wg_users_stats import load_data  # Импорт статист
 
 # Функция для обновления таблицы
 def update_table(show_inactive):
-    """Форматирует данные таблицы в соответствии с новой структурой."""
+    """Форматирует данные таблицы в HTML-формате."""
     table = load_data(show_inactive)
     print(f"[DEBUG] Загружены данные: {table}")  # Отладка
-    formatted_table = []
+    formatted_rows = []
 
     for row in table:
         username = row[0]
@@ -38,14 +38,28 @@ def update_table(show_inactive):
         recent_emoji = "🟢" if status == "active" else "🔴"
         state_emoji = "✅" if status == "active" else "❌"
 
-        # Форматирование строк в ячейках
-        first_col = f"{username}\n{allowed_ips} {recent_emoji}\n{endpoint}"
-        second_col = f"Up: {up}\nDown: {down}\nState: {state_emoji}"
+        # Форматирование строк с использованием HTML
+        first_col = f"<b>{username}</b><br>{allowed_ips} {recent_emoji}<br>{endpoint}"
+        second_col = f"Up: {up}<br>Down: {down}<br>State: {state_emoji}"
 
         print(f"[DEBUG] Форматированная строка: {first_col} | {second_col}")  # Отладка
-        formatted_table.append([first_col, second_col])
+        formatted_rows.append(f"<tr><td>{first_col}</td><td>{second_col}</td></tr>")
 
-    return formatted_table
+    # Обертка для таблицы
+    html_table = f"""
+    <table style="width:100%; border-collapse:collapse; text-align:left;">
+        <thead>
+            <tr>
+                <th style="border-bottom: 1px solid #ddd;">User/IPs</th>
+                <th style="border-bottom: 1px solid #ddd;">Up/Down</th>
+            </tr>
+        </thead>
+        <tbody>
+            {''.join(formatted_rows)}
+        </tbody>
+    </table>
+    """
+    return html_table
 
 
 # Основной интерфейс
@@ -116,18 +130,17 @@ with gr.Blocks(css="style.css") as admin_interface:
             refresh_button = gr.Button("Обновить")
             show_inactive = gr.Checkbox(label="Показать неактивных", value=True)
         with gr.Row():
-            stats_table = gr.Dataframe(
-                headers=["User/IPs", "Up/Down"],
-                value=update_table(True),
-                interactive=False,
-                wrap=True
-            )
+            stats_table = gr.HTML(value=update_table(True))
 
             def search_and_update_table(query, show_inactive):
                 """Фильтрует данные таблицы по запросу."""
                 table = update_table(show_inactive)
                 if query:
-                    table = [row for row in table if query.lower() in " ".join(map(str, row)).lower()]
+                    rows = table.split("<tr>")[1:]  # Получить все строки таблицы
+                    filtered_rows = [
+                        row for row in rows if query.lower() in row.lower()
+                    ]
+                    table = f"<table><tr>{''.join(filtered_rows)}</tr></table>"
                 print(f"[DEBUG] Обновленная таблица после поиска: {table}")  # Отладка
                 return table
 
