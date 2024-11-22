@@ -47,13 +47,13 @@ def update_table(show_inactive):
     formatted_rows = []
 
     for row in table:
-        username = row[0]
-        allowed_ips = row[2]
-        recent = row[5]
-        endpoint = row[1] or "N/A"
-        up = row[4]
-        down = row[3]
-        status = row[6]
+        username = row[0] if len(row) > 0 else "N/A"
+        allowed_ips = row[2] if len(row) > 2 else "N/A"
+        recent = row[5] if len(row) > 5 else "N/A"
+        endpoint = row[1] if len(row) > 1 else "N/A"
+        up = row[4] if len(row) > 4 else "N/A"
+        down = row[3] if len(row) > 3 else "N/A"
+        status = row[6] if len(row) > 6 else "N/A"
         created = row[7] if len(row) > 7 else "N/A"
         expires = row[8] if len(row) > 8 else "N/A"
 
@@ -154,7 +154,7 @@ with gr.Blocks(css="style.css") as admin_interface:
                     return "Неподдерживаемый формат данных!"
                 
                 # Извлекаем известные данные
-                username = row[0].replace("👤 User account : ", "")
+                username = row[0].replace("👤 User account : ", "N/A")
                 email = "user@mail.wg"  # Заглушка
                 created = row[1].replace("🌱 Created : ", "N/A")
                 expires = row[2].replace("🔥 Expires : ", "N/A")
