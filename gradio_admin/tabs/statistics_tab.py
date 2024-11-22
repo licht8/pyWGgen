@@ -22,7 +22,11 @@ def statistics_tab():
 
         # Область для отображения информации о выбранном пользователе
         with gr.Row():
-            selected_user_info = gr.Textbox(label="User Information", interactive=False)
+            selected_user_info = gr.Textbox(
+                label="User Information", 
+                interactive=False, 
+                value="Please enter a query to filter user data and then click a cell to view user details and perform actions."
+            )
 
         # Кнопки действий
         with gr.Row():
@@ -33,38 +37,9 @@ def statistics_tab():
         with gr.Row():
             search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True)
 
-        # Вставка кастомного JavaScript для обработки Enter
-        custom_js = """
-        <script>
-            document.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault(); // Предотвращаем стандартное поведение Enter
-                    const searchInput = document.querySelector('input[type="text"]');
-                    if (searchInput) {
-                        searchInput.blur(); // Скрываем клавиатуру
-                        const table = document.querySelector('table');
-                        if (table) {
-                            table.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                    }
-                }
-            });
-
-            const searchInput = document.querySelector('input[type="text"]');
-            if (searchInput) {
-                searchInput.addEventListener('focus', function() {
-                    setTimeout(() => {
-                        const topOffset = searchInput.getBoundingClientRect().top - 20;
-                        window.scrollBy({ top: topOffset, behavior: 'smooth' }); // Переместить поле выше
-                    }, 200); // Задержка для предотвращения конфликта с клавиатурой
-                });
-            }
-        </script>
-        """
-
-        # Добавляем кастомный HTML с JavaScript
+        # Надпись над таблицей
         with gr.Row():
-            gr.HTML(custom_js)
+            gr.Markdown("Click a cell to view user details", elem_id="table-help-text", elem_classes=["small-text"])
 
         # Таблица с данными
         with gr.Row():
@@ -125,7 +100,7 @@ def statistics_tab():
         # Обновление данных при нажатии кнопки "Refresh"
         def refresh_table(show_inactive):
             """Очищает строку поиска, сбрасывает информацию о пользователе и обновляет таблицу."""
-            return "", "", update_table(show_inactive)
+            return "", "Please enter a query to filter user data and then click a cell to view user details and perform actions.", update_table(show_inactive)
 
         refresh_button.click(
             fn=refresh_table,
