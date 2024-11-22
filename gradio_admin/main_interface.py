@@ -6,7 +6,6 @@ import sys
 import os
 import gradio as gr
 from datetime import datetime
-import pandas as pd
 
 # Добавляем путь к корневой директории проекта
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -15,8 +14,7 @@ sys.path.insert(0, project_root)
 # Импортируем функции для работы с пользователями
 from gradio_admin.create_user import create_user
 from gradio_admin.delete_user import delete_user
-from gradio_admin.search_user import search_user
-from gradio_admin.wg_users_stats import load_data  # Импорт статистики пользователей
+from gradio_admin.wg_users_stats import load_data
 
 
 # Функция для форматирования времени
@@ -135,27 +133,26 @@ with gr.Blocks(css="style.css") as admin_interface:
                 wrap=True
             )
 
-        def show_user_info(selected_index, table_data):
+        def show_user_info(selected_data):
             """Показывает информацию о выбранном пользователе."""
-            if selected_index is None or selected_index < 0:
+            if selected_data is None or not selected_data:
                 return "Выберите строку из таблицы!"
             try:
-                selected_user_data = table_data[selected_index]
-                user_info = "\n".join(selected_user_data)  # Форматируем данные строки
+                user_info = "\n".join(str(item) for item in selected_data)  # Форматируем данные строки
                 return user_info
-            except IndexError:
-                return "Ошибка: выбранный индекс вне диапазона данных!"
+            except Exception as e:
+                return f"Ошибка обработки данных: {str(e)}"
 
         # Обновление выбранного пользователя
         stats_table.select(
-            fn=lambda selected_index: show_user_info(selected_index, update_table(True)),
-            inputs=[],
+            fn=show_user_info,
+            inputs=[stats_table],
             outputs=[selected_user_info]
         )
 
         # Обновление данных при нажатии кнопки "Обновить"
         refresh_button.click(
-            fn=lambda show_inactive: update_table(show_inactive),
+            fn=update_table,
             inputs=[show_inactive],
             outputs=[stats_table]
         )
