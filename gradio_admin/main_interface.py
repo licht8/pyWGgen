@@ -39,9 +39,9 @@ def update_table(show_inactive):
         state_emoji = "✅" if status == "active" else "❌"
 
         # Формирование строк
-        formatted_rows.append([f"{username}", f"Up: {up}", ""])
-        formatted_rows.append([f"{allowed_ips} {recent_emoji}", f"Down: {down}", ""])
-        formatted_rows.append([f"Endpoint: {endpoint}", f"State: {state_emoji}", ""])
+        formatted_rows.append([f"{username}", f"Up: {up}"])
+        formatted_rows.append([f"{allowed_ips} {recent_emoji}", f"Down: {down}"])
+        formatted_rows.append([f"Endpoint: {endpoint}", f"State: {state_emoji}"])
 
     return formatted_rows
 
@@ -109,13 +109,13 @@ with gr.Blocks(css="style.css") as admin_interface:
     with gr.Tab("Статистика"):
         with gr.Row():
             gr.Markdown("## Статистика")
-        with gr.Row():
+        with gr.Column(scale=1, min_width=300):
             search_input = gr.Textbox(label="Поиск", placeholder="Введите данные для фильтрации...")
             refresh_button = gr.Button("Обновить")
             show_inactive = gr.Checkbox(label="Показать неактивных", value=True)
         with gr.Row():
             stats_table = gr.Dataframe(
-                headers=["User/IPs", "Info", ""],
+                headers=["User/IPs", "Up/Down"],
                 value=update_table(True),
                 interactive=False,
                 wrap=True
