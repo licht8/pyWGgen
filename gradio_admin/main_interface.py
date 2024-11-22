@@ -15,6 +15,7 @@ from gradio_admin.create_user import create_user
 from gradio_admin.list_users import list_users
 from gradio_admin.delete_user import delete_user
 from gradio_admin.search_user import search_user
+from gradio_admin.wg_users_stats import load_data  # Новый импорт
 
 # Основной интерфейс
 with gr.Blocks(css="style.css") as admin_interface:
@@ -74,6 +75,18 @@ with gr.Blocks(css="style.css") as admin_interface:
             search_button = gr.Button("Поиск")
             search_output = gr.Textbox(label="Результат поиска", interactive=False)
             search_button.click(search_user, inputs=search_input, outputs=search_output)
+
+    # Вкладка для статистики пользователей WireGuard
+    with gr.Tab("Статистика пользователей"):
+        with gr.Row():
+            gr.Markdown("## Статистика пользователей WireGuard")
+        with gr.Column(scale=1, min_width=300):
+            show_inactive = gr.Checkbox(label="Показать неактивных пользователей", value=True)
+            stats_table = gr.Dataframe(
+                headers=["Пользователь", "Endpoints", "Разрешенные IPs", "Принято", "Отправлено", "Handshake", "Статус"],
+                interactive=False
+            )
+            show_inactive.change(fn=load_data, inputs=[show_inactive], outputs=[stats_table])
 
 # Запуск интерфейса
 if __name__ == "__main__":
