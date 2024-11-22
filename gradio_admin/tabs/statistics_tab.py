@@ -29,10 +29,9 @@ def statistics_tab():
             block_button = gr.Button("Block")
             delete_button = gr.Button("Delete")
 
-        # Поиск во всю ширину с кнопкой поиска
+        # Поиск во всю ширину
         with gr.Row():
             search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True)
-            search_button = gr.Button("Search")
 
         # Таблица с данными
         with gr.Row():
@@ -116,4 +115,3 @@ def statistics_tab():
             inputs=[search_input, show_inactive],
             outputs=[stats_table]
         )
-
