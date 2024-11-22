@@ -6,8 +6,6 @@ modules/update_wg_data.py
 - Обновляет трафик и состояние пользователей.
 - Логирует подключения и общий трафик.
 - Обновляет JSON с историей пользователей.
-
-Должен запускаться периодически (например, через cron или как часть сервиса).
 """
 
 import os
@@ -16,28 +14,26 @@ import json
 from datetime import datetime
 
 # Пути к файлам
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-LOG_DIR = os.path.join(PROJECT_ROOT, "logs")
 WG_CONFIG_PATH = "/etc/wireguard/wg0.conf"
-JSON_LOG_PATH = os.path.join(LOG_DIR, "wg_users.json")
-TEXT_LOG_PATH = os.path.join(LOG_DIR, "wg_activity.log")
+JSON_LOG_PATH = "/root/pyWGgen/wg_qr_generator/logs/wg_users.json"
+TEXT_LOG_PATH = "/root/pyWGgen/wg_qr_generator/logs/wg_activity.log"
 
 
 def parse_wg_show():
-    """Считывает и парсит вывод команды `wg show`."""
+    """Считывает и парсит вывод команды `wg`."""
     try:
         output = subprocess.check_output(["wg"], text=True)
     except subprocess.CalledProcessError as e:
         print(f"Ошибка при выполнении `wg`: {e}")
         return None
-    
+
     peers = {}
     current_peer = None
 
     for line in output.splitlines():
         if line.startswith("peer:"):
             current_peer = line.split(":")[1].strip()
-            peers[current_peer] = {"transfer": {"received": 0, "sent": 0}, "latest_handshake": None}
+            peers[current_peer] = {"transfer": {"received": "0 B", "sent": "0 B"}, "latest_handshake": None}
         elif line.strip().startswith("transfer:"):
             parts = line.strip().split(",")
             received = parts[0].split()[1]
@@ -78,11 +74,31 @@ def parse_wg_conf():
     return users
 
 
+def parse_size(size_str):
+    """Парсит строку размера (например, '4.88 KiB') в байты."""
+    size, unit = size_str.split()
+    size = float(size)
+    unit = unit.lower()
+    multiplier = {
+        "b": 1,
+        "kib": 1024,
+        "mib": 1024**2,
+        "gib": 1024**3
+    }
+    return int(size * multiplier.get(unit, 1))
+
+
+def format_size(size_bytes):
+    """Форматирует размер в байтах в удобочитаемый вид."""
+    for unit in ["B", "KiB", "MiB", "GiB"]:
+        if size_bytes < 1024:
+            return f"{size_bytes:.2f} {unit}"
+        size_bytes /= 1024
+    return f"{size_bytes:.2f} GiB"
+
+
 def update_data():
     """Обновляет JSON и текстовый лог на основе текущих данных `wg`."""
-    # Создаем папку logs, если она отсутствует
-    os.makedirs(LOG_DIR, exist_ok=True)
-
     wg_show = parse_wg_show()
     wg_conf = parse_wg_conf()
 
@@ -125,7 +141,7 @@ def update_data():
         old_received = parse_size(user_data["total_transfer"]["received"])
         old_sent = parse_size(user_data["total_transfer"]["sent"])
 
-        # Обнуляем, если данные сбросились
+        # Если трафик сбросился, прибавляем к предыдущему
         if new_received < old_received or new_sent < old_sent:
             new_received += old_received
             new_sent += old_sent
@@ -153,29 +169,6 @@ def update_data():
             status = user_data["status"]
             transfer = user_data["total_transfer"]
             f.write(f"{datetime.now()}: {username} — {status}. Трафик: {transfer['received']} / {transfer['sent']}\n")
-
-
-def parse_size(size_str):
-    """Парсит строку размера (например, '4.88 KiB') в байты."""
-    size, unit = size_str.split()
-    size = float(size)
-    unit = unit.lower()
-    multiplier = {
-        "b": 1,
-        "kib": 1024,
-        "mib": 1024**2,
-        "gib": 1024**3
-    }
-    return int(size * multiplier.get(unit, 1))
-
-
-def format_size(size_bytes):
-    """Форматирует размер в байтах в удобочитаемый вид."""
-    for unit in ["B", "KiB", "MiB", "GiB"]:
-        if size_bytes < 1024:
-            return f"{size_bytes:.2f} {unit}"
-        size_bytes /= 1024
-    return f"{size_bytes:.2f} GiB"
 
 
 if __name__ == "__main__":
