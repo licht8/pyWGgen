@@ -129,7 +129,7 @@ with gr.Blocks(css="style.css") as admin_interface:
             show_inactive = gr.Checkbox(label="Показать неактивных", value=True)
         with gr.Row():
             stats_table = gr.Dataframe(
-                headers=["👤📅 : User info", "⬆️⬇️ : Other info "],
+                headers=["👤📅 User's info", "⬆️⬇️ Other info "],
                 value=update_table(True),
                 interactive=False,
                 wrap=True
