@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-# delete_user.py
+# gradio_admin/delete_user.py
+# Скрипт для удаления пользователей в проекте wg_qr_generator
+
 import os
 import subprocess
 from datetime import datetime
