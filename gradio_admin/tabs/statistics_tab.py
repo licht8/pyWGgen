@@ -59,7 +59,7 @@ def statistics_tab():
 
             # Проверяем, был ли выполнен поиск
             if not query.strip():
-                return "Please enter a query to filter user data and then Click a cell to view user details after the search. after the search. and perform actions."
+                return "Please enter a query to filter user data and then Click a cell to view user details after the search. after the search, and perform actions."
 
             # Проверяем, есть ли данные
             print(f"[DEBUG] Selected data: {selected_data}")  # Отладка
