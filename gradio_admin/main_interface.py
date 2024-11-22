@@ -25,22 +25,20 @@ def update_table(show_inactive):
     formatted_table = []
 
     for row in table:
-        user = row[0]
+        username = row[0]
         allowed_ips = row[2]
         recent = row[5]
-        endpoints = row[1] or "N/A"
+        endpoint = row[1] or "N/A"
         up = row[4]
         down = row[3]
-        state = row[6]
+        status = row[6]
 
-        # Эмодзи для Recent
-        recent_emoji = "🟢" if state == "active" else "🔴"
+        # Эмодзи для состояния
+        recent_emoji = "🟢" if status == "active" else "🔴"
+        state_emoji = "✅" if status == "active" else "❌"
 
-        # Эмодзи для State
-        state_emoji = "✅" if state == "active" else "❌"
-
-        # Форматирование строк в первом и втором столбце
-        first_col = f"{user}\n{allowed_ips} {recent_emoji}\n{endpoints}"
+        # Форматирование строк в ячейках
+        first_col = f"{username}\n{allowed_ips} {recent_emoji}\n{endpoint}"
         second_col = f"Up: {up}\nDown: {down}\nState: {state_emoji}"
 
         formatted_table.append([first_col, second_col])
@@ -92,11 +90,6 @@ with gr.Blocks(css="style.css") as admin_interface:
             delete_output = gr.Textbox(label="Результат удаления", interactive=False)
             delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
 
-            # Добавляем кнопку для отображения списка пользователей
-            list_button = gr.Button("Показать пользователей")
-            list_output = gr.Textbox(label="Список пользователей", interactive=False)
-            list_button.click(list_users, outputs=list_output)
-
     # Вкладка для поиска пользователей
     with gr.Tab("Поиск пользователей"):
         with gr.Row():
@@ -115,7 +108,7 @@ with gr.Blocks(css="style.css") as admin_interface:
             search_input = gr.Textbox(label="Поиск", placeholder="Введите данные для фильтрации...")
             refresh_button = gr.Button("Обновить")
             show_inactive = gr.Checkbox(label="Показать неактивных", value=True)
-        with gr.Column(scale=1, min_width=300):
+        with gr.Row():
             stats_table = gr.Dataframe(
                 headers=["User/IPs", "Up/Down"],
                 value=update_table(True),
