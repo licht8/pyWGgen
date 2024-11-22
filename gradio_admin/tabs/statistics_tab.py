@@ -20,10 +20,9 @@ def statistics_tab():
             show_inactive = gr.Checkbox(label="Show inactive", value=True)
             refresh_button = gr.Button("Refresh")
 
-        # Кнопки действий
+        # Поле для отображения информации о выбранном пользователе
         with gr.Row():
-            block_button = gr.Button("Block")
-            delete_button = gr.Button("Delete")
+            selected_user_info = gr.Textbox(label="User Information", interactive=False)
 
         # Поле поиска
         with gr.Row():
@@ -31,9 +30,10 @@ def statistics_tab():
         with gr.Row():
             search_button = gr.Button("Search", scale=1)
 
-        # Поле для отображения информации о выбранном пользователе
+        # Кнопки действий
         with gr.Row():
-            selected_user_info = gr.Textbox(label="User Information", interactive=False)
+            block_button = gr.Button("Block")
+            delete_button = gr.Button("Delete")
 
         # Таблица с данными
         with gr.Row():
