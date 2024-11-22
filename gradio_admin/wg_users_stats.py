@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
-# gradio_admin/wg_users_stats.py
 """
+gradio_admin/wg_users_stats.py
+
 Функции для получения статистики пользователей WireGuard.
 """
 
 import json
+import os
 
-JSON_LOG_PATH = "/var/log/wg_users.json"
+# Путь к файлу JSON
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+JSON_LOG_PATH = os.path.join(PROJECT_ROOT, "logs/wg_users.json")
+
 
 def load_data(show_inactive):
     """
@@ -28,9 +33,9 @@ def load_data(show_inactive):
         if not show_inactive and user_data["status"] == "inactive":
             continue
         table.append([
-            username,
-            ", ".join(user_data["endpoints"]),
-            user_data["allowed_ips"],
+            username or "Неизвестно",
+            ", ".join(user_data.get("endpoints", ["Нет данных"])),
+            user_data.get("allowed_ips", "Нет данных"),
             user_data["total_transfer"]["received"],
             user_data["total_transfer"]["sent"],
             user_data["last_handshake"] or "Никогда",
