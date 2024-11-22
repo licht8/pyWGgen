@@ -123,6 +123,7 @@ with gr.Blocks(css="style.css") as admin_interface:
                 interactive=False,
                 wrap=True
             )
+        with gr.Row():
             selected_user_info = gr.Textbox(
                 label="User Information",
                 placeholder="Информация о пользователе",
@@ -134,15 +135,15 @@ with gr.Blocks(css="style.css") as admin_interface:
             """Показывает информацию о выбранном пользователе."""
             try:
                 print("[DEBUG] Вызов функции show_user_info")
-                if selected_data is None or not selected_data:
+                if selected_data is None or len(selected_data) == 0:
                     return "Сначала выберите данные из таблицы!"
 
                 # Получаем индекс выбранной строки
-                row_index = selected_data[0]  # Gradio передаёт индекс строки
+                row_index = selected_data[0]
                 print(f"[DEBUG] Selected row index: {row_index}")
 
-                # Получаем данные всей таблицы
-                table = update_table(show_inactive=True)  # Подгружаем текущую таблицу
+                # Подгружаем текущую таблицу
+                table = update_table(show_inactive=True)
 
                 if row_index >= len(table):
                     return "Ошибка: выбранная строка за пределами таблицы."
@@ -172,11 +173,11 @@ with gr.Blocks(css="style.css") as admin_interface:
 ⬇️ Downloaded: {down}
 ✅ Status: {state}
 """
-                print(f"[DEBUG] User info:\n{user_info}")  # Отладка
+                print(f"[DEBUG] User info:\n{user_info}")
                 return user_info.strip()
 
             except Exception as e:
-                print(f"[DEBUG] Error: {e}")  # Отладка
+                print(f"[DEBUG] Error: {e}")
                 return f"Error processing data: {str(e)}"
 
         stats_table.select(
