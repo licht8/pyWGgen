@@ -1,6 +1,7 @@
 import gradio as gr
+from gradio_admin.delete_user import delete_user
 
-def get_delete_tab():
+def delete_user_tab():
     """Создает вкладку для удаления пользователей."""
     with gr.Tab("🔥 Delete"):
         with gr.Row():
@@ -12,7 +13,6 @@ def get_delete_tab():
 
             def handle_delete_user(username):
                 """Обработчик для удаления пользователя."""
-                from gradio_admin.delete_user import delete_user
                 return delete_user(username)
 
             delete_button.click(handle_delete_user, inputs=delete_input, outputs=delete_output)
