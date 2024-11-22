@@ -50,43 +50,97 @@ def update_table(show_inactive):
 
 # Основной интерфейс
 with gr.Blocks(css="style.css") as admin_interface:
-    # Изменение заголовка страницы
-    with gr.Row():
-        gr.Markdown("## Статистика")
+    # Вкладка для создания пользователя
+    with gr.Tab("Создание пользователя"):
+        with gr.Row():
+            gr.Markdown("## Создать нового пользователя")
+        with gr.Column(scale=1, min_width=300):
+            username_input = gr.Textbox(label="Имя пользователя", placeholder="Введите имя пользователя...")
+            create_button = gr.Button("Создать пользователя")
+            create_output = gr.Textbox(label="Результат создания", interactive=False)
+            qr_code_image = gr.Image(label="QR-код", visible=False)
 
-    # Поля поиска и управления
-    with gr.Row():
-        search_input = gr.Textbox(label="Поиск", placeholder="Введите данные для фильтрации...")
-        refresh_button = gr.Button("Обновить")
-        show_inactive = gr.Checkbox(label="Показать неактивных", value=True)
+            def handle_create_user(username):
+                """Обработчик для создания пользователя и отображения QR-кода."""
+                result, qr_code_path = create_user(username)
+                if qr_code_path:
+                    return result, gr.update(visible=True, value=qr_code_path)
+                return result, gr.update(visible=False)
 
-    # Таблица статистики
-    with gr.Row():
-        stats_table = gr.Dataframe(
-            headers=["User/IPs", "Up/Down"],
-            value=update_table(True),
-            interactive=False,
-            wrap=True
-        )
+            create_button.click(
+                handle_create_user,
+                inputs=username_input,
+                outputs=[create_output, qr_code_image]
+            )
 
-        def search_and_update_table(query, show_inactive):
-            """Фильтрует данные таблицы по запросу."""
-            table = update_table(show_inactive)
-            if query:
-                table = [row for row in table if query.lower() in " ".join(map(str, row)).lower()]
-            return table
+    # Вкладка для списка пользователей
+    with gr.Tab("Список пользователей"):
+        with gr.Row():
+            gr.Markdown("## Показать список пользователей")
+        with gr.Column(scale=1, min_width=300):
+            list_button = gr.Button("Показать пользователей")
+            list_output = gr.Textbox(label="Список пользователей", interactive=False)
+            list_button.click(list_users, outputs=list_output)
 
-        search_input.change(
-            fn=search_and_update_table,
-            inputs=[search_input, show_inactive],
-            outputs=[stats_table]
-        )
+    # Вкладка для удаления пользователей
+    with gr.Tab("Удаление пользователей"):
+        with gr.Row():
+            gr.Markdown("## Удалить пользователя")
+        with gr.Column(scale=1, min_width=300):
+            delete_input = gr.Textbox(label="Имя пользователя для удаления", placeholder="Введите имя пользователя...")
+            delete_button = gr.Button("Удалить пользователя")
+            delete_output = gr.Textbox(label="Результат удаления", interactive=False)
+            delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
 
-        refresh_button.click(
-            fn=update_table,
-            inputs=[show_inactive],
-            outputs=[stats_table]
-        )
+            # Добавляем кнопку для отображения списка пользователей
+            list_button = gr.Button("Показать пользователей")
+            list_output = gr.Textbox(label="Список пользователей", interactive=False)
+            list_button.click(list_users, outputs=list_output)
+
+    # Вкладка для поиска пользователей
+    with gr.Tab("Поиск пользователей"):
+        with gr.Row():
+            gr.Markdown("## Поиск пользователей")
+        with gr.Column(scale=1, min_width=300):
+            search_input = gr.Textbox(label="Введите имя или IP", placeholder="Введите строку для поиска...")
+            search_button = gr.Button("Поиск")
+            search_output = gr.Textbox(label="Результат поиска", interactive=False)
+            search_button.click(search_user, inputs=search_input, outputs=search_output)
+
+    # Вкладка для статистики пользователей WireGuard
+    with gr.Tab("Статистика"):
+        with gr.Row():
+            gr.Markdown("## Статистика")
+        with gr.Row():
+            search_input = gr.Textbox(label="Поиск", placeholder="Введите данные для фильтрации...")
+            refresh_button = gr.Button("Обновить")
+            show_inactive = gr.Checkbox(label="Показать неактивных", value=True)
+        with gr.Column(scale=1, min_width=300):
+            stats_table = gr.Dataframe(
+                headers=["User/IPs", "Up/Down"],
+                value=update_table(True),
+                interactive=False,
+                wrap=True
+            )
+
+            def search_and_update_table(query, show_inactive):
+                """Фильтрует данные таблицы по запросу."""
+                table = update_table(show_inactive)
+                if query:
+                    table = [row for row in table if query.lower() in " ".join(map(str, row)).lower()]
+                return table
+
+            search_input.change(
+                fn=search_and_update_table,
+                inputs=[search_input, show_inactive],
+                outputs=[stats_table]
+            )
+
+            refresh_button.click(
+                fn=update_table,
+                inputs=[show_inactive],
+                outputs=[stats_table]
+            )
 
 # Запуск интерфейса
 if __name__ == "__main__":
