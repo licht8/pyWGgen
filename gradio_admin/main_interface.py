@@ -66,7 +66,7 @@ def update_table(show_inactive):
         formatted_rows.append([f"📅 Created : {format_time(created)}", f"⌚ Ex : {format_time(expires)}"])
         formatted_rows.append([f"🌐 intIP {recent_emoji}  : {allowed_ips}", f"⬆️ up : {up}"])
         formatted_rows.append([f"🌎 extIP {recent_emoji}  : {endpoint}", f"⬇️ dw : {down}"])
-        formatted_rows.append([f"⏳ Time Left: {calculate_time_remaining(expires)}", f"State : {state_emoji}"])
+        formatted_rows.append([f"⏳ TimeLeft : {calculate_time_remaining(expires)}", f"State : {state_emoji}"])
 
         # Добавление пустой строки между пользователями
         formatted_rows.append(["", ""])
@@ -129,7 +129,7 @@ with gr.Blocks(css="style.css") as admin_interface:
             show_inactive = gr.Checkbox(label="Показать неактивных", value=True)
         with gr.Row():
             stats_table = gr.Dataframe(
-                headers=["👤: 📅: 🌐: 🌎: ⏳", "📧: ⌚: ⬆️: ⬇️: ✅"],
+                headers=["👤📅 : User info", "⬆️⬇️ : Other info "],
                 value=update_table(True),
                 interactive=False,
                 wrap=True
@@ -160,7 +160,7 @@ with gr.Blocks(css="style.css") as admin_interface:
                     formatted_rows.append([f"📅 Created : {format_time(created)}", f"⌚ Ex : {format_time(expires)}"])
                     formatted_rows.append([f"🌐 int. {recent_emoji}  : {allowed_ips}", f"⬆️ up : {up}"])
                     formatted_rows.append([f"🌎 ext. {recent_emoji}  : {endpoint}", f"⬇️ dw : {down}"])
-                    formatted_rows.append([f"⏳ Time Left: {calculate_time_remaining(expires)}", f"State: {state_emoji}"])
+                    formatted_rows.append([f"⏳ TimeLeft : {calculate_time_remaining(expires)}", f"State: {state_emoji}"])
 
                     # Добавление пустой строки между пользователями
                     formatted_rows.append(["", ""])
