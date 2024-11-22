@@ -109,17 +109,16 @@ with gr.Blocks(css="style.css") as admin_interface:
             delete_output = gr.Textbox(label="Результат удаления", interactive=False)
             delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
 
-"""
 # Вкладка для поиска пользователей
-    with gr.Tab("Поиск пользователей"):
-        with gr.Row():
-            gr.Markdown("## Поиск пользователей")
-        with gr.Column(scale=1, min_width=300):
-            search_input = gr.Textbox(label="Введите имя или IP", placeholder="Введите строку для поиска...")
-            search_button = gr.Button("Поиск")
-            search_output = gr.Textbox(label="Результат поиска", interactive=False)
-            search_button.click(search_user, inputs=search_input, outputs=search_output)
-"""
+#    with gr.Tab("Поиск пользователей"):
+#        with gr.Row():
+#            gr.Markdown("## Поиск пользователей")
+#        with gr.Column(scale=1, min_width=300):
+#            search_input = gr.Textbox(label="Введите имя или IP", placeholder="Введите строку для поиска...")
+#            search_button = gr.Button("Поиск")
+#            search_output = gr.Textbox(label="Результат поиска", interactive=False)
+#            search_button.click(search_user, inputs=search_input, outputs=search_output)
+
     # Вкладка для статистики пользователей WireGuard
     with gr.Tab("Статистика"):
         with gr.Row():
