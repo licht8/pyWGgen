@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# gradio_admin/tabs/statistics_tab.py
+# Вкладка "Statistics" для Gradio-интерфейса проекта wg_qr_generator
+
 import gradio as gr
 import pandas as pd
 from gradio_admin.functions.table_helpers import update_table
