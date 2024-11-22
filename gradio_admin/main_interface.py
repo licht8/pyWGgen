@@ -82,7 +82,7 @@ with gr.Blocks(css="style.css") as admin_interface:
             gr.Markdown("## Статистика пользователей WireGuard")
         with gr.Column(scale=1, min_width=300):
             show_inactive = gr.Checkbox(label="Показать неактивных пользователей", value=True)
-            stats_table = gr.HTML(value="")  # Используем HTML для таблицы
+            stats_table = gr.HTML(value=update_table(True))  # Инициализация таблицы
 
             def update_table(show_inactive):
                 table = load_data(show_inactive)
@@ -111,7 +111,6 @@ with gr.Blocks(css="style.css") as admin_interface:
                 return table_html
 
             show_inactive.change(fn=update_table, inputs=[show_inactive], outputs=[stats_table])
-            stats_table.update(value=update_table(True))  # Инициализация с отображением всех пользователей
 
 # Запуск интерфейса
 if __name__ == "__main__":
