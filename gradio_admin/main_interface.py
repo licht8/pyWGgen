@@ -29,8 +29,9 @@ def update_table(show_inactive):
         state = row[6]
         # Используем эмодзи для статуса
         state_emoji = "✅" if state == "active" else "❌"
+        # Форматируем User/IPs
         formatted_table.append([
-            f"{user}\n{allowed_ips}",  # User/IPs
+            f"{allowed_ips} {user}",  # User/IPs
             row[1],                   # Endpoints
             row[4],                   # Up (sent)
             row[3],                   # Down (received)
