@@ -117,7 +117,3 @@ def statistics_tab():
             outputs=[stats_table]
         )
 
-        # Кнопка "Search" просто фокусирует таблицу
-        search_button.click(
-            lambda: None, inputs=[], outputs=[]
-        )
