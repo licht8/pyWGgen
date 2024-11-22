@@ -43,4 +43,4 @@ with gr.Blocks(css="style.css") as admin_interface:
         stats_table.select(fn=show_user_info, inputs=[stats_table, search_input], outputs=[user_info_output])
 
 if __name__ == "__main__":
-    admin_interface.launch()
+    admin_interface.launch(server_name="0.0.0.0", server_port=7860, share=True)
