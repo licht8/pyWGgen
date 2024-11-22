@@ -134,61 +134,61 @@ with gr.Blocks(css="style.css") as admin_interface:
                 wrap=True
             )
 
-        def show_user_info(selected_data, query):
-            """Показывает подробную информацию о выбранном пользователе."""
-            print("[DEBUG] Вызов функции show_user_info")  # Отладка
-            print(f"[DEBUG] Запрос (query): {query}")  # Отладка
+def show_user_info(selected_data, query):
+    """Показывает подробную информацию о выбранном пользователе."""
+    print("[DEBUG] Вызов функции show_user_info")  # Отладка
+    print(f"[DEBUG] Запрос (query): {query}")  # Отладка
 
-            # Проверяем, был ли выполнен поиск
-            if not query.strip():
-                return "Сначала введите в поиск любые данные для фильтра пользовательских данных и затем нажмите на данные в ячейке чтобы посмотреть информацию о пользователе и иметь возможность производить действия над выбранным аккаунтом"
-            
-            # Проверяем, есть ли данные
-            print(f"[DEBUG] Данные selected_data: {selected_data}")  # Отладка
-            if selected_data is None or (isinstance(selected_data, pd.DataFrame) and selected_data.empty):
-                return "Выберите строку из таблицы!"
-            try:
-                # Если данные предоставлены в формате списка
-                if isinstance(selected_data, list):
-                    print(f"[DEBUG] Формат данных: list, данные: {selected_data}")  # Отладка
-                    row = selected_data
-                # Если данные предоставлены в формате DataFrame
-                elif isinstance(selected_data, pd.DataFrame):
-                    print(f"[DEBUG] Формат данных: DataFrame, данные:\n{selected_data}")  # Отладка
-                    row = selected_data.iloc[0].values
-                else:
-                    return "Неподдерживаемый формат данных!"
+    # Проверяем, был ли выполнен поиск
+    if not query.strip():
+        return "Please enter a query to filter user data and then click a cell to view user details and perform actions."
 
-                print(f"[DEBUG] Извлечённая строка (row): {row}")  # Отладка
+    # Проверяем, есть ли данные
+    print(f"[DEBUG] Данные selected_data: {selected_data}")  # Отладка
+    if selected_data is None or (isinstance(selected_data, pd.DataFrame) and selected_data.empty):
+        return "Select a row from the table!"
+    try:
+        # Если данные предоставлены в формате списка
+        if isinstance(selected_data, list):
+            print(f"[DEBUG] Формат данных: list, данные: {selected_data}")  # Отладка
+            row = selected_data
+        # Если данные предоставлены в формате DataFrame
+        elif isinstance(selected_data, pd.DataFrame):
+            print(f"[DEBUG] Формат данных: DataFrame, данные:\n{selected_data}")  # Отладка
+            row = selected_data.iloc[0].values
+        else:
+            return "Unsupported data format!"
 
-                # Безопасно извлекаем данные, проверяя длину строки
-                username = row[0].replace("👤 User account : ", "") if len(row) > 0 else "N/A"
-                email = "user@mail.wg"  # Заглушка
-                created = row[1].replace("🌱 Created : ", "N/A") if len(row) > 1 else "N/A"
-                expires = row[2].replace("🔥 Expires : ", "N/A") if len(row) > 2 else "N/A"
-                int_ip = row[3].replace("🌐 intIP : ", "N/A") if len(row) > 3 else "N/A"
-                ext_ip = row[4].replace("🌎 extIP : ", "N/A") if len(row) > 4 else "N/A"
-                up = row[5].replace("⬆️ up : ", "N/A") if len(row) > 5 else "N/A"
-                down = row[6].replace("⬇️ dw : ", "N/A") if len(row) > 6 else "N/A"
-                state = row[7].replace("State : ", "N/A") if len(row) > 7 else "N/A"
+        print(f"[DEBUG] Извлечённая строка (row): {row}")  # Отладка
 
-                # Формируем текстовый вывод
-                user_info = f"""
-                👤 Имя пользователя: {username}
-                📧 Электронная почта: {email}
-                🌱 Создан: {created}
-                🔥 Истекает: {expires}
-                🌐 Внутренний IP: {int_ip}
-                🌎 Внешний IP: {ext_ip}
-                ⬆️ Отправлено данных: {up}
-                ⬇️ Принято данных: {down}
-                ✅ Статус: {state}
-                """
-                print(f"[DEBUG] Сформированная информация о пользователе:\n{user_info}")  # Отладка
-                return user_info.strip()
-            except Exception as e:
-                print(f"[DEBUG] Ошибка: {e}")  # Отладка
-                return f"Ошибка обработки данных: {str(e)}"
+        # Безопасно извлекаем данные, проверяя длину строки
+        username = row[0].replace("👤 User account : ", "") if len(row) > 0 else "N/A"
+        email = "user@mail.wg"  # Заглушка
+        created = "N/A" if len(row) <= 1 else row[1].replace("🌱 Created : ", "N/A")
+        expires = "N/A" if len(row) <= 2 else row[2].replace("🔥 Expires : ", "N/A")
+        int_ip = "N/A" if len(row) <= 3 else row[3].replace("🌐 intIP : ", "N/A")
+        ext_ip = "N/A" if len(row) <= 4 else row[4].replace("🌎 extIP : ", "N/A")
+        up = "N/A" if len(row) <= 5 else row[5].replace("⬆️ up : ", "N/A")
+        down = "N/A" if len(row) <= 6 else row[6].replace("⬇️ dw : ", "N/A")
+        state = "N/A" if len(row) <= 7 else row[7].replace("State : ", "N/A")
+
+        # Формируем текстовый вывод
+        user_info = f"""
+👤 User: {username}
+📧 Email: {email}
+🌱 Created: {created}
+🔥 Expires: {expires}
+🌐 Internal IP: {int_ip}
+🌎 External IP: {ext_ip}
+⬆️ Uploaded: {up}
+⬇️ Downloaded: {down}
+✅ Status: {state}
+"""
+        print(f"[DEBUG] Сформированная информация о пользователе:\n{user_info}")  # Отладка
+        return user_info.strip()
+    except Exception as e:
+        print(f"[DEBUG] Ошибка: {e}")  # Отладка
+        return f"Error processing data: {str(e)}"
 
         # Обновление выбранного пользователя
         stats_table.select(
