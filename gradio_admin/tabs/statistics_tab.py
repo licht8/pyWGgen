@@ -4,26 +4,32 @@
 
 import gradio as gr
 import pandas as pd
-from gradio_admin.functions.table_helpers import update_table
-from gradio_admin.functions.format_helpers import format_user_info
-from gradio_admin.functions.user_records import load_user_records
+from gradio_admin.functions.table_helpers import update_table, search_and_update_table
+from gradio_admin.functions.show_user_info import show_user_info
 
 
 def statistics_tab():
-    """Возвращает вкладку статистики пользователей WireGuard."""
+    """Создает вкладку 'Statistics' для интерфейса Gradio."""
     with gr.Tab("🔍 Statistics"):
         with gr.Row():
             gr.Markdown("## Statistics")
 
-        # Верхние элементы: Рефреш, Чекбокс Show inactive, Поиск
+        # Чекбокс Show inactive
+        with gr.Row():
+            show_inactive = gr.Checkbox(label="Show inactive", value=True)
+
+        # Кнопка Refresh
         with gr.Row():
             refresh_button = gr.Button("Refresh")
-            show_inactive = gr.Checkbox(label="Show inactive", value=True)
-            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...")
 
-        # Область для отображения информации о выбранном пользователе
+        # Поле для отображения информации о выбранном пользователе
         with gr.Row():
             selected_user_info = gr.Textbox(label="User Information", interactive=False)
+
+        # Поиск
+        with gr.Row():
+            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", scale=8)
+            search_button = gr.Button("Search", scale=1)
 
         # Кнопки действий
         with gr.Row():
@@ -35,57 +41,11 @@ def statistics_tab():
             stats_table = gr.Dataframe(
                 headers=["👥 User's info", "🆔 Other info"],
                 value=update_table(True),
-                interactive=False,  # Таблица только для чтения
+                interactive=True,
                 wrap=True
             )
 
-        def show_user_info(selected_data, query):
-            """Показывает подробную информацию о выбранном пользователе."""
-            print("[DEBUG] Вызов функции show_user_info")  # Отладка
-            print(f"[DEBUG] Query: {query}")  # Отладка
-
-            # Проверяем, был ли выполнен поиск
-            if not query.strip():
-                return "Please enter a query to filter user data and then click a cell to view user details and perform actions."
-
-            # Проверяем, есть ли данные
-            print(f"[DEBUG] Selected data: {selected_data}")  # Отладка
-            if selected_data is None or (isinstance(selected_data, pd.DataFrame) and selected_data.empty):
-                return "Select a row from the table!"
-            try:
-                # Если данные предоставлены в формате списка
-                if isinstance(selected_data, list):
-                    print(f"[DEBUG] Data format: list, data: {selected_data}")  # Отладка
-                    row = selected_data
-                # Если данные предоставлены в формате DataFrame
-                elif isinstance(selected_data, pd.DataFrame):
-                    print(f"[DEBUG] Data format: DataFrame, data:\n{selected_data}")  # Отладка
-                    row = selected_data.iloc[0].values
-                else:
-                    return "Unsupported data format!"
-
-                print(f"[DEBUG] Extracted row: {row}")  # Отладка
-
-                # Загружаем информацию о пользователе
-                username = row[0].replace("👤 User account : ", "") if len(row) > 0 else "N/A"
-                records = load_user_records()
-                user_data = records.get(username, {})
-
-                # Форматируем данные для вывода
-                user_info = format_user_info(username, user_data, row)
-                print(f"[DEBUG] User info:\n{user_info}")  # Отладка
-                return user_info.strip()
-            except Exception as e:
-                print(f"[DEBUG] Error: {e}")  # Отладка
-                return f"Error processing data: {str(e)}"
-
-        stats_table.select(
-            fn=show_user_info,
-            inputs=[stats_table, search_input],
-            outputs=[selected_user_info]
-        )
-
-        # Обновление данных при нажатии кнопки "Refresh"
+        # Связь кнопки Refresh с обновлением таблицы и очисткой поля поиска и информации
         def refresh_table(show_inactive):
             """Очищает строку поиска, сбрасывает информацию о пользователе и обновляет таблицу."""
             return "", "", update_table(show_inactive)
@@ -96,18 +56,27 @@ def statistics_tab():
             outputs=[search_input, selected_user_info, stats_table]
         )
 
-        # Поиск
-        def search_and_update_table(query, show_inactive):
-            """Фильтрует данные таблицы по запросу."""
-            table = update_table(show_inactive)
-            if query:
-                table = [
-                    row for row in table if query.lower() in " ".join(map(str, row)).lower()
-                ]
-            return table
+        # Связь кнопки Search с перекидыванием к таблице
+        def search_jump_to_table(query):
+            """Фильтрует таблицу и возвращает результаты."""
+            return search_and_update_table(query, show_inactive.value)
 
+        search_button.click(
+            fn=search_jump_to_table,
+            inputs=[search_input],
+            outputs=[stats_table]
+        )
+
+        # Связь поисковой строки с таблицей
         search_input.change(
             fn=search_and_update_table,
             inputs=[search_input, show_inactive],
             outputs=[stats_table]
+        )
+
+        # Связь клика по таблице с отображением информации о пользователе
+        stats_table.select(
+            fn=show_user_info,
+            inputs=[stats_table, search_input],
+            outputs=[selected_user_info]
         )
