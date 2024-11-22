@@ -33,6 +33,29 @@ def statistics_tab():
         with gr.Row():
             search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True)
 
+        # Вставка кастомного JavaScript
+        custom_js = """
+        <script>
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const searchInput = document.querySelector('input[type="text"]');
+                    if (searchInput) {
+                        searchInput.blur();
+                        const table = document.querySelector('table');
+                        if (table) {
+                            table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }
+                }
+            });
+        </script>
+        """
+
+        # Добавляем кастомный HTML с JavaScript
+        with gr.Row():
+            gr.HTML(custom_js)
+
         # Таблица с данными
         with gr.Row():
             stats_table = gr.Dataframe(
