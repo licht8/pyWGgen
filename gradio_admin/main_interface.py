@@ -29,14 +29,13 @@ def update_table(show_inactive):
         state = row[6]
         # Цветовая индикация статуса
         state_color = "green" if state == "active" else "red"
-
         formatted_table.append([
             f"{user}\n{allowed_ips}",  # User/IPs
             row[1],                   # Endpoints
             row[4],                   # Up (sent)
             row[3],                   # Down (received)
             row[5],                   # Recent handshake
-            f"<span style='color: {state_color}'>{state}</span>"  # State
+            (state, state_color)      # State (с цветом)
         ])
     return formatted_table
 
@@ -106,47 +105,15 @@ with gr.Blocks(css="style.css") as admin_interface:
             gr.Markdown("## Статистика пользователей WireGuard")
         with gr.Column(scale=1, min_width=300):
             show_inactive = gr.Checkbox(label="Показать неактивных пользователей", value=True)
-            stats_table = gr.HTML(value="")  # Используем HTML для таблицы
-
-            def render_table_html(show_inactive):
-                """Генерация HTML-таблицы без полос прокрутки."""
-                table_data = update_table(show_inactive)
-                table_html = """
-                <style>
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                    }
-                    th, td {
-                        text-align: left;
-                        padding: 8px;
-                    }
-                    th {
-                        background-color: #f2f2f2;
-                    }
-                </style>
-                <table border="1">
-                    <thead>
-                        <tr>
-                            <th>User/IPs</th>
-                            <th>Endpoints</th>
-                            <th>Up</th>
-                            <th>Down</th>
-                            <th>Recent</th>
-                            <th>State</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                """
-                for row in table_data:
-                    table_html += "<tr>" + "".join(f"<td>{col}</td>" for col in row) + "</tr>"
-                table_html += "</tbody></table>"
-                return table_html
-
-            stats_table.value = render_table_html(True)
+            stats_table = gr.Dataframe(
+                headers=["User/IPs", "Endpoints", "Up", "Down", "Recent", "State"],
+                value=update_table(True),  # Инициализация таблицы
+                interactive=False,
+                wrap=True  # Отключение горизонтальной прокрутки
+            )
 
             # Обновляем таблицу при изменении состояния чекбокса
-            show_inactive.change(fn=render_table_html, inputs=[show_inactive], outputs=[stats_table])
+            show_inactive.change(fn=update_table, inputs=[show_inactive], outputs=[stats_table])
 
 # Запуск интерфейса
 if __name__ == "__main__":
