@@ -2,12 +2,9 @@
 """
 modules/update_wg_data.py
 
-Скрипт для обновления данных WireGuard:
-- Обновляет трафик и состояние пользователей.
-- Логирует подключения и общий трафик.
-- Обновляет JSON с историей пользователей.
-
-Должен запускаться периодически (например, через cron или как часть сервиса).
+Обновляет данные WireGuard:
+- Убирает дублирующиеся записи.
+- Чистит имена пользователей.
 """
 
 import os
@@ -70,7 +67,7 @@ def parse_wg_conf():
         elif line.strip().startswith("#"):
             if current_peer:
                 username = line.strip("#").strip()
-                # Убираем "Client", если оно есть
+                # Убираем лишнее слово "Client"
                 if username.startswith("Client "):
                     username = username.replace("Client ", "", 1)
                 users[current_peer]["username"] = username
@@ -142,6 +139,11 @@ def update_data():
 
         # Сохраняем в историю
         history["users"][username] = user_data
+
+    # Убираем пустые записи и дубли
+    history["users"] = {
+        k: v for k, v in history["users"].items() if k and "Client" not in k
+    }
 
     # Сохраняем обновленный JSON
     with open(JSON_LOG_PATH, "w") as f:
