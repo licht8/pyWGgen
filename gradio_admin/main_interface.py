@@ -100,7 +100,7 @@ with gr.Blocks(css="style.css") as admin_interface:
             )
 
     # Вкладка для удаления пользователей
-    with gr.Tab("Удаление"):
+    with gr.Tab("Удалить"):
         with gr.Row():
             gr.Markdown("## Удалить пользователя")
         with gr.Column(scale=1, min_width=300):
