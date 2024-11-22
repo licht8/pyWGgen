@@ -15,24 +15,25 @@ def statistics_tab():
         with gr.Row():
             gr.Markdown("## Statistics")
 
-        # Верхние элементы: Чекбокс Show inactive, Кнопка Refresh, Поиск
+        # Верхние элементы: Чекбокс Show inactive, Кнопка Refresh
         with gr.Row():
             show_inactive = gr.Checkbox(label="Show inactive", value=True)
             refresh_button = gr.Button("Refresh")
-
-        # Поле для отображения информации о выбранном пользователе
-        with gr.Row():
-            selected_user_info = gr.Textbox(label="User Information", interactive=False)
-
-        # Поле поиска и кнопка Search
-        with gr.Row():
-            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", scale=8)
-            search_button = gr.Button("Search", scale=1)
 
         # Кнопки действий
         with gr.Row():
             block_button = gr.Button("Block")
             delete_button = gr.Button("Delete")
+
+        # Поле поиска
+        with gr.Row():
+            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True, scale=10)
+        with gr.Row():
+            search_button = gr.Button("Search", scale=1)
+
+        # Поле для отображения информации о выбранном пользователе
+        with gr.Row():
+            selected_user_info = gr.Textbox(label="User Information", interactive=False)
 
         # Таблица с данными
         with gr.Row():
