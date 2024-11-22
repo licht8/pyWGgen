@@ -27,15 +27,15 @@ def update_table(show_inactive):
         user = row[0]
         allowed_ips = row[2]
         state = row[6]
-        # Цветовая индикация статуса
-        state_color = "green" if state == "active" else "red"
+        # Используем эмодзи для статуса
+        state_emoji = "✅" if state == "active" else "❌"
         formatted_table.append([
             f"{user}\n{allowed_ips}",  # User/IPs
             row[1],                   # Endpoints
             row[4],                   # Up (sent)
             row[3],                   # Down (received)
             row[5],                   # Recent handshake
-            (state, state_color)      # State (с цветом)
+            state_emoji               # State
         ])
     return formatted_table
 
