@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# gradio_admin/functions/table_helpers.py
+# Утилиты для обработки и отображения таблицы в проекте wg_qr_generator
+
 from gradio_admin.functions.format_helpers import format_time, calculate_time_remaining
 from gradio_admin.wg_users_stats import load_data
 
