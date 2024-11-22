@@ -18,6 +18,25 @@ from gradio_admin.search_user import search_user
 from gradio_admin.wg_users_stats import load_data  # Импорт статистики пользователей
 
 
+# Функция для обновления таблицы
+def update_table(show_inactive):
+    table = load_data(show_inactive)
+    formatted_table = []
+
+    for row in table:
+        user = row[0]
+        allowed_ips = row[2]
+        formatted_table.append([
+            f"{user}\n{allowed_ips}",  # User/IPs
+            row[1],                   # Endpoints
+            row[4],                   # Up (sent)
+            row[3],                   # Down (received)
+            row[5],                   # Recent handshake
+            row[6]                    # State
+        ])
+    return formatted_table
+
+
 # Основной интерфейс
 with gr.Blocks(css="style.css") as admin_interface:
     # Вкладка для создания пользователя
@@ -85,30 +104,12 @@ with gr.Blocks(css="style.css") as admin_interface:
             show_inactive = gr.Checkbox(label="Показать неактивных пользователей", value=True)
             stats_table = gr.Dataframe(
                 headers=["User/IPs", "Endpoints", "Up", "Down", "Recent", "State"],
-                value=[],
+                value=update_table(True),  # Инициализация таблицы
                 interactive=False
             )
 
-            def update_table(show_inactive):
-                table = load_data(show_inactive)
-                formatted_table = []
-
-                for row in table:
-                    user = row[0]
-                    allowed_ips = row[2]
-                    formatted_table.append([
-                        f"{user}\n{allowed_ips}",  # User/IPs
-                        row[1],                   # Endpoints
-                        row[4],                   # Up (sent)
-                        row[3],                   # Down (received)
-                        row[5],                   # Recent handshake
-                        row[6]                    # State
-                    ])
-                return formatted_table
-
             # Обновляем таблицу при изменении состояния чекбокса
             show_inactive.change(fn=update_table, inputs=[show_inactive], outputs=[stats_table])
-            stats_table.update(value=update_table(True))  # Инициализация с отображением всех пользователей
 
 # Запуск интерфейса
 if __name__ == "__main__":
