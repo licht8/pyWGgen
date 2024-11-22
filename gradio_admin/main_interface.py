@@ -134,8 +134,13 @@ with gr.Blocks(css="style.css") as admin_interface:
                 wrap=True
             )
 
-        def show_user_info(selected_data):
+        def show_user_info(selected_data, query):
             """Показывает информацию о выбранном пользователе."""
+            # Проверяем, был ли выполнен поиск
+            if not query.strip():
+                return "Сначала введите в поиск любые данные для фильтра пользовательских данных и затем нажмите на данные в ячейке чтобы посмотреть информацию о пользователе и иметь возможность производить действия над выбранным аккаунтом"
+            
+            # Проверяем, есть ли данные
             if selected_data is None or (isinstance(selected_data, pd.DataFrame) and selected_data.empty):
                 return "Выберите строку из таблицы!"
             try:
@@ -154,7 +159,7 @@ with gr.Blocks(css="style.css") as admin_interface:
         # Обновление выбранного пользователя
         stats_table.select(
             fn=show_user_info,
-            inputs=[stats_table],
+            inputs=[stats_table, search_input],
             outputs=[selected_user_info]
         )
 
