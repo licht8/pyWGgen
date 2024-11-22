@@ -100,41 +100,40 @@ with gr.Blocks(css="style.css") as admin_interface:
             search_output = gr.Textbox(label="Результат поиска", interactive=False)
             search_button.click(search_user, inputs=search_input, outputs=search_output)
 
-# Вкладка для статистики пользователей WireGuard
-with gr.Tab("Статистика пользователей"):
-    with gr.Row():
-        gr.Markdown("## Статистика пользователей WireGuard")
-    with gr.Row():
-        search_input = gr.Textbox(label="Поиск", placeholder="Введите данные для фильтрации...")
-        refresh_button = gr.Button("Обновить данные")
-    with gr.Column(scale=1, min_width=300):
-        stats_table = gr.Dataframe(
-            headers=["User/IPs", "Endpoints", "Up", "Down", "Recent", "State"],
-            value=update_table(True),
-            interactive=False,
-            wrap=True
-        )
+    # Вкладка для статистики пользователей WireGuard
+    with gr.Tab("Статистика пользователей"):
+        with gr.Row():
+            gr.Markdown("## Статистика пользователей WireGuard")
+        with gr.Row():
+            search_input = gr.Textbox(label="Поиск", placeholder="Введите данные для фильтрации...")
+            refresh_button = gr.Button("Обновить данные")
+            show_inactive = gr.Checkbox(label="Показать неактивных пользователей", value=True)
+        with gr.Column(scale=1, min_width=300):
+            stats_table = gr.Dataframe(
+                headers=["User/IPs", "Endpoints", "Up", "Down", "Recent", "State"],
+                value=update_table(True),
+                interactive=False,
+                wrap=True
+            )
 
-        def search_and_update_table(query, show_inactive):
-            table = update_table(show_inactive)
-            if query:
-                table = [row for row in table if query.lower() in " ".join(map(str, row)).lower()]
-            return table
+            def search_and_update_table(query, show_inactive):
+                """Фильтрует данные таблицы по запросу."""
+                table = update_table(show_inactive)
+                if query:
+                    table = [row for row in table if query.lower() in " ".join(map(str, row)).lower()]
+                return table
 
-        search_input.change(
-            fn=search_and_update_table,
-            inputs=[search_input, show_inactive],
-            outputs=[stats_table]
-        )
-        refresh_button.click(
-            fn=update_table,
-            inputs=[show_inactive],
-            outputs=[stats_table]
-        )
+            search_input.change(
+                fn=search_and_update_table,
+                inputs=[search_input, show_inactive],
+                outputs=[stats_table]
+            )
 
-
-            # Обновляем таблицу при изменении состояния чекбокса
-            show_inactive.change(fn=update_table, inputs=[show_inactive], outputs=[stats_table])
+            refresh_button.click(
+                fn=update_table,
+                inputs=[show_inactive],
+                outputs=[stats_table]
+            )
 
 # Запуск интерфейса
 if __name__ == "__main__":
