@@ -109,16 +109,6 @@ with gr.Blocks(css="style.css") as admin_interface:
             delete_output = gr.Textbox(label="Результат удаления", interactive=False)
             delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
 
-# Вкладка для поиска пользователей
-#    with gr.Tab("Поиск пользователей"):
-#        with gr.Row():
-#            gr.Markdown("## Поиск пользователей")
-#        with gr.Column(scale=1, min_width=300):
-#            search_input = gr.Textbox(label="Введите имя или IP", placeholder="Введите строку для поиска...")
-#            search_button = gr.Button("Поиск")
-#            search_output = gr.Textbox(label="Результат поиска", interactive=False)
-#            search_button.click(search_user, inputs=search_input, outputs=search_output)
-
     # Вкладка для статистики пользователей WireGuard
     with gr.Tab("🔍 Статистика"):
         with gr.Row():
@@ -127,65 +117,43 @@ with gr.Blocks(css="style.css") as admin_interface:
             search_input = gr.Textbox(label="Поиск", placeholder="Введите данные для фильтрации...")
             refresh_button = gr.Button("Обновить")
             show_inactive = gr.Checkbox(label="Показать неактивных", value=True)
+
+        # Область для отображения информации о выбранном пользователе
+        with gr.Row():
+            selected_user_info = gr.Textbox(label="Информация о пользователе", interactive=False)
+        with gr.Row():
+            block_button = gr.Button("Заблокировать")
+            delete_button = gr.Button("Удалить")
+
+        # Таблица с данными
         with gr.Row():
             stats_table = gr.Dataframe(
-                headers=["👥 User's info", "🆔 Other info "],
+                headers=["👥 User's info", "🆔 Other info"],
                 value=update_table(True),
-                interactive=False,
+                interactive=True,
                 wrap=True
             )
 
-            def update_table(show_inactive):
-                """Форматирует данные таблицы с шестью строками на пользователя."""
-                table = load_data(show_inactive)
-                formatted_rows = []
+        def show_user_info(selected_data):
+            """Показывает информацию о выбранном пользователе."""
+            if not selected_data:
+                return "Выберите строку из таблицы!"
+            user_info = "\n".join(selected_data[0])  # Форматируем данные строки
+            return user_info
 
-                for row in table:
-                    username = row[0]
-                    allowed_ips = row[2]
-                    recent = row[5]
-                    endpoint = row[1] or "N/A"
-                    up = row[4]
-                    down = row[3]
-                    status = row[6]
-                    created = row[7] if len(row) > 7 else "N/A"
-                    expires = row[8] if len(row) > 8 else "N/A"
+        # Обновление выбранного пользователя
+        stats_table.select(
+            fn=show_user_info,
+            inputs=[stats_table],
+            outputs=[selected_user_info]
+        )
 
-                    # Эмодзи для состояния
-                    recent_emoji = "🟢" if status == "active" else "🔴"
-                    state_emoji = "✅" if status == "active" else "❌"
-
-                    # Формирование строк для пользователя
-                    formatted_rows.append([f"👤 User account : {username}", f"📧 User e-mail : user@mail.wg"])
-                    formatted_rows.append([f"🌱 Created : {format_time(created)}", f"🔥 Expires : {format_time(expires)}"])
-                    formatted_rows.append([f"🌐 int. {recent_emoji}  : {allowed_ips}", f"⬆️ up : {up}"])
-                    formatted_rows.append([f"🌎 ext. {recent_emoji}  : {endpoint}", f"⬇️ dw : {down}"])
-                    formatted_rows.append([f"📅 TimeLeft : {calculate_time_remaining(expires)}", f"State : {state_emoji}"])
-
-                    # Добавление пустой строки между пользователями
-                    formatted_rows.append(["", ""])
-
-                return formatted_rows
-
-            def search_and_update_table(query, show_inactive):
-                """Фильтрует данные таблицы по запросу."""
-                table = update_table(show_inactive)
-                if query:
-                    table = [row for row in table if query.lower() in " ".join(map(str, row)).lower()]
-                print(f"[DEBUG] Обновленная таблица после поиска: {table}")  # Отладка
-                return table
-
-            search_input.change(
-                fn=search_and_update_table,
-                inputs=[search_input, show_inactive],
-                outputs=[stats_table]
-            )
-
-            refresh_button.click(
-                fn=update_table,
-                inputs=[show_inactive],
-                outputs=[stats_table]
-            )
+        # Обновление данных при нажатии кнопки "Обновить"
+        refresh_button.click(
+            fn=update_table,
+            inputs=[show_inactive],
+            outputs=[stats_table]
+        )
 
 # Запуск интерфейса
 if __name__ == "__main__":
