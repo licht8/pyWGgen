@@ -28,10 +28,10 @@ def statistics_tab():
                 value="Use the search below for filtering."
             )
 
-        # Кнопки действий
-        with gr.Row():
-            block_button = gr.Button("Block")
-            delete_button = gr.Button("Delete")
+        # Кнопки действий на одной строке
+        with gr.Row(equal_height=True):
+            block_button = gr.Button("Block", elem_id="block-button")
+            delete_button = gr.Button("Delete", elem_id="delete-button")
 
         # Поле поиска
         with gr.Row():
