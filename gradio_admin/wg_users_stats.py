@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-"""
-gradio_admin/wg_users_stats.py
+# gradio_admin/wg_users_stats.py
+# Скрипт для работы со статистикой пользователей WireGuard в проекте wg_qr_generator
 
-Функции для получения статистики пользователей WireGuard.
-"""
 
 import os
 import json
