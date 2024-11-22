@@ -5,7 +5,7 @@
 import sys
 import os
 import gradio as gr
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # Добавляем путь к корневой директории проекта
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -44,7 +44,6 @@ def calculate_time_remaining(expiry_time):
 def update_table(show_inactive):
     """Форматирует данные таблицы с шестью строками на пользователя."""
     table = load_data(show_inactive)
-    print(f"[DEBUG] Загружены данные: {table}")  # Отладка
     formatted_rows = []
 
     for row in table:
@@ -62,13 +61,15 @@ def update_table(show_inactive):
         recent_emoji = "🟢" if status == "active" else "🔴"
         state_emoji = "✅" if status == "active" else "❌"
 
-        # Формирование строк
-        formatted_rows.append([f"👤: {username}", f"⬆️ {up}"])
-        formatted_rows.append([f"🌐 int.IP : {allowed_ips} {recent_emoji}", f"⬇️ {down}"])
-        formatted_rows.append([f"🌐 ext.IP : {endpoint}", f"State: {state_emoji}"])
-        formatted_rows.append([f"📅 Создан : {format_time(created)}", ""])
-        formatted_rows.append([f"⏳ Истекает : {format_time(expires)}", ""])
-        formatted_rows.append([f"⏳ Осталось: {calculate_time_remaining(expires)}", ""])
+        # Формирование строк для пользователя
+        formatted_rows.append([f"👤: {username}", f"📧: user@mail.wg"])
+        formatted_rows.append([f"📅 Создан : {format_time(created)}", f"⏳ Истекает : {format_time(expires)}"])
+        formatted_rows.append([f"🌐 int.IP : {allowed_ips} {recent_emoji}", f"⬆️ {up}"])
+        formatted_rows.append([f"🌐 ext.IP : {endpoint}", f"⬇️ {down}"])
+        formatted_rows.append([f"⏳ Осталось: {calculate_time_remaining(expires)}", f"State: {state_emoji}"])
+
+        # Добавление пустой строки между пользователями
+        formatted_rows.append(["", ""])
 
     return formatted_rows
 
@@ -133,38 +134,6 @@ with gr.Blocks(css="style.css") as admin_interface:
                 interactive=False,
                 wrap=True
             )
-
-            def update_table(show_inactive):
-                """Форматирует данные таблицы с пропусками строк между пользователями."""
-                table = load_data(show_inactive)
-                formatted_rows = []
-
-                for row in table:
-                    username = row[0]
-                    allowed_ips = row[2]
-                    recent = row[5]
-                    endpoint = row[1] or "N/A"
-                    up = row[4]
-                    down = row[3]
-                    status = row[6]
-                    created = row[7] if len(row) > 7 else "N/A"
-                    expires = row[8] if len(row) > 8 else "N/A"
-
-                    # Эмодзи для состояния
-                    recent_emoji = "🟢" if status == "active" else "🔴"
-                    state_emoji = "✅" if status == "active" else "❌"
-
-                    # Формирование строк для пользователя
-                    formatted_rows.append([f"👤: {username}", f"📧: user@mail.wg"])
-                    formatted_rows.append([f"📅 Создан : {format_time(created)}", f"⏳ Истекает : {format_time(expires)}"])
-                    formatted_rows.append([f"🌐 int.IP : {allowed_ips} {recent_emoji}", f"⬆️ {up}"])
-                    formatted_rows.append([f"🌐 ext.IP : {endpoint}", f"⬇️ {down}"])
-                    formatted_rows.append([f"⏳ Осталось: {calculate_time_remaining(expires)}", f"State: {state_emoji}"])
-
-                    # Добавление пустой строки между пользователями
-                    formatted_rows.append(["", ""])
-
-                return formatted_rows
 
             def search_and_update_table(query, show_inactive):
                 """Фильтрует данные таблицы по запросу."""
