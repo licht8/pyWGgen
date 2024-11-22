@@ -25,7 +25,7 @@ def statistics_tab():
             selected_user_info = gr.Textbox(
                 label="User Information", 
                 interactive=False, 
-                value="Use the search below and then click on a cell to view."
+                value="Use the search below for filtering."
             )
 
         # Кнопки действий
