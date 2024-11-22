@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# gradio_admin/functions/show_user_info.py
+# Функции для отображения информации о пользователе в проекте wg_qr_generator
+
 from gradio_admin.functions.user_records import load_user_records
 from gradio_admin.functions.format_helpers import format_time
 
