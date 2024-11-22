@@ -4,6 +4,7 @@
 
 import sys
 import os
+import json
 import gradio as gr
 from datetime import datetime
 
@@ -33,15 +34,15 @@ def calculate_time_remaining(expiry_time):
         dt_expiry = datetime.fromisoformat(expiry_time)
         delta = dt_expiry - datetime.now()
         if delta.days >= 0:
-            return f"{delta.days} дней"
-        return "Истёк"
+            return f"{delta.days} days"
+        return "Expired"
     except Exception:
         return "N/A"
 
 
 # Функция для обновления таблицы
 def update_table(show_inactive):
-    """Форматирует данные таблицы с шестью строками на пользователя."""
+    """Форматирует данные таблицы."""
     table = load_data(show_inactive)
     formatted_rows = []
 
@@ -58,32 +59,90 @@ def update_table(show_inactive):
 
         # Эмодзи для состояния
         recent_emoji = "🟢" if status == "active" else "🔴"
-        state_emoji = "✅" if status == "active" else "❌"
 
         # Формирование строк для пользователя
-        formatted_rows.append([f"👤 User account : {username}", f"📧 User e-mail : user@mail.wg"])
-        formatted_rows.append([f"🌱 Created : {format_time(created)}", f"🔥 Expires : {format_time(expires)}"])
-        formatted_rows.append([f"🌐 intIP {recent_emoji}  : {allowed_ips}", f"⬆️ up : {up}"])
-        formatted_rows.append([f"🌎 extIP {recent_emoji}  : {endpoint}", f"⬇️ dw : {down}"])
-        formatted_rows.append([f"📅 TimeLeft : {calculate_time_remaining(expires)}", f"State : {state_emoji}"])
-
-        # Добавление пустой строки между пользователями
-        formatted_rows.append(["", ""])
+        formatted_rows.append([f"👤 {username}", f"⬆️ {up}"])
+        formatted_rows.append([f"🌐 intIP {recent_emoji}  : {allowed_ips}", f"⬇️ {down}"])
+        formatted_rows.append([f"🌎 extIP {recent_emoji}  : {endpoint}", f"📅 TimeLeft: {calculate_time_remaining(expires)}"])
+        formatted_rows.append(["", ""])  # Пустая строка для разделения пользователей
 
     return formatted_rows
+
+
+# Функция для загрузки информации о пользователе
+def load_user_info(username):
+    """Возвращает информацию о пользователе для отображения."""
+    user_records_path = "/root/pyWGgen/wg_qr_generator/user/data/user_records.json"
+    user_data = {}
+
+    try:
+        with open(user_records_path, "r") as f:
+            user_data = json.load(f)
+    except FileNotFoundError:
+        print(f"[DEBUG] File not found: {user_records_path}")
+    except Exception as e:
+        print(f"[DEBUG] Error reading user records: {e}")
+
+    user_info = user_data.get(username, {})
+    created = format_time(user_info.get("created_at", "N/A"))
+    expires = format_time(user_info.get("expires_at", "N/A"))
+    address = user_info.get("address", "N/A")
+
+    return f"""
+👤 User: {username}
+📧 Email: user@mail.wg
+🌱 Created: {created}
+🔥 Expires: {expires}
+🌐 Internal IP: {address}
+🌎 External IP: N/A
+⬆️ Uploaded: N/A
+⬇️ Downloaded: N/A
+✅ Status: N/A
+"""
+
+
+# Функция для отображения информации о пользователе
+def show_user_info(selected_data):
+    """Показывает информацию о выбранном пользователе."""
+    try:
+        print("[DEBUG] Вызов функции show_user_info")
+        print(f"[DEBUG] Selected data raw: {selected_data}")
+
+        if selected_data is None or len(selected_data) == 0:
+            return "First select data from the table!"
+
+        if isinstance(selected_data, list) and len(selected_data) == 1:
+            clicked_cell = selected_data[0]
+            print(f"[DEBUG] Clicked cell: {clicked_cell}")
+
+            # Определяем имя пользователя из клика
+            for row in update_table(True):
+                if clicked_cell in row:
+                    username = row[0].replace("👤 ", "")  # Удаляем эмодзи
+                    print(f"[DEBUG] Extracted username: {username}")
+
+                    # Получение детальной информации о пользователе
+                    user_info = load_user_info(username)
+                    print(f"[DEBUG] User info:\n{user_info}")
+                    return user_info.strip()
+
+        return "Error: could not determine the user from the selected data."
+    except Exception as e:
+        print(f"[DEBUG] Error: {e}")
+        return f"Error processing data: {str(e)}"
 
 
 # Основной интерфейс
 with gr.Blocks(css="style.css") as admin_interface:
     # Вкладка для создания пользователя
-    with gr.Tab("🌱 Создать"):
+    with gr.Tab("Create"):
         with gr.Row():
-            gr.Markdown("## Создать нового пользователя")
+            gr.Markdown("## Create a new user")
         with gr.Column(scale=1, min_width=300):
-            username_input = gr.Textbox(label="Имя пользователя", placeholder="Введите имя пользователя...")
-            create_button = gr.Button("Создать пользователя")
-            create_output = gr.Textbox(label="Результат создания", interactive=False)
-            qr_code_image = gr.Image(label="QR-код", visible=False)
+            username_input = gr.Textbox(label="Username", placeholder="Enter username...")
+            create_button = gr.Button("Create User")
+            create_output = gr.Textbox(label="Creation Result", interactive=False)
+            qr_code_image = gr.Image(label="QR Code", visible=False)
 
             def handle_create_user(username):
                 """Обработчик для создания пользователя и отображения QR-кода."""
@@ -99,23 +158,23 @@ with gr.Blocks(css="style.css") as admin_interface:
             )
 
     # Вкладка для удаления пользователей
-    with gr.Tab("🔥 Удалить"):
+    with gr.Tab("Delete"):
         with gr.Row():
-            gr.Markdown("## Удалить пользователя")
+            gr.Markdown("## Delete a user")
         with gr.Column(scale=1, min_width=300):
-            delete_input = gr.Textbox(label="Имя пользователя для удаления", placeholder="Введите имя пользователя...")
-            delete_button = gr.Button("Удалить пользователя")
-            delete_output = gr.Textbox(label="Результат удаления", interactive=False)
+            delete_input = gr.Textbox(label="Username to delete", placeholder="Enter username...")
+            delete_button = gr.Button("Delete User")
+            delete_output = gr.Textbox(label="Deletion Result", interactive=False)
             delete_button.click(delete_user, inputs=delete_input, outputs=delete_output)
 
     # Вкладка для статистики пользователей WireGuard
-    with gr.Tab("🔍 Статистика"):
+    with gr.Tab("Statistics"):
         with gr.Row():
-            gr.Markdown("## Статистика")
-        with gr.Column(scale=1, min_width=300):
-            search_input = gr.Textbox(label="Поиск", placeholder="Введите данные для фильтрации...")
-            refresh_button = gr.Button("Обновить")
-            show_inactive = gr.Checkbox(label="Показать неактивных", value=True)
+            gr.Markdown("## User Statistics")
+        with gr.Row():
+            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...")
+            refresh_button = gr.Button("Refresh")
+            show_inactive = gr.Checkbox(label="Show inactive", value=True)
         with gr.Row():
             stats_table = gr.Dataframe(
                 headers=["👥 User's info", "🆔 Other info"],
@@ -124,89 +183,28 @@ with gr.Blocks(css="style.css") as admin_interface:
                 wrap=True
             )
         with gr.Row():
-            selected_user_info = gr.Textbox(
-                label="User Information",
-                placeholder="Информация о пользователе",
-                lines=10
-            )
+            user_info_output = gr.Textbox(label="User Information", interactive=False)
 
-        # Обработчик выбора данных
-        def show_user_info(selected_data):
-            """Показывает информацию о выбранном пользователе."""
-            try:
-                print("[DEBUG] Вызов функции show_user_info")
-                if selected_data is None or len(selected_data) == 0:
-                    return "Сначала выберите данные из таблицы!"
+        # Обработчики событий
+        search_input.change(
+            fn=lambda query, show_inactive: [
+                update_table(show_inactive),
+                "",
+            ],
+            inputs=[search_input, show_inactive],
+            outputs=[stats_table, user_info_output],
+        )
 
-                # Получаем индекс выбранной строки
-                row_index = selected_data[0]
-                print(f"[DEBUG] Selected row index: {row_index}")
-
-                # Подгружаем текущую таблицу
-                table = update_table(show_inactive=True)
-
-                if row_index >= len(table):
-                    return "Ошибка: выбранная строка за пределами таблицы."
-
-                # Данные выбранной строки
-                row_data = table[row_index]
-                print(f"[DEBUG] Selected row data: {row_data}")
-
-                username = row_data[0].replace("👤 User account : ", "").strip()
-                created = row_data[7] if len(row_data) > 7 else "N/A"
-                expires = row_data[8] if len(row_data) > 8 else "N/A"
-                int_ip = row_data[2]
-                ext_ip = row_data[1]
-                up = row_data[4]
-                down = row_data[3]
-                state = row_data[6]
-
-                # Форматирование информации
-                user_info = f"""
-👤 User: {username}
-📧 Email: user@mail.wg
-🌱 Created: {created}
-🔥 Expires: {expires}
-🌐 Internal IP: {int_ip}
-🌎 External IP: {ext_ip}
-⬆️ Uploaded: {up}
-⬇️ Downloaded: {down}
-✅ Status: {state}
-"""
-                print(f"[DEBUG] User info:\n{user_info}")
-                return user_info.strip()
-
-            except Exception as e:
-                print(f"[DEBUG] Error: {e}")
-                return f"Error processing data: {str(e)}"
+        refresh_button.click(
+            fn=lambda show_inactive: update_table(show_inactive),
+            inputs=[show_inactive],
+            outputs=[stats_table],
+        )
 
         stats_table.select(
             fn=show_user_info,
             inputs=[stats_table],
-            outputs=[selected_user_info]
-        )
-
-        # Обновление данных при нажатии кнопки "Refresh"
-        refresh_button.click(
-            fn=update_table,
-            inputs=[show_inactive],
-            outputs=[stats_table]
-        )
-
-        # Поиск
-        def search_and_update_table(query, show_inactive):
-            """Фильтрует данные таблицы по запросу."""
-            table = update_table(show_inactive)
-            if query:
-                table = [
-                    row for row in table if query.lower() in " ".join(map(str, row)).lower()
-                ]
-            return table
-
-        search_input.change(
-            fn=search_and_update_table,
-            inputs=[search_input, show_inactive],
-            outputs=[stats_table]
+            outputs=[user_info_output],
         )
 
 # Запуск интерфейса
