@@ -42,6 +42,17 @@ def statistics_tab():
                 wrap=True
             )
 
+        # Добавляем кастомный JavaScript
+        search_input.style(js="""
+            document.querySelector("textarea").addEventListener("keydown", function(event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    document.querySelector("textarea").blur(); // Снимает фокус с текстового поля
+                    document.querySelector("[data-testid='datatable']").scrollIntoView({ behavior: "smooth" }); // Скроллит к таблице
+                }
+            });
+        """)
+
         # Функция для показа информации о пользователе
         def show_user_info(selected_data, query):
             """Показывает подробную информацию о выбранном пользователе."""
