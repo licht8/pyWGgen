@@ -84,17 +84,16 @@ with gr.Blocks(css="style.css") as admin_interface:
             show_inactive = gr.Checkbox(label="Показать неактивных пользователей", value=True)
             stats_table = gr.Dataframe(
                 headers=["Пользователь", "Endpoints", "Разрешенные IPs", "Принято", "Отправлено", "Handshake", "Статус"],
+                value=load_data(True),  # Инициализация таблицы с данными
                 interactive=False
             )
 
-            # Добавляем обработчик для обновления таблицы
+            # Обновление таблицы при изменении состояния чекбокса
             def update_table(show_inactive):
-                # Загружаем данные из файла
                 table = load_data(show_inactive)
                 print(f"Таблица для обновления: {table}")  # Отладка
                 return table
 
-            # Привязываем функцию к изменению чекбокса
             show_inactive.change(fn=update_table, inputs=[show_inactive], outputs=[stats_table])
 
 # Запуск интерфейса
