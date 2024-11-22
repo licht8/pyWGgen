@@ -15,6 +15,7 @@ sys.path.insert(0, project_root)
 from gradio_admin.functions.table_helpers import update_table
 from gradio_admin.functions.format_helpers import format_user_info
 from gradio_admin.functions.user_records import load_user_records
+from gradio_admin.tabs.delete_tab import get_delete_tab  # Подключение вкладки
 
 # Основной интерфейс
 with gr.Blocks(css="style.css") as admin_interface:
@@ -42,21 +43,8 @@ with gr.Blocks(css="style.css") as admin_interface:
                 outputs=[create_output, qr_code_image]
             )
 
-    # Вкладка для удаления пользователей
-    with gr.Tab("🔥 Delete"):
-        with gr.Row():
-            gr.Markdown("## Delete a user")
-        with gr.Column(scale=1, min_width=300):
-            delete_input = gr.Textbox(label="Username to delete", placeholder="Enter username...")
-            delete_button = gr.Button("Delete User")
-            delete_output = gr.Textbox(label="Result", interactive=False)
-
-            def handle_delete_user(username):
-                """Обработчик для удаления пользователя."""
-                from gradio_admin.delete_user import delete_user
-                return delete_user(username)
-
-            delete_button.click(handle_delete_user, inputs=delete_input, outputs=delete_output)
+    # Вкладка для удаления пользователей (вызывается через модуль)
+    get_delete_tab()
 
     # Вкладка для статистики пользователей WireGuard
     with gr.Tab("🔍 Statistics"):
