@@ -1,18 +1,3 @@
-#!/usr/bin/env python3
-"""
-gradio_admin/wg_users_stats.py
-
-Функции для получения статистики пользователей WireGuard.
-"""
-
-import json
-import os
-
-# Путь к файлу JSON
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-JSON_LOG_PATH = os.path.join(PROJECT_ROOT, "logs/wg_users.json")
-
-
 def load_data(show_inactive):
     """
     Загружает данные пользователей WireGuard из JSON-файла и фильтрует их.
@@ -46,5 +31,5 @@ def load_data(show_inactive):
             "Активен" if user_data["status"] == "active" else "Неактивен"
         ])
 
-    print(f"Форматированная таблица: {table}")  # Отладка
+    print(f"Форматированная таблица перед возвратом: {table}")  # Отладка
     return table
