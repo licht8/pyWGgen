@@ -76,50 +76,42 @@ with gr.Blocks(css="style.css") as admin_interface:
             search_output = gr.Textbox(label="Результат поиска", interactive=False)
             search_button.click(search_user, inputs=search_input, outputs=search_output)
 
-# Вкладка для статистики пользователей WireGuard
-with gr.Tab("Статистика пользователей"):
-    with gr.Row():
-        gr.Markdown("## Статистика пользователей WireGuard")
-    with gr.Column(scale=1, min_width=300):
-        show_inactive = gr.Checkbox(label="Показать неактивных пользователей", value=True)
-        stats_table = gr.HTML(value="")  # Используем HTML для таблицы
+    # Вкладка для статистики пользователей WireGuard
+    with gr.Tab("Статистика пользователей"):
+        with gr.Row():
+            gr.Markdown("## Статистика пользователей WireGuard")
+        with gr.Column(scale=1, min_width=300):
+            show_inactive = gr.Checkbox(label="Показать неактивных пользователей", value=True)
+            stats_table = gr.HTML(value="")  # Используем HTML для таблицы
 
-        def update_table(show_inactive):
-            table = load_data(show_inactive)
-            print(f"Таблица для обновления: {table}")  # Отладка
-
-            # Создаем HTML-таблицу
-            table_html = """
-            <table border="1" style="border-collapse: collapse; width: 100%;">
-                <thead>
-                    <tr>
-                        <th>Пользователь</th>
-                        <th>Endpoints</th>
-                        <th>Разрешенные IPs</th>
-                        <th>Принято</th>
-                        <th>Отправлено</th>
-                        <th>Handshake</th>
-                        <th>Статус</th>
-                    </tr>
-                </thead>
-                <tbody>
-            """
-            for row in table:
-                table_html += "<tr>" + "".join(f"<td>{col}</td>" for col in row) + "</tr>"
-            table_html += "</tbody></table>"
-
-            return table_html
-
-        show_inactive.change(fn=update_table, inputs=[show_inactive], outputs=[stats_table])
-
-
-            # Обновление таблицы при изменении состояния чекбокса
             def update_table(show_inactive):
                 table = load_data(show_inactive)
                 print(f"Таблица для обновления: {table}")  # Отладка
-                return table
+
+                # Создаем HTML-таблицу
+                table_html = """
+                <table border="1" style="border-collapse: collapse; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Пользователь</th>
+                            <th>Endpoints</th>
+                            <th>Разрешенные IPs</th>
+                            <th>Принято</th>
+                            <th>Отправлено</th>
+                            <th>Handshake</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                """
+                for row in table:
+                    table_html += "<tr>" + "".join(f"<td>{col}</td>" for col in row) + "</tr>"
+                table_html += "</tbody></table>"
+
+                return table_html
 
             show_inactive.change(fn=update_table, inputs=[show_inactive], outputs=[stats_table])
+            stats_table.update(value=update_table(True))  # Инициализация с отображением всех пользователей
 
 # Запуск интерфейса
 if __name__ == "__main__":
