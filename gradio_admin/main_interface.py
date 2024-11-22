@@ -5,6 +5,7 @@
 import sys
 import os
 import gradio as gr
+from datetime import datetime, timedelta
 
 # Добавляем путь к корневой директории проекта
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -17,9 +18,31 @@ from gradio_admin.search_user import search_user
 from gradio_admin.wg_users_stats import load_data  # Импорт статистики пользователей
 
 
+# Функция для форматирования времени
+def format_time(iso_time):
+    """Форматирует время из ISO 8601 в читаемый формат."""
+    try:
+        dt = datetime.fromisoformat(iso_time)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return "N/A"
+
+
+def calculate_time_remaining(expiry_time):
+    """Вычисляет оставшееся время до истечения."""
+    try:
+        dt_expiry = datetime.fromisoformat(expiry_time)
+        delta = dt_expiry - datetime.now()
+        if delta.days >= 0:
+            return f"{delta.days} дней"
+        return "Истёк"
+    except Exception:
+        return "N/A"
+
+
 # Функция для обновления таблицы
 def update_table(show_inactive):
-    """Форматирует данные таблицы с тремя строками на пользователя."""
+    """Форматирует данные таблицы с шестью строками на пользователя."""
     table = load_data(show_inactive)
     print(f"[DEBUG] Загружены данные: {table}")  # Отладка
     formatted_rows = []
@@ -32,15 +55,20 @@ def update_table(show_inactive):
         up = row[4]
         down = row[3]
         status = row[6]
+        created = row[7] if len(row) > 7 else "N/A"
+        expires = row[8] if len(row) > 8 else "N/A"
 
         # Эмодзи для состояния
         recent_emoji = "🟢" if status == "active" else "🔴"
         state_emoji = "✅" if status == "active" else "❌"
 
         # Формирование строк
-        formatted_rows.append([f"{username}", f"Up: {up}"])
-        formatted_rows.append([f"{allowed_ips} {recent_emoji}", f"Down: {down}"])
-        formatted_rows.append([f"Endpoint: {endpoint}", f"State: {state_emoji}"])
+        formatted_rows.append([f"👤: {username}", f"⬆️ {up}"])
+        formatted_rows.append([f"🌐 int.IP : {allowed_ips} {recent_emoji}", f"⬇️ {down}"])
+        formatted_rows.append([f"🌐 ext.IP : {endpoint}", f"State: {state_emoji}"])
+        formatted_rows.append([f"📅 Создан : {format_time(created)}", ""])
+        formatted_rows.append([f"⏳ Истекает : {format_time(expires)}", ""])
+        formatted_rows.append([f"⏳ Осталось: {calculate_time_remaining(expires)}", ""])
 
     return formatted_rows
 
