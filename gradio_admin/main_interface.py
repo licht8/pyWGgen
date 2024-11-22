@@ -168,18 +168,32 @@ with gr.Blocks(css="style.css") as admin_interface:
                 # Если данные предоставлены в формате списка
                 if isinstance(selected_data, list):
                     print(f"[DEBUG] Data format: list, data: {selected_data}")  # Отладка
-                    row = selected_data
+                    clicked_cell = selected_data[0] if selected_data else "N/A"
                 # Если данные предоставлены в формате DataFrame
                 elif isinstance(selected_data, pd.DataFrame):
                     print(f"[DEBUG] Data format: DataFrame, data:\n{selected_data}")  # Отладка
-                    row = selected_data.iloc[0].values
+                    clicked_cell = selected_data.iloc[0, 0]  # Первая ячейка первой строки
                 else:
                     return "Unsupported data format!"
 
-                print(f"[DEBUG] Extracted row: {row}")  # Отладка
+                print(f"[DEBUG] Clicked cell: {clicked_cell}")  # Отладка
 
-                # Безопасно извлекаем данные, проверяя длину строки
-                username = row[0].replace("👤 User account : ", "") if len(row) > 0 else "N/A"
+                # Попытка извлечь имя пользователя из кликаемой строки
+                if clicked_cell.startswith("👤 User account : "):
+                    username = clicked_cell.replace("👤 User account : ", "")
+                elif clicked_cell.startswith("🌐 intIP "):
+                    # Если клик был на строке IP, найти имя пользователя по IP
+                    ip = clicked_cell.split(":")[-1].strip()
+                    records = load_user_records()
+                    username = next(
+                        (name for name, data in records.items() if data.get("address") == ip), "N/A"
+                    )
+                else:
+                    username = "N/A"
+
+                print(f"[DEBUG] Extracted username: {username}")  # Отладка
+
+                # Получаем данные о пользователе
                 email = "user@mail.wg"  # Заглушка
                 records = load_user_records()
                 user_data = records.get(username, {})
@@ -187,10 +201,10 @@ with gr.Blocks(css="style.css") as admin_interface:
                 created = user_data.get("created_at", "N/A")
                 expires = user_data.get("expires_at", "N/A")
                 int_ip = user_data.get("address", "N/A")
-                ext_ip = "N/A" if len(row) <= 4 else row[4].replace("🌎 extIP : ", "N/A")
-                up = "N/A" if len(row) <= 5 else row[5].replace("⬆️ up : ", "N/A")
-                down = "N/A" if len(row) <= 6 else row[6].replace("⬇️ dw : ", "N/A")
-                state = "N/A" if len(row) <= 7 else row[7].replace("State : ", "N/A")
+                ext_ip = "N/A"
+                up = "N/A"
+                down = "N/A"
+                state = "N/A"
 
                 # Формируем текстовый вывод
                 user_info = f"""
