@@ -15,36 +15,35 @@ def statistics_tab():
         with gr.Row():
             gr.Markdown("## Statistics")
 
-        # Верхние элементы: Чекбокс Show inactive, Кнопка Refresh
+        # Чекбокс Show inactive и кнопка Refresh
         with gr.Row():
             show_inactive = gr.Checkbox(label="Show inactive", value=True)
             refresh_button = gr.Button("Refresh")
 
-        # Поле для отображения информации о выбранном пользователе
+        # Область для отображения информации о выбранном пользователе
         with gr.Row():
             selected_user_info = gr.Textbox(label="User Information", interactive=False)
-
-        # Поле поиска
-        with gr.Row():
-            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True, scale=10)
-        with gr.Row():
-            search_button = gr.Button("Search", scale=1)
 
         # Кнопки действий
         with gr.Row():
             block_button = gr.Button("Block")
             delete_button = gr.Button("Delete")
 
+        # Поиск во всю ширину с кнопкой поиска
+        with gr.Row():
+            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True)
+            search_button = gr.Button("Search")
+
         # Таблица с данными
         with gr.Row():
             stats_table = gr.Dataframe(
                 headers=["👥 User's info", "🆔 Other info"],
                 value=update_table(True),
-                interactive=True,  # Таблица интерактивна для выбора строк
+                interactive=False,  # Таблица только для чтения
                 wrap=True
             )
 
-        # Отображение информации о выбранном пользователе
+        # Функция для показа информации о пользователе
         def show_user_info(selected_data, query):
             """Показывает подробную информацию о выбранном пользователе."""
             print("[DEBUG] Вызов функции show_user_info")  # Отладка
@@ -102,7 +101,7 @@ def statistics_tab():
             outputs=[search_input, selected_user_info, stats_table]
         )
 
-        # Связь поиска с обновлением таблицы
+        # Поиск
         def search_and_update_table(query, show_inactive):
             """Фильтрует данные таблицы по запросу."""
             table = update_table(show_inactive)
@@ -118,9 +117,7 @@ def statistics_tab():
             outputs=[stats_table]
         )
 
-        # Кнопка Search для прокрутки к таблице
+        # Кнопка "Search" просто фокусирует таблицу
         search_button.click(
-            fn=lambda x: x,
-            inputs=[search_input],
-            outputs=[]
+            lambda: None, inputs=[], outputs=[]
         )
