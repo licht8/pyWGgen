@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-gradio_admin/wg_interface.py
+gradio_admin/wg_users_stats.py
 
 Gradio-интерфейс для отображения состояния WireGuard:
 - Фильтрация активных и неактивных пользователей.
