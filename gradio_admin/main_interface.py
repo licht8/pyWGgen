@@ -77,7 +77,7 @@ def update_table(show_inactive):
 # Основной интерфейс
 with gr.Blocks(css="style.css") as admin_interface:
     # Вкладка для создания пользователя
-    with gr.Tab("Создание пользователя"):
+    with gr.Tab("Создать"):
         with gr.Row():
             gr.Markdown("## Создать нового пользователя")
         with gr.Column(scale=1, min_width=300):
@@ -100,7 +100,7 @@ with gr.Blocks(css="style.css") as admin_interface:
             )
 
     # Вкладка для удаления пользователей
-    with gr.Tab("Удаление пользователей"):
+    with gr.Tab("Удаление"):
         with gr.Row():
             gr.Markdown("## Удалить пользователя")
         with gr.Column(scale=1, min_width=300):
