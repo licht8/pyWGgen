@@ -44,7 +44,7 @@ with gr.Blocks(css="style.css") as admin_interface:
             )
 
     # Вкладка для удаления пользователей
-    delete_user_tab()  # Ссылка на модуль вкладки удаления
+    delete_user_tab()
 
     # Вкладка для статистики пользователей WireGuard
     with gr.Tab("🔍 Statistics"):
@@ -67,7 +67,7 @@ with gr.Blocks(css="style.css") as admin_interface:
             stats_table = gr.Dataframe(
                 headers=["👥 User's info", "🆔 Other info"],
                 value=update_table(True),
-                interactive=True,
+                interactive=False,  # Делаем таблицу только для чтения
                 wrap=True
             )
 
