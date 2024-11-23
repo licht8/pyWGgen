@@ -7,6 +7,23 @@
 
 ---
 
+## Оглавление
+
+1. [Основные возможности](#основные-возможности)
+2. [Веб-интерфейс Gradio](#веб-интерфейс-gradio)
+   - [Как запустить админку](#как-запустить-админку)
+3. [Требования](#требования)
+   - [Установка Python, Git и Node.js](#установка-python-git-и-nodejs-на-centos-stream-8)
+4. [Установка и запуск проекта](#установка-и-запуск-проекта)
+   - [Быстрая установка](#быстрая-установка)
+5. [Использование меню](#использование-меню)
+6. [Структура проекта](#структура-проекта)
+7. [Тестирование](#тестирование)
+8. [Лицензия](#лицензия)
+9. [Контакты](#контакты)
+
+---
+
 ## Основные возможности
 
 - **Генерация конфигураций**: Автоматическое создание конфигурационных файлов и QR-кодов для пользователей.
@@ -123,34 +140,45 @@ wg_qr_generator-main
 ├── wireguard-install.sh
 ├── gradio_admin
 │   ├── __init__.py
-│   ├── create_user.py
-│   ├── delete_user.py
-│   ├── list_users.py
-│   ├── main_interface.py
-│   ├── search_user.py
+│   ├── create_user.py                # Скрипт для создания пользователя
+│   ├── delete_user.py                # Скрипт для удаления пользователя
+│   ├── list_users.py                 # Список пользователей WireGuard
+│   ├── main_interface.py             # Главный интерфейс Gradio
+│   ├── search_user.py                # Поиск пользователей
+│   ├── tabs                          # Отдельные вкладки интерфейса
+│   │   ├── __init__.py
+│   │   ├── create_user_tab.py        # Вкладка создания пользователя
+│   │   ├── delete_user_tab.py        # Вкладка удаления пользователя
+│   │   ├── statistics_tab.py         # Вкладка статистики
+│   ├── functions                     # Утилитарные функции для вкладок
+│   │   ├── __init__.py
+│   │   ├── format_helpers.py         # Форматирование данных
+│   │   ├── show_user_info.py         # Отображение информации о пользователе
+│   │   ├── table_helpers.py          # Работа с таблицами
+│   │   ├── user_records.py           # Работа с JSON-файлами пользователей
 ├── modules
-│   ├── account_expiry.py
-│   ├── check_user.py
-│   ├── client_config.py
-│   ├── config.py
-│   ├── config_writer.py
-│   ├── directory_setup.py
-│   ├── ip_management.py
-│   ├── keygen.py
-│   ├── qr_generator.py
-│   ├── sync.py
-│   ├── user_management.py
-│   ├── utils.py
+│   ├── account_expiry.py             # Управление сроками действия аккаунтов
+│   ├── check_user.py                 # Проверка наличия пользователя
+│   ├── client_config.py              # Конфигурация клиента
+│   ├── config.py                     # Основной конфигурационный файл
+│   ├── config_writer.py              # Запись конфигурации
+│   ├── directory_setup.py            # Настройка директорий
+│   ├── ip_management.py              # Управление IP-адресами
+│   ├── keygen.py                     # Генерация ключей
+│   ├── qr_generator.py               # Генерация QR-кодов
+│   ├── sync.py                       # Синхронизация данных
+│   ├── user_management.py            # Управление пользователями
+│   ├── utils.py                      # Вспомогательные функции
 └── test
-    ├── test_account_expiry.py
-    ├── test_check_user.py
-    ├── test_config_writer.py
-    ├── test_directory_setup.py
-    ├── test_ip_management.py
-    ├── test_keygen.py
-    ├── test_qr_generator.py
-    ├── test_sync.py
-    └── test_user_management.py
+    ├── test_account_expiry.py        # Тесты для account_expiry.py
+    ├── test_check_user.py            # Тесты для check_user.py
+    ├── test_config_writer.py         # Тесты для config_writer.py
+    ├── test_directory_setup.py       # Тесты для directory_setup.py
+    ├── test_ip_management.py         # Тесты для ip_management.py
+    ├── test_keygen.py                # Тесты для keygen.py
+    ├── test_qr_generator.py          # Тесты для qr_generator.py
+    ├── test_sync.py                  # Тесты для sync.py
+    └── test_user_management.py       # Тесты для user_management.py
 ```
 
 ---
@@ -172,4 +200,6 @@ pytest
 
 ## Контакты
 
-Если у вас есть вопросы или предложения, свяжитесь с нами через [Issues](https://github.com/licht8/wg_qr_generator/issues).
+Если у вас есть вопросы или предложения, свяжитесь
+
+ с нами через [Issues](https://github.com/licht8/wg_qr_generator/issues).
