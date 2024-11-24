@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # menu.py
-## Меню для управления проектом wg_qr_generator
-# Предоставляет интерфейс для управления VPN, запуска тестов, основного скрипта и Gradio админки.
+# Меню для управления проектом wg_qr_generator
 
 import os
 import subprocess
@@ -12,11 +11,14 @@ import sys
 WIREGUARD_BINARY = "/usr/bin/wg"
 WIREGUARD_INSTALL_SCRIPT = "wireguard-install.sh"
 CONFIG_DIR = "user/data"
-TEST_USER = "test_user"
 ADMIN_PORT = 7860
 GRADIO_ADMIN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "gradio_admin/main_interface.py"))
-MANAGE_EXPIRY_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "modules/manage_expiry_menu.py"))
-CREATE_USER_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "main.py"))
+
+# Добавляем текущий каталог в PYTHONPATH
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
+# Импортируем подменю
+from modules.manage_expiry_menu import manage_expiry_menu
 
 
 def check_wireguard_installed():
@@ -38,17 +40,6 @@ def remove_wireguard():
     print("❌ Удаление WireGuard...")
     subprocess.run(["yum", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL) or \
     subprocess.run(["apt", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL)
-
-
-def ensure_test_config_exists():
-    """Создание тестовой конфигурации, если она отсутствует."""
-    config_path = os.path.join(CONFIG_DIR, f"{TEST_USER}.conf")
-    if not os.path.exists(config_path):
-        print("⚙️  Тестовая конфигурация отсутствует. Создаём тестового пользователя...")
-        subprocess.run(["python3", "main.py", TEST_USER])
-        print(f"✅ Тестовый пользователь '{TEST_USER}' успешно создан.")
-    else:
-        print(f"✅ Тестовая конфигурация '{TEST_USER}' уже существует.")
 
 
 def open_firewalld_port(port):
@@ -93,58 +84,20 @@ def run_gradio_admin_interface():
         close_firewalld_port(ADMIN_PORT)
 
 
-def manage_user_menu():
-    """Меню управления пользователями."""
-    while True:
-        print("\n========== Управление пользователями ==========")
-        print("1. Создать пользователя")
-        print("2. Управление сроками действия")
-        print("0. Вернуться в главное меню")
-        print("===============================================")
-        choice = input("Выберите действие: ").strip()
-
-        if choice == "1":
-            nickname = input("Введите имя пользователя (nickname): ").strip()
-            subprocess.run(["python3", CREATE_USER_SCRIPT, nickname])
-        elif choice == "2":
-            manage_expiry_menu()
-        elif choice in {"0", "q"}:
-            print("🔙 Возврат в главное меню...")
-            break
-        else:
-            print("⚠️ Некорректный выбор. Попробуйте еще раз.")
-
-
-def manage_expiry_menu():
-    """Запуск меню управления сроками действия."""
-    if not os.path.exists(MANAGE_EXPIRY_SCRIPT):
-        print(f"❌ Скрипт {MANAGE_EXPIRY_SCRIPT} не найден.")
-        return
-
-    try:
-        subprocess.run(["python3", MANAGE_EXPIRY_SCRIPT])
-    except KeyboardInterrupt:
-        print("\n🔙 Возврат в главное меню...")
-
-
 def show_menu():
-    """Отображение главного меню."""
+    """Отображение меню."""
     while True:
         wireguard_installed = check_wireguard_installed()
         print("\n================== Меню ==================")
         print("1. Запустить тесты")
         print("2. Открыть Gradio админку")
         print("3. Управление пользователями")
-        if wireguard_installed:
-            print("4. Переустановить WireGuard ♻️")
-            print("5. Удалить WireGuard 🗑️")
-        else:
-            print("4. Установить WireGuard ⚙️")
+        print("4. Переустановить WireGuard ♻️")
+        print("5. Удалить WireGuard 🗑️")
         print("0. Выход")
         print("==========================================")
         choice = input("Выберите действие: ").strip()
         if choice == "1":
-            ensure_test_config_exists()
             print("🔍 Запуск тестов...")
             subprocess.run(["pytest"])
         elif choice == "2":
@@ -160,6 +113,27 @@ def show_menu():
                 print("⚠️ WireGuard не установлен.")
         elif choice == "0":
             print("👋 Выход. До свидания!")
+            break
+        else:
+            print("⚠️ Некорректный выбор. Попробуйте еще раз.")
+
+
+def manage_user_menu():
+    """Подменю для управления пользователями."""
+    while True:
+        print("\n========== Управление пользователями ==========")
+        print("1. Создать пользователя")
+        print("2. Управление сроками действия")
+        print("0. Вернуться в главное меню")
+        print("===============================================")
+        choice = input("Выберите действие: ").strip()
+        if choice == "1":
+            nickname = input("Введите имя пользователя (nickname): ").strip()
+            subprocess.run(["python3", "main.py", nickname])
+        elif choice == "2":
+            manage_expiry_menu()
+        elif choice in ["0", "q"]:
+            print("🔙 Возврат в главное меню...")
             break
         else:
             print("⚠️ Некорректный выбор. Попробуйте еще раз.")
