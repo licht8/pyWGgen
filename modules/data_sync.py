@@ -57,36 +57,31 @@ def sync_user_data():
     synced_data = {}
 
     for username, details in user_records.items():
-        user_address = details.get("allowed_ips", "N/A")
-        matched_peer = None
+        peer_key = details.get("peer", "N/A")
+        wg_data = wg_show_data.get(peer_key, {})
 
-        # Сопоставление по адресу
-        for peer, peer_data in wg_show_data.items():
-            if user_address == peer_data.get("allowed_ips"):
-                matched_peer = peer
-                break
-
-        # Информация из WireGuard
-        wg_data = wg_show_data.get(matched_peer, {})
-
-        # Обновляем существующего пользователя
+        # Обновляем или оставляем существующие поля
         synced_data[username] = {
+            "peer": peer_key,
             "username": username,
-            "allowed_ips": wg_data.get("allowed_ips", user_address),
-            "endpoint": wg_data.get("endpoint", "N/A"),
-            "last_handshake": wg_data.get("latest_handshake", "N/A"),
-            "uploaded": wg_data.get("sent", "N/A"),
-            "downloaded": wg_data.get("received", "N/A"),
-            "created": details.get("created", "N/A"),
-            "expiry": details.get("expiry", "N/A"),
-            "status": "active" if matched_peer else "inactive",
+            "email": details.get("email", "N/A"),
+            "telegram_id": details.get("telegram_id", "N/A"),
+            "allowed_ips": wg_data.get("allowed_ips", details.get("allowed_ips", "N/A")),
+            "endpoint": wg_data.get("endpoint", details.get("endpoint", "N/A")),
+            "last_handshake": wg_data.get("latest_handshake", details.get("last_handshake", "N/A")),
+            "uploaded": wg_data.get("sent", details.get("uploaded", "N/A")),
+            "downloaded": wg_data.get("received", details.get("downloaded", "N/A")),
+            "created": details.get("created_at", "N/A"),
+            "expiry": details.get("expires_at", "N/A"),
+            "qr_code_path": details.get("qr_code_path", "N/A"),
+            "status": "active" if wg_data else "inactive",
         }
 
     # Проверяем новых пользователей из wg show, которых нет в user_records
     for peer, peer_data in wg_show_data.items():
-        if not any(record.get("allowed_ips") == peer_data.get("allowed_ips") for record in synced_data.values()):
+        if not any(record.get("peer") == peer for record in synced_data.values()):
             print(f"⚠️ Новый пользователь из wg show не найден в базе: {peer_data.get('allowed_ips')}")
-            continue  # Игнорируем добавление неизвестных пользователей
+            continue
 
     # Сохранение данных
     with open(USER_RECORDS_JSON, "w") as user_records_file:
