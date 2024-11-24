@@ -57,31 +57,32 @@ def sync_user_data():
     synced_data = {}
 
     for username, details in user_records.items():
-        user_address = details.get("address", "N/A")  # Устанавливаем значение по умолчанию
+        user_address = details.get("address", "N/A")
         matched_peer = None
 
         # Сопоставление по адресу
         for peer, peer_data in wg_show_data.items():
-            allowed_ips = peer_data.get("allowed_ips", "")
-            if allowed_ips and user_address and user_address in allowed_ips:
+            if user_address == peer_data.get("allowed_ips"):
                 matched_peer = peer
                 break
 
+        # Информация из WireGuard
         wg_data = wg_show_data.get(matched_peer, {})
 
+        # Обновляем существующего пользователя
         synced_data[username] = {
             "username": username,
-            "allowed_ips": wg_data.get("allowed_ips", user_address),
+            "allowed_ips": wg_data.get("allowed_ips", details.get("address", "N/A")),
             "endpoint": wg_data.get("endpoint", "N/A"),
             "last_handshake": wg_data.get("latest_handshake", "N/A"),
             "uploaded": wg_data.get("sent", "N/A"),
             "downloaded": wg_data.get("received", "N/A"),
             "created": details.get("created_at", "N/A"),
             "expiry": details.get("expires_at", "N/A"),
-            "status": "active" if wg_data else "inactive",
+            "status": "active" if matched_peer else "inactive",
         }
 
-    # Добавляем новые пиры из wg show, которых нет в user_records
+    # Добавление новых пользователей из wg show
     for peer, peer_data in wg_show_data.items():
         if not any(record.get("allowed_ips") == peer_data.get("allowed_ips") for record in synced_data.values()):
             username = f"user_{peer[:6]}"
@@ -97,7 +98,7 @@ def sync_user_data():
                 "status": "active",
             }
 
-    # Сохраняем данные
+    # Сохранение данных
     with open(USER_RECORDS_JSON, "w") as user_records_file:
         json.dump(synced_data, user_records_file, indent=4)
     with open(WG_USERS_JSON, "w") as wg_users_file:
@@ -105,6 +106,7 @@ def sync_user_data():
 
     print(f"✅ Данные успешно синхронизированы. Файлы обновлены:\n - {WG_USERS_JSON}\n - {USER_RECORDS_JSON}")
     return synced_data
+
 
 if __name__ == "__main__":
     sync_user_data()
