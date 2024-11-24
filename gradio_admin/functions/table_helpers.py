@@ -17,21 +17,22 @@ def update_table(show_inactive):
         up = row[4] if len(row) > 4 else "N/A"
         down = row[3] if len(row) > 3 else "N/A"
         status = row[6] if len(row) > 6 else "N/A"
-        telegram_id = row[7] if len(row) > 7 else "N/A"
-        peer = row[8] if len(row) > 8 else "N/A"
-        created = row[9] if len(row) > 9 else "N/A"
-        expires = row[10] if len(row) > 10 else "N/A"
+        email = row[7] if len(row) > 7 else "N/A"
+        telegram_id = row[8] if len(row) > 8 else "N/A"
+        peer = row[9] if len(row) > 9 else "N/A"
+        created = row[10] if len(row) > 10 else "N/A"
+        expires = row[11] if len(row) > 11 else "N/A"
 
         # Эмодзи для состояния
         status_emoji = "🟢" if status == "active" else "🔴"
 
         # Формирование строк для пользователя
-        formatted_rows.append([f"👤 User account : {username}", f"📧 Telegram ID : {telegram_id}"])
-        formatted_rows.append([f"🌐 Peer : {peer}", f"📅 Time Left : {calculate_time_remaining(expires)}"])
-        formatted_rows.append([f"🌐 Endpoint : {endpoint}", f"⬆️ Uploaded : {up}"])
-        formatted_rows.append([f"⬇️ Downloaded : {down}", f"🌐 IP : {allowed_ips}"])
+        formatted_rows.append([f"👤 User account : {username}", f"📧 Email : {email}"])
+        formatted_rows.append([f"🌐 Peer : {peer}", f"📱 Telegram ID : {telegram_id}"])
+        formatted_rows.append([f"🌐 Endpoint : {endpoint}", f"🌐 IP : {allowed_ips}"])
+        formatted_rows.append([f"⬆️ Uploaded : {up}", f"⬇️ Downloaded : {down}"])
         formatted_rows.append([f"🌱 Created : {format_time(created)}", f"🔥 Expires : {format_time(expires)}"])
-        formatted_rows.append([f"State : {status_emoji}", ""])
+        formatted_rows.append([f"State : {status_emoji}", f"📅 Time Left : {calculate_time_remaining(expires)}"])
 
         # Добавление пустой строки между пользователями
         formatted_rows.append(["", ""])
