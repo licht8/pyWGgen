@@ -2,7 +2,6 @@
 # gradio_admin/wg_users_stats.py
 # Скрипт для работы со статистикой пользователей WireGuard в проекте wg_qr_generator
 
-
 import os
 import json
 
@@ -26,28 +25,38 @@ def load_data(show_inactive):
         print(f"Ошибка декодирования JSON: {e}")
         return [["Ошибка чтения JSON-файла"]]
 
-    users = data.get("users", {})
-    print(f"Загруженные пользователи: {users}")  # Отладка
+    # Логика работы с верхним уровнем JSON
+    print(f"Загруженные пользователи: {data}")  # Отладка
 
     table = []
 
-    for username, user_data in users.items():
-        if not show_inactive and user_data["status"] == "inactive":
+    for username, user_data in data.items():
+        # Пропускаем пользователей со статусом "inactive", если show_inactive == False
+        if not show_inactive and user_data.get("status") == "inactive":
             continue
-        
-        # Стилизация статуса
-        status_color = "green" if user_data["status"] == "active" else "red"
-        status_html = f"<span style='color: {status_color}'>{user_data['status']}</span>"
 
+        # Форматируем статус
+        status_color = "green" if user_data.get("status") == "active" else "red"
+        status_html = f"<span style='color: {status_color}'>{user_data.get('status', 'unknown')}</span>"
+
+        # Добавляем строку в таблицу
         table.append([
-            username or "Неизвестно",
-            ", ".join(user_data.get("endpoints", ["Нет данных"])),
-            user_data.get("allowed_ips", "Нет данных"),
-            user_data["total_transfer"]["received"],
-            user_data["total_transfer"]["sent"],
-            user_data["last_handshake"] or "Никогда",
-            status_html  # HTML для статуса
+            username,
+            user_data.get("endpoint", "N/A"),
+            user_data.get("allowed_ips", "N/A"),
+            user_data.get("uploaded", "N/A"),
+            user_data.get("downloaded", "N/A"),
+            user_data.get("last_handshake", "N/A"),
+            status_html
         ])
 
     print(f"Форматированная таблица перед возвратом: {table}")  # Отладка
     return table
+
+
+if __name__ == "__main__":
+    # Тестовая загрузка данных для отладки
+    print("Тестовая загрузка данных...")
+    test_data = load_data(show_inactive=True)
+    for row in test_data:
+        print(row)
