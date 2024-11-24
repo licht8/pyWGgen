@@ -23,12 +23,8 @@ def load_json(filepath):
 
 def save_json(filepath, data):
     """Сохраняет данные в JSON-файл."""
-    try:
-        with open(filepath, "w") as file:
-            json.dump(data, file, indent=4)
-        print(f"✅ Данные успешно сохранены в {filepath}.")
-    except Exception as e:
-        print(f"❌ Ошибка при сохранении данных в {filepath}: {e}")
+    with open(filepath, "w") as file:
+        json.dump(data, file, indent=4)
 
 
 def get_wg_show_data():
@@ -56,7 +52,6 @@ def get_wg_show_data():
 
         return peers
     except subprocess.CalledProcessError:
-        print("❌ Ошибка при выполнении команды 'wg show'.")
         return {}
 
 
@@ -66,9 +61,10 @@ def sync_user_data():
     wg_show_data = get_wg_show_data()
 
     synced_data = {}
+    updated_user_records = user_records.copy()
 
     for username, details in user_records.items():
-        peer_key = details.get("peer")  # Ожидается, что поле "peer" содержит публичный ключ.
+        peer_key = details.get("peer")
         wg_data = wg_show_data.get(peer_key, {})
 
         synced_data[username] = {
@@ -83,13 +79,27 @@ def sync_user_data():
             "status": "active" if "latest_handshake" in wg_data and wg_data["latest_handshake"] != "N/A" else "inactive",
         }
 
+    # Дополнение user_records новыми данными
+    for peer, wg_data in wg_show_data.items():
+        if not any(details.get("peer") == peer for details in user_records.values()):
+            new_user = {
+                "peer": peer,
+                "created_at": datetime.now().isoformat(),
+                "expires_at": "N/A",
+                "address": wg_data.get("allowed_ips", "N/A"),
+            }
+            username = f"user_{peer[:6]}"  # Создаём временное имя пользователя
+            updated_user_records[username] = new_user
+
     # Сохраняем обновленные данные
     save_json(WG_USERS_JSON, synced_data)
+    save_json(USER_RECORDS_JSON, updated_user_records)
 
+    print(f"✅ Данные успешно синхронизированы. Файлы обновлены:")
+    print(f" - {WG_USERS_JSON}")
+    print(f" - {USER_RECORDS_JSON}")
     return synced_data
 
 
 if __name__ == "__main__":
-    print("🔄 Синхронизация данных пользователей...")
-    synced_users = sync_user_data()
-    print("✅ Синхронизация завершена.")
+    sync_user_data()
