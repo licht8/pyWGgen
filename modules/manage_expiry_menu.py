@@ -3,6 +3,10 @@
 ## Подменю для управления сроками действия пользователей WireGuard
 
 import subprocess
+import os
+
+# Убедимся, что manage_expiry.py ссылается на корректный путь
+MANAGE_EXPIRY_SCRIPT = os.path.join("modules", "manage_expiry.py")
 
 def manage_expiry_menu():
     """Подменю для работы с manage_expiry.py."""
@@ -22,7 +26,7 @@ def manage_expiry_menu():
                 continue
             print("🔍 Проверка сроков действия...")
             try:
-                subprocess.run(["python3", "modules/manage_expiry.py", "check", nickname], check=True)
+                subprocess.run(["python3", MANAGE_EXPIRY_SCRIPT, "check", nickname], check=True)
             except subprocess.CalledProcessError as e:
                 print(f"❌ Ошибка: {e}")
         elif choice == "2":
@@ -33,7 +37,7 @@ def manage_expiry_menu():
             try:
                 days = int(input("Введите количество дней для продления: ").strip())
                 print(f"⏳ Продление срока действия пользователя {nickname} на {days} дней...")
-                subprocess.run(["python3", "modules/manage_expiry.py", "extend", nickname, "--days", str(days)], check=True)
+                subprocess.run(["python3", MANAGE_EXPIRY_SCRIPT, "extend", nickname, "--days", str(days)], check=True)
             except ValueError:
                 print("⚠️ Введите корректное число дней.")
             except subprocess.CalledProcessError as e:
@@ -45,7 +49,7 @@ def manage_expiry_menu():
                 continue
             print(f"🔄 Сброс срока действия пользователя {nickname}...")
             try:
-                subprocess.run(["python3", "modules/manage_expiry.py", "reset", nickname], check=True)
+                subprocess.run(["python3", MANAGE_EXPIRY_SCRIPT, "reset", nickname], check=True)
             except subprocess.CalledProcessError as e:
                 print(f"❌ Ошибка: {e}")
         elif choice == "0":
