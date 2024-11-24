@@ -49,7 +49,7 @@ def statistics_tab():
         # Таблица с данными пользователей
         with gr.Row():
             stats_table = gr.Dataframe(
-                headers=["👥 User's Info", "🆔 Other Info"],
+                headers=["👥 User's Info", "Peer", "Telegram ID", "🆔 Other Info"],
                 value=update_table(True),
                 interactive=False,  # Таблица только для чтения
                 wrap=True
