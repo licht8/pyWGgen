@@ -56,49 +56,37 @@ def sync_user_data():
 
     synced_data = {}
 
-    # Обработка пользователей из user_records.json
     for username, details in user_records.items():
         user_address = details.get("allowed_ips", "N/A")
         matched_peer = None
 
-        # Сопоставление по адресу из user_records.json
+        # Сопоставление по адресу
         for peer, peer_data in wg_show_data.items():
             if user_address == peer_data.get("allowed_ips"):
                 matched_peer = peer
                 break
 
+        # Информация из WireGuard
         wg_data = wg_show_data.get(matched_peer, {})
 
-        # Обновляем данные для существующего пользователя
+        # Обновляем существующего пользователя
         synced_data[username] = {
             "username": username,
-            "allowed_ips": user_address,
+            "allowed_ips": wg_data.get("allowed_ips", user_address),
             "endpoint": wg_data.get("endpoint", "N/A"),
             "last_handshake": wg_data.get("latest_handshake", "N/A"),
             "uploaded": wg_data.get("sent", "N/A"),
             "downloaded": wg_data.get("received", "N/A"),
-            "created": details.get("created_at", "N/A"),
-            "expiry": details.get("expires_at", "N/A"),
+            "created": details.get("created", "N/A"),
+            "expiry": details.get("expiry", "N/A"),
             "status": "active" if matched_peer else "inactive",
         }
 
-    # Добавление новых пользователей только если они отсутствуют в user_records.json
+    # Проверяем новых пользователей из wg show, которых нет в user_records
     for peer, peer_data in wg_show_data.items():
-        # Проверяем, нет ли такого адреса в synced_data
         if not any(record.get("allowed_ips") == peer_data.get("allowed_ips") for record in synced_data.values()):
             print(f"⚠️ Новый пользователь из wg show не найден в базе: {peer_data.get('allowed_ips')}")
-            username = f"user_{peer[:6]}"
-            synced_data[username] = {
-                "username": username,
-                "allowed_ips": peer_data.get("allowed_ips", "N/A"),
-                "endpoint": peer_data.get("endpoint", "N/A"),
-                "last_handshake": peer_data.get("latest_handshake", "N/A"),
-                "uploaded": peer_data.get("sent", "N/A"),
-                "downloaded": peer_data.get("received", "N/A"),
-                "created": datetime.now().isoformat(),
-                "expiry": "N/A",
-                "status": "active",
-            }
+            continue  # Игнорируем добавление неизвестных пользователей
 
     # Сохранение данных
     with open(USER_RECORDS_JSON, "w") as user_records_file:
@@ -108,6 +96,7 @@ def sync_user_data():
 
     print(f"✅ Данные успешно синхронизированы. Файлы обновлены:\n - {WG_USERS_JSON}\n - {USER_RECORDS_JSON}")
     return synced_data
+
 
 if __name__ == "__main__":
     sync_user_data()
