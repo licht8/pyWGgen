@@ -7,7 +7,7 @@ import pandas as pd
 from gradio_admin.functions.table_helpers import update_table
 from gradio_admin.functions.format_helpers import format_user_info
 from gradio_admin.functions.user_records import load_user_records
-
+from modules.data_sync import sync_user_data  # Добавлено для синхронизации
 
 def statistics_tab():
     """Возвращает вкладку статистики пользователей WireGuard."""
@@ -23,8 +23,8 @@ def statistics_tab():
         # Область для отображения информации о выбранном пользователе
         with gr.Row():
             selected_user_info = gr.Textbox(
-                label="User Information", 
-                interactive=False, 
+                label="User Information",
+                interactive=False,
                 value="Use the search below for filtering.",
                 elem_id="user-info-block"  # Добавляем ID для CSS
             )
@@ -59,7 +59,7 @@ def statistics_tab():
 
             # Проверяем, был ли выполнен поиск
             if not query.strip():
-                return "Please enter a query to filter user data and then Click a cell to view user details  after the search, and perform actions."
+                return "Please enter a query to filter user data and then Click a cell to view user details after the search, and perform actions."
 
             # Проверяем, есть ли данные
             print(f"[DEBUG] Selected data: {selected_data}")  # Отладка
@@ -100,8 +100,11 @@ def statistics_tab():
 
         # Обновление данных при нажатии кнопки "Refresh"
         def refresh_table(show_inactive):
-            """Очищает строку поиска, сбрасывает информацию о пользователе и обновляет таблицу."""
-            return "", "Please enter a query to filter user data and then Click a cell to view user details after the search. and perform actions.", update_table(show_inactive)
+            """
+            Синхронизирует данные, очищает строку поиска, сбрасывает информацию о пользователе и обновляет таблицу.
+            """
+            sync_user_data()  # Синхронизация данных
+            return "", "Please enter a query to filter user data and then Click a cell to view user details after the search, and perform actions.", update_table(show_inactive)
 
         refresh_button.click(
             fn=refresh_table,
