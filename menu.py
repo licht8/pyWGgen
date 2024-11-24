@@ -1,25 +1,20 @@
 #!/usr/bin/env python3
 # menu.py
-# Меню для управления проектом wg_qr_generator
+## Меню для управления проектом wg_qr_generator
+# Предоставляет интерфейс для управления VPN, запуска тестов, основного скрипта и Gradio админки.
 
 import os
 import subprocess
 import signal
 import sys
+from modules.manage_expiry_menu import manage_expiry_menu
+from modules.show_users import show_all_users
 
 # Константы
 WIREGUARD_BINARY = "/usr/bin/wg"
 WIREGUARD_INSTALL_SCRIPT = "wireguard-install.sh"
-CONFIG_DIR = "user/data"
 ADMIN_PORT = 7860
 GRADIO_ADMIN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "gradio_admin/main_interface.py"))
-
-# Добавляем текущий каталог в PYTHONPATH
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-
-# Импортируем подменю
-from modules.manage_expiry import check_expiry, extend_expiry, reset_expiry
-from modules.show_users import show_all_users
 
 
 def check_wireguard_installed():
@@ -85,88 +80,62 @@ def run_gradio_admin_interface():
         close_firewalld_port(ADMIN_PORT)
 
 
-def manage_user_menu():
-    """Подменю для управления пользователями."""
-    while True:
-        print("\n========== Управление пользователями ==========")
-        print("1. 🌱 Создать пользователя")
-        print("2. 📋 Показать всех пользователей")
-        print("3. 🔥 Удалить пользователя")
-        print("4. 🔍 Проверить срок действия аккаунта")
-        print("5. ⏳ Продлить срок действия аккаунта")
-        print("6. ♻️  Сбросить срок действия аккаунта")
-        print("\n\t0 или q. Вернуться в главное меню")
-        print("===============================================")
-        choice = input("Выберите действие: ").strip()
-        if choice == "1":
-            nickname = input("Введите имя пользователя (nickname): ").strip()
-            subprocess.run(["python3", "main.py", nickname])
-        elif choice == "2":
-            show_all_users()
-        elif choice == "3":
-            nickname = input("Введите имя пользователя для удаления: ").strip()
-            # Здесь нужно добавить функцию удаления пользователя
-            print(f"🔧 Удаление пользователя {nickname} не реализовано.")
-        elif choice == "4":
-            nickname = input("Введите имя пользователя для проверки срока: ").strip()
-            try:
-                result = check_expiry(nickname)
-                print(result)
-            except Exception as e:
-                print(f"❌ Ошибка: {e}")
-        elif choice == "5":
-            nickname = input("Введите имя пользователя для продления срока: ").strip()
-            days = input("Введите количество дней для продления: ").strip()
-            try:
-                extend_expiry(nickname, int(days))
-            except Exception as e:
-                print(f"❌ Ошибка: {e}")
-        elif choice == "6":
-            nickname = input("Введите имя пользователя для сброса срока: ").strip()
-            try:
-                reset_expiry(nickname)
-            except Exception as e:
-                print(f"❌ Ошибка: {e}")
-        elif choice in ["0", "q"]:
-            print("🔙 Возврат в главное меню...")
-            break
-        else:
-            print("⚠️ Некорректный выбор. Попробуйте еще раз.")
-
-
-def show_menu():
-    """Отображение главного меню."""
+def show_main_menu():
+    """Отображение основного меню."""
     while True:
         wireguard_installed = check_wireguard_installed()
         print("\n================== Меню ==================")
         print("1. 🧪 Запустить тесты")
         print("2. 🌐 Открыть Gradio админку")
-        print("3. 👥 Управление пользователями")
-        print("4. ♻️ Переустановить WireGuard")
-        print("5. 🗑️ Удалить WireGuard")
+        print("3. 👤 Управление пользователями")
+        if wireguard_installed:
+            print("4. ♻️ Переустановить WireGuard")
+            print("5. 🗑️ Удалить WireGuard")
+        else:
+            print("4. ⚙️ Установить WireGuard")
         print("\n\t0 или q. Выход")
         print("==========================================")
-        choice = input("Выберите действие: ").strip()
+        choice = input("Выберите действие: ").strip().lower()
+
         if choice == "1":
             print("🔍 Запуск тестов...")
             subprocess.run(["pytest"])
         elif choice == "2":
             run_gradio_admin_interface()
         elif choice == "3":
-            manage_user_menu()
+            manage_users_menu()
         elif choice == "4":
             install_wireguard()
-        elif choice == "5":
-            if wireguard_installed:
-                remove_wireguard()
-            else:
-                print("⚠️ WireGuard не установлен.")
-        elif choice in ["0", "q"]:
+        elif choice == "5" and wireguard_installed:
+            remove_wireguard()
+        elif choice in {"0", "q"}:
             print("👋 Выход. До свидания!")
             break
         else:
             print("⚠️ Некорректный выбор. Попробуйте еще раз.")
 
 
+def manage_users_menu():
+    """Меню управления пользователями."""
+    while True:
+        print("\n========== Управление пользователями ==========")
+        print("1. 🌱 Создать пользователя")
+        print("2. 🔍 Управление сроками действия")
+        print("\n\t0 или q. Вернуться в главное меню")
+        print("===============================================")
+        choice = input("Выберите действие: ").strip().lower()
+
+        if choice == "1":
+            nickname = input("Введите имя пользователя (nickname): ").strip()
+            subprocess.run(["python3", "main.py", nickname])
+        elif choice == "2":
+            manage_expiry_menu()
+        elif choice in {"0", "q"}:
+            print("🔙 Возврат в главное меню...")
+            break
+        else:
+            print("⚠️ Некорректный выбор. Попробуйте еще раз.")
+
+
 if __name__ == "__main__":
-    show_menu()
+    show_main_menu()
