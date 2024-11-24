@@ -94,21 +94,21 @@ def add_user_record_enhanced(nickname, trial_days, address, public_key, preshare
 
     # Добавляем новую запись
     user_data[nickname] = {
+        "peer": public_key,
         "username": nickname,
         "created_at": datetime.now().isoformat(),
         "expires_at": expiry_date.isoformat(),
         "allowed_ips": address,
         "public_key": public_key,
         "preshared_key": preshared_key,
-        "endpoint": "N/A",  # будет обновляться позже
-        "last_handshake": "N/A",  # будет обновляться позже
-        "uploaded": "N/A",  # будет обновляться позже
-        "downloaded": "N/A",  # будет обновляться позже
+        "endpoint": "N/A",
+        "last_handshake": "N/A",
+        "uploaded": "N/A",
+        "downloaded": "N/A",
         "qr_code_path": qr_code_path,
-        "email": "N/A",  # можно обновить через интерфейс
-        "phone": "N/A",  # можно обновить через интерфейс
-        "telegram_id": "N/A",  # можно обновить через интерфейс
-        "status": "inactive"  # будет обновляться позже
+        "email": "N/A",
+        "telegram_id": "N/A",
+        "status": "inactive"
     }
 
     # Сохраняем обновленные данные
