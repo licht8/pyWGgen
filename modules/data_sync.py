@@ -17,11 +17,7 @@ def load_json(filepath):
     try:
         with open(filepath, "r") as file:
             return json.load(file)
-    except FileNotFoundError:
-        print(f"❌ Файл {filepath} не найден.")
-        return {}
-    except json.JSONDecodeError:
-        print(f"❌ Ошибка декодирования JSON в файле {filepath}.")
+    except (FileNotFoundError, json.JSONDecodeError):
         return {}
 
 
@@ -62,21 +58,17 @@ def get_wg_show_data():
     except subprocess.CalledProcessError:
         print("❌ Ошибка при выполнении команды 'wg show'.")
         return {}
-    except Exception as e:
-        print(f"❌ Неизвестная ошибка при получении данных 'wg show': {e}")
-        return {}
 
 
 def sync_user_data():
     """Синхронизирует данные пользователей."""
     user_records = load_json(USER_RECORDS_JSON)
-    wg_users = load_json(WG_USERS_JSON)
     wg_show_data = get_wg_show_data()
 
     synced_data = {}
 
     for username, details in user_records.items():
-        peer_key = details.get("peer")
+        peer_key = details.get("peer")  # Ожидается, что поле "peer" содержит публичный ключ.
         wg_data = wg_show_data.get(peer_key, {})
 
         synced_data[username] = {
@@ -88,7 +80,7 @@ def sync_user_data():
             "downloaded": wg_data.get("received", "N/A"),
             "created": details.get("created_at", "N/A"),
             "expiry": details.get("expires_at", "N/A"),
-            "status": "active" if wg_data else "inactive",
+            "status": "active" if "latest_handshake" in wg_data and wg_data["latest_handshake"] != "N/A" else "inactive",
         }
 
     # Сохраняем обновленные данные
@@ -97,13 +89,7 @@ def sync_user_data():
     return synced_data
 
 
-def update_and_sync():
-    """Основной метод для обновления и синхронизации данных."""
-    print("🔄 Обновление данных пользователей...")
-    synced_data = sync_user_data()
-    print("✅ Синхронизация завершена.")
-    return synced_data
-
-
 if __name__ == "__main__":
-    update_and_sync()
+    print("🔄 Синхронизация данных пользователей...")
+    synced_users = sync_user_data()
+    print("✅ Синхронизация завершена.")
