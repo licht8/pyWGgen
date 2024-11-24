@@ -5,12 +5,10 @@
 import os
 import json
 import subprocess
-from datetime import datetime
 
 # Пути к данным
 WG_USERS_JSON = os.path.join("logs", "wg_users.json")
 USER_RECORDS_JSON = os.path.join("user", "data", "user_records.json")
-
 
 def load_json(filepath):
     """Загружает данные из JSON-файла."""
@@ -19,7 +17,6 @@ def load_json(filepath):
             return json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
-
 
 def get_wg_show_data():
     """Получает данные команды 'wg show'."""
@@ -38,7 +35,7 @@ def get_wg_show_data():
                 elif "endpoint:" in line:
                     peers[current_peer]["endpoint"] = line.split(":")[1].strip()
                 elif "latest handshake:" in line:
-                    peers[current_peer]["latest_handshake"] = line.split(":")[1].strip()
+                    peers[current_peer]["last_handshake"] = line.split(":")[1].strip()
                 elif "transfer:" in line:
                     transfer_data = line.split(":")[1].strip().split(", ")
                     peers[current_peer]["received"] = transfer_data[0]
@@ -48,7 +45,6 @@ def get_wg_show_data():
     except subprocess.CalledProcessError:
         return {}
 
-
 def sync_user_data():
     """Синхронизирует данные из всех источников."""
     user_records = load_json(USER_RECORDS_JSON)
@@ -57,33 +53,28 @@ def sync_user_data():
     synced_data = {}
 
     for username, details in user_records.items():
-        # Сопоставление по IP-адресу
-        user_address = details.get("allowed_ips", "N/A")
-        matched_peer = None
-
+        peer_key = None
+        # Попробуем найти peer по IP
         for peer, peer_data in wg_show_data.items():
-            if user_address == peer_data.get("allowed_ips"):
-                matched_peer = peer
+            if peer_data.get("allowed_ips") == details.get("allowed_ips"):
+                peer_key = peer
                 break
 
-        # Информация из WireGuard
-        wg_data = wg_show_data.get(matched_peer, {})
-
-        # Обновляем данные
+        # Обновляем или оставляем существующие поля
         synced_data[username] = {
-            "peer": matched_peer or "N/A",
+            "peer": peer_key or "N/A",
             "username": username,
             "email": details.get("email", "N/A"),
             "telegram_id": details.get("telegram_id", "N/A"),
-            "allowed_ips": wg_data.get("allowed_ips", details.get("allowed_ips", "N/A")),
-            "endpoint": wg_data.get("endpoint", details.get("endpoint", "N/A")),
-            "last_handshake": wg_data.get("latest_handshake", details.get("last_handshake", "N/A")),
-            "uploaded": wg_data.get("sent", details.get("uploaded", "N/A")),
-            "downloaded": wg_data.get("received", details.get("downloaded", "N/A")),
+            "allowed_ips": details.get("allowed_ips", "N/A"),
+            "endpoint": wg_show_data.get(peer_key, {}).get("endpoint", "N/A"),
+            "last_handshake": wg_show_data.get(peer_key, {}).get("last_handshake", "N/A"),
+            "uploaded": wg_show_data.get(peer_key, {}).get("sent", "N/A"),
+            "downloaded": wg_show_data.get(peer_key, {}).get("received", "N/A"),
             "created": details.get("created_at", "N/A"),
             "expiry": details.get("expires_at", "N/A"),
             "qr_code_path": details.get("qr_code_path", "N/A"),
-            "status": "active" if matched_peer else "inactive",
+            "status": "active" if peer_key else "inactive",
         }
 
     # Сохранение данных
@@ -94,7 +85,6 @@ def sync_user_data():
 
     print(f"✅ Данные успешно синхронизированы. Файлы обновлены:\n - {WG_USERS_JSON}\n - {USER_RECORDS_JSON}")
     return synced_data
-
 
 if __name__ == "__main__":
     sync_user_data()
