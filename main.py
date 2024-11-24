@@ -10,21 +10,22 @@ from datetime import datetime, timedelta
 
 from modules.config import load_params
 from modules.keygen import generate_private_key, generate_public_key, generate_preshared_key
-from modules.ip_management import get_existing_ips, generate_ip
+from modules.ip_management import generate_ip
 from modules.config_writer import add_user_to_server_config
 from modules.sync import sync_wireguard_config
 from modules.qr_generator import generate_qr_code
-from modules.user_management import add_user_record
 from modules.directory_setup import setup_directories
 from modules.client_config import create_client_config
 
 
-def generate_config(nickname, params, config_file):
+def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A"):
     """
     Генерация конфигурации пользователя и QR-кода.
     :param nickname: Имя пользователя.
     :param params: Параметры сервера.
     :param config_file: Путь к файлу конфигурации сервера WireGuard.
+    :param email: Электронная почта пользователя.
+    :param telegram_id: Telegram ID пользователя.
     :return: Пути к файлу конфигурации пользователя и QR-коду.
     """
     server_public_key = params['SERVER_PUB_KEY']
@@ -63,19 +64,21 @@ def generate_config(nickname, params, config_file):
     add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), address)
 
     # Добавляем запись пользователя с дополнительными данными
-    add_user_record_enhanced(
+    add_user_record(
         nickname,
         trial_days=settings.DEFAULT_TRIAL_DAYS,
         address=address,
         public_key=public_key.decode('utf-8'),
         preshared_key=preshared_key.decode('utf-8'),
-        qr_code_path=qr_path
+        qr_code_path=qr_path,
+        email=email,
+        telegram_id=telegram_id
     )
 
     return config_path, qr_path
 
 
-def add_user_record_enhanced(nickname, trial_days, address, public_key, preshared_key, qr_code_path):
+def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr_code_path, email, telegram_id):
     """
     Добавляет запись о пользователе с расширенными данными.
     """
@@ -94,21 +97,20 @@ def add_user_record_enhanced(nickname, trial_days, address, public_key, preshare
 
     # Добавляем новую запись
     user_data[nickname] = {
-        "peer": public_key,
         "username": nickname,
         "created_at": datetime.now().isoformat(),
         "expires_at": expiry_date.isoformat(),
         "allowed_ips": address,
         "public_key": public_key,
         "preshared_key": preshared_key,
-        "endpoint": "N/A",
-        "last_handshake": "N/A",
-        "uploaded": "N/A",
-        "downloaded": "N/A",
+        "endpoint": "N/A",  # будет обновляться позже
+        "last_handshake": "N/A",  # будет обновляться позже
+        "uploaded": "N/A",  # будет обновляться позже
+        "downloaded": "N/A",  # будет обновляться позже
         "qr_code_path": qr_code_path,
-        "email": "N/A",
-        "telegram_id": "N/A",
-        "status": "inactive"
+        "email": email,
+        "telegram_id": telegram_id,
+        "status": "inactive"  # будет обновляться позже
     }
 
     # Сохраняем обновленные данные
@@ -118,11 +120,13 @@ def add_user_record_enhanced(nickname, trial_days, address, public_key, preshare
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Использование: python3 main.py <nickname>")
+    if len(sys.argv) < 2:
+        print("Использование: python3 main.py <nickname> [email] [telegram_id]")
         sys.exit(1)
 
     nickname = sys.argv[1]
+    email = sys.argv[2] if len(sys.argv) > 2 else "N/A"
+    telegram_id = sys.argv[3] if len(sys.argv) > 3 else "N/A"
     params_file = settings.PARAMS_FILE
 
     try:
@@ -130,7 +134,7 @@ if __name__ == "__main__":
 
         params = load_params(params_file)  # Загружаем параметры из файла
         config_file = settings.SERVER_CONFIG_FILE
-        config_path, qr_path = generate_config(nickname, params, config_file)
+        config_path, qr_path = generate_config(nickname, params, config_file, email, telegram_id)
         print(f"Конфигурация сохранена в {config_path}")
         print(f"QR-код сохранён в {qr_path}")
 
