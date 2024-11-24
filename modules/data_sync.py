@@ -57,27 +57,33 @@ def sync_user_data():
     synced_data = {}
 
     for username, details in user_records.items():
-        peer_key = details.get("peer", "N/A")
-        wg_data = next(
-            (wg for wg, wg_details in wg_show_data.items() if wg_details.get("allowed_ips") == details.get("allowed_ips")),
-            peer_key
-        )
+        # Сопоставление по IP-адресу
+        user_address = details.get("allowed_ips", "N/A")
+        matched_peer = None
 
-        # Обновляем или оставляем существующие поля
+        for peer, peer_data in wg_show_data.items():
+            if user_address == peer_data.get("allowed_ips"):
+                matched_peer = peer
+                break
+
+        # Информация из WireGuard
+        wg_data = wg_show_data.get(matched_peer, {})
+
+        # Обновляем данные
         synced_data[username] = {
-            "peer": wg_data,
+            "peer": matched_peer or "N/A",
             "username": username,
             "email": details.get("email", "N/A"),
             "telegram_id": details.get("telegram_id", "N/A"),
-            "allowed_ips": wg_show_data.get(wg_data, {}).get("allowed_ips", details.get("allowed_ips", "N/A")),
-            "endpoint": wg_show_data.get(wg_data, {}).get("endpoint", details.get("endpoint", "N/A")),
-            "last_handshake": wg_show_data.get(wg_data, {}).get("latest_handshake", details.get("last_handshake", "N/A")),
-            "uploaded": wg_show_data.get(wg_data, {}).get("sent", details.get("uploaded", "N/A")),
-            "downloaded": wg_show_data.get(wg_data, {}).get("received", details.get("downloaded", "N/A")),
+            "allowed_ips": wg_data.get("allowed_ips", details.get("allowed_ips", "N/A")),
+            "endpoint": wg_data.get("endpoint", details.get("endpoint", "N/A")),
+            "last_handshake": wg_data.get("latest_handshake", details.get("last_handshake", "N/A")),
+            "uploaded": wg_data.get("sent", details.get("uploaded", "N/A")),
+            "downloaded": wg_data.get("received", details.get("downloaded", "N/A")),
             "created": details.get("created_at", "N/A"),
             "expiry": details.get("expires_at", "N/A"),
             "qr_code_path": details.get("qr_code_path", "N/A"),
-            "status": "active" if wg_data else "inactive",
+            "status": "active" if matched_peer else "inactive",
         }
 
     # Сохранение данных
