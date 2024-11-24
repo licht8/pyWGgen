@@ -25,14 +25,14 @@ def calculate_time_left(expiry_date):
     :param expiry_date: Дата истечения в формате ISO 8601.
     :return: Оставшееся время в днях или "N/A".
     """
-    if expiry_date == "N/A":
+    if not expiry_date or expiry_date == "N/A":
         return "N/A"
     try:
         expiry = datetime.fromisoformat(expiry_date)
         now = datetime.now()
         remaining = expiry - now
         return f"{remaining.days} days" if remaining.days > 0 else "Expired"
-    except ValueError:
+    except (ValueError, TypeError):
         return "N/A"
 
 
