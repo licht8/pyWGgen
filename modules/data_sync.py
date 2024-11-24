@@ -21,12 +21,6 @@ def load_json(filepath):
         return {}
 
 
-def save_json(filepath, data):
-    """Сохраняет данные в JSON-файл."""
-    with open(filepath, "w") as file:
-        json.dump(data, file, indent=4)
-
-
 def get_wg_show_data():
     """Получает данные команды 'wg show'."""
     try:
@@ -56,49 +50,59 @@ def get_wg_show_data():
 
 
 def sync_user_data():
-    """Синхронизирует данные пользователей."""
+    """Синхронизирует данные из всех источников."""
     user_records = load_json(USER_RECORDS_JSON)
     wg_show_data = get_wg_show_data()
 
     synced_data = {}
-    updated_user_records = user_records.copy()
 
     for username, details in user_records.items():
-        peer_key = details.get("peer")
-        wg_data = wg_show_data.get(peer_key, {})
+        user_address = details.get("address")
+        matched_peer = None
+
+        # Сопоставление по адресу
+        for peer, peer_data in wg_show_data.items():
+            if peer_data.get("allowed_ips", "").startswith(user_address):
+                matched_peer = peer
+                break
+
+        wg_data = wg_show_data.get(matched_peer, {})
 
         synced_data[username] = {
             "username": username,
-            "allowed_ips": wg_data.get("allowed_ips", "N/A"),
+            "allowed_ips": wg_data.get("allowed_ips", user_address),
             "endpoint": wg_data.get("endpoint", "N/A"),
             "last_handshake": wg_data.get("latest_handshake", "N/A"),
             "uploaded": wg_data.get("sent", "N/A"),
             "downloaded": wg_data.get("received", "N/A"),
             "created": details.get("created_at", "N/A"),
             "expiry": details.get("expires_at", "N/A"),
-            "status": "active" if "latest_handshake" in wg_data and wg_data["latest_handshake"] != "N/A" else "inactive",
+            "status": "active" if wg_data else "inactive",
         }
 
-    # Дополнение user_records новыми данными
-    for peer, wg_data in wg_show_data.items():
-        if not any(details.get("peer") == peer for details in user_records.values()):
-            new_user = {
-                "peer": peer,
-                "created_at": datetime.now().isoformat(),
-                "expires_at": "N/A",
-                "address": wg_data.get("allowed_ips", "N/A"),
+    # Добавляем новые пиры из wg show, которых нет в user_records
+    for peer, peer_data in wg_show_data.items():
+        if not any(record.get("allowed_ips") == peer_data.get("allowed_ips") for record in synced_data.values()):
+            username = f"user_{peer[:6]}"
+            synced_data[username] = {
+                "username": username,
+                "allowed_ips": peer_data.get("allowed_ips", "N/A"),
+                "endpoint": peer_data.get("endpoint", "N/A"),
+                "last_handshake": peer_data.get("latest_handshake", "N/A"),
+                "uploaded": peer_data.get("sent", "N/A"),
+                "downloaded": peer_data.get("received", "N/A"),
+                "created": datetime.now().isoformat(),
+                "expiry": "N/A",
+                "status": "active",
             }
-            username = f"user_{peer[:6]}"  # Создаём временное имя пользователя
-            updated_user_records[username] = new_user
 
-    # Сохраняем обновленные данные
-    save_json(WG_USERS_JSON, synced_data)
-    save_json(USER_RECORDS_JSON, updated_user_records)
+    # Сохраняем данные
+    with open(USER_RECORDS_JSON, "w") as user_records_file:
+        json.dump(synced_data, user_records_file, indent=4)
+    with open(WG_USERS_JSON, "w") as wg_users_file:
+        json.dump(synced_data, wg_users_file, indent=4)
 
-    print(f"✅ Данные успешно синхронизированы. Файлы обновлены:")
-    print(f" - {WG_USERS_JSON}")
-    print(f" - {USER_RECORDS_JSON}")
-    return synced_data
+    print(f"✅ Данные успешно синхронизированы. Файлы обновлены:\n - {WG_USERS_JSON}\n - {USER_RECORDS_JSON}")
 
 
 if __name__ == "__main__":
