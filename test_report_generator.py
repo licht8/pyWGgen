@@ -32,6 +32,23 @@ def load_json(filepath):
     except json.JSONDecodeError as e:
         return {"error": f"Ошибка декодирования JSON: {e}"}
 
+def analyze_field_presence(data, fields):
+    """
+    Проверяет наличие и заполненность указанных полей в данных.
+    :param data: Данные для анализа (словарь)
+    :param fields: Список ключей для проверки
+    :return: Строка отчета
+    """
+    report = []
+    for username, user_data in data.items():
+        report.append(f"Пользователь: {username}")
+        for field in fields:
+            value = user_data.get(field, "N/A")
+            status = "Заполнено" if value != "N/A" else "Пусто"
+            report.append(f"  {field}: {value} ({status})")
+        report.append("")
+    return "\n".join(report)
+
 def write_report(content):
     """Записывает отчет в файл."""
     with open(REPORT_FILE, "w") as f:
@@ -59,6 +76,8 @@ def main():
         report.append(f"Ошибка: {user_records['error']}")
     else:
         report.append(json.dumps(user_records, indent=4))
+        report.append("\n--- Анализ полей (peer, telegram_id) в user_records.json ---")
+        report.append(analyze_field_presence(user_records, ["peer", "telegram_id"]))
 
     report.append("")
 
@@ -69,6 +88,8 @@ def main():
         report.append(f"Ошибка: {wg_users['error']}")
     else:
         report.append(json.dumps(wg_users, indent=4))
+        report.append("\n--- Анализ полей (peer, telegram_id) в wg_users.json ---")
+        report.append(analyze_field_presence(wg_users, ["peer", "telegram_id"]))
 
     report.append("")
 
