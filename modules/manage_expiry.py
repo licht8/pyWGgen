@@ -44,12 +44,15 @@ def format_user_info(nickname, records, wg_data):
     info = records.get(nickname, {})
     wg_info = wg_data.get(info.get("peer"), {})
 
+    uploaded = wg_info.get("transfer", "N/A").split("received, ")[1] if "received, " in wg_info.get("transfer", "") else "N/A"
+    downloaded = wg_info.get("transfer", "N/A").split(" received, ")[0] if " received, " in wg_info.get("transfer", "") else "N/A"
+
     return f"""
 👤 User: {nickname}
 🌐 Internal IP: {info.get('allowed_ips', 'N/A')}
 🌎 External IP: {wg_info.get('endpoint', 'N/A')}
-⬆️ Uploaded: {wg_info.get('transfer', 'N/A').split('received, ')[1]}
-⬇️ Downloaded: {wg_info.get('transfer', 'N/A').split(' received, ')[0]}
+⬆️ Uploaded: {uploaded}
+⬇️ Downloaded: {downloaded}
 📅 Last handshake: {wg_info.get('latest_handshake', 'N/A')}
 🔥 Status: {wg_info.get('status', 'inactive')}
 ✅ Expiry: {info.get('expiry', 'N/A')}
@@ -95,12 +98,18 @@ def main():
                 print(f"❌ Пользователь {args.nickname} не найден.")
 
         elif args.action == "extend":
-            extend_expiry(args.nickname, args.days)
-            print(f"✅ Срок действия аккаунта {args.nickname} продлен на {args.days} дней.")
+            if args.nickname in user_records:
+                extend_expiry(args.nickname, args.days)
+                print(f"✅ Срок действия аккаунта {args.nickname} продлен на {args.days} дней.")
+            else:
+                print(f"❌ Пользователь {args.nickname} не найден.")
 
         elif args.action == "reset":
-            reset_expiry(args.nickname, args.days)
-            print(f"✅ Срок действия аккаунта {args.nickname} сброшен на {args.days} дней.")
+            if args.nickname in user_records:
+                reset_expiry(args.nickname, args.days)
+                print(f"✅ Срок действия аккаунта {args.nickname} сброшен на {args.days} дней.")
+            else:
+                print(f"❌ Пользователь {args.nickname} не найден.")
 
         else:
             parser.print_help()
