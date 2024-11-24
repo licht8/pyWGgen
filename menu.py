@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # menu.py
-## Меню для управления проектом wg_qr_generator
-# Предоставляет интерфейс для управления VPN, запуска тестов, основного скрипта и Gradio админки.
+## Главное меню для управления проектом wg_qr_generator
 
 import os
 import subprocess
