@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 # modules/manage_expiry_menu.py
-# Меню для управления сроками действия пользователей
+# Меню для управления сроками действия VPN аккаунтов WireGuard
 
 import os
-import subprocess
+import sys
 from modules.account_expiry import check_expiry, extend_expiry, reset_expiry
-from modules.show_users import show_all_users  # Импортируем функцию
+from modules.show_users import show_all_users
+
+# Добавляем текущий и родительский каталог в PYTHONPATH
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 def manage_expiry_menu():
     """Меню управления сроками действия."""
@@ -20,18 +23,15 @@ def manage_expiry_menu():
         choice = input("Выберите действие: ").strip()
 
         if choice == "1":
-            show_all_users()  # Вызываем функцию из модуля
+            show_all_users()
         elif choice == "2":
             nickname = input("Введите имя пользователя для проверки: ").strip()
             result = check_expiry(nickname)
-            if result["status"] == "expired":
-                print(f"Срок действия аккаунта пользователя {nickname} истек.")
-            else:
-                print(f"Аккаунт пользователя {nickname} еще действителен. {result['remaining_time']}")
+            print(result)
         elif choice == "3":
             nickname = input("Введите имя пользователя для продления срока: ").strip()
-            days = int(input("Введите количество дней для продления: ").strip())
-            extend_expiry(nickname, days)
+            days = input("Введите количество дней для продления: ").strip()
+            extend_expiry(nickname, int(days))
         elif choice == "4":
             nickname = input("Введите имя пользователя для сброса срока: ").strip()
             reset_expiry(nickname)
@@ -40,3 +40,6 @@ def manage_expiry_menu():
             break
         else:
             print("⚠️ Некорректный выбор. Попробуйте еще раз.")
+
+if __name__ == "__main__":
+    manage_expiry_menu()
