@@ -124,26 +124,26 @@ fi
 
 # Полезная информация перед запуском меню
 echo -e "\n=== Полезная информация о системе ==="
-echo -e "📌 ${BOLD}Версия ОС:${RESET} $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"')"
-echo -e "📌 ${BOLD}Версия ядра:${RESET} $(uname -r)"
+echo -e "🖥️ ОС: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"')"
+echo -e "🧰 Ядро: $(uname -r)"
 EXTERNAL_IP=$(curl -s ifconfig.me)
-echo -e "📌 ${BOLD}Внешний IP-адрес:${RESET} ${EXTERNAL_IP}"
+echo -e "🌍 Внешний IP-адрес: ${EXTERNAL_IP}"
 FIREWALL_PORTS=$(sudo firewall-cmd --list-ports)
 if [ -z "$FIREWALL_PORTS" ]; then
-  echo -e "📌 ${RED}Открытые порты в firewalld: Нет открытых портов. Проверьте настройки.${RESET}"
+  echo -e "🔓 Открытые порты в firewalld: Нет открытых портов. Проверьте настройки."
 else
-  echo -e "📌 ${BOLD}Открытые порты в firewalld:${RESET} ${FIREWALL_PORTS}"
+  echo -e "🔓 Открытые порты в firewalld: ${FIREWALL_PORTS}"
 fi
 
 if ! systemctl is-active --quiet wg-quick@wg0; then
-  echo -e "📌 ${RED}Статус WireGuard: не активен. Установите и настройте WireGuard для корректной работы.${RESET}"
+  echo -e "🛡️ WireGuard статус: не активен. Установите и настройте WireGuard для корректной работы."
 else
-  echo -e "📌 ${BOLD}Статус WireGuard:${RESET} активен"
+  echo -e "🛡️ WireGuard статус: активен"
 fi
 
-echo -e "📌 ${BOLD}Файл конфигурации WireGuard:${RESET} /etc/wireguard/wg0.conf"
-echo -e "📌 ${BOLD}Ссылка на Gradio админку:${RESET} http://${EXTERNAL_IP}:7860"
-echo -e "📌 ${UNDERLINE}Ссылка на проект:${RESET} https://github.com/licht8/wg_qr_generator"
+echo -e "⚙️ Файл конфигурации WireGuard: /etc/wireguard/wg0.conf"
+echo -e "🌐 Gradio админка: http://${EXTERNAL_IP}:7860"
+echo -e "📂 Репозиторий: https://github.com/licht8/wg_qr_generator"
 echo "======================================"
 
 # Выводим сообщение об успешной установке
