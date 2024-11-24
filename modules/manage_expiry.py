@@ -6,7 +6,6 @@ import argparse
 import os
 import sys
 import json
-from datetime import datetime
 from modules.account_expiry import check_expiry, extend_expiry, reset_expiry
 
 # Добавляем путь для импорта
@@ -59,12 +58,28 @@ def format_user_info(nickname, records, wg_data):
 """
 
 
+def show_all_users(records, wg_data):
+    """Показывает список всех пользователей с полной информацией."""
+    if not records:
+        print("❌ Нет зарегистрированных пользователей.")
+        return
+
+    print("\n========== Список пользователей ==========")
+    for nickname in records.keys():
+        print(format_user_info(nickname, records, wg_data).strip())
+        print("-" * 40)  # Разделитель между пользователями
+    print("==========================================")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Скрипт для управления сроком действия VPN аккаунтов WireGuard"
     )
 
     subparsers = parser.add_subparsers(dest="action", help="Доступные команды")
+
+    # Подкоманда show
+    show_parser = subparsers.add_parser("show", help="Показать всех пользователей")
 
     # Подкоманда check
     check_parser = subparsers.add_parser("check", help="Проверить, истек ли срок действия аккаунта")
@@ -91,7 +106,10 @@ def main():
     wg_show = get_wg_show_data()
 
     try:
-        if args.action == "check":
+        if args.action == "show":
+            show_all_users(user_records, wg_show)
+
+        elif args.action == "check":
             if args.nickname in user_records:
                 print(format_user_info(args.nickname, user_records, wg_show))
             else:
