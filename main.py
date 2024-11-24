@@ -5,6 +5,8 @@
 import sys
 import os
 import settings
+import json
+from datetime import datetime, timedelta
 
 from modules.config import load_params
 from modules.keygen import generate_private_key, generate_public_key, generate_preshared_key
@@ -60,10 +62,59 @@ def generate_config(nickname, params, config_file):
     # Добавляем нового пользователя в конфигурацию сервера
     add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), address)
 
-    # Добавляем запись пользователя с датой создания и удаления
-    add_user_record(nickname, trial_days=settings.DEFAULT_TRIAL_DAYS, address=address)
+    # Добавляем запись пользователя с дополнительными данными
+    add_user_record_enhanced(
+        nickname,
+        trial_days=settings.DEFAULT_TRIAL_DAYS,
+        address=address,
+        public_key=public_key.decode('utf-8'),
+        preshared_key=preshared_key.decode('utf-8'),
+        qr_code_path=qr_path
+    )
 
     return config_path, qr_path
+
+
+def add_user_record_enhanced(nickname, trial_days, address, public_key, preshared_key, qr_code_path):
+    """
+    Добавляет запись о пользователе с расширенными данными.
+    """
+    user_records_path = os.path.join("user", "data", "user_records.json")
+    expiry_date = datetime.now() + timedelta(days=trial_days)
+
+    # Загружаем существующие записи
+    if os.path.exists(user_records_path):
+        with open(user_records_path, "r", encoding="utf-8") as file:
+            try:
+                user_data = json.load(file)
+            except json.JSONDecodeError:
+                user_data = {}
+    else:
+        user_data = {}
+
+    # Добавляем новую запись
+    user_data[nickname] = {
+        "username": nickname,
+        "created_at": datetime.now().isoformat(),
+        "expires_at": expiry_date.isoformat(),
+        "allowed_ips": address,
+        "public_key": public_key,
+        "preshared_key": preshared_key,
+        "endpoint": "N/A",  # будет обновляться позже
+        "last_handshake": "N/A",  # будет обновляться позже
+        "uploaded": "N/A",  # будет обновляться позже
+        "downloaded": "N/A",  # будет обновляться позже
+        "qr_code_path": qr_code_path,
+        "email": "N/A",  # можно обновить через интерфейс
+        "phone": "N/A",  # можно обновить через интерфейс
+        "telegram_id": "N/A",  # можно обновить через интерфейс
+        "status": "inactive"  # будет обновляться позже
+    }
+
+    # Сохраняем обновленные данные
+    with open(user_records_path, "w", encoding="utf-8") as file:
+        json.dump(user_data, file, indent=4)
+    print(f"✅ Данные пользователя {nickname} успешно добавлены в {user_records_path}")
 
 
 if __name__ == "__main__":
