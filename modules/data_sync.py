@@ -57,12 +57,13 @@ def sync_user_data():
     synced_data = {}
 
     for username, details in user_records.items():
-        user_address = details.get("address")
+        user_address = details.get("address", "N/A")  # Устанавливаем значение по умолчанию
         matched_peer = None
 
         # Сопоставление по адресу
         for peer, peer_data in wg_show_data.items():
-            if peer_data.get("allowed_ips", "").startswith(user_address):
+            allowed_ips = peer_data.get("allowed_ips", "")
+            if allowed_ips and user_address and user_address in allowed_ips:
                 matched_peer = peer
                 break
 
@@ -103,7 +104,7 @@ def sync_user_data():
         json.dump(synced_data, wg_users_file, indent=4)
 
     print(f"✅ Данные успешно синхронизированы. Файлы обновлены:\n - {WG_USERS_JSON}\n - {USER_RECORDS_JSON}")
-
+    return synced_data
 
 if __name__ == "__main__":
     sync_user_data()
