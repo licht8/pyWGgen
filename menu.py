@@ -15,6 +15,7 @@ CONFIG_DIR = "user/data"
 TEST_USER = "test_user"
 ADMIN_PORT = 7860
 GRADIO_ADMIN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "gradio_admin/main_interface.py"))
+MANAGE_EXPIRY_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "manage_expiry.py"))
 
 
 def check_wireguard_installed():
@@ -91,6 +92,16 @@ def run_gradio_admin_interface():
         close_firewalld_port(ADMIN_PORT)
 
 
+def run_manage_expiry():
+    """Запуск скрипта manage_expiry.py."""
+    if not os.path.exists(MANAGE_EXPIRY_SCRIPT):
+        print(f"❌ Скрипт {MANAGE_EXPIRY_SCRIPT} не найден.")
+        return
+
+    print("🕒 Управление сроками действия пользователей...")
+    subprocess.run(["python3", MANAGE_EXPIRY_SCRIPT])
+
+
 def show_menu():
     """Отображение меню."""
     while True:
@@ -99,6 +110,7 @@ def show_menu():
         print("1. Запустить тесты")
         print("2. Запустить основной скрипт (main.py)")
         print("3. Открыть Gradio админку")
+        print("6. Управление сроками действия пользователей")
         if wireguard_installed:
             print("4. Переустановить WireGuard ♻️")
             print("5. Удалить WireGuard 🗑️")
@@ -117,6 +129,8 @@ def show_menu():
             subprocess.run(["python3", "main.py", nickname])
         elif choice == "3":
             run_gradio_admin_interface()
+        elif choice == "6":
+            run_manage_expiry()
         elif choice == "4":
             install_wireguard()
         elif choice == "5":
