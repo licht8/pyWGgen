@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # modules/data_sync.py
-# Утилита для синхронизации данных о пользователях WireGuard
-
-#!/usr/bin/env python3
-# modules/data_sync.py
+# Скрипт для синхронизации данных пользователей WireGuard в проекте wg_qr_generator
 
 import os
 import json
@@ -29,7 +26,13 @@ def save_json(filepath, data):
 
 
 def sync_user_data():
-    """Синхронизирует данные из user_records.json в wg_users.json."""
+    """
+    Синхронизирует данные из user_records.json в wg_users.json.
+
+    1. Загружает данные пользователей из user_records.json.
+    2. Преобразует данные в формат для wg_users.json.
+    3. Сохраняет данные в wg_users.json.
+    """
     user_records = load_json(USER_RECORDS_JSON)
     if not user_records:
         print("❌ No data found in user_records.json.")
