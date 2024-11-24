@@ -6,10 +6,12 @@ import argparse
 import os
 import sys
 import json
-from modules.account_expiry import check_expiry, extend_expiry, reset_expiry
+from datetime import datetime
 
 # Добавляем путь для импорта
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from modules.account_expiry import check_expiry, extend_expiry, reset_expiry
 
 # Пути к данным
 WG_USERS_JSON = os.path.join("logs", "wg_users.json")
@@ -79,7 +81,7 @@ def main():
     subparsers = parser.add_subparsers(dest="action", help="Доступные команды")
 
     # Подкоманда show
-    show_parser = subparsers.add_parser("show", help="Показать всех пользователей")
+    subparsers.add_parser("show", help="Показать всех пользователей")
 
     # Подкоманда check
     check_parser = subparsers.add_parser("check", help="Проверить, истек ли срок действия аккаунта")
