@@ -6,9 +6,10 @@ import os
 import subprocess
 import signal
 import sys
+import psutil
+from termcolor import colored
 from modules.manage_users_menu import manage_users_menu
 from modules.port_manager import handle_port_conflict  # Функция для обработки конфликта портов
-from modules.project_status import show_project_status  # Отображение состояния проекта
 
 # Константы
 WIREGUARD_BINARY = "/usr/bin/wg"
@@ -18,6 +19,14 @@ GRADIO_ADMIN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "g
 CLEAN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "clean_user_data.sh"))
 TEST_REPORT_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "test_report_generator.py"))
 TEST_REPORT_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "test_report.txt"))
+
+
+def colorize_status(status, is_positive=True):
+    """Возвращает строку со статусом, окрашенным в зеленый или красный цвет."""
+    if is_positive:
+        return colored(f"{status} ✅", "green")
+    else:
+        return colored(f"{status} ❌", "red")
 
 
 def check_wireguard_installed():
@@ -121,19 +130,19 @@ def display_test_report():
 def update_project():
     """Обновление проекта и зависимостей."""
     print("  🔄  Обновление проекта и зависимостей...")
-    subprocess.run(["git", "pull", "origin", "main"])
-    subprocess.run(["pip", "install", "--upgrade", "-r", "requirements.txt"])
+    subprocess.run(["git", "pull"])
+    subprocess.run(["pip", "install", "-r", "requirements.txt"])
 
 
 def manage_users():
     """Подменю управления пользователями."""
     while True:
         print("\n ==========  Управление пользователями  ==========")
-        print("  1. 🌱  Создать пользователя")
-        print("  2. 🔍  Показать всех пользователей")
-        print("  0. Вернуться в главное меню")
+        print(" 1. 🌱  Создать пользователя")
+        print(" 2. 🔍  Показать всех пользователей")
+        print(" 0. Вернуться в главное меню")
         print(" ================================================")
-        choice = input("  Выберите действие: ").strip().lower()
+        choice = input(" Выберите действие: ").strip().lower()
 
         if choice == "1":
             print("  🌱  Создание пользователя...")
@@ -145,7 +154,7 @@ def manage_users():
             print("  👈  Возврат в главное меню...")
             break
         else:
-            print("\n  ⚠️  Некорректный выбор. Попробуйте снова.")
+            print("\n ! ⚠️  Некорректный выбор. Попробуйте снова.")
 
 
 def show_main_menu():
@@ -153,31 +162,32 @@ def show_main_menu():
     while True:
         wireguard_installed = check_wireguard_installed()
         print("\n==================  Меню  ==================\n")
-        print("  1. 🛠️   Информация о состоянии проекта")
-        print("  2. 🧪   Запустить тесты")
-        print("  u. 🔄   Запустить обновление проекта и зависимостей")
+        print(" 1. 🛠️   Информация о состоянии проекта")
+        print(" 2. 🧪   Запустить тесты")
+        print(" u. 🔄   Запустить обновление проекта и зависимостей")
         print("--------------------------------------------")
-        print("  3. 🌐   Открыть Gradio админку")
-        print("  4. 👤   Управление пользователями")
+        print(" 3. 🌐   Открыть Gradio админку")
+        print(" 4. 👤   Управление пользователями")
         print("--------------------------------------------")
         if wireguard_installed:
-            print("  5. ♻️   Переустановить WireGuard")
-            print("  6. 🗑️   Удалить WireGuard")
+            print(" 5. ♻️   Переустановить WireGuard")
+            print(" 6. 🗑️   Удалить WireGuard")
         else:
-            print("  5. ⚙️   Установить WireGuard")
+            print(" 5. ⚙️   Установить WireGuard")
         print("--------------------------------------------")
-        print("  7. 🧹   Очистить базу пользователей")
-        print("  8. 📋   Запустить генерацию отчета")
-        print("  9. 📄   Показать отчет отладки")
+        print(" 7. 🧹   Очистить базу пользователей")
+        print(" 8. 📋   Запустить генерацию отчета")
+        print(" 9. 📄   Показать отчет отладки")
         print("\n\t 0 или q. Выход")
         print(" ==========================================\n")
         
-        choice = input("  Выберите действие: ").strip().lower()
+        choice = input(" Выберите действие: ").strip().lower()
 
         if choice == "1":
+            from modules.project_status import show_project_status
             show_project_status()
         elif choice == "2":
-            print("  🧪  Запуск тестов...")
+            print("🔍  Запуск тестов...")
             subprocess.run(["pytest"])
         elif choice == "u":
             update_project()
@@ -187,7 +197,7 @@ def show_main_menu():
             manage_users_menu()
         elif choice == "5":
             if wireguard_installed:
-                print("  ♻️  Переустановка WireGuard...")
+                print("🔄  Переустановка WireGuard...")
                 remove_wireguard()
                 install_wireguard()
             else:
@@ -197,14 +207,16 @@ def show_main_menu():
         elif choice == "7":
             run_clean_user_data()
         elif choice == "8":
-            run_test_report_generator()
+            from wg_qr_generator.test_report_generator import generate_report
+            generate_report()
         elif choice == "9":
             display_test_report()
         elif choice in {"0", "q"}:
-            print("  👋  Выход. До свидания!")
+            print("👋  Выход. До свидания!")
             break
         else:
-            print("\n  ⚠️  Некорректный выбор. Попробуйте снова.")
+            print("\n ! ⚠️  Некорректный выбор. Попробуйте снова.")
+
 
 if __name__ == "__main__":
     show_main_menu()
