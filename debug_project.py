@@ -20,17 +20,16 @@ def start_loader(message="Processing"):
     loading = True
     spinner = ["|", "/", "-", "\\"]
     idx = 0
-    print(f"{message} ", end="", flush=True)
     while loading:
-        print(spinner[idx % len(spinner)], end="\r", flush=True)
+        print(f"\r{message} {spinner[idx % len(spinner)]}", end="", flush=True)
         idx += 1
         time.sleep(0.2)
 
 def stop_loader():
-    """Останавливает лоадер."""
+    """Останавливает лоадер и очищает строку."""
     global loading
     loading = False
-    print("✔ Done!         ")  # Заменить лоадер на финальное сообщение
+    print("\r", end="", flush=True)  # Удаляет лоадер с экрана
 
 def log(message):
     """Логирует сообщение в консоль."""
@@ -123,7 +122,7 @@ def main():
     report_lines = [f"=== Diagnostic Report for wg_qr_generator ===", f"Timestamp: {timestamp}", ""]
 
     # Лоадер в отдельном потоке
-    loader_thread = threading.Thread(target=start_loader, args=("Running diagnostics",), daemon=True)
+    loader_thread = threading.Thread(target=start_loader, args=("Running diagnostics...",), daemon=True)
     loader_thread.start()
 
     try:
