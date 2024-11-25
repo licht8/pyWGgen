@@ -92,7 +92,7 @@ def show_project_status():
     # Состояние WireGuard
     print(f" 🛡️  WireGuard статус: {get_wireguard_status()}")
     print(f" ⚙️  Файл конфигурации: {'/etc/wireguard/wg0.conf' if os.path.exists('/etc/wireguard/wg0.conf') else colored('отсутствует ❌', 'red')}")
-    print(f" 🌐  Активные peers: {get_wireguard_peers()}\n")
+    print(f" 🌐 Активные peers: {get_wireguard_peers()}\n")
 
     # Пользователи
     users = get_users_data()
