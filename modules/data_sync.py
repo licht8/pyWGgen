@@ -70,7 +70,7 @@ def sync_user_data():
             "last_handshake": wg_data.get("last_handshake", details.get("last_handshake", "N/A")),
             "uploaded": wg_data.get("uploaded", details.get("uploaded", "N/A")),
             "downloaded": wg_data.get("downloaded", details.get("downloaded", "N/A")),
-            "created": details.get("created", datetime.now().isoformat()),
+            "created": details.get("created", "N/A"),
             "expiry": details.get("expiry", "N/A"),
             "qr_code_path": details.get("qr_code_path", "N/A"),
             "status": "active" if wg_data else "inactive",
@@ -79,10 +79,11 @@ def sync_user_data():
     # Проверяем новых пользователей из wg show, которых нет в user_records
     for peer, peer_data in wg_show_data.items():
         if not any(record.get("peer") == peer for record in synced_data.values()):
-            print(f"⚠️ Новый пользователь из wg show не найден в базе: {peer_data.get('allowed_ips')}")
-            synced_data[f"unknown_{peer}"] = {
+            new_user_id = f"unknown_{peer}"
+            print(f"⚠️ Новый пользователь из wg show: {peer_data.get('allowed_ips')}")
+            synced_data[new_user_id] = {
                 "peer": peer,
-                "username": f"unknown_{peer}",
+                "username": new_user_id,
                 "email": "N/A",
                 "telegram_id": "N/A",
                 "allowed_ips": peer_data.get("allowed_ips", "N/A"),
@@ -90,7 +91,7 @@ def sync_user_data():
                 "last_handshake": peer_data.get("last_handshake", "N/A"),
                 "uploaded": peer_data.get("uploaded", "N/A"),
                 "downloaded": peer_data.get("downloaded", "N/A"),
-                "created": datetime.now().isoformat(),
+                "created": datetime.utcnow().isoformat(),
                 "expiry": "N/A",
                 "qr_code_path": "N/A",
                 "status": "active",
