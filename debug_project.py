@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # debug_project.py
-# Скрипт для отладки проекта wg_qr_generator
+# Скрипт для диагностики проекта wg_qr_generator.
+# Проверяет структуру, ищет функции и автоматически устраняет базовые проблемы.
 
 import os
 import subprocess
@@ -16,7 +17,7 @@ TARGET_FUNCTIONS = [
     "delete_user_tab",
     "statistics_tab",
     "run_gradio_admin_interface",
-    "sync_users_with_wireguard"
+    "sync_users_with_wireguard",
 ]
 REQUIRED_PATHS = [
     "user/data/qrcodes",
@@ -25,7 +26,7 @@ REQUIRED_PATHS = [
 ]
 REQUIRED_FILES = {
     "user/data/user_records.json": "{}",
-    "logs/wg_users.json": "{}"
+    "logs/wg_users.json": "{}",
 }
 REPORT_PATH = os.path.join(PROJECT_ROOT, "debug_report.txt")
 
@@ -72,15 +73,15 @@ def check_required_files_and_dirs():
     return report_lines
 
 
-def grep_functions_in_project(functions, timeout=10):
-    """Ищет функции по всему проекту с ограничением времени."""
+def grep_functions_in_project(functions):
+    """Ищет функции по всему проекту."""
     report_lines = ["=== Function Search Report ==="]
     try:
-        command = f"grep -r -n -E {'|'.join(functions)} {PROJECT_ROOT}"
-        output = subprocess.check_output(command, shell=True, text=True, timeout=timeout)
+        command = f"grep -r -n -E '({'|'.join(functions)})' {PROJECT_ROOT}"
+        output = subprocess.check_output(command, shell=True, text=True, stderr=subprocess.STDOUT)
         report_lines.append(output.strip())
-    except subprocess.TimeoutExpired:
-        report_lines.append("❌ Timeout expired during function search.")
+    except subprocess.CalledProcessError as e:
+        report_lines.append(f"❌ No matches found: {e.output.strip()}")
     except Exception as e:
         report_lines.append(f"❌ Error during function search: {e}")
     return report_lines
@@ -91,7 +92,7 @@ def run_diagnostics():
     report_lines = [
         f"=== Diagnostic Report for wg_qr_generator ===",
         f"Timestamp: {datetime.now().isoformat()}",
-        ""
+        "",
     ]
 
     # Проверка Python окружения
