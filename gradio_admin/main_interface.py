@@ -5,11 +5,12 @@
 import sys
 import os
 import gradio as gr
-from modules.port_manager import handle_port_conflict  # Ссылка на модуль управления портами
 
 # Добавляем путь к корню проекта
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.insert(0, project_root)
+sys.path.insert(0, project_root)  # Убедитесь, что путь добавлен первым
+
+from modules.port_manager import handle_port_conflict  # Импорт управления портами
 
 # Импортируем вкладки
 from gradio_admin.tabs.delete_user_tab import delete_user_tab
