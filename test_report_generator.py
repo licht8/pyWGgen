@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # test_report_generator.py
-# Скрипт для тестирования системы wg_qr_generator и генерации отчета
+# Скрипт для генерации отчета о состоянии проекта wg_qr_generator
 
 import os
 import json
@@ -8,111 +8,75 @@ import subprocess
 from datetime import datetime
 
 # Пути к файлам
-PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
-LOGS_DIR = os.path.join(PROJECT_ROOT, "logs")
-USER_RECORDS_PATH = os.path.join(PROJECT_ROOT, "user", "data", "user_records.json")
-WG_USERS_PATH = os.path.join(LOGS_DIR, "wg_users.json")
-REPORT_FILE = os.path.join(PROJECT_ROOT, "test_report.txt")
-
-def run_command(command):
-    """Выполняет команду в shell и возвращает результат."""
-    try:
-        result = subprocess.check_output(command, shell=True, text=True)
-        return result.strip()
-    except subprocess.CalledProcessError as e:
-        return f"Ошибка выполнения команды '{command}': {e}"
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+USER_RECORDS_JSON = os.path.join(BASE_DIR, "user/data/user_records.json")
+WG_USERS_JSON = os.path.join(BASE_DIR, "logs/wg_users.json")
+TEST_REPORT_PATH = os.path.join(BASE_DIR, "test_report.txt")
+WG_CONFIG = "/etc/wireguard/wg0.conf"
 
 def load_json(filepath):
     """Загружает данные из JSON-файла."""
     try:
-        with open(filepath, "r") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {"error": "Файл не найден"}
-    except json.JSONDecodeError as e:
-        return {"error": f"Ошибка декодирования JSON: {e}"}
+        with open(filepath, "r") as file:
+            return json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
 
-def analyze_field_presence(data, fields):
-    """
-    Проверяет наличие и заполненность указанных полей в данных.
-    :param data: Данные для анализа (словарь)
-    :param fields: Список ключей для проверки
-    :return: Строка отчета
-    """
-    report = []
-    for username, user_data in data.items():
-        report.append(f"Пользователь: {username}")
-        for field in fields:
-            value = user_data.get(field, "N/A")
-            status = "Заполнено" if value != "N/A" else "Пусто"
-            report.append(f"  {field}: {value} ({status})")
-        report.append("")
-    return "\n".join(report)
+def run_command(command):
+    """Выполняет команду и возвращает вывод."""
+    try:
+        return subprocess.check_output(command, text=True).strip()
+    except subprocess.CalledProcessError as e:
+        return f"Ошибка выполнения команды: {e}"
 
-def write_report(content):
-    """Записывает отчет в файл."""
-    with open(REPORT_FILE, "w") as f:
-        f.write(content)
-    print(f"✅ Отчет сохранен в {REPORT_FILE}")
+def generate_report():
+    """Генерирует отчет о состоянии проекта."""
+    timestamp = datetime.utcnow().isoformat()
+    user_records = load_json(USER_RECORDS_JSON)
+    wg_users = load_json(WG_USERS_JSON)
 
-def main():
-    report = []
-    report.append(f"=== Отчет о тестировании wg_qr_generator ===")
-    report.append(f"Дата и время: {datetime.now().isoformat()}")
-    report.append("")
+    report_lines = [f"=== Отчет о тестировании wg_qr_generator ===", f"Дата и время: {timestamp}\n"]
 
-    # 1. Проверка существования важных файлов
-    report.append("=== Проверка файлов ===")
-    report.append(f"- Путь к user_records.json: {USER_RECORDS_PATH}")
-    report.append(f"- Путь к wg_users.json: {WG_USERS_PATH}")
-    report.append(f"- user_records.json существует: {'Да' if os.path.exists(USER_RECORDS_PATH) else 'Нет'}")
-    report.append(f"- wg_users.json существует: {'Да' if os.path.exists(WG_USERS_PATH) else 'Нет'}")
-    report.append("")
+    # Проверка файлов
+    report_lines.append("=== Проверка файлов ===")
+    report_lines.append(f"- Путь к user_records.json: {USER_RECORDS_JSON}")
+    report_lines.append(f"- Путь к wg_users.json: {WG_USERS_JSON}")
+    report_lines.append(f"- user_records.json существует: {'Да' if os.path.exists(USER_RECORDS_JSON) else 'Нет'}")
+    report_lines.append(f"- wg_users.json существует: {'Да' if os.path.exists(WG_USERS_JSON) else 'Нет'}")
+    report_lines.append(f"- wg0.conf существует: {'Да' if os.path.exists(WG_CONFIG) else 'Нет'}\n")
 
-    # 2. Проверка данных в user_records.json
-    report.append("=== Данные из user_records.json ===")
-    user_records = load_json(USER_RECORDS_PATH)
-    if "error" in user_records:
-        report.append(f"Ошибка: {user_records['error']}")
-    else:
-        report.append(json.dumps(user_records, indent=4))
-        report.append("\n--- Анализ полей (peer, telegram_id) в user_records.json ---")
-        report.append(analyze_field_presence(user_records, ["peer", "telegram_id"]))
+    # Данные JSON
+    report_lines.append("=== Данные из user_records.json ===")
+    report_lines.append(json.dumps(user_records, indent=4) if user_records else "Нет данных.\n")
 
-    report.append("")
+    report_lines.append("--- Анализ user_records.json ---")
+    for username, data in user_records.items():
+        report_lines.append(f"Пользователь: {username}")
+        report_lines.append(f"  peer: {data.get('peer', 'N/A')}")
+        report_lines.append(f"  telegram_id: {data.get('telegram_id', 'N/A')}\n")
 
-    # 3. Проверка данных в wg_users.json
-    report.append("=== Данные из wg_users.json ===")
-    wg_users = load_json(WG_USERS_PATH)
-    if "error" in wg_users:
-        report.append(f"Ошибка: {wg_users['error']}")
-    else:
-        report.append(json.dumps(wg_users, indent=4))
-        report.append("\n--- Анализ полей (peer, telegram_id) в wg_users.json ---")
-        report.append(analyze_field_presence(wg_users, ["peer", "telegram_id"]))
+    report_lines.append("=== Данные из wg_users.json ===")
+    report_lines.append(json.dumps(wg_users, indent=4) if wg_users else "Нет данных.\n")
 
-    report.append("")
+    # Проверка WireGuard
+    report_lines.append("=== Результаты wg show ===")
+    report_lines.append(run_command(["wg", "show"]) or "WireGuard не запущен или ошибка.")
 
-    # 4. Проверка команды wg show
-    report.append("=== Результаты wg show ===")
-    wg_show = run_command("wg show")
-    report.append(wg_show)
-    report.append("")
+    # Проверка состояния WireGuard
+    report_lines.append("=== Состояние WireGuard ===")
+    report_lines.append(run_command(["systemctl", "status", "wg-quick@wg0"]))
 
-    # 5. Проверка запуска Gradio
-    report.append("=== Проверка Gradio ===")
-    gradio_check = run_command("ps aux | grep '[p]ython3.*menu.py'")
-    report.append(f"Gradio запущен: {'Да' if gradio_check else 'Нет'}")
-    report.append("")
+    # Проверка структуры папок
+    report_lines.append("\n=== Структура папок ===")
+    required_dirs = ["logs", "user/data", "user/data/qrcodes", "user/data/wg_configs"]
+    for folder in required_dirs:
+        report_lines.append(f"- {folder}: {'Существует' if os.path.exists(folder) else 'Отсутствует'}")
 
-    # 6. Проверка состояния WireGuard
-    report.append("=== Состояние WireGuard ===")
-    wireguard_status = run_command("systemctl status wg-quick@wg0 --no-pager")
-    report.append(wireguard_status)
-    report.append("")
-
-    # Запись отчета в файл
-    write_report("\n".join(report))
+    # Сохранение отчета
+    with open(TEST_REPORT_PATH, "w") as report_file:
+        report_file.write("\n".join(report_lines))
+    
+    print(f"✅ Отчет сохранен в {TEST_REPORT_PATH}")
 
 if __name__ == "__main__":
-    main()
+    generate_report()
