@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 # test_report_generator.py
-# Скрипт для генерации отчета о состоянии проекта wg_qr_generator
-# Версия: 1.2
+# Скрипт для генерации полного отчета о состоянии проекта wg_qr_generator
+# Версия: 1.3
 # Обновлено: 2024-11-25
-# Автор: Ваше Имя
 
 import os
 import json
 import subprocess
 from datetime import datetime
 
-# Пути к файлам
+# Пути к файлам и настройкам
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 USER_RECORDS_JSON = os.path.join(BASE_DIR, "user/data/user_records.json")
 WG_USERS_JSON = os.path.join(BASE_DIR, "logs/wg_users.json")
 TEST_REPORT_PATH = os.path.join(BASE_DIR, "test_report.txt")
 WG_CONFIG = "/etc/wireguard/wg0.conf"
+GRADIO_PORT = 7860
+
 
 def load_json(filepath):
     """Загружает данные из JSON-файла."""
@@ -27,12 +28,26 @@ def load_json(filepath):
     except json.JSONDecodeError:
         return f"Файл {filepath} поврежден."
 
+
 def run_command(command):
     """Выполняет команду и возвращает вывод."""
     try:
         return subprocess.check_output(command, text=True).strip()
     except subprocess.CalledProcessError as e:
         return f"Ошибка выполнения команды {' '.join(command)}: {e}"
+
+
+def get_gradio_status():
+    """Проверяет статус Gradio."""
+    try:
+        output = subprocess.check_output(["ps", "-eo", "pid,cmd"], text=True)
+        for line in output.splitlines():
+            if "gradio" in line and str(GRADIO_PORT) in line:
+                return f"запущен (строка: {line})"
+        return "не запущен"
+    except Exception as e:
+        return f"Ошибка проверки Gradio: {e}"
+
 
 def generate_report():
     """Генерирует отчет о состоянии проекта."""
@@ -47,11 +62,11 @@ def generate_report():
     required_files = {
         "user_records.json": USER_RECORDS_JSON,
         "wg_users.json": WG_USERS_JSON,
-        "wg0.conf": WG_CONFIG
+        "wg0.conf": WG_CONFIG,
     }
     for name, path in required_files.items():
         report_lines.append(f"- {name}: {'Присутствует' if os.path.exists(path) else 'Отсутствует'}")
-    
+
     required_dirs = ["logs", "user/data", "user/data/qrcodes", "user/data/wg_configs"]
     for folder in required_dirs:
         report_lines.append(f"- {folder}: {'Существует' if os.path.exists(folder) else 'Отсутствует'}")
@@ -92,14 +107,15 @@ def generate_report():
 
     # Проверка Gradio
     report_lines.append("\n=== Статус Gradio ===")
-    gradio_status = run_command(["ps", "aux", "|", "grep", "gradio"])
-    report_lines.append(f"Процессы Gradio: {gradio_status}")
+    gradio_status = get_gradio_status()
+    report_lines.append(f"Gradio: {gradio_status}")
 
     # Сохранение отчета
     with open(TEST_REPORT_PATH, "w") as report_file:
         report_file.write("\n".join(report_lines))
     
     print(f"✅ Отчет сохранен в {TEST_REPORT_PATH}")
+
 
 if __name__ == "__main__":
     generate_report()
