@@ -34,7 +34,7 @@ def generate_report():
     with open(report_path, "w") as report_file:
         report_file.write(report_content)
 
-    print(f" ✅ Отчет сохранен в {report_path}")
+    print(f"  ✅ Отчет сохранен в {report_path}")
 
 if __name__ == "__main__":
     generate_report()
