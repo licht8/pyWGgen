@@ -10,6 +10,7 @@ from modules.firewall_utils import open_firewalld_port, close_firewalld_port
 from modules.gradio_utils import run_gradio_admin_interface
 from modules.report_utils import generate_project_report, display_test_report, display_test_summary
 from modules.update_utils import update_project
+from modules.sync import sync_users_with_wireguard
 from modules.manage_users_menu import manage_users_menu
 
 def show_main_menu():
@@ -23,6 +24,7 @@ def show_main_menu():
         print("--------------------------------------------")
         print(" 3. 🌐   Открыть Gradio админку")
         print(" 4. 👤   Управление пользователями")
+        print("11. 🔄   Синхронизировать пользователей")
         print("--------------------------------------------")
         if wireguard_installed:
             print(" 5. ♻️   Переустановить WireGuard")
@@ -52,22 +54,18 @@ def show_main_menu():
         elif choice == "4":
             manage_users_menu()
         elif choice == "5":
-            if wireguard_installed:
-                remove_wireguard()
-                install_wireguard()
-            else:
-                install_wireguard()
+            remove_wireguard()
+            install_wireguard()
         elif choice == "6" and wireguard_installed:
             remove_wireguard()
-        elif choice == "7":
-            print("  🔄 Очистка базы данных пользователей...")
-            # Вызывается функция очистки базы данных (добавьте её в нужный модуль)
         elif choice == "8":
             generate_project_report()
         elif choice == "9":
             display_test_summary()
         elif choice == "10":
             display_test_report()
+        elif choice == "11":
+            sync_users_with_wireguard()
         elif choice in {"0", "q"}:
             print("👋  Выход. До свидания!")
             break
