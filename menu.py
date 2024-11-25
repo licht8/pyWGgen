@@ -4,6 +4,7 @@
 
 import sys
 import os
+import subprocess  # Добавляем импорт subprocess
 from modules.wireguard_utils import check_wireguard_installed, install_wireguard, remove_wireguard
 from modules.firewall_utils import open_firewalld_port, close_firewalld_port
 from modules.gradio_utils import run_gradio_admin_interface
