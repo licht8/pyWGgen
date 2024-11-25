@@ -2,10 +2,11 @@
 # menu.py
 # Главное меню для управления проектом wg_qr_generator
 
+import sys
 import os
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 import subprocess
 import signal
-import sys
 import psutil
 from termcolor import colored
 from modules.manage_users_menu import manage_users_menu
@@ -207,8 +208,10 @@ def show_main_menu():
         elif choice == "7":
             run_clean_user_data()
         elif choice == "8":
-            from wg_qr_generator.test_report_generator import generate_report
+            from modules.test_report_generator import generate_report
+            print("  📋  Запуск генерации отчета...")
             generate_report()
+
         elif choice == "9":
             display_test_report()
         elif choice in {"0", "q"}:
