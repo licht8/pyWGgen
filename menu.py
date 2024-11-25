@@ -12,6 +12,13 @@ from termcolor import colored
 from modules.manage_users_menu import manage_users_menu
 from modules.port_manager import handle_port_conflict  # Функция для обработки конфликта портов
 
+# Вывод текущего PYTHONPATH для проверки
+print("PYTHONPATH:", sys.path)
+
+# Убедитесь, что путь до папки 'wg_qr_generator' включен
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
+
 # Константы
 WIREGUARD_BINARY = "/usr/bin/wg"
 WIREGUARD_INSTALL_SCRIPT = "wireguard-install.sh"
