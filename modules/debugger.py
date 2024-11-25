@@ -10,9 +10,8 @@ from datetime import datetime
 import threading
 import time
 
-# Константы
 EXCLUDE_DIRS = ['venv', '.pytest_cache', '.git', 'temp', '__pycache__']
-MAX_VISIBLE_FILES = 100  # Максимальное количество файлов/папок в отчете
+MAX_VISIBLE_FILES = 100
 TARGET_FUNCTIONS = [
     "create_user_tab",
     "delete_user_tab",
@@ -21,7 +20,6 @@ TARGET_FUNCTIONS = [
     "sync_users_with_wireguard",
 ]
 
-# Глобальная переменная для лоадера
 loading = False
 
 def start_loader(message="Processing"):
@@ -101,7 +99,7 @@ def grep_functions_in_project(functions, base_path):
     """Поиск функций в проекте."""
     function_occurrences = {}
     for function in functions:
-        command = f"grep -r -n -E 'def {function}\\(' {base_path}"
+        command = f"grep -r -n -E 'def\\s+{function}' {base_path}"
         try:
             output = subprocess.check_output(command, shell=True, text=True, stderr=subprocess.DEVNULL)
             function_occurrences[function] = output.strip().splitlines()
