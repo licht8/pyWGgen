@@ -7,3 +7,4 @@ requests>=2.31.0
 pyqrcode==1.2.1
 gradio>=3.36.0
 pypng
+psutil
