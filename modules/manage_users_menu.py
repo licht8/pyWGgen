@@ -1,56 +1,64 @@
 #!/usr/bin/env python3
 # modules/manage_users_menu.py
-# Объединенное меню для управления пользователями и сроками действия VPN WireGuard
+# Меню управления пользователями WireGuard
 
+import json
 import os
-import sys
-import subprocess
-from modules.account_expiry import check_expiry, extend_expiry, reset_expiry
-from modules.show_users import show_all_users
 
-# Добавляем текущий и родительский каталог в PYTHONPATH
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+USER_RECORDS_FILE = "user/data/user_records.json"
 
+def load_user_records():
+    """Загрузка данных пользователей."""
+    if os.path.exists(USER_RECORDS_FILE):
+        with open(USER_RECORDS_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_user_records(user_records):
+    """Сохранение данных пользователей."""
+    with open(USER_RECORDS_FILE, "w") as f:
+        json.dump(user_records, f, indent=4)
+
+def create_user():
+    """Создание нового пользователя."""
+    username = input("Введите имя пользователя: ").strip()
+    telegram_id = input("Введите Telegram ID (или оставьте пустым): ").strip()
+    allowed_ips = input("Введите разрешенные IP-адреса (например, 10.66.66.5): ").strip()
+
+    user_records = load_user_records()
+    if username in user_records:
+        print("❌ Пользователь с таким именем уже существует.")
+        return
+
+    user_records[username] = {
+        "username": username,
+        "telegram_id": telegram_id or "N/A",
+        "allowed_ips": allowed_ips,
+        "status": "inactive",
+    }
+    save_user_records(user_records)
+    print(f"✅ Пользователь {username} успешно создан.")
 
 def manage_users_menu():
-    """Объединенное меню для управления пользователями."""
+    """Меню управления пользователями."""
     while True:
         print("\n========== Управление пользователями ==========")
         print("1. 🌱 Создать пользователя")
         print("2. 🔍 Показать всех пользователей")
-        print("3. ❌ Удалить пользователя")
-        print("4. 📅 Проверить срок действия аккаунта")
-        print("5. ➕ Продлить срок действия аккаунта")
-        print("6. 🔄 Сбросить срок действия аккаунта")
-        print("\n\t0 или q. Вернуться в главное меню")
+        print("0. Вернуться в главное меню")
         print("===============================================")
-        choice = input("Выберите действие: ").strip().lower()
 
+        choice = input("Выберите действие: ").strip()
         if choice == "1":
-            nickname = input("Введите имя пользователя (nickname): ").strip()
-            subprocess.run(["python3", "main.py", nickname])
+            create_user()
         elif choice == "2":
-            show_all_users()
-        elif choice == "3":
-            nickname = input("Введите имя пользователя для удаления: ").strip()
-            print(f"❌ Пользователь {nickname} успешно удален.")  # Добавить логику удаления пользователя
-        elif choice == "4":
-            nickname = input("Введите имя пользователя для проверки: ").strip()
-            result = check_expiry(nickname)
-            print(result)
-        elif choice == "5":
-            nickname = input("Введите имя пользователя для продления срока: ").strip()
-            days = input("Введите количество дней для продления: ").strip()
-            extend_expiry(nickname, int(days))
-        elif choice == "6":
-            nickname = input("Введите имя пользователя для сброса срока: ").strip()
-            reset_expiry(nickname)
-        elif choice in {"0", "q"}:
-            print("🔙 Возврат в главное меню...")
+            user_records = load_user_records()
+            if not user_records:
+                print("⚠️ Список пользователей пуст.")
+            else:
+                for username, data in user_records.items():
+                    print(f"👤 {username} | Telegram: {data.get('telegram_id', 'N/A')} | Peer: {data.get('peer', 'N/A')}")
+        elif choice == "0":
             break
         else:
-            print("⚠️ Некорректный выбор. Попробуйте еще раз.")
-
-
-if __name__ == "__main__":
-    manage_users_menu()
+            print("⚠️ Некорректный выбор. Попробуйте снова.")
