@@ -4,20 +4,16 @@
 
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 import subprocess
 import signal
 import psutil
 from termcolor import colored
 from modules.manage_users_menu import manage_users_menu
 from modules.port_manager import handle_port_conflict  # Функция для обработки конфликта портов
+from modules.test_report_generator import generate_report  # Импорт генерации отчета
 
 # Вывод текущего PYTHONPATH для проверки
 print("PYTHONPATH:", sys.path)
-
-# Убедитесь, что путь до папки 'wg_qr_generator' включен
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-
 
 # Константы
 WIREGUARD_BINARY = "/usr/bin/wg"
@@ -25,9 +21,7 @@ WIREGUARD_INSTALL_SCRIPT = "wireguard-install.sh"
 ADMIN_PORT = 7860
 GRADIO_ADMIN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "gradio_admin/main_interface.py"))
 CLEAN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "clean_user_data.sh"))
-TEST_REPORT_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "test_report_generator.py"))
-TEST_REPORT_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "test_report.txt"))
-
+TEST_REPORT_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "modules/test_report.txt"))
 
 def colorize_status(status, is_positive=True):
     """Возвращает строку со статусом, окрашенным в зеленый или красный цвет."""
@@ -36,11 +30,9 @@ def colorize_status(status, is_positive=True):
     else:
         return colored(f"{status} ❌", "red")
 
-
 def check_wireguard_installed():
     """Проверка, установлен ли WireGuard."""
     return os.path.isfile(WIREGUARD_BINARY)
-
 
 def install_wireguard():
     """Установка WireGuard."""
@@ -50,13 +42,11 @@ def install_wireguard():
     else:
         print(f"  ❌  Скрипт {WIREGUARD_INSTALL_SCRIPT} не найден. Положите его в текущую директорию.")
 
-
 def remove_wireguard():
     """Удаление WireGuard."""
     print("  ❌  Удаление WireGuard...")
     subprocess.run(["yum", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL) or \
     subprocess.run(["apt", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL)
-
 
 def open_firewalld_port(port):
     """Открытие порта через firewalld."""
@@ -67,7 +57,6 @@ def open_firewalld_port(port):
     except subprocess.CalledProcessError:
         print(f"  ❌  Не удалось добавить порт {port} через firewalld.")
 
-
 def close_firewalld_port(port):
     """Закрытие порта через firewalld."""
     print(f"  🔒  Закрытие порта {port} через firewalld...")
@@ -76,7 +65,6 @@ def close_firewalld_port(port):
         print(f"  ✅  Порт {port} удален через firewalld (временные правила).")
     except subprocess.CalledProcessError:
         print(f"  ❌  Не удалось удалить порт {port} через firewalld.")
-
 
 def run_gradio_admin_interface():
     """Запуск Gradio интерфейса с корректной обработкой портов и сигналов выхода."""
@@ -105,7 +93,6 @@ def run_gradio_admin_interface():
     finally:
         close_firewalld_port(ADMIN_PORT)
 
-
 def run_clean_user_data():
     """Запуск скрипта очистки пользовательских данных."""
     if not os.path.exists(CLEAN_SCRIPT):
@@ -115,17 +102,6 @@ def run_clean_user_data():
     print("  🔄  Запуск очистки пользовательских данных...")
     subprocess.run(["bash", CLEAN_SCRIPT])
 
-
-def run_test_report_generator():
-    """Запуск скрипта для генерации отчета."""
-    if not os.path.exists(TEST_REPORT_SCRIPT):
-        print(f"  ❌  Скрипт {TEST_REPORT_SCRIPT} не найден.")
-        return
-
-    print("  📋  Запуск генерации отчета...")
-    subprocess.run(["python3", TEST_REPORT_SCRIPT])
-
-
 def display_test_report():
     """Вывод содержимого отчета в консоль."""
     if os.path.exists(TEST_REPORT_FILE):
@@ -134,36 +110,31 @@ def display_test_report():
     else:
         print(f"  ❌  Файл отчета {TEST_REPORT_FILE} не найден.")
 
+def display_test_summary():
+    """Вывод краткого содержимого отчета."""
+    if os.path.exists(TEST_REPORT_FILE):
+        with open(TEST_REPORT_FILE, "r") as file:
+            lines = file.readlines()
+            summary_keys = [
+                "Дата и время",
+                "WireGuard статус",
+                "Gradio",
+                "Открытые порты",
+                "wg0.conf"
+            ]
+            print("\n=== Краткий отчет о состоянии проекта ===")
+            for line in lines:
+                if any(key in line for key in summary_keys):
+                    print(line.strip())
+            print("\n=========================================\n")
+    else:
+        print(f"  ❌  Файл отчета {TEST_REPORT_FILE} не найден.")
 
 def update_project():
     """Обновление проекта и зависимостей."""
     print("  🔄  Обновление проекта и зависимостей...")
     subprocess.run(["git", "pull"])
     subprocess.run(["pip", "install", "-r", "requirements.txt"])
-
-
-def manage_users():
-    """Подменю управления пользователями."""
-    while True:
-        print("\n ==========  Управление пользователями  ==========")
-        print(" 1. 🌱  Создать пользователя")
-        print(" 2. 🔍  Показать всех пользователей")
-        print(" 0. Вернуться в главное меню")
-        print(" ================================================")
-        choice = input(" Выберите действие: ").strip().lower()
-
-        if choice == "1":
-            print("  🌱  Создание пользователя...")
-            manage_users_menu("create")
-        elif choice == "2":
-            print("  🔍  Показать всех пользователей...")
-            manage_users_menu("show")
-        elif choice in {"0", "q"}:
-            print("  👈  Возврат в главное меню...")
-            break
-        else:
-            print("\n ! ⚠️  Некорректный выбор. Попробуйте снова.")
-
 
 def show_main_menu():
     """Отображение основного меню."""
@@ -185,7 +156,8 @@ def show_main_menu():
         print("--------------------------------------------")
         print(" 7. 🧹   Очистить базу пользователей")
         print(" 8. 📋   Запустить генерацию отчета")
-        print(" 9. 📄   Показать отчет отладки")
+        print(" 9. 🗂️   Показать краткий отчет")
+        print("10. 📄   Показать полный отчет")
         print("\n\t 0 или q. Выход")
         print(" ==========================================\n")
         
@@ -215,18 +187,17 @@ def show_main_menu():
         elif choice == "7":
             run_clean_user_data()
         elif choice == "8":
-            from modules.test_report_generator import generate_report
             print("  📋  Запуск генерации отчета...")
             generate_report()
-
         elif choice == "9":
+            display_test_summary()
+        elif choice == "10":
             display_test_report()
         elif choice in {"0", "q"}:
             print("👋  Выход. До свидания!")
             break
         else:
             print("\n ! ⚠️  Некорректный выбор. Попробуйте снова.")
-
 
 if __name__ == "__main__":
     show_main_menu()
