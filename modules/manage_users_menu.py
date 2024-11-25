@@ -4,9 +4,9 @@
 
 import os
 import json
+from modules.utils import get_wireguard_subnet, read_json, write_json
 
 USER_RECORDS_FILE = "user/data/user_records.json"
-DEFAULT_ALLOWED_IPS = "10.66.66.0/24"  # Значение по умолчанию для разрешённых IP
 
 
 def ensure_directory_exists(filepath):
@@ -18,17 +18,13 @@ def ensure_directory_exists(filepath):
 
 def load_user_records():
     """Загрузка данных пользователей из JSON."""
-    if os.path.exists(USER_RECORDS_FILE):
-        with open(USER_RECORDS_FILE, "r") as file:
-            return json.load(file)
-    return {}
+    return read_json(USER_RECORDS_FILE)
 
 
 def save_user_records(user_records):
     """Сохранение данных пользователей в JSON."""
     ensure_directory_exists(USER_RECORDS_FILE)
-    with open(USER_RECORDS_FILE, "w") as file:
-        json.dump(user_records, file, indent=4)
+    write_json(USER_RECORDS_FILE, user_records)
 
 
 def create_user():
@@ -38,7 +34,13 @@ def create_user():
         print("❌ Имя пользователя не может быть пустым.")
         return
 
-    allowed_ips = input("Введите разрешённые IP (например, 10.66.66.5): ").strip() or DEFAULT_ALLOWED_IPS
+    try:
+        default_subnet = get_wireguard_subnet()
+    except Exception as e:
+        print(f"⚠️ Ошибка получения подсети WireGuard: {e}")
+        default_subnet = "10.66.66.0/24"  # Резервное значение
+
+    allowed_ips = input(f"Введите разрешённые IP (например, {default_subnet}): ").strip() or default_subnet
 
     records = load_user_records()
     if username in records:
