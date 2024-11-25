@@ -143,50 +143,63 @@ def show_main_menu():
     """Отображение основного меню."""
     while True:
         wireguard_installed = check_wireguard_installed()
-        print("\n ==================  Меню  ==================")
-        print(" 1. 🧪  Запустить тесты")
-        print(" 2. 🌐  Открыть Gradio админку")
-        print(" 3. 👤  Управление пользователями")
+        print("\n==================  Меню  ==================\n")
+        print(" 1. 🛠️   Информация о состоянии проекта")
+        print(" 2. 🧪   Запустить тесты")
+        print("-----------------------------------------------------------------------------------")
+        print(" 3. 🌐   Открыть Gradio админку")
+        print(" 4. 👤   Управление пользователями")
+        print("-----------------------------------------------------------------------------------")
         if wireguard_installed:
-            print(" 4. ♻️  Переустановить WireGuard")
-            print(" 5. 🗑️  Удалить WireGuard")
+            print(" 5. ♻️   Переустановить WireGuard")
+            print(" 6. 🗑️   Удалить WireGuard")
         else:
-            print(" 4. ⚙️  Установить WireGuard")
-        print(" 6. 🧹  Очистить базу пользователей")
-        print(" 7. 📋  Запустить генерацию отчета")
-        print(" 8. 📄  Показать отчет отладки")
+            print(" 5. ⚙️   Установить WireGuard")
+        print("-----------------------------------------------------------------------------------")
+        print(" 7. 🧹   Очистить базу пользователей")
+        print(" 8. 📋   Запустить генерацию отчета")
+        print(" 9. 📄   Показать отчет отладки")
         print("\n\t 0 или q. Выход")
-        print(" ==========================================")
+        print(" ==========================================\n")
+        
         choice = input(" Выберите действие: ").strip().lower()
 
         if choice == "1":
-            print("  🔍  Запуск тестов...")
-            subprocess.run(["pytest"])
+            from modules.project_status import show_project_status
+            show_project_status()
         elif choice == "2":
-            run_gradio_admin_interface()
+            print("🔍  Запуск тестов...")
+            subprocess.run(["pytest"])
         elif choice == "3":
-            manage_users()
+            run_gradio_admin_interface()
         elif choice == "4":
+            manage_users_menu()
+        elif choice == "5":
             if wireguard_installed:
-                print("  ♻️  Переустановка WireGuard...")
+                print("🔄  Переустановка WireGuard...")
                 remove_wireguard()
                 install_wireguard()
             else:
                 install_wireguard()
-        elif choice == "5" and wireguard_installed:
+        elif choice == "6" and wireguard_installed:
             remove_wireguard()
-        elif choice == "6":
-            run_clean_user_data()
         elif choice == "7":
-            run_test_report_generator()
+            run_clean_user_data()
         elif choice == "8":
-            display_test_report()
+            from wg_qr_generator.test_report_generator import generate_report
+            generate_report()
+        elif choice == "9":
+            report_path = os.path.join("wg_qr_generator", "test_report.txt")
+            if os.path.exists(report_path):
+                with open(report_path, "r") as file:
+                    print(file.read())
+            else:
+                print("📄  Отчет отладки отсутствует.")
         elif choice in {"0", "q"}:
-            print("  👋  Выход. До свидания!")
+            print("👋  Выход. До свидания!")
             break
         else:
-            print("  ⚠️  Некорректный выбор. Попробуйте еще раз.")
-
+            print("⚠️   Некорректный выбор. Попробуйте снова.")
 
 if __name__ == "__main__":
     show_main_menu()
