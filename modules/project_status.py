@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # modules/project_status.py
 # Модуль для отображения состояния проекта wg_qr_generator
+# Версия: 1.1
+# Обновлено: 2024-11-25
+# Автор: Ваше Имя
 
 import os
 import json
@@ -10,23 +13,20 @@ import psutil
 from datetime import datetime
 from termcolor import colored
 
-
 def get_external_ip():
     """Получает внешний IP-адрес."""
     try:
         return subprocess.check_output(["curl", "-s", "https://ipinfo.io/ip"], text=True).strip()
     except subprocess.CalledProcessError:
-        return "N/A"
-
+        return colored("N/A ❌", "red")
 
 def get_open_ports():
     """Возвращает список открытых портов в firewalld."""
     try:
         output = subprocess.check_output(["sudo", "firewall-cmd", "--list-ports"], text=True)
-        return output.strip() if output else "Нет открытых портов"
+        return output.strip() if output else colored("Нет открытых портов ❌", "red")
     except subprocess.CalledProcessError:
-        return "Ошибка получения данных"
-
+        return colored("Ошибка получения данных ❌", "red")
 
 def get_wireguard_status():
     """Возвращает статус WireGuard."""
@@ -34,11 +34,9 @@ def get_wireguard_status():
         output = subprocess.check_output(["systemctl", "is-active", "wg-quick@wg0"], text=True).strip()
         if output == "active":
             return colored("активен ✅", "green")
-        else:
-            return colored("неактивен ❌", "red")
+        return colored("неактивен ❌", "red")
     except subprocess.CalledProcessError:
         return colored("не установлен ❌", "red")
-
 
 def get_wireguard_peers():
     """Получает список активных пиров WireGuard."""
@@ -46,11 +44,10 @@ def get_wireguard_peers():
         output = subprocess.check_output(["wg", "show"], text=True).splitlines()
         peers = [line.split(":")[1].strip() for line in output if line.startswith("peer:")]
         if peers:
-            return ", ".join(peers)
+            return f"{len(peers)} активных пиров ✅"
         return colored("Нет активных пиров ❌", "red")
     except subprocess.CalledProcessError:
         return colored("Ошибка получения данных ❌", "red")
-
 
 def get_users_data():
     """Получает информацию о пользователях из user_records.json."""
@@ -58,21 +55,21 @@ def get_users_data():
     try:
         with open(user_records_path, "r") as file:
             return json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return colored("Файл user_records.json отсутствует или поврежден ❌", "red")
-
+    except FileNotFoundError:
+        return colored("Файл user_records.json отсутствует ❌", "red")
+    except json.JSONDecodeError:
+        return colored("Файл user_records.json поврежден ❌", "red")
 
 def get_gradio_status(port=7860):
     """Проверяет статус Gradio."""
     try:
         for proc in psutil.process_iter(["pid", "name", "cmdline"]):
             cmdline = proc.info.get("cmdline", [])
-            if cmdline and any("gradio" in part for part in cmdline) and str(port) in " ".join(cmdline):
+            if cmdline and "gradio" in " ".join(cmdline) and str(port) in " ".join(cmdline):
                 return f"запущен (PID {proc.info['pid']}) ✅"
-        return "не запущен ❌"
+        return colored("не запущен ❌", "red")
     except Exception as e:
-        return f"Ошибка проверки Gradio: {e} ❌"
-
+        return colored(f"Ошибка проверки Gradio: {e} ❌", "red")
 
 def get_gradio_port_status(port=7860):
     """Проверяет, открыт ли порт Gradio."""
@@ -80,7 +77,6 @@ def get_gradio_port_status(port=7860):
     if f"{port}/tcp" in open_ports:
         return colored("открыт ✅", "green")
     return colored("закрыт ❌", "red")
-
 
 def show_project_status():
     """Отображает состояние проекта."""
@@ -94,7 +90,9 @@ def show_project_status():
 
     # Состояние WireGuard
     print(f" 🛡️  WireGuard статус: {get_wireguard_status()}")
-    print(f" ⚙️  Файл конфигурации: {'/etc/wireguard/wg0.conf' if os.path.exists('/etc/wireguard/wg0.conf') else colored('отсутствует ❌', 'red')}")
+    config_path = "/etc/wireguard/wg0.conf"
+    config_status = config_path if os.path.exists(config_path) else colored("отсутствует ❌", "red")
+    print(f" ⚙️  Файл конфигурации: {config_status}")
     print(f" 🌐 Активные peers: {get_wireguard_peers()}\n")
 
     # Пользователи
