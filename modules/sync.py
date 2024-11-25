@@ -38,23 +38,26 @@ def parse_wireguard_output(wg_output):
 
 def sync_users_with_wireguard():
     """Синхронизирует пользователей WireGuard с JSON-файлами."""
-    wg_output = subprocess.check_output(["wg", "show"], text=True)
-    wg_users = parse_wireguard_output(wg_output)
-    existing_users = load_json(USER_RECORDS_JSON)
+    try:
+        wg_output = subprocess.check_output(["wg", "show"], text=True)
+        wg_users = parse_wireguard_output(wg_output)
+        existing_users = load_json(USER_RECORDS_JSON)
 
-    updated = False
-    for user in wg_users:
-        peer = user.get("peer")
-        if peer and peer not in existing_users:
-            existing_users[peer] = {
-                "peer": user["peer"],
-                "allowed_ips": user["allowed_ips"],
-                "status": "active"
-            }
-            updated = True
+        updated = False
+        for user in wg_users:
+            peer = user.get("peer")
+            if peer and peer not in existing_users:
+                existing_users[peer] = {
+                    "peer": user["peer"],
+                    "allowed_ips": user["allowed_ips"],
+                    "status": "active"
+                }
+                updated = True
 
-    if updated:
-        save_json(USER_RECORDS_JSON, existing_users)
-        print("✅ Пользователи синхронизированы с WireGuard.")
-    else:
-        print("🔄 Пользователи уже синхронизированы.")
+        if updated:
+            save_json(USER_RECORDS_JSON, existing_users)
+            print("✅ Пользователи синхронизированы с WireGuard.")
+        else:
+            print("🔄 Пользователи уже синхронизированы.")
+    except Exception as e:
+        print(f"❌ Ошибка синхронизации пользователей: {e}")
