@@ -2,63 +2,82 @@
 # modules/manage_users_menu.py
 # Меню управления пользователями WireGuard
 
-import json
 import os
+import json
 
 USER_RECORDS_FILE = "user/data/user_records.json"
 
 def load_user_records():
-    """Загрузка данных пользователей."""
+    """Загружает записи пользователей."""
     if os.path.exists(USER_RECORDS_FILE):
-        with open(USER_RECORDS_FILE, "r") as f:
-            return json.load(f)
+        with open(USER_RECORDS_FILE, "r") as file:
+            return json.load(file)
     return {}
 
-def save_user_records(user_records):
-    """Сохранение данных пользователей."""
-    with open(USER_RECORDS_FILE, "w") as f:
-        json.dump(user_records, f, indent=4)
+def save_user_records(records):
+    """Сохраняет записи пользователей."""
+    with open(USER_RECORDS_FILE, "w") as file:
+        json.dump(records, file, indent=4)
 
 def create_user():
-    """Создание нового пользователя."""
+    """Создаёт нового пользователя."""
     username = input("Введите имя пользователя: ").strip()
-    telegram_id = input("Введите Telegram ID (или оставьте пустым): ").strip()
-    allowed_ips = input("Введите разрешенные IP-адреса (например, 10.66.66.5): ").strip()
+    allowed_ips = input("Введите разрешённые IP (например, 10.66.66.5): ").strip()
 
-    user_records = load_user_records()
-    if username in user_records:
+    records = load_user_records()
+    if username in records:
         print("❌ Пользователь с таким именем уже существует.")
         return
 
-    user_records[username] = {
-        "username": username,
-        "telegram_id": telegram_id or "N/A",
+    records[username] = {
         "allowed_ips": allowed_ips,
-        "status": "inactive",
+        "status": "active"
     }
-    save_user_records(user_records)
+    save_user_records(records)
     print(f"✅ Пользователь {username} успешно создан.")
+
+def delete_user():
+    """Удаляет пользователя."""
+    username = input("Введите имя пользователя для удаления: ").strip()
+    records = load_user_records()
+
+    if username not in records:
+        print("❌ Пользователь не найден.")
+        return
+
+    del records[username]
+    save_user_records(records)
+    print(f"✅ Пользователь {username} успешно удалён.")
+
+def list_users():
+    """Показывает всех пользователей."""
+    records = load_user_records()
+    if not records:
+        print("⚠️ Список пользователей пуст.")
+    else:
+        print("\nСписок пользователей:")
+        for username, details in records.items():
+            print(f"👤 {username}: {details}")
 
 def manage_users_menu():
     """Меню управления пользователями."""
     while True:
-        print("\n========== Управление пользователями ==========")
-        print("1. 🌱 Создать пользователя")
-        print("2. 🔍 Показать всех пользователей")
-        print("0. Вернуться в главное меню")
-        print("===============================================")
+        print("\n==========  Управление пользователями  ==========")
+        print(" 1. 🌱  Создать пользователя")
+        print(" 2. 🔍  Показать всех пользователей")
+        print(" 3. 🗑️  Удалить пользователя")
+        print(" 0. 👈  Вернуться в главное меню")
+        print(" ================================================")
 
         choice = input("Выберите действие: ").strip()
+
         if choice == "1":
             create_user()
         elif choice == "2":
-            user_records = load_user_records()
-            if not user_records:
-                print("⚠️ Список пользователей пуст.")
-            else:
-                for username, data in user_records.items():
-                    print(f"👤 {username} | Telegram: {data.get('telegram_id', 'N/A')} | Peer: {data.get('peer', 'N/A')}")
-        elif choice == "0":
+            list_users()
+        elif choice == "3":
+            delete_user()
+        elif choice in {"0", "q"}:
             break
         else:
             print("⚠️ Некорректный выбор. Попробуйте снова.")
