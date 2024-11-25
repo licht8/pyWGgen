@@ -64,11 +64,14 @@ def get_users_data():
 
 def get_gradio_status(port=7860):
     """Проверяет статус Gradio."""
-    for proc in psutil.process_iter(["pid", "name", "cmdline"]):
-        cmdline = proc.info.get("cmdline", [])
-        if cmdline and "python" in proc.info["name"] and f"{port}" in " ".join(cmdline):
-            return colored(f"запущен ✅ (PID {proc.info['pid']})", "green")
-    return colored("не запущен ❌", "red")
+    try:
+        for proc in psutil.process_iter(["pid", "name", "cmdline"]):
+            cmdline = proc.info.get("cmdline", [])
+            if cmdline and any("gradio" in part for part in cmdline) and str(port) in " ".join(cmdline):
+                return f"запущен (PID {proc.info['pid']}) ✅"
+        return "не запущен ❌"
+    except Exception as e:
+        return f"Ошибка проверки Gradio: {e} ❌"
 
 
 def get_gradio_port_status(port=7860):
