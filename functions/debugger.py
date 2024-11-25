@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# debug_project.py
-# Скрипт для диагностики и анализа структуры проекта wg_qr_generator.
+# modules/debugger.py
+# Модуль для диагностики и анализа структуры проекта wg_qr_generator.
 
 import os
 import sys
@@ -16,6 +16,7 @@ MAX_VISIBLE_FILES = 100  # Максимальное количество ото�
 
 loading = False  # Глобальная переменная для управления лоадером
 
+
 def start_loader(message="Processing"):
     """Функция запуска лоадера."""
     global loading
@@ -27,15 +28,18 @@ def start_loader(message="Processing"):
         idx += 1
         time.sleep(0.2)
 
+
 def stop_loader():
     """Останавливает лоадер и очищает строку."""
     global loading
     loading = False
     print("\r", end="", flush=True)  # Удаляет лоадер с экрана
 
+
 def log(message):
     """Логирует сообщение в консоль."""
     print(message)
+
 
 def generate_project_structure_report(base_path, exclude_dirs, max_visible_files):
     """
@@ -63,6 +67,7 @@ def generate_project_structure_report(base_path, exclude_dirs, max_visible_files
                 report.append(f"  ├── 📄 {f}")
     return "\n".join(report)
 
+
 def debug_python_environment():
     """Отчет об окружении Python."""
     return f"""=== Python Environment ===
@@ -71,6 +76,7 @@ Python Version: {sys.version}
 PYTHONPATH:
 {sys.path}
 """
+
 
 def debug_required_files_and_dirs(base_path):
     """Проверка необходимых файлов и директорий."""
@@ -98,6 +104,7 @@ def debug_required_files_and_dirs(base_path):
                 report.append(f"✅ File created: {item}")
     return "\n".join(report)
 
+
 def grep_functions_in_project(functions, base_path):
     """
     Поиск функций в проекте.
@@ -115,6 +122,7 @@ def grep_functions_in_project(functions, base_path):
             function_occurrences[function] = []
     return function_occurrences
 
+
 def generate_function_search_report(function_occurrences):
     """Форматирование отчета о найденных функциях."""
     report = ["=== Function Search Report ==="]
@@ -125,6 +133,7 @@ def generate_function_search_report(function_occurrences):
         else:
             report.append(f"❌ {function} not found.")
     return "\n".join(report)
+
 
 def main():
     """Основной процесс диагностики."""
@@ -165,8 +174,9 @@ def main():
     report_path = os.path.join(base_path, "debug_report.txt")
     with open(report_path, "w") as report_file:
         report_file.write("\n".join(report_lines))
-    
+
     log(f"✅ Отчет сохранен в {report_path}")
+
 
 if __name__ == "__main__":
     main()
