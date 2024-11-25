@@ -59,9 +59,11 @@ def get_users_data():
 def get_gradio_status(port=7860):
     """Проверяет статус Gradio."""
     for proc in psutil.process_iter(["pid", "name", "cmdline"]):
-        if "python" in proc.info["name"] and f"{port}" in " ".join(proc.info["cmdline"]):
+        cmdline = proc.info.get("cmdline", [])
+        if cmdline and "python" in proc.info["name"] and f"{port}" in " ".join(cmdline):
             return f"запущен (PID {proc.info['pid']})"
     return "не запущен"
+
 
 
 def show_project_status():
