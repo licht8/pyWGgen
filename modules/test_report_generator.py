@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # test_report_generator.py
 # Скрипт для генерации полного отчета о состоянии проекта wg_qr_generator
-# Версия: 1.3
+# Версия: 1.4
 # Обновлено: 2024-11-25
 
 import os
@@ -109,6 +109,14 @@ def generate_report():
     report_lines.append("\n=== Статус Gradio ===")
     gradio_status = get_gradio_status()
     report_lines.append(f"Gradio: {gradio_status}")
+
+    # Проверка активных процессов
+    report_lines.append("\n=== Активные процессы ===")
+    try:
+        ps_output = subprocess.check_output(["ps", "-eo", "pid,cmd"], text=True)
+        report_lines.append(ps_output)
+    except subprocess.CalledProcessError:
+        report_lines.append("Ошибка получения списка процессов.")
 
     # Сохранение отчета
     with open(TEST_REPORT_PATH, "w") as report_file:
