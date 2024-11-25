@@ -20,7 +20,7 @@ def start_loader(message="Processing"):
     """Функция запуска лоадера."""
     global loading
     loading = True
-    spinner = ["|", "/", "-", "\\"]
+    spinner = ["🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔"]
     idx = 0
     while loading:
         print(f"\r{message} {spinner[idx % len(spinner)]}", end="", flush=True)
