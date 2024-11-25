@@ -7,8 +7,30 @@ import sys
 import json
 import subprocess
 from datetime import datetime
+import threading
+import time
 
 EXCLUDE_DIRS = ['venv']  # Исключаем каталоги, которые не нужно сканировать (например, виртуальное окружение).
+
+loading = False  # Глобальная переменная для управления лоадером
+
+def start_loader(message="Processing"):
+    """Функция запуска лоадера."""
+    global loading
+    loading = True
+    spinner = ["|", "/", "-", "\\"]
+    idx = 0
+    print(f"{message} ", end="", flush=True)
+    while loading:
+        print(spinner[idx % len(spinner)], end="\r", flush=True)
+        idx += 1
+        time.sleep(0.2)
+
+def stop_loader():
+    """Останавливает лоадер."""
+    global loading
+    loading = False
+    print("✔ Done!         ")  # Заменить лоадер на финальное сообщение
 
 def log(message):
     """Логирует сообщение в консоль."""
@@ -100,25 +122,34 @@ def main():
     timestamp = datetime.now().isoformat()
     report_lines = [f"=== Diagnostic Report for wg_qr_generator ===", f"Timestamp: {timestamp}", ""]
 
-    # Отчет об окружении Python
-    report_lines.append(debug_python_environment())
+    # Лоадер в отдельном потоке
+    loader_thread = threading.Thread(target=start_loader, args=("Running diagnostics",), daemon=True)
+    loader_thread.start()
 
-    # Проверка структуры проекта
-    report_lines.append(generate_project_structure_report(base_path, EXCLUDE_DIRS))
+    try:
+        # Отчет об окружении Python
+        report_lines.append(debug_python_environment())
 
-    # Проверка необходимых файлов/директорий
-    report_lines.append(debug_required_files_and_dirs(base_path))
+        # Проверка структуры проекта
+        report_lines.append(generate_project_structure_report(base_path, EXCLUDE_DIRS))
 
-    # Поиск функций
-    TARGET_FUNCTIONS = [
-        "create_user_tab",
-        "delete_user_tab",
-        "statistics_tab",
-        "run_gradio_admin_interface",
-        "sync_users_with_wireguard",
-    ]
-    function_occurrences = grep_functions_in_project(TARGET_FUNCTIONS, base_path)
-    report_lines.append(generate_function_search_report(function_occurrences))
+        # Проверка необходимых файлов/директорий
+        report_lines.append(debug_required_files_and_dirs(base_path))
+
+        # Поиск функций
+        TARGET_FUNCTIONS = [
+            "create_user_tab",
+            "delete_user_tab",
+            "statistics_tab",
+            "run_gradio_admin_interface",
+            "sync_users_with_wireguard",
+        ]
+        function_occurrences = grep_functions_in_project(TARGET_FUNCTIONS, base_path)
+        report_lines.append(generate_function_search_report(function_occurrences))
+
+    finally:
+        # Остановить лоадер
+        stop_loader()
 
     # Сохранение отчета
     report_path = os.path.join(base_path, "debug_report.txt")
