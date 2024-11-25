@@ -52,10 +52,16 @@ def show_main_menu():
         elif choice == "4":
             manage_users_menu()
         elif choice == "5":
-            remove_wireguard()
-            install_wireguard()
+            if wireguard_installed:
+                remove_wireguard()
+                install_wireguard()
+            else:
+                install_wireguard()
         elif choice == "6" and wireguard_installed:
             remove_wireguard()
+        elif choice == "7":
+            print("  🔄 Очистка базы данных пользователей...")
+            # Вызывается функция очистки базы данных (добавьте её в нужный модуль)
         elif choice == "8":
             generate_project_report()
         elif choice == "9":
