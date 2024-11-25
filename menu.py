@@ -4,137 +4,11 @@
 
 import sys
 import os
-import subprocess
-import signal
-import psutil
-from termcolor import colored
-from modules.manage_users_menu import manage_users_menu
-from modules.port_manager import handle_port_conflict  # Функция для обработки конфликта портов
-from modules.test_report_generator import generate_report  # Импорт генерации отчета
-
-# Вывод текущего PYTHONPATH для проверки
-print("PYTHONPATH:", sys.path)
-
-# Константы
-WIREGUARD_BINARY = "/usr/bin/wg"
-WIREGUARD_INSTALL_SCRIPT = "wireguard-install.sh"
-ADMIN_PORT = 7860
-GRADIO_ADMIN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "gradio_admin/main_interface.py"))
-CLEAN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "clean_user_data.sh"))
-TEST_REPORT_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "modules/test_report.txt"))
-
-def colorize_status(status, is_positive=True):
-    """Возвращает строку со статусом, окрашенным в зеленый или красный цвет."""
-    if is_positive:
-        return colored(f"{status} ✅", "green")
-    else:
-        return colored(f"{status} ❌", "red")
-
-def check_wireguard_installed():
-    """Проверка, установлен ли WireGuard."""
-    return os.path.isfile(WIREGUARD_BINARY)
-
-def install_wireguard():
-    """Установка WireGuard."""
-    if os.path.isfile(WIREGUARD_INSTALL_SCRIPT):
-        print("  🔧  Установка WireGuard...")
-        subprocess.run(["bash", WIREGUARD_INSTALL_SCRIPT])
-    else:
-        print(f"  ❌  Скрипт {WIREGUARD_INSTALL_SCRIPT} не найден. Положите его в текущую директорию.")
-
-def remove_wireguard():
-    """Удаление WireGuard."""
-    print("  ❌  Удаление WireGuard...")
-    subprocess.run(["yum", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL) or \
-    subprocess.run(["apt", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL)
-
-def open_firewalld_port(port):
-    """Открытие порта через firewalld."""
-    print(f"  🔓  Открытие порта {port} через firewalld...")
-    try:
-        subprocess.run(["sudo", "firewall-cmd", "--add-port", f"{port}/tcp"], check=True)
-        print(f"  ✅  Порт {port} добавлен через firewalld (временные правила).")
-    except subprocess.CalledProcessError:
-        print(f"  ❌  Не удалось добавить порт {port} через firewalld.")
-
-def close_firewalld_port(port):
-    """Закрытие порта через firewalld."""
-    print(f"  🔒  Закрытие порта {port} через firewalld...")
-    try:
-        subprocess.run(["sudo", "firewall-cmd", "--remove-port", f"{port}/tcp"], check=True)
-        print(f"  ✅  Порт {port} удален через firewalld (временные правила).")
-    except subprocess.CalledProcessError:
-        print(f"  ❌  Не удалось удалить порт {port} через firewalld.")
-
-def run_gradio_admin_interface():
-    """Запуск Gradio интерфейса с корректной обработкой портов и сигналов выхода."""
-    def handle_exit_signal(sig, frame):
-        """Обработчик сигнала для закрытия порта."""
-        close_firewalld_port(ADMIN_PORT)
-        sys.exit(0)
-
-    if not os.path.exists(GRADIO_ADMIN_SCRIPT):
-        print(f"  ❌  Скрипт {GRADIO_ADMIN_SCRIPT} не найден.")
-        return
-
-    # Проверка наличия порта
-    conflict_action = handle_port_conflict(ADMIN_PORT)
-    if conflict_action == "ignore":
-        return
-
-    # Открытие порта через firewalld
-    open_firewalld_port(ADMIN_PORT)
-
-    signal.signal(signal.SIGINT, handle_exit_signal)  # Обработка Ctrl+C
-
-    try:
-        print(f"  🌐  Запуск Gradio интерфейса на порту {ADMIN_PORT}...")
-        subprocess.run(["python3", GRADIO_ADMIN_SCRIPT])
-    finally:
-        close_firewalld_port(ADMIN_PORT)
-
-def run_clean_user_data():
-    """Запуск скрипта очистки пользовательских данных."""
-    if not os.path.exists(CLEAN_SCRIPT):
-        print(f"  ❌  Скрипт {CLEAN_SCRIPT} не найден.")
-        return
-
-    print("  🔄  Запуск очистки пользовательских данных...")
-    subprocess.run(["bash", CLEAN_SCRIPT])
-
-def display_test_report():
-    """Вывод содержимого отчета в консоль."""
-    if os.path.exists(TEST_REPORT_FILE):
-        with open(TEST_REPORT_FILE, "r") as file:
-            print(file.read())
-    else:
-        print(f"  ❌  Файл отчета {TEST_REPORT_FILE} не найден.")
-
-def display_test_summary():
-    """Вывод краткого содержимого отчета."""
-    if os.path.exists(TEST_REPORT_FILE):
-        with open(TEST_REPORT_FILE, "r") as file:
-            lines = file.readlines()
-            summary_keys = [
-                "Дата и время",
-                "WireGuard статус",
-                "Gradio",
-                "Открытые порты",
-                "wg0.conf"
-            ]
-            print("\n=== Краткий отчет о состоянии проекта ===")
-            for line in lines:
-                if any(key in line for key in summary_keys):
-                    print(line.strip())
-            print("\n=========================================\n")
-    else:
-        print(f"  ❌  Файл отчета {TEST_REPORT_FILE} не найден.")
-
-def update_project():
-    """Обновление проекта и зависимостей."""
-    print("  🔄  Обновление проекта и зависимостей...")
-    subprocess.run(["git", "pull"])
-    subprocess.run(["pip", "install", "-r", "requirements.txt"])
+from modules.wireguard_utils import check_wireguard_installed, install_wireguard, remove_wireguard
+from modules.firewall_utils import open_firewalld_port, close_firewalld_port
+from modules.gradio_utils import run_gradio_admin_interface
+from modules.report_utils import generate_project_report, display_test_report, display_test_summary
+from modules.update_utils import update_project
 
 def show_main_menu():
     """Отображение основного меню."""
@@ -174,21 +48,14 @@ def show_main_menu():
         elif choice == "3":
             run_gradio_admin_interface()
         elif choice == "4":
-            manage_users_menu()
+            print("  👤  Управление пользователями (разработка).")
         elif choice == "5":
-            if wireguard_installed:
-                print("🔄  Переустановка WireGuard...")
-                remove_wireguard()
-                install_wireguard()
-            else:
-                install_wireguard()
+            remove_wireguard()
+            install_wireguard()
         elif choice == "6" and wireguard_installed:
             remove_wireguard()
-        elif choice == "7":
-            run_clean_user_data()
         elif choice == "8":
-            print("  📋  Запуск генерации отчета...")
-            generate_report()
+            generate_project_report()
         elif choice == "9":
             display_test_summary()
         elif choice == "10":
