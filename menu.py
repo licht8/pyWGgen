@@ -116,27 +116,23 @@ def display_test_report():
         print(f"  ❌  Файл отчета {TEST_REPORT_FILE} не найден.")
 
 
-def manage_users():
-    """Подменю управления пользователями."""
-    while True:
-        print("\n ==========  Управление пользователями  ==========")
-        print(" 1. 🌱  Создать пользователя")
-        print(" 2. 🔍  Показать всех пользователей")
-        print(" 0. Вернуться в главное меню")
-        print(" ================================================")
-        choice = input(" Выберите действие: ").strip().lower()
-
-        if choice == "1":
-            print("  🌱  Создание пользователя...")
-            manage_users_menu("create")
-        elif choice == "2":
-            print("  🔍  Показать всех пользователей...")
-            manage_users_menu("show")
-        elif choice in {"0", "q"}:
-            print("  👈  Возврат в главное меню...")
-            break
-        else:
-            print("\n ! ⚠️  Некорректный выбор. Попробуйте снова.")
+def update_project_dependencies():
+    """Запускает обновление проекта и зависимостей."""
+    print("\n  🛠️   Обновление проекта и зависимостей...")
+    try:
+        # Обновление репозитория
+        print("  🔄  Обновление репозитория через git...")
+        subprocess.run(["git", "pull", "origin", "main"], check=True)
+        
+        # Обновление зависимостей
+        print("  📦  Обновление зависимостей через pip...")
+        subprocess.run(["pip", "install", "-r", "requirements.txt", "--upgrade"], check=True)
+        
+        print("\n  ✅  Обновление проекта завершено.")
+    except subprocess.CalledProcessError as e:
+        print(f"  ❌  Ошибка при обновлении: {e}")
+    except FileNotFoundError:
+        print("  ❌  Git или pip не найдены. Убедитесь, что они установлены.")
 
 
 def show_main_menu():
@@ -146,6 +142,7 @@ def show_main_menu():
         print("\n==================  Меню  ==================\n")
         print(" 1. 🛠️   Информация о состоянии проекта")
         print(" 2. 🧪   Запустить тесты")
+        print(" u. 🛠️   Запустить обновление проекта и зависимостей")
         print("--------------------------------------------")
         print(" 3. 🌐   Открыть Gradio админку")
         print(" 4. 👤   Управление пользователями")
@@ -168,15 +165,17 @@ def show_main_menu():
             from modules.project_status import show_project_status
             show_project_status()
         elif choice == "2":
-            print("🔍  Запуск тестов...")
+            print("  🔍  Запуск тестов...")
             subprocess.run(["pytest"])
+        elif choice == "u":
+            update_project_dependencies()
         elif choice == "3":
             run_gradio_admin_interface()
         elif choice == "4":
             manage_users_menu()
         elif choice == "5":
             if wireguard_installed:
-                print("🔄  Переустановка WireGuard...")
+                print("  ♻️   Переустановка WireGuard...")
                 remove_wireguard()
                 install_wireguard()
             else:
@@ -186,15 +185,9 @@ def show_main_menu():
         elif choice == "7":
             run_clean_user_data()
         elif choice == "8":
-            from wg_qr_generator.test_report_generator import generate_report
-            generate_report()
+            run_test_report_generator()
         elif choice == "9":
-            report_path = os.path.join("wg_qr_generator", "test_report.txt")
-            if os.path.exists(report_path):
-                with open(report_path, "r") as file:
-                    print(file.read())
-            else:
-                print("📄  Отчет отладки отсутствует.")
+            display_test_report()
         elif choice in {"0", "q"}:
             print("👋  Выход. До свидания!")
             break
