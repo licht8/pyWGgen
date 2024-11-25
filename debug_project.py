@@ -11,6 +11,7 @@ import threading
 import time
 
 EXCLUDE_DIRS = ['venv']  # Исключаем каталоги, которые не нужно сканировать (например, виртуальное окружение).
+MAX_VISIBLE_FILES = 100  # Максимальное количество отображаемых файлов/папок в отчете
 
 loading = False  # Глобальная переменная для управления лоадером
 
@@ -35,11 +36,12 @@ def log(message):
     """Логирует сообщение в консоль."""
     print(message)
 
-def generate_project_structure_report(base_path, exclude_dirs):
+def generate_project_structure_report(base_path, exclude_dirs, max_visible_files):
     """
     Генерация отчета о структуре проекта.
     :param base_path: Базовый путь проекта.
     :param exclude_dirs: Список директорий для исключения.
+    :param max_visible_files: Максимальное количество файлов/папок для отображения.
     :return: Отчет о структуре в строковом формате.
     """
     report = ["=== Project Structure ==="]
@@ -48,8 +50,16 @@ def generate_project_structure_report(base_path, exclude_dirs):
         dirs[:] = [d for d in dirs if d not in exclude_dirs]
         relative_path = os.path.relpath(root, base_path)
         report.append(f"📂 {relative_path}")
-        for file in files:
-            report.append(f"  ├── {file}")
+        total_items = len(dirs) + len(files)
+
+        # Сокращенное отображение папок с большим количеством файлов
+        if total_items > max_visible_files:
+            report.append(f"  ├── 📂 Contains {len(dirs)} folders and {len(files)} files")
+        else:
+            for d in dirs:
+                report.append(f"  ├── 📂 {d}")
+            for f in files:
+                report.append(f"  ├── 📄 {f}")
     return "\n".join(report)
 
 def debug_python_environment():
@@ -130,7 +140,7 @@ def main():
         report_lines.append(debug_python_environment())
 
         # Проверка структуры проекта
-        report_lines.append(generate_project_structure_report(base_path, EXCLUDE_DIRS))
+        report_lines.append(generate_project_structure_report(base_path, EXCLUDE_DIRS, MAX_VISIBLE_FILES))
 
         # Проверка необходимых файлов/директорий
         report_lines.append(debug_required_files_and_dirs(base_path))
