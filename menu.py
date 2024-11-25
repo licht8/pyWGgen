@@ -14,10 +14,13 @@ WIREGUARD_BINARY = "/usr/bin/wg"
 WIREGUARD_INSTALL_SCRIPT = "wireguard-install.sh"
 ADMIN_PORT = 7860
 GRADIO_ADMIN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "gradio_admin/main_interface.py"))
+CLEAN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "clean_user_data.sh"))
+
 
 def check_wireguard_installed():
     """Проверка, установлен ли WireGuard."""
     return os.path.isfile(WIREGUARD_BINARY)
+
 
 def install_wireguard():
     """Установка WireGuard."""
@@ -27,11 +30,13 @@ def install_wireguard():
     else:
         print(f"❌ Скрипт {WIREGUARD_INSTALL_SCRIPT} не найден. Положите его в текущую директорию.")
 
+
 def remove_wireguard():
     """Удаление WireGuard."""
     print("❌ Удаление WireGuard...")
     subprocess.run(["yum", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL) or \
     subprocess.run(["apt", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL)
+
 
 def open_firewalld_port(port):
     """Открытие порта через firewalld."""
@@ -42,6 +47,7 @@ def open_firewalld_port(port):
     except subprocess.CalledProcessError:
         print(f"❌ Не удалось добавить порт {port} через firewalld.")
 
+
 def close_firewalld_port(port):
     """Закрытие порта через firewalld."""
     print(f"🔒 Закрытие порта {port} через firewalld...")
@@ -50,6 +56,7 @@ def close_firewalld_port(port):
         print(f"✅ Порт {port} удален через firewalld (временные правила).")
     except subprocess.CalledProcessError:
         print(f"❌ Не удалось удалить порт {port} через firewalld.")
+
 
 def run_gradio_admin_interface():
     """Запуск Gradio интерфейса с корректной обработкой портов и сигналов выхода."""
@@ -78,6 +85,17 @@ def run_gradio_admin_interface():
     finally:
         close_firewalld_port(ADMIN_PORT)
 
+
+def run_clean_user_data():
+    """Запуск скрипта очистки пользовательских данных."""
+    if not os.path.exists(CLEAN_SCRIPT):
+        print(f"❌ Скрипт {CLEAN_SCRIPT} не найден.")
+        return
+
+    print("🔄 Запуск очистки пользовательских данных...")
+    subprocess.run(["bash", CLEAN_SCRIPT])
+
+
 def show_main_menu():
     """Отображение основного меню."""
     while True:
@@ -91,6 +109,7 @@ def show_main_menu():
             print("5. 🗑️ Удалить WireGuard")
         else:
             print("4. ⚙️ Установить WireGuard")
+        print("6. 🧹 Очистить базу пользователей")
         print("\n\t0 или q. Выход")
         print("==========================================")
         choice = input("Выберите действие: ").strip().lower()
@@ -111,11 +130,14 @@ def show_main_menu():
                 install_wireguard()
         elif choice == "5" and wireguard_installed:
             remove_wireguard()
+        elif choice == "6":
+            run_clean_user_data()
         elif choice in {"0", "q"}:
             print("👋 Выход. До свидания!")
             break
         else:
             print("⚠️ Некорректный выбор. Попробуйте еще раз.")
+
 
 if __name__ == "__main__":
     show_main_menu()
