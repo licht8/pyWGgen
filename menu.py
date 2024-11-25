@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # menu.py
-## Главное меню для управления проектом wg_qr_generator
+# Главное меню для управления проектом wg_qr_generator
 
 import os
 import subprocess
 import signal
 import sys
 from modules.manage_users_menu import manage_users_menu
+from modules.port_manager import handle_port_conflict  # Функция для обработки конфликта портов
 
 # Константы
 WIREGUARD_BINARY = "/usr/bin/wg"
@@ -14,11 +15,9 @@ WIREGUARD_INSTALL_SCRIPT = "wireguard-install.sh"
 ADMIN_PORT = 7860
 GRADIO_ADMIN_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), "gradio_admin/main_interface.py"))
 
-
 def check_wireguard_installed():
     """Проверка, установлен ли WireGuard."""
     return os.path.isfile(WIREGUARD_BINARY)
-
 
 def install_wireguard():
     """Установка WireGuard."""
@@ -28,13 +27,11 @@ def install_wireguard():
     else:
         print(f"❌ Скрипт {WIREGUARD_INSTALL_SCRIPT} не найден. Положите его в текущую директорию.")
 
-
 def remove_wireguard():
     """Удаление WireGuard."""
     print("❌ Удаление WireGuard...")
     subprocess.run(["yum", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL) or \
     subprocess.run(["apt", "remove", "wireguard", "-y"], stderr=subprocess.DEVNULL)
-
 
 def open_firewalld_port(port):
     """Открытие порта через firewalld."""
@@ -45,7 +42,6 @@ def open_firewalld_port(port):
     except subprocess.CalledProcessError:
         print(f"❌ Не удалось добавить порт {port} через firewalld.")
 
-
 def close_firewalld_port(port):
     """Закрытие порта через firewalld."""
     print(f"🔒 Закрытие порта {port} через firewalld...")
@@ -55,9 +51,8 @@ def close_firewalld_port(port):
     except subprocess.CalledProcessError:
         print(f"❌ Не удалось удалить порт {port} через firewalld.")
 
-
 def run_gradio_admin_interface():
-    """Запуск Gradio интерфейса с корректной обработкой Ctrl+C."""
+    """Запуск Gradio интерфейса с корректной обработкой портов и сигналов выхода."""
     def handle_exit_signal(sig, frame):
         """Обработчик сигнала для закрытия порта."""
         close_firewalld_port(ADMIN_PORT)
@@ -67,8 +62,14 @@ def run_gradio_admin_interface():
         print(f"❌ Скрипт {GRADIO_ADMIN_SCRIPT} не найден.")
         return
 
-    # Проверка и открытие порта
+    # Проверка наличия порта
+    conflict_action = handle_port_conflict(ADMIN_PORT)
+    if conflict_action == "ignore":
+        return
+
+    # Открытие порта через firewalld
     open_firewalld_port(ADMIN_PORT)
+
     signal.signal(signal.SIGINT, handle_exit_signal)  # Обработка Ctrl+C
 
     try:
@@ -76,7 +77,6 @@ def run_gradio_admin_interface():
         subprocess.run(["python3", GRADIO_ADMIN_SCRIPT])
     finally:
         close_firewalld_port(ADMIN_PORT)
-
 
 def show_main_menu():
     """Отображение основного меню."""
@@ -103,7 +103,12 @@ def show_main_menu():
         elif choice == "3":
             manage_users_menu()
         elif choice == "4":
-            install_wireguard()
+            if wireguard_installed:
+                print("🔄 Переустановка WireGuard...")
+                remove_wireguard()
+                install_wireguard()
+            else:
+                install_wireguard()
         elif choice == "5" and wireguard_installed:
             remove_wireguard()
         elif choice in {"0", "q"}:
@@ -111,7 +116,6 @@ def show_main_menu():
             break
         else:
             print("⚠️ Некорректный выбор. Попробуйте еще раз.")
-
 
 if __name__ == "__main__":
     show_main_menu()
