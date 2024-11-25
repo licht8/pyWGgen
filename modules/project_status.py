@@ -8,6 +8,7 @@ import subprocess
 import platform
 import psutil
 from datetime import datetime
+from termcolor import colored
 
 
 def get_external_ip():
@@ -31,9 +32,12 @@ def get_wireguard_status():
     """Возвращает статус WireGuard."""
     try:
         output = subprocess.check_output(["systemctl", "is-active", "wg-quick@wg0"], text=True).strip()
-        return "активен" if output == "active" else "неактивен"
+        if output == "active":
+            return colored("активен ✅", "green")
+        else:
+            return colored("неактивен ❌", "red")
     except subprocess.CalledProcessError:
-        return "не установлен"
+        return colored("не установлен ❌", "red")
 
 
 def get_wireguard_peers():
@@ -41,9 +45,11 @@ def get_wireguard_peers():
     try:
         output = subprocess.check_output(["wg", "show"], text=True).splitlines()
         peers = [line.split(":")[1].strip() for line in output if line.startswith("peer:")]
-        return peers if peers else "Нет активных пиров"
+        if peers:
+            return ", ".join(peers)
+        return colored("Нет активных пиров ❌", "red")
     except subprocess.CalledProcessError:
-        return "Ошибка получения данных"
+        return colored("Ошибка получения данных ❌", "red")
 
 
 def get_users_data():
@@ -53,7 +59,7 @@ def get_users_data():
         with open(user_records_path, "r") as file:
             return json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
-        return "Файл user_records.json отсутствует или поврежден."
+        return colored("Файл user_records.json отсутствует или поврежден ❌", "red")
 
 
 def get_gradio_status(port=7860):
@@ -61,9 +67,16 @@ def get_gradio_status(port=7860):
     for proc in psutil.process_iter(["pid", "name", "cmdline"]):
         cmdline = proc.info.get("cmdline", [])
         if cmdline and "python" in proc.info["name"] and f"{port}" in " ".join(cmdline):
-            return f"запущен (PID {proc.info['pid']})"
-    return "не запущен"
+            return colored(f"запущен ✅ (PID {proc.info['pid']})", "green")
+    return colored("не запущен ❌", "red")
 
+
+def get_gradio_port_status(port=7860):
+    """Проверяет, открыт ли порт Gradio."""
+    open_ports = get_open_ports()
+    if f"{port}/tcp" in open_ports:
+        return colored("открыт ✅", "green")
+    return colored("закрыт ❌", "red")
 
 
 def show_project_status():
@@ -78,7 +91,7 @@ def show_project_status():
 
     # Состояние WireGuard
     print(f" 🛡️  WireGuard статус: {get_wireguard_status()}")
-    print(f" ⚙️  Файл конфигурации: {'/etc/wireguard/wg0.conf' if os.path.exists('/etc/wireguard/wg0.conf') else 'отсутствует'}")
+    print(f" ⚙️  Файл конфигурации: {'/etc/wireguard/wg0.conf' if os.path.exists('/etc/wireguard/wg0.conf') else colored('отсутствует ❌', 'red')}")
     print(f" 🌐  Активные peers: {get_wireguard_peers()}\n")
 
     # Пользователи
@@ -86,22 +99,24 @@ def show_project_status():
     if isinstance(users, dict):
         print(" 👤  Пользователи WireGuard:")
         for user, details in users.items():
-            print(f"    - {user}: {details.get('allowed_ips', 'N/A')} | Статус: {details.get('status', 'N/A')}")
+            status = details.get("status", "N/A")
+            status_colored = colored(status, "green") if status == "active" else colored(status, "red")
+            print(f"    - {user}: {details.get('allowed_ips', 'N/A')} | Статус: {status_colored}")
     else:
         print(f" 👤  Пользователи: {users}\n")
 
     # Gradio
     print(f" 🌐  Gradio интерфейс: {get_gradio_status()}")
-    print(f" 🔌  Порт Gradio: {'7860 открыт' if '7860/tcp' in get_open_ports() else 'закрыт'}\n")
+    print(f" 🔌  Порт Gradio: {get_gradio_port_status()}\n")
 
     # Последний отчет
     report_path = os.path.join("wg_qr_generator", "test_report.txt")
     if os.path.exists(report_path):
         print(f" 📋  Последний отчет: {report_path}")
     else:
-        print(" 📋  Последний отчет: отсутствует\n")
+        print(colored(" 📋  Последний отчет: отсутствует ❌", "red"))
 
-    print("===========================================\n")
+    print("\n===========================================\n")
 
 
 if __name__ == "__main__":
