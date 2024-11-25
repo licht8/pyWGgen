@@ -11,7 +11,7 @@ import threading
 import time
 
 # Исключаем каталоги, которые не нужно сканировать (например, виртуальное окружение, кэш и временные файлы)
-EXCLUDE_DIRS = ['venv', '.pytest_cache', '.git', 'temp']
+EXCLUDE_DIRS = ['venv', '.pytest_cache', '.git', 'temp', '__pycache__']
 MAX_VISIBLE_FILES = 100  # Максимальное количество отображаемых файлов/папок в отчете
 
 loading = False  # Глобальная переменная для управления лоадером
