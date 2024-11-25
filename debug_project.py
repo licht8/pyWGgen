@@ -1,124 +1,131 @@
 #!/usr/bin/env python3
 # debug_project.py
-# Скрипт для диагностики проекта wg_qr_generator
+# Скрипт для диагностики и анализа структуры проекта wg_qr_generator.
 
 import os
-import subprocess
 import sys
 import json
+import subprocess
 from datetime import datetime
 
-# Настройки
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-TARGET_FUNCTIONS = [
-    "create_user_tab",
-    "delete_user_tab",
-    "statistics_tab",
-    "run_gradio_admin_interface",
-    "sync_users_with_wireguard"
-]
-REQUIRED_PATHS = [
-    "user/data/qrcodes",
-    "user/data/wg_configs",
-    "logs",
-]
-REQUIRED_FILES = {
-    "user/data/user_records.json": "{}",
-    "logs/wg_users.json": "{}"
-}
-REPORT_PATH = os.path.join(PROJECT_ROOT, "debug_report.txt")
+EXCLUDE_DIRS = ['venv']  # Исключаем каталоги, которые не нужно сканировать (например, виртуальное окружение).
 
-# Вспомогательные функции
-def write_json(file_path, data):
-    """Запись данных в JSON-файл."""
-    with open(file_path, "w", encoding="utf-8") as file:
-        json.dump(data, file, indent=4, ensure_ascii=False)
+def log(message):
+    """Логирует сообщение в консоль."""
+    print(message)
 
-def create_missing_files_and_dirs():
-    """Создает недостающие файлы и директории."""
-    report_lines = ["=== Missing Files/Dirs Creation ==="]
-    for path in REQUIRED_PATHS:
-        full_path = os.path.join(PROJECT_ROOT, path)
-        if not os.path.exists(full_path):
-            os.makedirs(full_path)
-            report_lines.append(f"✅ Directory created: {path}")
-    for file_path, default_content in REQUIRED_FILES.items():
-        full_path = os.path.join(PROJECT_ROOT, file_path)
-        if not os.path.exists(full_path):
-            with open(full_path, "w", encoding="utf-8") as file:
-                file.write(default_content)
-            report_lines.append(f"✅ File created: {file_path}")
-    return report_lines
+def generate_project_structure_report(base_path, exclude_dirs):
+    """
+    Генерация отчета о структуре проекта.
+    :param base_path: Базовый путь проекта.
+    :param exclude_dirs: Список директорий для исключения.
+    :return: Отчет о структуре в строковом формате.
+    """
+    report = ["=== Project Structure ==="]
+    for root, dirs, files in os.walk(base_path):
+        # Исключаем ненужные директории
+        dirs[:] = [d for d in dirs if d not in exclude_dirs]
+        relative_path = os.path.relpath(root, base_path)
+        report.append(f"📂 {relative_path}")
+        for file in files:
+            report.append(f"  ├── {file}")
+    return "\n".join(report)
 
-def check_required_files_and_dirs():
-    """Проверяет наличие необходимых файлов и директорий."""
-    report_lines = ["=== Required Files/Dirs Check ==="]
-    for path in REQUIRED_PATHS:
-        full_path = os.path.join(PROJECT_ROOT, path)
-        if os.path.exists(full_path):
-            report_lines.append(f"✅ Directory exists: {path}")
-        else:
-            report_lines.append(f"❌ Missing directory: {path}")
-    for file_path in REQUIRED_FILES.keys():
-        full_path = os.path.join(PROJECT_ROOT, file_path)
-        if os.path.exists(full_path):
-            report_lines.append(f"✅ File exists: {file_path}")
-        else:
-            report_lines.append(f"❌ Missing file: {file_path}")
-    return report_lines
+def debug_python_environment():
+    """Отчет об окружении Python."""
+    return f"""=== Python Environment ===
+Python Executable: {sys.executable}
+Python Version: {sys.version}
+PYTHONPATH:
+{sys.path}
+"""
 
-def grep_functions_in_project(functions):
-    """Ищет функции по всему проекту."""
-    report_lines = ["=== Function Search Report ==="]
-    try:
-        command = f"grep -r -n -E \"({'|'.join(functions)})\" {PROJECT_ROOT}"
-        output = subprocess.check_output(command, shell=True, text=True)
-        report_lines.append(output.strip())
-    except subprocess.CalledProcessError as e:
-        if e.returncode == 1:
-            report_lines.append("❌ No occurrences found for target functions.")
-        else:
-            report_lines.append(f"❌ Error during function search: {e}")
-    except Exception as e:
-        report_lines.append(f"❌ Unexpected error during function search: {e}")
-    return report_lines
-
-def run_diagnostics():
-    """Запускает все проверки и возвращает отчет."""
-    report_lines = [
-        f"=== Diagnostic Report for wg_qr_generator ===",
-        f"Timestamp: {datetime.now().isoformat()}",
-        ""
+def debug_required_files_and_dirs(base_path):
+    """Проверка необходимых файлов и директорий."""
+    required_items = [
+        "user/data/qrcodes",
+        "user/data/wg_configs",
+        "logs",
+        "user/data/user_records.json",
+        "logs/wg_users.json"
     ]
+    report = ["=== Required Files/Dirs Check ==="]
+    for item in required_items:
+        path = os.path.join(base_path, item)
+        if os.path.exists(path):
+            report.append(f"✅ Exists: {item}")
+        else:
+            report.append(f"❌ Missing: {item}")
+            # Если отсутствует, создаем директорию или файл
+            if "." not in os.path.basename(item):  # Если это директория
+                os.makedirs(path, exist_ok=True)
+                report.append(f"✅ Directory created: {item}")
+            else:  # Если это файл
+                with open(path, 'w') as f:
+                    json.dump({}, f)
+                report.append(f"✅ File created: {item}")
+    return "\n".join(report)
 
-    # Проверка Python окружения
-    report_lines.append("=== Python Environment ===")
-    report_lines.append(f"Python Executable: {sys.executable}")
-    report_lines.append(f"Python Version: {sys.version}")
-    report_lines.append(f"PYTHONPATH:\n{sys.path}\n")
+def grep_functions_in_project(functions, base_path):
+    """
+    Поиск функций в проекте.
+    :param functions: Список функций для поиска.
+    :param base_path: Базовый путь проекта.
+    :return: Словарь с результатами поиска.
+    """
+    function_occurrences = {}
+    for function in functions:
+        command = f"grep -r -n -E 'def {function}\\(' {base_path}"
+        try:
+            output = subprocess.check_output(command, shell=True, text=True, stderr=subprocess.DEVNULL)
+            function_occurrences[function] = output.strip().splitlines()
+        except subprocess.CalledProcessError:
+            function_occurrences[function] = []
+    return function_occurrences
+
+def generate_function_search_report(function_occurrences):
+    """Форматирование отчета о найденных функциях."""
+    report = ["=== Function Search Report ==="]
+    for function, occurrences in function_occurrences.items():
+        if occurrences:
+            report.append(f"✅ {function} found in:")
+            report.extend([f"  {line}" for line in occurrences])
+        else:
+            report.append(f"❌ {function} not found.")
+    return "\n".join(report)
+
+def main():
+    """Основной процесс диагностики."""
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    timestamp = datetime.now().isoformat()
+    report_lines = [f"=== Diagnostic Report for wg_qr_generator ===", f"Timestamp: {timestamp}", ""]
+
+    # Отчет об окружении Python
+    report_lines.append(debug_python_environment())
 
     # Проверка структуры проекта
-    report_lines.append("=== Project Structure Check ===")
-    report_lines.extend(check_required_files_and_dirs())
+    report_lines.append(generate_project_structure_report(base_path, EXCLUDE_DIRS))
 
-    # Создание недостающих файлов/директорий
-    report_lines.extend(create_missing_files_and_dirs())
+    # Проверка необходимых файлов/директорий
+    report_lines.append(debug_required_files_and_dirs(base_path))
 
-    # Проверка функций
-    report_lines.extend(grep_functions_in_project(TARGET_FUNCTIONS))
+    # Поиск функций
+    TARGET_FUNCTIONS = [
+        "create_user_tab",
+        "delete_user_tab",
+        "statistics_tab",
+        "run_gradio_admin_interface",
+        "sync_users_with_wireguard",
+    ]
+    function_occurrences = grep_functions_in_project(TARGET_FUNCTIONS, base_path)
+    report_lines.append(generate_function_search_report(function_occurrences))
 
-    return report_lines
-
-def save_report(report_lines):
-    """Сохраняет отчет в файл."""
-    with open(REPORT_PATH, "w", encoding="utf-8") as report_file:
+    # Сохранение отчета
+    report_path = os.path.join(base_path, "debug_report.txt")
+    with open(report_path, "w") as report_file:
         report_file.write("\n".join(report_lines))
-    print(f"✅ Отчет сохранен в {REPORT_PATH}")
-
-# Основная логика
-def main():
-    report_lines = run_diagnostics()
-    save_report(report_lines)
+    
+    log(f"✅ Отчет сохранен в {report_path}")
 
 if __name__ == "__main__":
     main()
