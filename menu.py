@@ -12,6 +12,7 @@ from modules.report_utils import generate_project_report, display_test_report, d
 from modules.update_utils import update_project
 from modules.sync import sync_users_with_wireguard
 from modules.manage_users_menu import manage_users_menu
+from modules.debugger import main as run_diagnostics  # Импорт функции диагностики
 
 def show_main_menu():
     """Отображение основного меню."""
@@ -36,6 +37,7 @@ def show_main_menu():
         print(" 8. 📋   Запустить генерацию отчета")
         print(" 9. 🗂️   Показать краткий отчет")
         print("10. 📄   Показать полный отчет")
+        print("12. 🛠️   Запустить диагностику проекта")  # Новый пункт меню
         print("\n\t 0 или q. Выход")
         print(" ==========================================\n")
         
@@ -69,6 +71,9 @@ def show_main_menu():
             display_test_report()
         elif choice == "11":
             sync_users_with_wireguard()
+        elif choice == "12":
+            print("🔍  Запуск диагностики проекта...")
+            run_diagnostics()  # Вызов функции диагностики
         elif choice in {"0", "q"}:
             print("👋  Выход. До свидания!")
             break
