@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # modules/debugger.py
-# Модуль для диагностики и анализа структуры проекта wg_qr_generator.
+# Модуль для диагностики проекта wg_qr_generator.
 
 import os
 import sys
@@ -10,14 +10,22 @@ from datetime import datetime
 import threading
 import time
 
-# Исключаем каталоги, которые не нужно сканировать (например, виртуальное окружение, кэш и временные файлы)
+# Константы
 EXCLUDE_DIRS = ['venv', '.pytest_cache', '.git', 'temp', '__pycache__']
-MAX_VISIBLE_FILES = 100  # Максимальное количество отображаемых файлов/папок в отчете
+MAX_VISIBLE_FILES = 100  # Максимальное количество файлов/папок в отчете
+TARGET_FUNCTIONS = [
+    "create_user_tab",
+    "delete_user_tab",
+    "statistics_tab",
+    "run_gradio_admin_interface",
+    "sync_users_with_wireguard",
+]
 
-loading = False  # Глобальная переменная для управления лоадером
+# Глобальная переменная для лоадера
+loading = False
 
 def start_loader(message="Processing"):
-    """Функция запуска лоадера."""
+    """Запускает лоадер."""
     global loading
     loading = True
     spinner = ["🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔"]
@@ -28,35 +36,27 @@ def start_loader(message="Processing"):
         time.sleep(0.2)
 
 def stop_loader():
-    """Останавливает лоадер и очищает строку."""
+    """Останавливает лоадер."""
     global loading
     loading = False
-    print("\r", end="", flush=True)  # Удаляет лоадер с экрана
+    print("\r", end="", flush=True)
 
 def log(message):
-    """Логирует сообщение в консоль."""
+    """Выводит сообщение в консоль."""
     print(message)
 
 def generate_project_structure_report(base_path, exclude_dirs, max_visible_files):
-    """
-    Генерация отчета о структуре проекта.
-    :param base_path: Базовый путь проекта.
-    :param exclude_dirs: Список директорий для исключения.
-    :param max_visible_files: Максимальное количество файлов/папок для отображения.
-    :return: Отчет о структуре в строковом формате.
-    """
+    """Генерация отчета о структуре проекта."""
     report = ["=== Project Structure ==="]
     for root, dirs, files in os.walk(base_path):
-        # Исключаем ненужные директории
         dirs[:] = [d for d in dirs if d not in exclude_dirs]
         relative_path = os.path.relpath(root, base_path)
-        report.append(f"📂 {relative_path}")
         total_items = len(dirs) + len(files)
 
-        # Сокращенное отображение папок с большим количеством файлов
         if total_items > max_visible_files:
-            report.append(f"  ├── 📂 Contains {len(dirs)} folders and {len(files)} files")
+            report.append(f"📂 {relative_path} ─ {len(dirs)} folders, {len(files)} files")
         else:
+            report.append(f"📂 {relative_path}")
             for d in dirs:
                 report.append(f"  ├── 📂 {d}")
             for f in files:
@@ -64,7 +64,7 @@ def generate_project_structure_report(base_path, exclude_dirs, max_visible_files
     return "\n".join(report)
 
 def debug_python_environment():
-    """Отчет об окружении Python."""
+    """Создает отчет об окружении Python."""
     return f"""=== Python Environment ===
 Python Executable: {sys.executable}
 Python Version: {sys.version}
@@ -73,7 +73,7 @@ PYTHONPATH:
 """
 
 def debug_required_files_and_dirs(base_path):
-    """Проверка необходимых файлов и директорий."""
+    """Проверка наличия нужных файлов и директорий."""
     required_items = [
         "user/data/qrcodes",
         "user/data/wg_configs",
@@ -88,23 +88,17 @@ def debug_required_files_and_dirs(base_path):
             report.append(f"✅ Exists: {item}")
         else:
             report.append(f"❌ Missing: {item}")
-            # Если отсутствует, создаем директорию или файл
-            if "." not in os.path.basename(item):  # Если это директория
+            if "." not in os.path.basename(item):
                 os.makedirs(path, exist_ok=True)
                 report.append(f"✅ Directory created: {item}")
-            else:  # Если это файл
+            else:
                 with open(path, 'w') as f:
                     json.dump({}, f)
                 report.append(f"✅ File created: {item}")
     return "\n".join(report)
 
 def grep_functions_in_project(functions, base_path):
-    """
-    Поиск функций в проекте.
-    :param functions: Список функций для поиска.
-    :param base_path: Базовый путь проекта.
-    :return: Словарь с результатами поиска.
-    """
+    """Поиск функций в проекте."""
     function_occurrences = {}
     for function in functions:
         command = f"grep -r -n -E 'def {function}\\(' {base_path}"
@@ -116,7 +110,7 @@ def grep_functions_in_project(functions, base_path):
     return function_occurrences
 
 def generate_function_search_report(function_occurrences):
-    """Форматирование отчета о найденных функциях."""
+    """Создание отчета о найденных функциях."""
     report = ["=== Function Search Report ==="]
     for function, occurrences in function_occurrences.items():
         if occurrences:
@@ -126,47 +120,28 @@ def generate_function_search_report(function_occurrences):
             report.append(f"❌ {function} not found.")
     return "\n".join(report)
 
-def main():
+def run_diagnostics():
     """Основной процесс диагностики."""
-    base_path = os.path.dirname(os.path.abspath(__file__))
+    base_path = os.path.abspath(os.path.join(__file__, "../../"))
     timestamp = datetime.now().isoformat()
     report_lines = [f"=== Diagnostic Report for wg_qr_generator ===", f"Timestamp: {timestamp}", ""]
 
-    # Лоадер в отдельном потоке
     loader_thread = threading.Thread(target=start_loader, args=("Running diagnostics...",), daemon=True)
     loader_thread.start()
 
     try:
-        # Отчет об окружении Python
         report_lines.append(debug_python_environment())
-
-        # Проверка структуры проекта
         report_lines.append(generate_project_structure_report(base_path, EXCLUDE_DIRS, MAX_VISIBLE_FILES))
-
-        # Проверка необходимых файлов/директорий
         report_lines.append(debug_required_files_and_dirs(base_path))
-
-        # Поиск функций
-        TARGET_FUNCTIONS = [
-            "create_user_tab",
-            "delete_user_tab",
-            "statistics_tab",
-            "run_gradio_admin_interface",
-            "sync_users_with_wireguard",
-        ]
         function_occurrences = grep_functions_in_project(TARGET_FUNCTIONS, base_path)
         report_lines.append(generate_function_search_report(function_occurrences))
-
     finally:
-        # Остановить лоадер
         stop_loader()
 
-    # Сохранение отчета
-    report_path = os.path.join(base_path, "debug_report.txt")
+    report_path = os.path.join(base_path, "modules", "debug_report.txt")
     with open(report_path, "w") as report_file:
         report_file.write("\n".join(report_lines))
-    
     log(f"✅ Отчет сохранен в {report_path}")
 
 if __name__ == "__main__":
-    main()
+    run_diagnostics()
