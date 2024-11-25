@@ -58,6 +58,9 @@ def show_main_menu():
             install_wireguard()
         elif choice == "6" and wireguard_installed:
             remove_wireguard()
+        elif choice == "7":
+            from modules.user_data_cleaner import clean_user_data  # Импорт функции очистки
+            clean_user_data()
         elif choice == "8":
             generate_project_report()
         elif choice == "9":
