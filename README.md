@@ -80,6 +80,31 @@ http://127.0.0.1:7860
 
 ## Установка и запуск проекта
 
+Подготовка к установке проекта:
+
+```bash
+sudo dnf update -y && sudo dnf install epel-release -y && \
+curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - && \
+sudo dnf install -y nodejs && node --version && \
+sudo dnf update -y && \
+sudo dnf install git mc tar gcc curl openssl-devel bzip2-devel libffi-devel zlib-devel -y && \
+sudo dnf install net-tools lsof -y && \
+sudo dnf install python3.11 -y && \
+sudo alternatives --set python3 /usr/bin/python3.11 && python3 --version
+```
+
+### Описание команды:
+1. **Обновление системы**: `sudo dnf update -y`.
+2. **Установка EPEL-репозитория**: Для получения дополнительных пакетов.
+3. **Установка Node.js**: Через официальный источник NodeSource.
+4. **Обновление системных пакетов и установка зависимостей**:
+   - Инструменты разработки (`gcc`, `curl`, `openssl-devel`, `bzip2-devel`, `libffi-devel`, `zlib-devel`).
+   - Утилиты (`net-tools`, `lsof`, `mc`).
+5. **Установка Python 3.11**: С последующей настройкой как основной версии Python.
+
+### Как использовать:
+Вставьте этот код в секцию установки вашего `README.md` файла, чтобы пользователи могли подготовить систему перед установкой проекта.
+
 ### Быстрая установка
 
 Для установки и запуска выполните:
