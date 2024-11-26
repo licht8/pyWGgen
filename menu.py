@@ -12,7 +12,7 @@ from modules.report_utils import generate_project_report, display_test_report, d
 from modules.update_utils import update_project
 from modules.sync import sync_users_with_wireguard
 from modules.manage_users_menu import manage_users_menu
-from modules.debugger import main as run_diagnostics  # Импорт функции диагностики
+from modules.debugger import run_diagnostics  # Исправленный импорт функции диагностики
 
 def show_main_menu():
     """Отображение основного меню."""
@@ -61,7 +61,7 @@ def show_main_menu():
         elif choice == "6" and wireguard_installed:
             remove_wireguard()
         elif choice == "7":
-            from modules.user_data_cleaner import clean_user_data  # Импорт функции очистки
+            from modules.user_data_cleaner import clean_user_data
             clean_user_data()
         elif choice == "8":
             generate_project_report()
