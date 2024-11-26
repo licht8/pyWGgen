@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# create_user.py
-# Логика создания пользователей WireGuard
+# gradio_admin/create_user.py
+# Логика создания пользователей WireGuard через Gradio интерфейс
 
 import os
 import subprocess
@@ -18,8 +18,12 @@ def create_user(username, email="N/A", telegram_id="N/A"):
         return "Ошибка: имя пользователя не может быть пустым.", None
 
     try:
-        # Здесь должен быть вызов основной логики создания пользователя.
-        # Например: subprocess.run(["python3", "main.py", username, email, telegram_id], check=True)
+        # Вызываем основную логику через main.py
+        subprocess.run(
+            ["python3", "main.py", username, email, telegram_id],
+            check=True,
+            cwd=os.path.abspath(os.path.dirname(__file__)) + "/../../"
+        )
 
         # Путь к QR-коду
         qr_code_path = os.path.join("user", "data", "qrcodes", f"{username}.png")
