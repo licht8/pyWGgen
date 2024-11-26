@@ -4,15 +4,17 @@
 
 import os
 import sys
+import subprocess
 
 # Установить путь к корню проекта
 project_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-import subprocess
+
+# Импорт модулей
 from modules.wireguard_utils import check_wireguard_installed, install_wireguard, remove_wireguard
 from modules.firewall_utils import open_firewalld_port, close_firewalld_port
-from modules.gradio_utils import run_gradio_admin_interface
+from modules.gradio_utils import run_gradio_admin_interface, check_and_open_port
 from modules.report_utils import generate_project_report, display_test_report, display_test_summary
 from modules.update_utils import update_project
 from modules.sync import sync_users_with_wireguard
@@ -57,7 +59,13 @@ def show_main_menu():
         elif choice == "u":
             update_project()
         elif choice == "3":
-            run_gradio_admin_interface()
+            # Проверяем и открываем порт перед запуском Gradio
+            port = 7860
+            print(f"🔓 Открытие порта {port} через firewalld...")
+            open_firewalld_port(port)
+            run_gradio_admin_interface(port=port)
+            print(f"🔒 Закрытие порта {port} через firewalld...")
+            close_firewalld_port(port)
         elif choice == "4":
             manage_users_menu()
         elif choice == "5":
