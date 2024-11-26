@@ -1,22 +1,18 @@
-#!/usr/bin/env python3
 # gradio_admin/tabs/delete_user_tab.py
-# Вкладка "Delete User" для Gradio-интерфейса проекта wg_qr_generator
 
 import gradio as gr
-from gradio_admin.delete_user import delete_user
+from gradio_admin.functions.delete_user import delete_user  # Предполагаем, что эта функция уже реализована
 
 def delete_user_tab():
-    """Создает вкладку для удаления пользователей."""
-    with gr.Tab("🔥 Delete"):
-        with gr.Row():
-            gr.Markdown("## Delete a user")
-        with gr.Column(scale=1, min_width=300):
-            delete_input = gr.Textbox(label="Username to delete", placeholder="Enter username...")
-            delete_button = gr.Button("Delete User")
-            delete_output = gr.Textbox(label="Result", interactive=False)
+    with gr.Row():
+        gr.Markdown("## Удалить пользователя")
+    with gr.Column(scale=1, min_width=300):
+        username_input = gr.Textbox(label="Имя пользователя", placeholder="Введите имя пользователя...")
+        delete_button = gr.Button("Удалить")
+        delete_output = gr.Textbox(label="Результат", interactive=False)
 
-            def handle_delete_user(username):
-                """Обработчик для удаления пользователя."""
-                return delete_user(username)
-
-            delete_button.click(handle_delete_user, inputs=delete_input, outputs=delete_output)
+        delete_button.click(
+            delete_user,
+            inputs=username_input,
+            outputs=delete_output
+        )
