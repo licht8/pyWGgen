@@ -2,19 +2,17 @@
 # create_user_tab.py
 # Вкладка для создания пользователей WireGuard
 
-import sys
 import os
+import sys
+import gradio as gr
 
-# Устанавливаем путь к корню проекта для импорта
+# Установка пути для корректного импорта
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, "../../"))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-# Импорт функции создания пользователя
 from gradio_admin.functions.create_user import create_user
-
-import gradio as gr
 
 def create_user_tab():
     """
