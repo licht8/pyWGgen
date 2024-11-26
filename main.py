@@ -20,7 +20,7 @@ import logging
 # Настройка логгера
 logging.basicConfig(
     level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(levelname)-8s %(message)s",
     handlers=[logging.StreamHandler()]  # Вывод только в консоль
 )
 
@@ -30,33 +30,46 @@ INFO_EMOJI = "ℹ️"
 WARNING_EMOJI = "⚠️"
 ERROR_EMOJI = "❌"
 CRITICAL_EMOJI = "🔥"
+WG_EMOJI = "🌐"
+FIREWALL_EMOJI = "🛡️"
 
 class EmojiLoggerAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
         if kwargs.get('level', logging.INFO) == logging.DEBUG:
-            msg = f"{DEBUG_EMOJI} {msg}"
+            msg = f"{DEBUG_EMOJI}  {msg}"
         elif kwargs.get('level', logging.INFO) == logging.INFO:
-            msg = f"{INFO_EMOJI} {msg}"
+            msg = f"{INFO_EMOJI}  {msg}"
         elif kwargs.get('level', logging.INFO) == logging.WARNING:
-            msg = f"{WARNING_EMOJI} {msg}"
+            msg = f"{WARNING_EMOJI}  {msg}"
         elif kwargs.get('level', logging.INFO) == logging.ERROR:
-            msg = f"{ERROR_EMOJI} {msg}"
+            msg = f"{ERROR_EMOJI}  {msg}"
         elif kwargs.get('level', logging.INFO) == logging.CRITICAL:
-            msg = f"{CRITICAL_EMOJI} {msg}"
+            msg = f"{CRITICAL_EMOJI}  {msg}"
         return msg, kwargs
 
 logger = EmojiLoggerAdapter(logging.getLogger(__name__), {})
 
 def restart_wireguard(interface="wg0"):
     """
-    Перезапускает WireGuard.
+    Перезапускает WireGuard и показывает его статус.
     """
     try:
         subprocess.run(["sudo", "systemctl", "restart", f"wg-quick@{interface}"], check=True)
         logger.info(f"WireGuard {interface} успешно перезапущен.")
+        
+        # Получение статуса WireGuard
+        wg_status = subprocess.check_output(["sudo", "systemctl", "status", f"wg-quick@{interface}"]).decode()
+        for line in wg_status.splitlines():
+            if "Active:" in line:
+                logger.info(f"{WG_EMOJI}  {line.strip()}")
+        
+        # Вывод состояния firewall
+        firewall_status = subprocess.check_output(["sudo", "firewall-cmd", "--list-ports"]).decode()
+        for line in firewall_status.splitlines():
+            logger.info(f"{FIREWALL_EMOJI}  {line.strip()}")
+
     except subprocess.CalledProcessError as e:
         logger.error(f"Ошибка перезапуска WireGuard: {e}")
-
 
 def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A"):
     """
