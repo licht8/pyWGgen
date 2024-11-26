@@ -6,9 +6,10 @@ import sys
 import os
 import gradio as gr
 
-# Добавляем текущую директорию проекта в PYTHONPATH для корректных импортов
-base_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(base_dir)
+# Добавляем базовую директорию проекта в PYTHONPATH
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if base_dir not in sys.path:
+    sys.path.append(base_dir)
 
 # Импорты вкладок
 from gradio_admin.tabs.create_user_tab import create_user_tab
