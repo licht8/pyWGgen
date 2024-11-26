@@ -87,10 +87,10 @@ def write_report(report_data, output_file):
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(report_data)
 
-# Main function
-def main():
+# Main diagnostic function
+def run_diagnostics():
     """
-    Main entry point for generating the diagnostic report.
+    Main function to generate and write the diagnostic report.
     """
     timestamp = datetime.datetime.now().isoformat()
     required_items = [
@@ -136,7 +136,3 @@ def main():
     # Write to file
     write_report(report_data, REPORT_FILE)
     print(f"Diagnostic report written to {REPORT_FILE}")
-
-# Entry point
-if __name__ == "__main__":
-    main()
