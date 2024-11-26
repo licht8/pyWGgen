@@ -1,18 +1,24 @@
+#!/usr/bin/env python3
 # gradio_admin/tabs/statistics_tab.py
+# Вкладка для просмотра статистики пользователей WireGuard
 
 import gradio as gr
-from gradio_admin.functions.statistics import get_user_statistics  # Предполагаем, что эта функция уже реализована
+from gradio_admin.functions.statistics import get_user_statistics
 
 def statistics_tab():
-    with gr.Row():
-        gr.Markdown("## Статистика пользователей")
-    with gr.Column(scale=1, min_width=300):
-        stats_output = gr.Textbox(label="Статистика", interactive=False)
+    """
+    Вкладка для отображения статистики пользователей WireGuard.
+    """
+    refresh_button = gr.Button("Обновить статистику")
+    statistics_output = gr.Textbox(label="Статистика пользователей", interactive=False)
 
-        def fetch_statistics():
-            return get_user_statistics()
+    def handle_refresh_statistics():
+        return get_user_statistics()
 
-        gr.Button("Обновить статистику").click(
-            fetch_statistics,
-            outputs=stats_output
-        )
+    refresh_button.click(
+        handle_refresh_statistics,
+        inputs=[],
+        outputs=statistics_output
+    )
+    
+    return [refresh_button, statistics_output]
