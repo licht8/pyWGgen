@@ -4,14 +4,12 @@
 
 import os
 import sys
-import json
 import subprocess
 from datetime import datetime
 import threading
 import time
 
 EXCLUDE_DIRS = ['venv', '.pytest_cache', '.git', 'temp', '__pycache__']
-MAX_VISIBLE_FILES = 100
 TARGET_FUNCTIONS = [
     "create_user_tab",
     "delete_user_tab",
@@ -43,31 +41,22 @@ def log(message):
     """Выводит сообщение в консоль."""
     print(message)
 
-def generate_project_structure_report(base_path, exclude_dirs, max_visible_files):
-    """Генерация отчета о структуре проекта."""
-    report = ["=== Project Structure ==="]
+def summarize_project_structure(base_path, exclude_dirs):
+    """Возвращает краткий обзор структуры проекта."""
+    directories = []
     for root, dirs, files in os.walk(base_path):
         dirs[:] = [d for d in dirs if d not in exclude_dirs]
-        relative_path = os.path.relpath(root, base_path)
-        total_items = len(dirs) + len(files)
-
-        if total_items > max_visible_files:
-            report.append(f"📂 {relative_path} ─ {len(dirs)} folders, {len(files)} files")
-        else:
-            report.append(f"📂 {relative_path}")
-            for d in dirs:
-                report.append(f"  ├── 📂 {d}")
-            for f in files:
-                report.append(f"  ├── 📄 {f}")
-    return "\n".join(report)
+        if root == base_path:
+            directories = dirs
+            break
+    return f"Root Directory: {base_path}\nKey Directories:\n" + "\n".join([f"- {d}" for d in directories])
 
 def debug_python_environment():
     """Создает отчет об окружении Python."""
     return f"""=== Python Environment ===
 Python Executable: {sys.executable}
-Python Version: {sys.version}
-PYTHONPATH:
-{sys.path}
+Python Version: {sys.version.split()[0]}
+PYTHONPATH: {sys.path[:1]}...
 """
 
 def debug_required_files_and_dirs(base_path):
@@ -79,21 +68,14 @@ def debug_required_files_and_dirs(base_path):
         "user/data/user_records.json",
         "logs/wg_users.json"
     ]
-    report = ["=== Required Files/Dirs Check ==="]
+    status = []
     for item in required_items:
         path = os.path.join(base_path, item)
         if os.path.exists(path):
-            report.append(f"✅ Exists: {item}")
+            status.append(f"✅ {item}")
         else:
-            report.append(f"❌ Missing: {item}")
-            if "." not in os.path.basename(item):
-                os.makedirs(path, exist_ok=True)
-                report.append(f"✅ Directory created: {item}")
-            else:
-                with open(path, 'w') as f:
-                    json.dump({}, f)
-                report.append(f"✅ File created: {item}")
-    return "\n".join(report)
+            status.append(f"❌ {item}")
+    return "=== Required Files/Dirs Status ===\n" + "\n".join(status)
 
 def grep_functions_in_project(functions, base_path):
     """Поиск функций в проекте."""
@@ -107,16 +89,15 @@ def grep_functions_in_project(functions, base_path):
             function_occurrences[function] = []
     return function_occurrences
 
-def generate_function_search_report(function_occurrences):
-    """Создание отчета о найденных функциях."""
-    report = ["=== Function Search Report ==="]
+def generate_function_search_summary(function_occurrences):
+    """Создает краткое резюме поиска функций."""
+    summary = []
     for function, occurrences in function_occurrences.items():
         if occurrences:
-            report.append(f"✅ {function} found in:")
-            report.extend([f"  {line}" for line in occurrences])
+            summary.append(f"✅ {function}: Found in {occurrences[0].split(':')[0]}")
         else:
-            report.append(f"❌ {function} not found.")
-    return "\n".join(report)
+            summary.append(f"❌ {function}: Not found.")
+    return "=== Function Search Summary ===\n" + "\n".join(summary)
 
 def run_diagnostics():
     """Основной процесс диагностики."""
@@ -129,10 +110,10 @@ def run_diagnostics():
 
     try:
         report_lines.append(debug_python_environment())
-        report_lines.append(generate_project_structure_report(base_path, EXCLUDE_DIRS, MAX_VISIBLE_FILES))
+        report_lines.append(summarize_project_structure(base_path, EXCLUDE_DIRS))
         report_lines.append(debug_required_files_and_dirs(base_path))
         function_occurrences = grep_functions_in_project(TARGET_FUNCTIONS, base_path)
-        report_lines.append(generate_function_search_report(function_occurrences))
+        report_lines.append(generate_function_search_summary(function_occurrences))
     finally:
         stop_loader()
 
