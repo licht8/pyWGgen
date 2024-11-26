@@ -11,7 +11,7 @@ project_root = os.path.abspath(os.path.join(current_dir, "../../"))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-# Импорт функции create_user из файла create_user.py
+# Импорт функции создания пользователя
 from gradio_admin.functions.create_user import create_user
 
 import gradio as gr
