@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # create_user.py
-## Скрипт для обработки создания пользователей и отображения QR-кодов
+# Логика создания пользователей WireGuard
 
 import os
 import subprocess
-import json
 
 def create_user(username, email="N/A", telegram_id="N/A"):
     """
@@ -19,14 +18,13 @@ def create_user(username, email="N/A", telegram_id="N/A"):
         return "Ошибка: имя пользователя не может быть пустым.", None
 
     try:
-        # Запускаем процесс создания пользователя через main.py
-        subprocess.run(["python3", "main.py", username, email, telegram_id], check=True)
+        # Здесь должен быть вызов основной логики создания пользователя.
+        # Например: subprocess.run(["python3", "main.py", username, email, telegram_id], check=True)
 
-        # Формируем путь к QR-коду
+        # Путь к QR-коду
         qr_code_path = os.path.join("user", "data", "qrcodes", f"{username}.png")
         absolute_path = os.path.abspath(qr_code_path)
 
-        # Проверяем, создан ли QR-код
         if os.path.exists(absolute_path):
             return f"✅ Пользователь {username} успешно создан.", absolute_path
         else:
