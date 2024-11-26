@@ -2,7 +2,15 @@
 # main_interface.py
 # Основной интерфейс Gradio для управления WireGuard пользователями
 
+import sys
+import os
 import gradio as gr
+
+# Добавляем текущую директорию проекта в PYTHONPATH для корректных импортов
+base_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(base_dir)
+
+# Импорты вкладок
 from gradio_admin.tabs.create_user_tab import create_user_tab
 from gradio_admin.tabs.delete_user_tab import delete_user_tab
 from gradio_admin.tabs.statistics_tab import statistics_tab
