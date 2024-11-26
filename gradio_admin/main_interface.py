@@ -1,13 +1,19 @@
-#!/usr/bin/env python3
 # gradio_admin/main_interface.py
 
 import gradio as gr
+from gradio_admin.tabs.create_user_tab import create_user_tab
+from gradio_admin.tabs.delete_user_tab import delete_user_tab
+from gradio_admin.tabs.statistics_tab import statistics_tab
 
-# Создаем объект интерфейса
 with gr.Blocks(css="style.css") as admin_interface:
     with gr.Tab(label="🌱 Создать пользователя"):
-        gr.Markdown("Интерфейс создания пользователя.")
+        create_user_tab()
+
     with gr.Tab(label="🔥 Удалить пользователя"):
-        gr.Markdown("Интерфейс удаления пользователя.")
+        delete_user_tab()
+
     with gr.Tab(label="🔍 Статистика"):
-        gr.Markdown("Статистика WireGuard пользователей.")
+        statistics_tab()
+
+if __name__ == "__main__":
+    admin_interface.launch(server_name="0.0.0.0", server_port=7860, share=True)
