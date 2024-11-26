@@ -26,9 +26,7 @@ def save_json(filepath, data):
         json.dump(data, file, indent=4)
 
 def parse_wireguard_output(wg_output):
-    """
-    Парсит вывод команды `wg show` для извлечения информации о пользователях.
-    """
+    """Парсит вывод команды `wg show`."""
     lines = wg_output.splitlines()
     users = []
     current_peer = None
@@ -43,10 +41,18 @@ def parse_wireguard_output(wg_output):
 
     return users
 
+def sync_wireguard_config(interface="wg0"):
+    """
+    Обновляет конфигурацию WireGuard.
+    """
+    try:
+        subprocess.run(["wg-quick", "save", interface], check=True)
+        print(f"✅ Конфигурация WireGuard {interface} успешно сохранена.")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Ошибка при сохранении конфигурации WireGuard: {e}")
+
 def sync_users_with_wireguard():
-    """
-    Синхронизирует пользователей WireGuard с JSON-файлами проекта.
-    """
+    """Синхронизирует пользователей WireGuard с JSON-файлами проекта."""
     try:
         print("🔄 Получение информации из WireGuard...")
         wg_output = subprocess.check_output(["wg", "show"], text=True)
