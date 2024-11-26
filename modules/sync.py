@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # modules/sync.py
+
 import subprocess
 import json
 import os
@@ -46,34 +47,37 @@ def parse_wireguard_output(wg_output):
     return peers
 
 def sync_users_with_wireguard():
-    """Синхронизирует пользователей WireGuard с JSON-файлами."""
+    """Синхронизирует пользователей WireGuard с JSON-файлами проекта."""
     try:
         # Читаем вывод команды wg show
         wg_output = subprocess.check_output(["wg", "show"], text=True)
         wg_users = parse_wireguard_output(wg_output)
 
-        # Если пиров нет, выходим
         if not wg_users:
             print("⚠️ Нет пользователей в выводе WireGuard.")
             return
 
-        # Загружаем данные из user_records.json
+        # Загружаем записи пользователей
         user_records = load_json(USER_RECORDS_JSON)
 
-        # Сопоставляем данные
+        # Создаем сопоставление публичных ключей и имен пользователей
+        key_to_username = {
+            record["public_key"]: username
+            for username, record in user_records.items()
+            if "public_key" in record
+        }
+
+        # Обновляем пользователей
         synced_users = {}
         for peer, data in wg_users.items():
-            username = next(
-                (name for name, record in user_records.items() if record.get("public_key") == peer),
-                peer  # Если имя не найдено, оставить ключ
-            )
+            username = key_to_username.get(peer, peer)  # Если имя не найдено, используем ключ
             synced_users[username] = {
                 "public_key": peer,
                 **data,
                 "status": "active" if data.get("last_handshake") else "inactive"
             }
 
-        # Сохраняем синхронизированные данные
+        # Сохраняем данные в wg_users.json
         save_json(WG_USERS_JSON, synced_users)
         print("✅ Пользователи успешно синхронизированы.")
     except subprocess.CalledProcessError as e:
