@@ -21,17 +21,13 @@ import logging
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s - %(levelname)-8s %(message)s",
-    handlers=[logging.StreamHandler()]  # Вывод только в консоль
+    handlers=[logging.StreamHandler()]
 )
 
-# Эмодзи для уровней логирования
 DEBUG_EMOJI = "🐛"
 INFO_EMOJI = "ℹ️"
 WARNING_EMOJI = "⚠️"
 ERROR_EMOJI = "❌"
-CRITICAL_EMOJI = "🔥"
-WG_EMOJI = "🌐"
-FIREWALL_EMOJI = "🛡️"
 
 class EmojiLoggerAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
@@ -43,31 +39,46 @@ class EmojiLoggerAdapter(logging.LoggerAdapter):
             msg = f"{WARNING_EMOJI}  {msg}"
         elif kwargs.get('level', logging.INFO) == logging.ERROR:
             msg = f"{ERROR_EMOJI}  {msg}"
-        elif kwargs.get('level', logging.INFO) == logging.CRITICAL:
-            msg = f"{CRITICAL_EMOJI}  {msg}"
         return msg, kwargs
 
 logger = EmojiLoggerAdapter(logging.getLogger(__name__), {})
 
+def load_existing_users():
+    """
+    Загружает список существующих пользователей из базы данных.
+    """
+    user_records_path = os.path.join("user", "data", "user_records.json")
+    if os.path.exists(user_records_path):
+        with open(user_records_path, "r", encoding="utf-8") as file:
+            try:
+                user_data = json.load(file)
+                return {user.lower(): user_data[user] for user in user_data}  # Нормализуем имена
+            except json.JSONDecodeError:
+                logger.warning("Ошибка чтения базы данных пользователей.")
+                return {}
+    return {}
+
+def is_user_in_server_config(nickname, config_file):
+    """
+    Проверяет наличие пользователя в конфигурации сервера.
+    """
+    nickname_lower = nickname.lower()
+    try:
+        with open(config_file, "r") as file:
+            for line in file:
+                if nickname_lower in line.lower():
+                    return True
+    except FileNotFoundError:
+        logger.warning(f"Файл конфигурации {config_file} не найден.")
+    return False
+
 def restart_wireguard(interface="wg0"):
     """
-    Перезапускает WireGuard и показывает его статус.
+    Перезапускает WireGuard.
     """
     try:
         subprocess.run(["sudo", "systemctl", "restart", f"wg-quick@{interface}"], check=True)
         logger.info(f"WireGuard {interface} успешно перезапущен.")
-        
-        # Получение статуса WireGuard
-        wg_status = subprocess.check_output(["sudo", "systemctl", "status", f"wg-quick@{interface}"]).decode()
-        for line in wg_status.splitlines():
-            if "Active:" in line:
-                logger.info(f"{WG_EMOJI}  {line.strip()}")
-        
-        # Вывод состояния firewall
-        firewall_status = subprocess.check_output(["sudo", "firewall-cmd", "--list-ports"]).decode()
-        for line in firewall_status.splitlines():
-            logger.info(f"{FIREWALL_EMOJI}  {line.strip()}")
-
     except subprocess.CalledProcessError as e:
         logger.error(f"Ошибка перезапуска WireGuard: {e}")
 
@@ -136,7 +147,6 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
 
     return config_path, qr_path
 
-
 def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr_code_path, email, telegram_id):
     """
     Добавляет запись о пользователе с расширенными данными.
@@ -165,7 +175,7 @@ def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr
         "last_handshake": "N/A",
         "uploaded": "N/A",
         "downloaded": "N/A",
-        "qr_code_path": qr_code_path,
+        "qr_code_path": qr_path,
         "email": email,
         "telegram_id": telegram_id,
         "status": "inactive"
@@ -176,7 +186,6 @@ def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr
         json.dump(user_data, file, indent=4)
     logger.info(f"Данные пользователя {nickname} успешно добавлены в {user_records_path}")
 
-
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         logger.error("Недостаточно аргументов. Использование: python3 main.py <nickname> [email] [telegram_id]")
@@ -186,6 +195,16 @@ if __name__ == "__main__":
     email = sys.argv[2] if len(sys.argv) > 2 else "N/A"
     telegram_id = sys.argv[3] if len(sys.argv) > 3 else "N/A"
     params_file = settings.PARAMS_FILE
+
+    # Проверка существующего пользователя
+    existing_users = load_existing_users()
+    if nickname.lower() in existing_users:
+        logger.error(f"Пользователь с именем '{nickname}' уже существует в базе данных.")
+        sys.exit(1)
+
+    if is_user_in_server_config(nickname, settings.SERVER_CONFIG_FILE):
+        logger.error(f"Пользователь с именем '{nickname}' уже существует в конфигурации сервера.")
+        sys.exit(1)
 
     try:
         logger.info("Инициализация директорий.")
