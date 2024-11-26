@@ -99,7 +99,7 @@ def grep_functions_in_project(functions, base_path):
     """Поиск функций в проекте."""
     function_occurrences = {}
     for function in functions:
-        command = f"grep -r -n -E 'def\\s+{function}' {base_path}"
+        command = f"grep -r -n -E '\\bdef\\s+{function}\\b' {base_path}"  # Точное соответствие имени функции
         try:
             output = subprocess.check_output(command, shell=True, text=True, stderr=subprocess.DEVNULL)
             function_occurrences[function] = output.strip().splitlines()
@@ -120,7 +120,7 @@ def generate_function_search_report(function_occurrences):
 
 def run_diagnostics():
     """Основной процесс диагностики."""
-    base_path = os.path.abspath(os.path.join(__file__, "../../"))
+    base_path = os.path.abspath(os.path.join(__file__, "../../"))  # Корень проекта
     timestamp = datetime.now().isoformat()
     report_lines = [f"=== Diagnostic Report for wg_qr_generator ===", f"Timestamp: {timestamp}", ""]
 
