@@ -15,7 +15,37 @@ from modules.qr_generator import generate_qr_code
 from modules.directory_setup import setup_directories
 from modules.client_config import create_client_config
 import subprocess
+import logging
 
+# Настройка логгера
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler()]  # Вывод только в консоль
+)
+
+# Эмодзи для уровней логирования
+DEBUG_EMOJI = "🐛"
+INFO_EMOJI = "ℹ️"
+WARNING_EMOJI = "⚠️"
+ERROR_EMOJI = "❌"
+CRITICAL_EMOJI = "🔥"
+
+class EmojiLoggerAdapter(logging.LoggerAdapter):
+    def process(self, msg, kwargs):
+        if kwargs.get('level', logging.INFO) == logging.DEBUG:
+            msg = f"{DEBUG_EMOJI} {msg}"
+        elif kwargs.get('level', logging.INFO) == logging.INFO:
+            msg = f"{INFO_EMOJI} {msg}"
+        elif kwargs.get('level', logging.INFO) == logging.WARNING:
+            msg = f"{WARNING_EMOJI} {msg}"
+        elif kwargs.get('level', logging.INFO) == logging.ERROR:
+            msg = f"{ERROR_EMOJI} {msg}"
+        elif kwargs.get('level', logging.INFO) == logging.CRITICAL:
+            msg = f"{CRITICAL_EMOJI} {msg}"
+        return msg, kwargs
+
+logger = EmojiLoggerAdapter(logging.getLogger(__name__), {})
 
 def restart_wireguard(interface="wg0"):
     """
@@ -23,33 +53,32 @@ def restart_wireguard(interface="wg0"):
     """
     try:
         subprocess.run(["sudo", "systemctl", "restart", f"wg-quick@{interface}"], check=True)
-        print(f"✅ WireGuard {interface} успешно перезапущен.")
+        logger.info(f"WireGuard {interface} успешно перезапущен.")
     except subprocess.CalledProcessError as e:
-        print(f"❌ Ошибка перезапуска WireGuard: {e}")
+        logger.error(f"Ошибка перезапуска WireGuard: {e}")
 
 
 def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A"):
     """
     Генерация конфигурации пользователя и QR-кода.
-    :param nickname: Имя пользователя.
-    :param params: Параметры сервера.
-    :param config_file: Путь к файлу конфигурации сервера WireGuard.
-    :param email: Электронная почта пользователя.
-    :param telegram_id: Telegram ID пользователя.
-    :return: Пути к файлу конфигурации пользователя и QR-коду.
     """
+    logger.info(f"Начало генерации конфигурации для пользователя: {nickname}")
     server_public_key = params['SERVER_PUB_KEY']
     endpoint = f"{params['SERVER_PUB_IP']}:{params['SERVER_PORT']}"
     dns_servers = f"{params['CLIENT_DNS_1']},{params['CLIENT_DNS_2']}"
 
     private_key = generate_private_key()
+    logger.debug("Приватный ключ сгенерирован.")
     public_key = generate_public_key(private_key)
+    logger.debug("Публичный ключ сгенерирован.")
     preshared_key = generate_preshared_key()
+    logger.debug("Пресекретный ключ сгенерирован.")
 
     # Генерация IP-адреса
     address, new_ipv4 = generate_ip(config_file)
+    logger.info(f"IP-адрес сгенерирован: {address}")
 
-    # Используем функцию для генерации конфигурации клиента
+    # Генерация конфигурации клиента
     client_config = create_client_config(
         private_key=private_key,
         address=address,
@@ -58,22 +87,26 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
         preshared_key=preshared_key,
         endpoint=endpoint
     )
+    logger.debug("Конфигурация клиента создана.")
 
     config_path = os.path.join(settings.WG_CONFIG_DIR, f"{nickname}.conf")
     qr_path = os.path.join(settings.QR_CODE_DIR, f"{nickname}.png")
 
-    # Сохраняем конфигурационный файл клиента
+    # Сохраняем конфигурацию
     os.makedirs(settings.WG_CONFIG_DIR, exist_ok=True)
     with open(config_path, "w") as file:
         file.write(client_config)
+    logger.info(f"Конфигурация клиента сохранена в {config_path}")
 
     # Генерация QR-кода
     generate_qr_code(client_config, qr_path)
+    logger.info(f"QR-код сохранён в {qr_path}")
 
-    # Добавляем нового пользователя в конфигурацию сервера
+    # Добавление пользователя в конфигурацию сервера
     add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), address)
+    logger.info("Пользователь добавлен в конфигурацию сервера.")
 
-    # Добавляем запись пользователя с дополнительными данными
+    # Добавление записи пользователя
     add_user_record(
         nickname,
         trial_days=settings.DEFAULT_TRIAL_DAYS,
@@ -85,7 +118,7 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
         telegram_id=telegram_id
     )
 
-    # Перезапускаем WireGuard для применения изменений
+    # Перезапуск WireGuard
     restart_wireguard(params['SERVER_WG_NIC'])
 
     return config_path, qr_path
@@ -95,10 +128,10 @@ def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr
     """
     Добавляет запись о пользователе с расширенными данными.
     """
+    logger.info(f"Добавление записи пользователя {nickname} в базу данных.")
     user_records_path = os.path.join("user", "data", "user_records.json")
     expiry_date = datetime.now() + timedelta(days=trial_days)
 
-    # Загружаем существующие записи
     if os.path.exists(user_records_path):
         with open(user_records_path, "r", encoding="utf-8") as file:
             try:
@@ -108,7 +141,6 @@ def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr
     else:
         user_data = {}
 
-    # Добавляем новую запись
     user_data[nickname] = {
         "username": nickname,
         "created_at": datetime.now().isoformat(),
@@ -116,26 +148,25 @@ def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr
         "allowed_ips": address,
         "public_key": public_key,
         "preshared_key": preshared_key,
-        "endpoint": "N/A",  # будет обновляться позже
-        "last_handshake": "N/A",  # будет обновляться позже
-        "uploaded": "N/A",  # будет обновляться позже
-        "downloaded": "N/A",  # будет обновляться позже
+        "endpoint": "N/A",
+        "last_handshake": "N/A",
+        "uploaded": "N/A",
+        "downloaded": "N/A",
         "qr_code_path": qr_code_path,
         "email": email,
         "telegram_id": telegram_id,
-        "status": "inactive"  # будет обновляться позже
+        "status": "inactive"
     }
 
-    # Сохраняем обновленные данные
     os.makedirs(os.path.dirname(user_records_path), exist_ok=True)
     with open(user_records_path, "w", encoding="utf-8") as file:
         json.dump(user_data, file, indent=4)
-    print(f"✅ Данные пользователя {nickname} успешно добавлены в {user_records_path}")
+    logger.info(f"Данные пользователя {nickname} успешно добавлены в {user_records_path}")
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Использование: python3 main.py <nickname> [email] [telegram_id]")
+        logger.error("Недостаточно аргументов. Использование: python3 main.py <nickname> [email] [telegram_id]")
         sys.exit(1)
 
     nickname = sys.argv[1]
@@ -144,12 +175,17 @@ if __name__ == "__main__":
     params_file = settings.PARAMS_FILE
 
     try:
-        setup_directories()  # Вызов функции для проверки и создания директорий
+        logger.info("Инициализация директорий.")
+        setup_directories()
 
-        params = load_params(params_file)  # Загружаем параметры из файла
+        logger.info("Загрузка параметров сервера.")
+        params = load_params(params_file)
+
+        logger.info("Генерация конфигурации пользователя.")
         config_file = settings.SERVER_CONFIG_FILE
         config_path, qr_path = generate_config(nickname, params, config_file, email, telegram_id)
-        print(f"Конфигурация сохранена в {config_path}")
-        print(f"QR-код сохранён в {qr_path}")
+
+        logger.info(f"✅ Конфигурация сохранена в {config_path}")
+        logger.info(f"✅ QR-код сохранён в {qr_path}")
     except Exception as e:
-        print(f"Ошибка: {e}")
+        logger.error(f"Ошибка выполнения: {e}")
