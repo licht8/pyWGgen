@@ -2,8 +2,13 @@
 # menu.py
 # Главное меню для управления проектом wg_qr_generator
 
-import sys
 import os
+import sys
+
+# Установить путь к корню проекта
+project_root = os.path.dirname(os.path.abspath(__file__))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 import subprocess
 from modules.wireguard_utils import check_wireguard_installed, install_wireguard, remove_wireguard
 from modules.firewall_utils import open_firewalld_port, close_firewalld_port
