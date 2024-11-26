@@ -16,6 +16,8 @@ from modules.sync import sync_wireguard_config
 from modules.qr_generator import generate_qr_code
 from modules.directory_setup import setup_directories
 from modules.client_config import create_client_config
+from modules.sync import sync_wireguard_config
+
 
 
 def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A"):
