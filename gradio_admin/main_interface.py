@@ -13,13 +13,13 @@ def main_interface():
     """
     with gr.Blocks() as interface:
         with gr.Tabs():
-            with gr.Tab(label="👤 Создать пользователя"):
+            with gr.Tab(label="🌱 Создать пользователя"):
                 create_user_tab()
 
-            with gr.Tab(label="❌ Удалить пользователя"):
+            with gr.Tab(label="🔥 Удалить пользователя"):
                 delete_user_tab()
 
-            with gr.Tab(label="📊 Статистика"):
+            with gr.Tab(label="🔍 Статистика"):
                 statistics_tab()
 
     return interface
