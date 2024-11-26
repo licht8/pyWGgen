@@ -4,20 +4,28 @@
 
 import sys
 import os
-import settings
 import json
 from datetime import datetime, timedelta
-
+import settings
 from modules.config import load_params
 from modules.keygen import generate_private_key, generate_public_key, generate_preshared_key
 from modules.ip_management import generate_ip
 from modules.config_writer import add_user_to_server_config
-from modules.sync import sync_wireguard_config
 from modules.qr_generator import generate_qr_code
 from modules.directory_setup import setup_directories
 from modules.client_config import create_client_config
-from modules.sync import sync_wireguard_config
+import subprocess
 
+
+def restart_wireguard(interface="wg0"):
+    """
+    Перезапускает WireGuard.
+    """
+    try:
+        subprocess.run(["sudo", "systemctl", "restart", f"wg-quick@{interface}"], check=True)
+        print(f"✅ WireGuard {interface} успешно перезапущен.")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Ошибка перезапуска WireGuard: {e}")
 
 
 def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A"):
@@ -77,6 +85,9 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
         telegram_id=telegram_id
     )
 
+    # Перезапускаем WireGuard для применения изменений
+    restart_wireguard(params['SERVER_WG_NIC'])
+
     return config_path, qr_path
 
 
@@ -116,6 +127,7 @@ def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr
     }
 
     # Сохраняем обновленные данные
+    os.makedirs(os.path.dirname(user_records_path), exist_ok=True)
     with open(user_records_path, "w", encoding="utf-8") as file:
         json.dump(user_data, file, indent=4)
     print(f"✅ Данные пользователя {nickname} успешно добавлены в {user_records_path}")
@@ -139,9 +151,5 @@ if __name__ == "__main__":
         config_path, qr_path = generate_config(nickname, params, config_file, email, telegram_id)
         print(f"Конфигурация сохранена в {config_path}")
         print(f"QR-код сохранён в {qr_path}")
-
-        # Синхронизация конфигурации сервера
-        sync_wireguard_config(params['SERVER_WG_NIC'])  # Передаем имя интерфейса WireGuard
-
     except Exception as e:
         print(f"Ошибка: {e}")
