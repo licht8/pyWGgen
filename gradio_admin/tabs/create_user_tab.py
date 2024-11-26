@@ -1,25 +1,36 @@
+#!/usr/bin/env python3
 # gradio_admin/tabs/create_user_tab.py
+# Вкладка Gradio для создания пользователей
 
 import gradio as gr
-from gradio_admin.functions.create_user import create_user  # Предполагаем, что эта функция уже реализована
+from gradio_admin.functions.create_user import create_user
 
 def create_user_tab():
-    with gr.Row():
-        gr.Markdown("## Создать нового пользователя")
-    with gr.Column(scale=1, min_width=300):
-        username_input = gr.Textbox(label="Имя пользователя", placeholder="Введите имя пользователя...")
-        create_button = gr.Button("Создать")
-        create_output = gr.Textbox(label="Результат", interactive=False)
-        qr_code_image = gr.Image(label="QR-код", visible=False)
+    """
+    Вкладка для создания пользователя.
+    """
+    with gr.Tab("🌱 Создать пользователя"):
+        with gr.Row():
+            gr.Markdown("## Создание нового пользователя WireGuard")
+        
+        with gr.Row():
+            username_input = gr.Textbox(label="Имя пользователя", placeholder="Введите имя пользователя...")
+            email_input = gr.Textbox(label="Email (необязательно)", placeholder="Введите email...")
+            telegram_input = gr.Textbox(label="Telegram ID (необязательно)", placeholder="Введите Telegram ID...")
+        
+        with gr.Row():
+            create_button = gr.Button("Создать пользователя")
+            output_message = gr.Textbox(label="Результат", interactive=False)
+            qr_code_display = gr.Image(label="QR-код", visible=False)
 
-        def handle_create_user(username):
-            result, qr_code_path = create_user(username)
+        def handle_create_user(username, email, telegram_id):
+            result, qr_code_path = create_user(username, email, telegram_id)
             if qr_code_path:
                 return result, gr.update(visible=True, value=qr_code_path)
             return result, gr.update(visible=False)
 
         create_button.click(
             handle_create_user,
-            inputs=username_input,
-            outputs=[create_output, qr_code_image]
+            inputs=[username_input, email_input, telegram_input],
+            outputs=[output_message, qr_code_display]
         )
