@@ -2,38 +2,20 @@
 # create_user_tab.py
 # Вкладка для создания пользователей WireGuard
 
-import os
-import sys
 import gradio as gr
-
-# Устанавливаем корректный PYTHONPATH
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
 from gradio_admin.functions.create_user import create_user
 
 def create_user_tab():
-    """
-    Вкладка для создания пользователей WireGuard.
-    """
+    """Вкладка для создания пользователей."""
     with gr.Row():
         gr.Markdown("### 🌱 Создать нового пользователя")
 
-    with gr.Row():
-        username = gr.Textbox(label="Имя пользователя", placeholder="Введите имя пользователя")
-        email = gr.Textbox(label="Email (необязательно)", placeholder="Введите email")
-        telegram_id = gr.Textbox(label="Telegram ID (необязательно)", placeholder="Введите Telegram ID")
+    username = gr.Textbox(label="Имя пользователя", placeholder="Введите имя")
+    email = gr.Textbox(label="Email (опционально)")
+    telegram_id = gr.Textbox(label="Telegram ID (опционально)")
+    result = gr.Textbox(label="Результат", interactive=False)
 
-    result = gr.Textbox(label="Результат операции", interactive=False)
+    def handle_create(username, email, telegram_id):
+        return create_user(username, email, telegram_id)[0]
 
-    def handle_create_user(username, email, telegram_id):
-        """
-        Обработчик для создания пользователя.
-        """
-        message, qr_path = create_user(username, email, telegram_id)
-        return message
-
-    create_button = gr.Button("Создать пользователя")
-    create_button.click(handle_create_user, inputs=[username, email, telegram_id], outputs=[result])
+    gr.Button("Создать").click(handle_create, inputs=[username, email, telegram_id], outputs=[result])
