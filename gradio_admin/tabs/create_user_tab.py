@@ -5,10 +5,11 @@
 import sys
 import os
 
-# Установка пути для корректного импорта
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-if base_dir not in sys.path:
-    sys.path.append(base_dir)
+# Устанавливаем путь к корню проекта для импорта
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, "../../"))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from gradio_admin.functions.create_user import create_user  # Импорт функции
 
