@@ -5,7 +5,7 @@
 import sys
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import settings
 from modules.config import load_params
 from modules.keygen import generate_private_key, generate_public_key, generate_preshared_key
@@ -46,6 +46,52 @@ class EmojiLoggerAdapter(logging.LoggerAdapter):
 
 logger = EmojiLoggerAdapter(logging.getLogger(__name__), {})
 
+def load_existing_users():
+    """
+    Загружает список существующих пользователей из базы данных.
+    """
+    user_records_path = os.path.join("user", "data", "user_records.json")
+    if os.path.exists(user_records_path):
+        with open(user_records_path, "r", encoding="utf-8") as file:
+            try:
+                user_data = json.load(file)
+                return {user.lower(): user_data[user] for user in user_data}  # Нормализуем имена
+            except json.JSONDecodeError:
+                logger.warning("Ошибка чтения базы данных пользователей, будет создана новая.")
+                return {}
+    return {}
+
+def save_user_record(user_record):
+    """
+    Сохраняет информацию о пользователе в файл user_records.json.
+    """
+    user_records_path = os.path.join("user", "data", "user_records.json")
+    os.makedirs(os.path.dirname(user_records_path), exist_ok=True)
+
+    # Загружаем существующие записи
+    if os.path.exists(user_records_path):
+        with open(user_records_path, "r", encoding="utf-8") as file:
+            try:
+                user_data = json.load(file)
+            except json.JSONDecodeError:
+                logger.warning("Ошибка чтения базы данных пользователей. Создаём новый файл.")
+                user_data = {}
+    else:
+        user_data = {}
+
+    # Проверка на уникальность имени пользователя
+    if user_record['username'].lower() in user_data:
+        logger.error(f"Пользователь с именем '{user_record['username']}' уже существует в базе данных.")
+        raise ValueError(f"Пользователь с именем '{user_record['username']}' уже существует.")
+
+    # Добавляем новую запись
+    user_data[user_record['username']] = user_record
+
+    # Сохраняем данные в файл
+    with open(user_records_path, "w", encoding="utf-8") as file:
+        json.dump(user_data, file, indent=4)
+    logger.info(f"Данные пользователя {user_record['username']} успешно добавлены в {user_records_path}")
+
 def restart_wireguard(interface="wg0"):
     """
     Перезапускает WireGuard и показывает его статус.
@@ -62,10 +108,12 @@ def restart_wireguard(interface="wg0"):
 
         # Вывод состояния firewall
         firewall_status = subprocess.check_output(["sudo", "firewall-cmd", "--list-ports"]).decode()
-        logger.info(f"{FIREWALL_EMOJI}  {firewall_status.strip()}")
+        for line in firewall_status.splitlines():
+            logger.info(f"{FIREWALL_EMOJI}  {line.strip()}")
 
     except subprocess.CalledProcessError as e:
         logger.error(f"Ошибка перезапуска WireGuard: {e}")
+
 def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A"):
     """
     Генерация конфигурации пользователя и QR-кода.
@@ -77,9 +125,9 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
 
     private_key = generate_private_key()
     logger.debug("Приватный ключ сгенерирован.")
-    public_key = generate_public_key(private_key)  # Убрано .decode()
+    public_key = generate_public_key(private_key)
     logger.debug("Публичный ключ сгенерирован.")
-    preshared_key = generate_preshared_key()  # Убрано .decode()
+    preshared_key = generate_preshared_key()
     logger.debug("Пресекретный ключ сгенерирован.")
 
     # Генерация IP-адреса
@@ -110,12 +158,25 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     generate_qr_code(client_config, qr_path)
     logger.info(f"QR-код сохранён в {qr_path}")
 
+    # Создаем запись пользователя
+    user_record = create_user_record(
+        username=nickname,
+        address=address,
+        public_key=public_key,
+        preshared_key=preshared_key,
+        qr_code_path=qr_path,
+        email=email,
+        telegram_id=telegram_id
+    )
+
+    # Сохраняем запись пользователя
+    save_user_record(user_record)
+
     # Добавление пользователя в конфигурацию сервера
     add_user_to_server_config(config_file, nickname, public_key, preshared_key, address)
     logger.info("Пользователь добавлен в конфигурацию сервера.")
 
     return config_path, qr_path
-
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -126,6 +187,12 @@ if __name__ == "__main__":
     email = sys.argv[2] if len(sys.argv) > 2 else "N/A"
     telegram_id = sys.argv[3] if len(sys.argv) > 3 else "N/A"
     params_file = settings.PARAMS_FILE
+
+    # Проверка существующего пользователя
+    existing_users = load_existing_users()
+    if nickname.lower() in existing_users:
+        logger.error(f"Пользователь с именем '{nickname}' уже существует в базе данных.")
+        sys.exit(1)
 
     try:
         logger.info("Инициализация директорий.")
