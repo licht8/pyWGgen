@@ -104,6 +104,11 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     logger.info("+--------- Процесс 🌱 создания пользователя активирован ---------+")
     try:
         logger.info(f"Начало генерации конфигурации для пользователя: {nickname}")
+        logger.debug(f"Загруженные параметры сервера: {params}")
+
+        if 'SERVER_SUBNET' not in params:
+            raise KeyError("Параметр 'SERVER_SUBNET' отсутствует в конфигурации. Проверьте файл params.json.")
+
         server_public_key = params['SERVER_PUB_KEY']
         endpoint = f"{params['SERVER_PUB_IP']}:{params['SERVER_PORT']}"
         dns_servers = f"{params['CLIENT_DNS_1']},{params['CLIENT_DNS_2']}"
