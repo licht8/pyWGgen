@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# modules/main-registration-fields.py
+# modules/main_registration_fields.py
 ## Основной модуль для генерации полей пользователя
 
 import uuid
