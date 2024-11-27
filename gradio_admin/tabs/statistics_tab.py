@@ -82,7 +82,7 @@ def statistics_tab():
             choices=prepare_user_choices(),
             label="Введите имя пользователя или выберите из списка",
             interactive=True,
-            value="",  # По умолчанию пользователь не выбран
+            value=None,  # По умолчанию пользователь не выбран
             allow_custom_value=False  # Исключает произвольные значения
         )
 
@@ -90,11 +90,33 @@ def statistics_tab():
         def update_user_choices(show_inactive):
             """Обновляет список пользователей."""
             choices = prepare_user_choices(show_inactive)
-            # Возвращаем пустое значение выбора для сброса.
+            # Проверяем, что список не пустой
+            if not choices:
+                return {"choices": choices, "value": None}
             return {"choices": choices, "value": ""}
 
-        refresh_button.click(update_user_choices, inputs=[show_inactive_checkbox], outputs=user_dropdown)
-        user_dropdown.change(get_user_info, inputs=[user_dropdown], outputs=user_info_box)
-        block_button.click(dummy_action, inputs=[user_dropdown], outputs=user_info_box)
-        delete_button.click(dummy_action, inputs=[user_dropdown], outputs=user_info_box)
-        archive_button.click(dummy_action, inputs=[user_dropdown], outputs=user_info_box)
+        refresh_button.click(
+            fn=update_user_choices,
+            inputs=[show_inactive_checkbox],
+            outputs=user_dropdown
+        )
+        user_dropdown.change(
+            fn=get_user_info,
+            inputs=[user_dropdown],
+            outputs=user_info_box
+        )
+        block_button.click(
+            fn=dummy_action,
+            inputs=[user_dropdown],
+            outputs=user_info_box
+        )
+        delete_button.click(
+            fn=dummy_action,
+            inputs=[user_dropdown],
+            outputs=user_info_box
+        )
+        archive_button.click(
+            fn=dummy_action,
+            inputs=[user_dropdown],
+            outputs=user_info_box
+        )
