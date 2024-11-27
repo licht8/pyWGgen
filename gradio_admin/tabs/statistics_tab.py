@@ -35,6 +35,15 @@ def get_user_details(username):
 
     return user_data[["Поле", "Данные"]], None
 
+# Функция для фильтрации пользователей по введенному тексту
+def filter_usernames(input_text):
+    users = load_users()
+    if users.empty:
+        return ["Нет пользователей"]
+
+    filtered_usernames = users["username"][users["username"].str.contains(input_text, case=False)].tolist()
+    return filtered_usernames if filtered_usernames else ["Нет совпадений"]
+
 # Функции управления пользователями
 def block_unblock_user(username):
     users = load_users()
@@ -89,12 +98,14 @@ def statistics_tab():
     """) as tab:
         gr.Markdown("# Управление пользователями")
 
-        # Выпадающее меню для выбора пользователя
-        users = load_users()
-        user_dropdown = gr.Dropdown(
-            choices=users["username"].tolist() if not users.empty else [],
-            label="Выберите пользователя",
+        # Поле для ввода текста для фильтрации пользователей
+        user_input = gr.Textbox(
+            placeholder="Введите имя пользователя или выберите его из списка",
+            label="Поиск пользователя"
         )
+
+        # Динамическое выпадающее меню
+        user_dropdown = gr.Dropdown(choices=[], label="Выберите пользователя")
 
         # Таблица для отображения данных выбранного пользователя
         user_table = gr.DataFrame(
@@ -112,7 +123,8 @@ def statistics_tab():
         # Вывод сообщений
         action_output = gr.Textbox(label="Результат действия", interactive=False)
 
-        # Логика кнопок и выпадающего меню
+        # Логика взаимодействия
+        user_input.change(filter_usernames, inputs=user_input, outputs=user_dropdown)
         user_dropdown.change(
             get_user_details, inputs=user_dropdown, outputs=[user_table, action_output]
         )
