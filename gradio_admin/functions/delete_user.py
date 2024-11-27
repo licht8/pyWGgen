@@ -21,7 +21,10 @@ logging.getLogger("urllib3").setLevel(logging.CRITICAL)
 logging.getLogger("gradio").setLevel(logging.CRITICAL)
 logging.getLogger("requests").setLevel(logging.CRITICAL)
 logging.getLogger("asyncio").setLevel(logging.CRITICAL)
-logging.getLogger("tornado").setLevel(logging.CRITICAL)  # Используется Gradio
+logging.getLogger("tornado.access").setLevel(logging.CRITICAL)
+logging.getLogger("tornado.application").setLevel(logging.CRITICAL)
+logging.getLogger("tornado.general").setLevel(logging.CRITICAL)
+logging.getLogger("tornado").setLevel(logging.CRITICAL)
 
 
 def delete_user(username):
