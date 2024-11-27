@@ -4,8 +4,8 @@
 
 import gradio as gr
 import pandas as pd
-import os
 import json
+import os
 from gradio_admin.functions.table_helpers import update_table
 from settings import USER_DB_PATH  # Путь к JSON с данными пользователей
 
@@ -33,13 +33,8 @@ def statistics_tab():
             selected_user_info = gr.Textbox(
                 label="User Information", 
                 interactive=False, 
-                value="Use the search below to filter users.",
+                value="Select a user to view details.",
             )
-
-        # Кнопки действий
-        with gr.Row():
-            block_button = gr.Button("Block")
-            delete_button = gr.Button("Delete")
 
         # Поле поиска
         with gr.Row():
@@ -48,16 +43,7 @@ def statistics_tab():
         # Таблица с данными
         with gr.Row():
             stats_table = gr.Dataframe(
-                headers=[
-                    "👤 Username",
-                    "📧 Email",
-                    "📱 Telegram",
-                    "🔗 Allowed IPs",
-                    "📊 Data Used",
-                    "📦 Data Limit",
-                    "⚡ Status",
-                    "💳 Plan",
-                ],
+                headers=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $"],
                 value=update_table(show_inactive=True),
                 interactive=False,  # Таблица только для чтения
                 wrap=True
@@ -99,11 +85,26 @@ def statistics_tab():
             username = selected_data[0]  # Первое поле — имя пользователя
             user_records = load_user_records()
             user_info = user_records.get(username, {})
-            return json.dumps(user_info, indent=4)
+            if not user_info:
+                return "No detailed information found for this user."
+
+            # Форматирование информации с эмодзи
+            details = [
+                f"👤 **Username**: {user_info.get('username', 'N/A')}",
+                f"📧 **Email**: {user_info.get('email', 'N/A')}",
+                f"📱 **Telegram**: {user_info.get('telegram_id', 'N/A')}",
+                f"🔗 **Allowed IPs**: {user_info.get('allowed_ips', 'N/A')}",
+                f"📊 **Data Used**: {user_info.get('data_used', '0.0 KiB')}",
+                f"📦 **Data Limit**: {user_info.get('data_limit', '100.0 GB')}",
+                f"⚡ **Status**: {user_info.get('status', 'inactive')}",
+                f"💳 **Subscription Plan**: {user_info.get('subscription_plan', 'free')}",
+                f"🛠️ **Public Key**: {user_info.get('public_key', 'N/A')}",
+                f"🔑 **Preshared Key**: {user_info.get('preshared_key', 'N/A')}",
+            ]
+            return "\n".join(details)
 
         stats_table.select(
             fn=show_user_info,
             inputs=[stats_table],
             outputs=[selected_user_info]
         )
-
