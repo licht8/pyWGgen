@@ -3,7 +3,6 @@
 # Вкладка "Statistics" Gradio-интерфейса wg_qr_generator
 
 import gradio as gr
-import pandas as pd
 import json
 import os
 from settings import USER_DB_PATH  # Путь к JSON с данными пользователей
@@ -22,76 +21,96 @@ def load_user_records():
     return data
 
 
-def prepare_table_data(show_inactive=True):
-    """Создает данные для таблицы."""
-    print(f"[DEBUG] Подготовка данных для таблицы. Show inactive: {show_inactive}")
+def prepare_user_choices(show_inactive=True):
+    """Создает список пользователей для Dropdown."""
+    print(f"[DEBUG] Подготовка списка пользователей. Show inactive: {show_inactive}")
     user_records = load_user_records()
-    table_data = []
+    user_choices = []
 
     for user in user_records.values():
         if not show_inactive and user.get("status") != "active":
             continue
-        table_data.append({
-            "Select": False,
-            "User": user.get("username", "N/A"),
-            "Used": user.get("data_used", "0.0 KiB"),
-            "Limit": user.get("data_limit", "100.0 GB"),
-            "Status": user.get("status", "inactive"),
-            "Price": user.get("subscription_price", "0.00 USD"),
-            "UID": user.get("user_id", "N/A")
-        })
-
-    print(f"[DEBUG] Подготовлено {len(table_data)} записей для таблицы.")
-    return pd.DataFrame(table_data)
+        user_choices.append(f"{user['username']} ({user['user_id']})")
+    
+    print(f"[DEBUG] Подготовлено {len(user_choices)} записей для выбора.")
+    return user_choices
 
 
-def get_selected_user(dataframe):
-    """Возвращает выбранного пользователя из таблицы."""
-    print(f"[DEBUG] Получены данные из таблицы: {dataframe}")
-    selected_rows = dataframe[dataframe["Select"] == True]
-    if selected_rows.empty:
-        print("[WARNING] Пользователь не выбран.")
-        return "No user selected"
-    selected_user = selected_rows.iloc[0]
-    print(f"[DEBUG] Выбран пользователь: {selected_user['User']} (UID: {selected_user['UID']})")
-    return selected_user["UID"]
-
-
-def get_user_info(user_id):
+def get_user_info(selected_user):
     """Возвращает подробную информацию о пользователе."""
-    print(f"[DEBUG] Запрос информации о пользователе с UID: {user_id}")
-    if user_id == "No user selected" or not user_id:
+    print(f"[DEBUG] Запрос информации о выбранном пользователе: {selected_user}")
+    if not selected_user:
         print("[WARNING] Пользователь не выбран.")
         return "No user selected"
+
+    user_id = selected_user.split("(")[-1].strip(")")
     user_records = load_user_records()
     for user in user_records.values():
         if user.get("user_id") == user_id:
             print(f"[DEBUG] Найден пользователь: {user.get('username')}")
             return json.dumps(user, indent=4)
+    
     print("[WARNING] Пользователь не найден.")
+    return "User not found."
+
+
+def block_user(selected_user):
+    """Блокирует пользователя."""
+    print(f"[DEBUG] Блокировка пользователя: {selected_user}")
+    if not selected_user:
+        print("[WARNING] Невозможно заблокировать: пользователь не выбран.")
+        return "No user selected"
+
+    user_id = selected_user.split("(")[-1].strip(")")
+    user_records = load_user_records()
+    for username, user in user_records.items():
+        if user.get("user_id") == user_id:
+            user["status"] = "blocked"
+            with open(USER_DB_PATH, "w") as f:
+                json.dump(user_records, f, indent=4)
+            print(f"[DEBUG] Пользователь {username} заблокирован.")
+            return f"User {username} blocked."
+    
+    print("[WARNING] Пользователь для блокировки не найден.")
+    return "User not found."
+
+
+def delete_user(selected_user):
+    """Удаляет пользователя."""
+    print(f"[DEBUG] Удаление пользователя: {selected_user}")
+    if not selected_user:
+        print("[WARNING] Невозможно удалить: пользователь не выбран.")
+        return "No user selected"
+
+    user_id = selected_user.split("(")[-1].strip(")")
+    user_records = load_user_records()
+    for username, user in list(user_records.items()):
+        if user.get("user_id") == user_id:
+            del user_records[username]
+            with open(USER_DB_PATH, "w") as f:
+                json.dump(user_records, f, indent=4)
+            print(f"[DEBUG] Пользователь {username} удален.")
+            return f"User {username} deleted."
+    
+    print("[WARNING] Пользователь для удаления не найден.")
     return "User not found."
 
 
 def statistics_tab():
     """Создает интерфейс вкладки статистики."""
     with gr.Tab("🔍 Statistics"):
-        gr.Markdown("## Статистика пользователей")
+        gr.Markdown("## Управление пользователями WireGuard")
 
         # Фильтры
         with gr.Row():
-            search_box = gr.Textbox(label="Search", placeholder="Search for users...")
             show_inactive_checkbox = gr.Checkbox(label="Show inactive users", value=True)
-            refresh_button = gr.Button("Refresh Table")
+            refresh_button = gr.Button("Refresh List")
 
-        # Таблица данных
-        user_table = gr.Dataframe(
-            value=prepare_table_data(),
-            interactive=True,
-            label="Users Table"
-        )
+        # Выбор пользователя
+        user_dropdown = gr.Dropdown(choices=[], label="Выберите пользователя")
 
         # Подробная информация
-        user_info_box = gr.Textbox(label="User Information", lines=10, interactive=False)
+        user_info_box = gr.Textbox(label="Информация о пользователе", lines=10, interactive=False)
 
         # Управление пользователями
         with gr.Row():
@@ -99,17 +118,11 @@ def statistics_tab():
             delete_button = gr.Button("Delete User")
 
         # Связывание компонентов
-        def filter_table(search_query, show_inactive):
-            print(f"[DEBUG] Фильтрация таблицы. Query: '{search_query}', Show inactive: {show_inactive}")
-            df = prepare_table_data(show_inactive)
-            if search_query:
-                df = df[df.apply(lambda row: search_query.lower() in str(row).lower(), axis=1)]
-            print(f"[DEBUG] Фильтр применен. Найдено записей: {len(df)}.")
-            return df
+        def update_user_choices(show_inactive):
+            print("[DEBUG] Обновление списка пользователей...")
+            return gr.Dropdown.update(choices=prepare_user_choices(show_inactive))
 
-        refresh_button.click(lambda: prepare_table_data(), outputs=user_table)
-        search_box.change(lambda q, show: filter_table(q, show), inputs=[search_box, show_inactive_checkbox], outputs=user_table)
-        show_inactive_checkbox.change(lambda q, show: filter_table(q, show), inputs=[search_box, show_inactive_checkbox], outputs=user_table)
-        user_table.change(get_selected_user, inputs=user_table, outputs=user_info_box)
-        block_button.click(get_user_info, inputs=user_table, outputs=user_info_box)
-        delete_button.click(get_user_info, inputs=user_table, outputs=user_info_box)
+        refresh_button.click(update_user_choices, inputs=[show_inactive_checkbox], outputs=user_dropdown)
+        user_dropdown.change(get_user_info, inputs=[user_dropdown], outputs=user_info_box)
+        block_button.click(block_user, inputs=[user_dropdown], outputs=user_info_box)
+        delete_button.click(delete_user, inputs=[user_dropdown], outputs=user_info_box)
