@@ -90,7 +90,9 @@ def statistics_tab():
         def update_user_choices(show_inactive):
             """Обновляет список пользователей."""
             choices = prepare_user_choices(show_inactive)
-            # Сбрасываем выбор, если список изменился
+            # Сбрасываем выбор пользователя после обновления
+            if not choices:
+                return {"choices": choices, "value": None}
             return {"choices": choices, "value": None}
 
         refresh_button.click(
