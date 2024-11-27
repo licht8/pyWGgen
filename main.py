@@ -131,16 +131,19 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     logger.info("Пользователь добавлен в конфигурацию сервера.")
 
     # Добавление записи пользователя
-    add_user_record(
-        nickname,
-        trial_days=settings.DEFAULT_TRIAL_DAYS,
-        address=address,
-        public_key=public_key.decode('utf-8'),
-        preshared_key=preshared_key.decode('utf-8'),
-        qr_code_path=qr_path,
-        email=email,
-        telegram_id=telegram_id
-    )
+    try:
+        add_user_record(
+            nickname,
+            trial_days=settings.DEFAULT_TRIAL_DAYS,
+            address=address,
+            public_key=public_key.decode('utf-8'),
+            preshared_key=preshared_key.decode('utf-8'),
+            qr_code_path=qr_path,  # Передача переменной qr_path
+            email=email,
+            telegram_id=telegram_id
+        )
+    except Exception as e:
+        logger.error(f"Ошибка добавления записи пользователя: {e}")
 
     # Перезапуск WireGuard
     restart_wireguard(params['SERVER_WG_NIC'])
