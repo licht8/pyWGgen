@@ -14,7 +14,6 @@ from modules.config_writer import add_user_to_server_config
 from modules.qr_generator import generate_qr_code
 from modules.directory_setup import setup_directories
 from modules.client_config import create_client_config
-from modules.main_registration_fields import create_user_record
 import subprocess
 import logging
 
@@ -61,36 +60,19 @@ def load_existing_users():
                 return {}
     return {}
 
-def save_user_record(user_record):
+def is_user_in_server_config(nickname, config_file):
     """
-    Сохраняет информацию о пользователе в файл user_records.json.
+    Проверяет наличие пользователя в конфигурации сервера.
     """
-    user_records_path = os.path.join("user", "data", "user_records.json")
-    os.makedirs(os.path.dirname(user_records_path), exist_ok=True)
-
-    # Загружаем существующие записи
-    if os.path.exists(user_records_path):
-        with open(user_records_path, "r", encoding="utf-8") as file:
-            try:
-                user_data = json.load(file)
-            except json.JSONDecodeError:
-                logger.warning("Ошибка чтения базы данных пользователей. Создаём новый файл.")
-                user_data = {}
-    else:
-        user_data = {}
-
-    # Проверка на уникальность имени пользователя
-    if user_record['username'].lower() in user_data:
-        logger.error(f"Пользователь с именем '{user_record['username']}' уже существует в базе данных.")
-        raise ValueError(f"Пользователь с именем '{user_record['username']}' уже существует.")
-
-    # Добавляем новую запись
-    user_data[user_record['username']] = user_record
-
-    # Сохраняем данные в файл
-    with open(user_records_path, "w", encoding="utf-8") as file:
-        json.dump(user_data, file, indent=4)
-    logger.info(f"Данные пользователя {user_record['username']} успешно добавлены в {user_records_path}")
+    nickname_lower = nickname.lower()
+    try:
+        with open(config_file, "r") as file:
+            for line in file:
+                if nickname_lower in line.lower():
+                    return True
+    except FileNotFoundError:
+        logger.warning(f"Файл конфигурации {config_file} не найден.")
+    return False
 
 def restart_wireguard(interface="wg0"):
     """
@@ -119,35 +101,25 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     Генерация конфигурации пользователя и QR-кода.
     """
     logger.info(f"Начало генерации конфигурации для пользователя: {nickname}")
-    
-    # Проверяем наличие всех необходимых параметров
-    required_keys = ['SERVER_PUB_KEY', 'SERVER_PUB_IP', 'SERVER_PORT', 'CLIENT_DNS_1', 'CLIENT_DNS_2', 'SERVER_SUBNET']
-    for key in required_keys:
-        if key not in params:
-            logger.error(f"Отсутствует необходимый параметр: {key}")
-            raise KeyError(f"Отсутствует необходимый параметр: {key}")
-
     server_public_key = params['SERVER_PUB_KEY']
     endpoint = f"{params['SERVER_PUB_IP']}:{params['SERVER_PORT']}"
     dns_servers = f"{params['CLIENT_DNS_1']},{params['CLIENT_DNS_2']}"
 
     private_key = generate_private_key()
     logger.debug("Приватный ключ сгенерирован.")
-    public_key = generate_public_key(private_key).decode()  # Декодируем байты в строку
+    public_key = generate_public_key(private_key)
     logger.debug("Публичный ключ сгенерирован.")
-    preshared_key = generate_preshared_key().decode()  # Декодируем байты в строку
+    preshared_key = generate_preshared_key()
     logger.debug("Пресекретный ключ сгенерирован.")
 
     # Генерация IP-адреса
-    existing_ips, new_ipv4 = generate_ip(config_file)
-    logger.info(f"Существующие IP: {existing_ips}")
-    logger.info(f"Подсеть WireGuard: {params['SERVER_SUBNET']}")
-    logger.info(f"IP-адрес сгенерирован: {new_ipv4}")
+    address, new_ipv4 = generate_ip(config_file)
+    logger.info(f"IP-адрес сгенерирован: {address}")
 
     # Генерация конфигурации клиента
     client_config = create_client_config(
         private_key=private_key,
-        address=new_ipv4,
+        address=address,
         dns_servers=dns_servers,
         server_public_key=server_public_key,
         preshared_key=preshared_key,
@@ -168,43 +140,75 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     generate_qr_code(client_config, qr_path)
     logger.info(f"QR-код сохранён в {qr_path}")
 
-    # Создаем запись пользователя
-    user_record = create_user_record(
-        username=nickname,
-        address=new_ipv4,
-        public_key=public_key,
-        preshared_key=preshared_key,
+    # Добавление пользователя в конфигурацию сервера
+    add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), address)
+    logger.info("Пользователь добавлен в конфигурацию сервера.")
+
+    # Добавление записи пользователя
+    add_user_record(
+        nickname,
+        trial_days=settings.DEFAULT_TRIAL_DAYS,
+        address=address,
+        public_key=public_key.decode('utf-8'),
+        preshared_key=preshared_key.decode('utf-8'),
         qr_code_path=qr_path,
         email=email,
         telegram_id=telegram_id
     )
 
-    # Сохраняем запись пользователя
-    save_user_record(user_record)
-
-    # Добавление пользователя в конфигурацию сервера
-    add_user_to_server_config(config_file, nickname, public_key, preshared_key, new_ipv4)
-    logger.info("Пользователь добавлен в конфигурацию сервера.")
+    # Перезапуск WireGuard
+    restart_wireguard(params['SERVER_WG_NIC'])
 
     return config_path, qr_path
 
-
-def add_user_to_server_config(config_file, nickname, public_key, preshared_key, allowed_ip):
+def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr_code_path, email, telegram_id):
     """
-    Добавляет пользователя в конфигурацию сервера WireGuard.
+    Добавляет запись о пользователе с расширенными данными.
     """
-    try:
-        with open(config_file, "a") as file:
-            file.write(f"\n### Client {nickname}\n")
-            file.write("[Peer]\n")
-            file.write(f"PublicKey = {public_key}\n")
-            file.write(f"PresharedKey = {preshared_key}\n")
-            file.write(f"AllowedIPs = {allowed_ip}/32\n")  # Убедимся, что формат корректен
-        logger.info(f"Пользователь {nickname} успешно добавлен в {config_file}")
-    except Exception as e:
-        logger.error(f"Ошибка добавления пользователя в конфигурацию сервера: {e}")
-        raise
+    logger.info(f"Добавление записи пользователя {nickname} в базу данных.")
+    user_records_path = os.path.join("user", "data", "user_records.json")
+    expiry_date = datetime.now() + timedelta(days=trial_days)
 
+    # Загружаем существующие записи
+    if os.path.exists(user_records_path):
+        with open(user_records_path, "r", encoding="utf-8") as file:
+            try:
+                user_data = json.load(file)
+            except json.JSONDecodeError:
+                logger.warning("Ошибка чтения базы данных пользователей, будет создана новая.")
+                user_data = {}
+    else:
+        user_data = {}
+
+    # Проверяем, чтобы не было дубликатов
+    if nickname in user_data:
+        logger.error(f"Пользователь с именем '{nickname}' уже существует в базе данных.")
+        raise ValueError(f"Пользователь с именем '{nickname}' уже существует.")
+
+    # Добавляем новую запись
+    user_data[nickname] = {
+        "username": nickname,
+        "created_at": datetime.now().isoformat(),
+        "expires_at": expiry_date.isoformat(),
+        "allowed_ips": address,
+        "public_key": public_key,
+        "preshared_key": preshared_key,
+        "endpoint": "N/A",  # будет обновляться позже
+        "last_handshake": "N/A",  # будет обновляться позже
+        "uploaded": "N/A",  # будет обновляться позже
+        "downloaded": "N/A",  # будет обновляться позже
+        "transfer": "0.0 KiB received, 0.0 KiB sent",  # Новое поле
+        "qr_code_path": qr_code_path,
+        "email": email,
+        "telegram_id": telegram_id,
+        "status": "inactive"
+    }
+
+    # Сохраняем обновленные данные
+    os.makedirs(os.path.dirname(user_records_path), exist_ok=True)
+    with open(user_records_path, "w", encoding="utf-8") as file:
+        json.dump(user_data, file, indent=4)
+    logger.info(f"Данные пользователя {nickname} успешно добавлены в {user_records_path}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -222,6 +226,10 @@ if __name__ == "__main__":
         logger.error(f"Пользователь с именем '{nickname}' уже существует в базе данных.")
         sys.exit(1)
 
+    if is_user_in_server_config(nickname, settings.SERVER_CONFIG_FILE):
+        logger.error(f"Пользователь с именем '{nickname}' уже существует в конфигурации сервера.")
+        sys.exit(1)
+
     try:
         logger.info("Инициализация директорий.")
         setup_directories()
@@ -235,7 +243,5 @@ if __name__ == "__main__":
 
         logger.info(f"✅ Конфигурация сохранена в {config_path}")
         logger.info(f"✅ QR-код сохранён в {qr_path}")
-        restart_wireguard(params['SERVER_WG_NIC'])
-
     except Exception as e:
         logger.error(f"Ошибка выполнения: {e}")
