@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # gradio_admin/tabs/statistics_tab.py
-# Вкладка "Statistics" для Gradio-интерфейса проекта wg_qr_generator
 
 import gradio as gr
 import pandas as pd
 import json
 import os
 from settings import USER_DB_PATH  # Путь к JSON с данными пользователей
+
 
 def load_user_records():
     """Загружает данные пользователей из JSON."""
@@ -15,6 +15,7 @@ def load_user_records():
 
     with open(USER_DB_PATH, "r") as f:
         return json.load(f)
+
 
 def update_table(show_inactive=True):
     """Создает таблицу для отображения в Gradio."""
@@ -38,6 +39,7 @@ def update_table(show_inactive=True):
         columns=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $", "UID"]
     )
 
+
 def statistics_tab():
     """Возвращает вкладку статистики пользователей WireGuard."""
     with gr.Tab("🔍 Statistics"):
@@ -52,8 +54,8 @@ def statistics_tab():
         # Область для отображения информации о выбранном пользователе
         with gr.Row():
             selected_user_info = gr.Textbox(
-                label="User Information", 
-                interactive=False, 
+                label="User Information",
+                interactive=False,
                 value="Select a user to view details.",
             )
 
@@ -90,9 +92,9 @@ def statistics_tab():
             """Фильтрует данные таблицы по запросу в поиске."""
             table = update_table(show_inactive)
             if query.strip():
-                table = [
-                    row for row in table if query.lower() in " ".join(map(str, row)).lower()
-                ]
+                table = table[table.apply(
+                    lambda row: query.lower() in row.to_string().lower(), axis=1
+                )]
             return table
 
         search_input.change(
@@ -119,12 +121,15 @@ def statistics_tab():
                 # Поиск информации о пользователе по user_id
                 user_records = load_user_records()
                 user_info = next(
-                    (info for info in user_records.values() if info.get("user_id") == user_id), 
+                    (info for info in user_records.values() if info.get("user_id") == user_id),
                     None
                 )
 
                 if not user_info:
                     return f"No detailed information found for UID: {user_id}"
+
+                # Логирование выбранного пользователя
+                print(f"Selected User ID: {user_id}")
 
                 # Форматирование полной информации
                 user_details = json.dumps(user_info, indent=4, ensure_ascii=False)
