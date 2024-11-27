@@ -109,18 +109,19 @@ def statistics_tab():
                 return "Select a row from the table to view details."
 
             try:
-                # Отладка
-                print("[DEBUG] Selected Data:", selected_data)
-
                 # Проверяем формат данных
                 if isinstance(selected_data, pd.DataFrame):
-                    user_id = selected_data.iloc[0, -1]  # UID в последнем столбце
-                    print("[DEBUG] Extracted UID (DataFrame):", user_id)
+                    # Получаем индекс выбранной строки
+                    selected_index = selected_data.index[0]
+                    user_id = selected_data.iloc[selected_index, -1]  # UID в последнем столбце
                 elif isinstance(selected_data, list):
                     user_id = selected_data[-1]  # UID в последнем элементе
-                    print("[DEBUG] Extracted UID (List):", user_id)
                 else:
                     return "[ERROR] Unsupported data format selected."
+
+                # Отладка
+                print("[DEBUG] Selected Index:", selected_index)
+                print("[DEBUG] Extracted UID:", user_id)
 
                 # Поиск информации о пользователе по user_id
                 user_records = load_user_records()
@@ -143,45 +144,6 @@ def statistics_tab():
 
         stats_table.select(
             fn=show_user_info,
-            inputs=[stats_table],
-            outputs=[selected_user_info]
-        )
-
-        # Действия блокировки и удаления пользователей
-        def block_user(selected_data):
-            """Блокирует пользователя."""
-            if not selected_data or len(selected_data) == 0:
-                return "No user selected to block."
-            if isinstance(selected_data, pd.DataFrame):
-                user_id = selected_data.iloc[0, -1]
-            elif isinstance(selected_data, list):
-                user_id = selected_data[-1]
-            else:
-                return "Unsupported data format selected."
-            # Логика блокировки пользователя по UID
-            return f"User with UID {user_id} blocked."
-
-        block_button.click(
-            fn=block_user,
-            inputs=[stats_table],
-            outputs=[selected_user_info]
-        )
-
-        def delete_user(selected_data):
-            """Удаляет пользователя."""
-            if not selected_data or len(selected_data) == 0:
-                return "No user selected to delete."
-            if isinstance(selected_data, pd.DataFrame):
-                user_id = selected_data.iloc[0, -1]
-            elif isinstance(selected_data, list):
-                user_id = selected_data[-1]
-            else:
-                return "Unsupported data format selected."
-            # Логика удаления пользователя по UID
-            return f"User with UID {user_id} deleted."
-
-        delete_button.click(
-            fn=delete_user,
             inputs=[stats_table],
             outputs=[selected_user_info]
         )
