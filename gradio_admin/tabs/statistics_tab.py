@@ -123,7 +123,7 @@ def statistics_tab():
             choices = prepare_user_choices(show_inactive)
             return {"choices": choices}
 
-        refresh_button.click(update_user_choices, inputs=[show_inactive_checkbox], outputs=user_dropdown)
-        user_dropdown.change(get_user_info, inputs=[user_dropdown], outputs=user_info_box)
-        block_button.click(block_user, inputs=[user_dropdown], outputs=user_info_box)
-        delete_button.click(delete_user, inputs=[user_dropdown], outputs=user_info_box)
+        refresh_button.click(fn=update_user_choices, inputs=[show_inactive_checkbox], outputs=user_dropdown)
+        user_dropdown.change(fn=get_user_info, inputs=[user_dropdown], outputs=user_info_box)
+        block_button.click(fn=block_user, inputs=[user_dropdown], outputs=user_info_box)
+        delete_button.click(fn=delete_user, inputs=[user_dropdown], outputs=user_info_box)
