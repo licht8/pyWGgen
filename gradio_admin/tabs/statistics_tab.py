@@ -107,7 +107,7 @@ def statistics_tab():
             refresh_button = gr.Button("Refresh List")
 
         # Выбор пользователя
-        user_dropdown = gr.Dropdown(choices=[], label="Выберите пользователя")
+        user_dropdown = gr.Dropdown(choices=prepare_user_choices(), label="Выберите пользователя")
 
         # Подробная информация
         user_info_box = gr.Textbox(label="Информация о пользователе", lines=10, interactive=False)
@@ -121,7 +121,7 @@ def statistics_tab():
         def update_user_choices(show_inactive):
             print("[DEBUG] Обновление списка пользователей...")
             choices = prepare_user_choices(show_inactive)
-            return {"choices": choices}
+            return {"choices": choices, "value": None}
 
         refresh_button.click(fn=update_user_choices, inputs=[show_inactive_checkbox], outputs=user_dropdown)
         user_dropdown.change(fn=get_user_info, inputs=[user_dropdown], outputs=user_info_box)
