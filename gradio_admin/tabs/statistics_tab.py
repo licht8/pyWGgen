@@ -109,13 +109,18 @@ def statistics_tab():
                 return "Select a row from the table to view details."
 
             try:
+                # Отладка
+                print("[DEBUG] Selected Data:", selected_data)
+
                 # Проверяем формат данных
                 if isinstance(selected_data, pd.DataFrame):
                     user_id = selected_data.iloc[0, -1]  # UID в последнем столбце
+                    print("[DEBUG] Extracted UID (DataFrame):", user_id)
                 elif isinstance(selected_data, list):
                     user_id = selected_data[-1]  # UID в последнем элементе
+                    print("[DEBUG] Extracted UID (List):", user_id)
                 else:
-                    return "Unsupported data format selected."
+                    return "[ERROR] Unsupported data format selected."
 
                 # Поиск информации о пользователе по user_id
                 user_records = load_user_records()
@@ -123,6 +128,9 @@ def statistics_tab():
                     (info for info in user_records.values() if info.get("user_id") == user_id), 
                     None
                 )
+
+                print("[DEBUG] Found User Info:", user_info)
+
                 if not user_info:
                     return f"No detailed information found for UID: {user_id}"
 
@@ -130,6 +138,7 @@ def statistics_tab():
                 user_details = json.dumps(user_info, indent=4, ensure_ascii=False)
                 return user_details
             except Exception as e:
+                print("[ERROR] Exception in show_user_info:", str(e))
                 return f"Error processing user information: {str(e)}"
 
         stats_table.select(
