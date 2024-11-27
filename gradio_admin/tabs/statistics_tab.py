@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # statistics_tab.py
-# Полностью переработанная вкладка "Statistics" для Gradio-интерфейса wg_qr_generator
+# Переработанная вкладка "Statistics" для Gradio-интерфейса wg_qr_generator
 
 import gradio as gr
 import pandas as pd
@@ -53,14 +53,21 @@ def statistics_tab():
         with gr.Row():
             search_input = gr.Textbox(label="Search", placeholder="Enter text to filter...")
 
-        # Основная таблица
-        user_table = gr.Dataframe(
-            headers=["User", "Used", "Limit", "Status", "Price", "Action"],
-            interactive=False,
-            label="User Table"
-        )
+        # Таблица пользователей
+        with gr.Row():
+            user_table = gr.Dataset(
+                headers=["User", "Used", "Limit", "Status", "Price"],
+                label="User Table"
+            )
 
-        # Область для отображения информации о пользователе
+        # Столбец для кнопок
+        with gr.Row():
+            action_buttons = gr.Dataset(
+                headers=["Action"],
+                label="Actions",
+            )
+
+        # Поле для отображения информации о пользователе
         with gr.Row():
             user_info_display = gr.Textbox(
                 label="User Information",
@@ -70,19 +77,18 @@ def statistics_tab():
 
         # Функция обновления таблицы
         def update_table(show_inactive, search_query):
-            """Обновляет таблицу в зависимости от фильтров."""
+            """Обновляет данные таблицы в зависимости от фильтров."""
             df = prepare_table_data(show_inactive)
             if search_query.strip():
                 df = df[df.apply(
                     lambda row: search_query.lower() in row.to_string().lower(), axis=1
                 )]
-            # Добавляем колонку кнопок
-            df["Action"] = df["UID"].apply(lambda uid: f"<button onclick=\"selectUser('{uid}')\">View</button>")
-            return df.drop(columns=["UID"])
+            return df.drop(columns=["UID"]), [{"Action": f"View ({uid[:6]}...)"} for uid in df["UID"]]
 
         # Функция отображения информации о пользователе
-        def show_user_info(uid):
+        def show_user_info(action):
             """Показывает информацию о пользователе по UID."""
+            uid = action.split()[1].strip("()")
             user_records = load_user_records()
             user_info = next(
                 (info for info in user_records.values() if info.get("user_id") == uid),
@@ -94,32 +100,15 @@ def statistics_tab():
             print(f"[DEBUG] Displaying info for user UID {uid}: {user_info}")  # Отладочная информация
             return json.dumps(user_info, indent=4, ensure_ascii=False)
 
-        # Передача UID через JavaScript
-        gr.HTML("""
-        <script>
-        function selectUser(uid) {
-            const textbox = document.querySelector('textarea[aria-label="selected_uid"]');
-            textbox.value = uid;
-            textbox.dispatchEvent(new Event('input'));
-        }
-        </script>
-        """)
-
-        # Скрытое поле для передачи UID
-        selected_uid = gr.Textbox(visible=False)
-
-        selected_uid.change(
-            fn=show_user_info,
-            inputs=[selected_uid],
-            outputs=[user_info_display]
-        )
-
         # Привязка кнопки "Refresh Table"
         refresh_button.click(
             fn=update_table,
             inputs=[show_inactive, search_input],
-            outputs=[user_table]
+            outputs=[user_table, action_buttons]
         )
 
-        # Начальная загрузка таблицы
-        user_table.value = update_table(show_inactive=True, search_query="")
+        action_buttons.select(
+            fn=show_user_info,
+            inputs=[action_buttons],
+            outputs=[user_info_display]
+        )
