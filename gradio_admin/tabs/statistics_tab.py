@@ -5,28 +5,6 @@ import gradio as gr
 from datetime import datetime
 from settings import USER_DB_PATH
 
-# Словарь эмодзи для полей
-FIELD_EMOJIS = {
-    "username": "👤",
-    "group": "🛡️",
-    "status": "⚡",
-    "created_at": "📅",
-    "expires_at": "⏳",
-    "auto_suspend_date": "🛑",
-    "allowed_ips": "🌐",
-    "dns_custom": "📡",
-    "public_key": "🔑",
-    "email": "📧",
-    "telegram_id": "📲",
-    "subscription_plan": "💳",
-    "data_used": "📊",
-    "admin_notes": "📝",
-    "preferred_language": "🌍",
-    "last_handshake": "🤝",
-    "total_transfer": "🚀",
-    # Добавьте сюда другие поля, если нужно
-}
-
 # Функция загрузки данных из JSON
 def load_users():
     if not os.path.exists(USER_DB_PATH):
@@ -52,13 +30,10 @@ def get_user_details(username):
 
     user_data = users[users["username"] == username].transpose()
     user_data.columns = ["Данные"]  # Для удобного отображения в таблице
-
-    # Добавляем эмодзи в отдельный столбец
-    user_data["Эмодзи"] = user_data.index.map(FIELD_EMOJIS.get)
     user_data.reset_index(inplace=True)
     user_data.rename(columns={"index": "Поле"}, inplace=True)
 
-    return user_data[["Эмодзи", "Поле", "Данные"]], None
+    return user_data[["Поле", "Данные"]], None
 
 # Функции управления пользователями
 def block_unblock_user(username):
@@ -94,15 +69,22 @@ def archive_user(username):
 def statistics_tab():
     with gr.Blocks(css="""
         .gr-table-container { 
-            overflow: auto; 
-            max-width: 100%;
+            overflow-x: auto; 
+            max-width: 100%; 
             word-wrap: break-word;
             white-space: nowrap;
         }
         .gr-table-container th, .gr-table-container td {
-            max-width: 200px; 
+            max-width: 300px; 
             overflow: hidden; 
             text-overflow: ellipsis;
+            padding: 10px 5px;
+        }
+        @media screen and (max-width: 600px) {
+            .gr-table-container th, .gr-table-container td {
+                font-size: 12px;
+                max-width: 150px;
+            }
         }
     """) as tab:
         gr.Markdown("# Управление пользователями")
@@ -116,7 +98,7 @@ def statistics_tab():
 
         # Таблица для отображения данных выбранного пользователя
         user_table = gr.DataFrame(
-            headers=["Эмодзи", "Поле", "Данные"],
+            headers=["Поле", "Данные"],
             interactive=False,
             label="Данные пользователя"
         )
