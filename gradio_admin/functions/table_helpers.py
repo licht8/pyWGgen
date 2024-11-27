@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # gradio_admin/functions/table_helpers.py
-# Утилита для обработки и отображения данных в таблице Gradio
 
 import os
 import json
 import pandas as pd
 from settings import USER_DB_PATH  # Путь к JSON с данными пользователей
+
 
 def load_data(show_inactive=True):
     """Загружает данные пользователей из JSON."""
@@ -25,8 +25,10 @@ def load_data(show_inactive=True):
             "data_limit": user_info.get("data_limit", "100.0 GB"),
             "status": user_info.get("status", "inactive"),
             "subscription_price": user_info.get("subscription_price", "0.00 USD"),
+            "user_id": user_info.get("user_id", "N/A")  # Сохраняем UID
         })
     return table
+
 
 def update_table(show_inactive):
     """Создает таблицу для отображения в Gradio."""
@@ -40,9 +42,10 @@ def update_table(show_inactive):
             user["data_limit"],
             user["status"],
             user["subscription_price"],
+            user["user_id"],  # UID добавляем в таблицу
         ])
 
     return pd.DataFrame(
         formatted_rows,
-        columns=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $"]
+        columns=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $", "UID"]
     )
