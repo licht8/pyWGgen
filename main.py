@@ -101,83 +101,90 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     """
     Генерация конфигурации пользователя и QR-кода.
     """
-    logger.info(f"Начало генерации конфигурации для пользователя: {nickname}")
-    server_public_key = params['SERVER_PUB_KEY']
-    endpoint = f"{params['SERVER_PUB_IP']}:{params['SERVER_PORT']}"
-    dns_servers = f"{params['CLIENT_DNS_1']},{params['CLIENT_DNS_2']}"
+    logger.info("+--------- Процесс 🌱 создания пользователя активирован ---------+")
+    try:
+        logger.info(f"Начало генерации конфигурации для пользователя: {nickname}")
+        server_public_key = params['SERVER_PUB_KEY']
+        endpoint = f"{params['SERVER_PUB_IP']}:{params['SERVER_PORT']}"
+        dns_servers = f"{params['CLIENT_DNS_1']},{params['CLIENT_DNS_2']}"
 
-    private_key = generate_private_key()
-    logger.debug("Приватный ключ сгенерирован.")
-    public_key = generate_public_key(private_key)
-    logger.debug("Публичный ключ сгенерирован.")
-    preshared_key = generate_preshared_key()
-    logger.debug("Пресекретный ключ сгенерирован.")
+        private_key = generate_private_key()
+        logger.debug("Приватный ключ сгенерирован.")
+        public_key = generate_public_key(private_key)
+        logger.debug("Публичный ключ сгенерирован.")
+        preshared_key = generate_preshared_key()
+        logger.debug("Пресекретный ключ сгенерирован.")
 
-    # Генерация IP-адреса
-    address, new_ipv4 = generate_ip(config_file)
-    logger.info(f"IP-адрес сгенерирован: {address}")
+        # Генерация IP-адреса
+        address, new_ipv4 = generate_ip(config_file)
+        logger.info(f"IP-адрес сгенерирован: {address}")
 
-    # Генерация конфигурации клиента
-    client_config = create_client_config(
-        private_key=private_key,
-        address=address,
-        dns_servers=dns_servers,
-        server_public_key=server_public_key,
-        preshared_key=preshared_key,
-        endpoint=endpoint
-    )
-    logger.debug("Конфигурация клиента создана.")
+        # Генерация конфигурации клиента
+        client_config = create_client_config(
+            private_key=private_key,
+            address=address,
+            dns_servers=dns_servers,
+            server_public_key=server_public_key,
+            preshared_key=preshared_key,
+            endpoint=endpoint
+        )
+        logger.debug("Конфигурация клиента создана.")
 
-    config_path = os.path.join(settings.WG_CONFIG_DIR, f"{nickname}.conf")
-    qr_path = os.path.join(settings.QR_CODE_DIR, f"{nickname}.png")
+        config_path = os.path.join(settings.WG_CONFIG_DIR, f"{nickname}.conf")
+        qr_path = os.path.join(settings.QR_CODE_DIR, f"{nickname}.png")
 
-    # Сохраняем конфигурацию
-    os.makedirs(settings.WG_CONFIG_DIR, exist_ok=True)
-    with open(config_path, "w") as file:
-        file.write(client_config)
-    logger.info(f"Конфигурация клиента сохранена в {config_path}")
+        # Сохраняем конфигурацию
+        os.makedirs(settings.WG_CONFIG_DIR, exist_ok=True)
+        with open(config_path, "w") as file:
+            file.write(client_config)
+        logger.info(f"Конфигурация клиента сохранена в {config_path}")
 
-    # Генерация QR-кода
-    generate_qr_code(client_config, qr_path)
-    logger.info(f"QR-код сохранён в {qr_path}")
+        # Генерация QR-кода
+        generate_qr_code(client_config, qr_path)
+        logger.info(f"QR-код сохранён в {qr_path}")
 
-    # Добавление пользователя в конфигурацию сервера
-    add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), address)
-    logger.info("Пользователь добавлен в конфигурацию сервера.")
+        # Добавление пользователя в конфигурацию сервера
+        add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), address)
+        logger.info("Пользователь добавлен в конфигурацию сервера.")
 
-    # Добавление записи пользователя с новой функцией
-    user_record = create_user_record(
-        username=nickname,
-        address=address,
-        public_key=public_key.decode('utf-8'),
-        preshared_key=preshared_key.decode('utf-8'),
-        qr_code_path=qr_path,
-        email=email,
-        telegram_id=telegram_id
-    )
+        # Добавление записи пользователя
+        user_record = create_user_record(
+            username=nickname,
+            address=address,
+            public_key=public_key.decode('utf-8'),
+            preshared_key=preshared_key.decode('utf-8'),
+            qr_code_path=qr_path,
+            email=email,
+            telegram_id=telegram_id
+        )
 
-    # Сохраняем в базе данных
-    user_records_path = os.path.join("user", "data", "user_records.json")
-    if os.path.exists(user_records_path):
-        with open(user_records_path, "r", encoding="utf-8") as file:
-            try:
-                user_data = json.load(file)
-            except json.JSONDecodeError:
-                logger.warning("Ошибка чтения базы данных пользователей, будет создана новая.")
-                user_data = {}
-    else:
-        user_data = {}
+        # Сохраняем в базе данных
+        user_records_path = os.path.join("user", "data", "user_records.json")
+        if os.path.exists(user_records_path):
+            with open(user_records_path, "r", encoding="utf-8") as file:
+                try:
+                    user_data = json.load(file)
+                except json.JSONDecodeError:
+                    logger.warning("Ошибка чтения базы данных пользователей, будет создана новая.")
+                    user_data = {}
+        else:
+            user_data = {}
 
-    user_data[nickname] = user_record
-    os.makedirs(os.path.dirname(user_records_path), exist_ok=True)
-    with open(user_records_path, "w", encoding="utf-8") as file:
-        json.dump(user_data, file, indent=4)
-    logger.info(f"Данные пользователя {nickname} успешно добавлены в {user_records_path}")
+        user_data[nickname] = user_record
+        os.makedirs(os.path.dirname(user_records_path), exist_ok=True)
+        with open(user_records_path, "w", encoding="utf-8") as file:
+            json.dump(user_data, file, indent=4)
+        logger.info(f"Данные пользователя {nickname} успешно добавлены в {user_records_path}")
 
-    # Перезапуск WireGuard
-    restart_wireguard(params['SERVER_WG_NIC'])
+        # Перезапуск WireGuard
+        restart_wireguard(params['SERVER_WG_NIC'])
 
-    return config_path, qr_path
+        logger.info("+--------- Процесс 🌱 создания пользователя завершен --------------+")
+        return config_path, qr_path
+    except Exception as e:
+        logger.error(f"Ошибка выполнения: {e}")
+        logger.info("+--------- Процесс 🌱 создания пользователя завершен --------------+")
+        raise
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
