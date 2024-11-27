@@ -114,14 +114,12 @@ def statistics_tab():
             outputs=[user_info_display]
         )
 
-        # Обновляем таблицу при изменении фильтров
+        # Привязка кнопки "Refresh Table"
         refresh_button.click(
             fn=update_table,
             inputs=[show_inactive, search_input],
             outputs=[user_table]
         )
 
-        # Автоматическая загрузка таблицы при открытии
-        user_table.update(
-            value=update_table(show_inactive=True, search_query="")
-        )
+        # Начальная загрузка таблицы
+        user_table.value = update_table(show_inactive=True, search_query="")
