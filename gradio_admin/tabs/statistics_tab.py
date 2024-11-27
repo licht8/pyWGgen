@@ -18,6 +18,125 @@ def load_user_records():
         return json.load(f)
 
 
+def create_table(show_inactive=True):
+    """Создает таблицу с данными пользователей."""
+    user_records = load_user_records()
+    table = []
+
+    for user in user_records.values():
+        if not show_inactive and user.get("status") != "active":
+            continue
+        table.append([
+            user.get("username", "N/A"),
+            user.get("data_used", "0.0 KiB"),
+            user.get("data_limit", "100.0 GB"),
+            user.get("status", "inactive"),
+            user.get("subscription_price", "0.00 USD"),
+            user.get("user_id", "N/A")  # UID для передачи через кнопку
+        ])
+
+    return pd.DataFrame(
+        table,
+        columns=["User", "Used", "Limit", "Status", "Price", "UID"]
+    )
+
+
+def statistics_tab():
+    """Возвращает вкладку статистики пользователей WireGuard."""
+    with gr.Tab("🔍 Statistics"):
+        with gr.Row():
+            gr.Markdown("## User Statistics")
+
+        # Чекбокс Show inactive и кнопка Refresh
+        with gr.Row():
+            show_inactive = gr.Checkbox(label="Show inactive", value=True)
+            refresh_button = gr.Button("Refresh Table")
+
+        # Область для отображения информации о выбранном пользователе
+        with gr.Row():
+            selected_user_info = gr.Textbox(
+                label="User Information",
+                interactive=False,
+                value="Click 'View' to see user details.",
+            )
+
+        # Основная таблица с кнопками
+        def generate_table_with_buttons(show_inactive):
+            """Создает HTML-таблицу с кнопками."""
+            df = create_table(show_inactive)
+            df["Action"] = df["UID"].apply(
+                lambda uid: f"<button class='view-btn' onclick=\"setUID('{uid}')\">View</button>"
+            )
+            return (
+                df.drop(columns=["UID"])  # Убираем UID из отображения
+                .to_html(escape=False, index=False, classes="gr-table")
+            )
+
+        with gr.Row():
+            user_table = gr.HTML(value=generate_table_with_buttons(show_inactive=True))
+
+        # Обновление таблицы при изменении чекбокса
+        def refresh_table(show_inactive):
+            return generate_table_with_buttons(show_inactive)
+
+        refresh_button.click(
+            fn=refresh_table,
+            inputs=[show_inactive],
+            outputs=[user_table]
+        )
+
+        # Получение информации о пользователе по UID
+        def show_user_info(uid):
+            """Отображает информацию о пользователе по UID."""
+            user_records = load_user_records()
+            user_info = next(
+                (info for info in user_records.values() if info.get("user_id") == uid),
+                None
+            )
+            if not user_info:
+                return f"No user found with UID: {uid}"
+            return json.dumps(user_info, indent=4, ensure_ascii=False)
+
+        # Поле для передачи UID из JavaScript
+        with gr.Row():
+            selected_uid = gr.Textbox(visible=False)
+
+        selected_uid.change(
+            fn=show_user_info,
+            inputs=[selected_uid],
+            outputs=[selected_user_info]
+        )
+
+        # Добавляем JavaScript для передачи UID из кнопки в Python
+        gr.HTML("""
+        <script>
+        function setUID(uid) {
+            const input = document.querySelector('textarea[aria-label="selected_uid"]');
+            input.value = uid;
+            input.dispatchEvent(new Event('input'));
+        }
+        </script>
+        """)
+#!/usr/bin/env python3
+# statistics_tab.py
+# Вкладка "Statistics" для Gradio-интерфейса проекта wg_qr_generator
+
+import gradio as gr
+import pandas as pd
+import json
+import os
+from settings import USER_DB_PATH  # Путь к JSON с данными пользователей
+
+
+def load_user_records():
+    """Загружает данные пользователей из JSON."""
+    if not os.path.exists(USER_DB_PATH):
+        return {}
+
+    with open(USER_DB_PATH, "r") as f:
+        return json.load(f)
+
+
 def create_html_table(show_inactive=True):
     """Создает HTML-таблицу с кнопками для отображения в Gradio."""
     user_records = load_user_records()
