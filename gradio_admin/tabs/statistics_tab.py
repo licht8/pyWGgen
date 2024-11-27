@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # statistics_tab.py
-# Вкладка "Statistics" для Gradio-интерфейса проекта wg_qr_generator
+# Полностью обновленная вкладка "Statistics" для Gradio-интерфейса wg_qr_generator
 
 import gradio as gr
 import pandas as pd
@@ -18,31 +18,24 @@ def load_user_records():
         return json.load(f)
 
 
-def create_table_with_buttons(show_inactive=True):
-    """Создает таблицу с кнопками для взаимодействия."""
+def prepare_table_data(show_inactive=True):
+    """Создает данные для таблицы."""
     user_records = load_user_records()
-    table = []
+    table_data = []
 
     for user in user_records.values():
         if not show_inactive and user.get("status") != "active":
             continue
-        table.append([
-            user.get("username", "N/A"),
-            user.get("data_used", "0.0 KiB"),
-            user.get("data_limit", "100.0 GB"),
-            user.get("status", "inactive"),
-            user.get("subscription_price", "0.00 USD"),
-            user.get("user_id", "N/A"),  # UID для передачи
-        ])
+        table_data.append({
+            "User": user.get("username", "N/A"),
+            "Used": user.get("data_used", "0.0 KiB"),
+            "Limit": user.get("data_limit", "100.0 GB"),
+            "Status": user.get("status", "inactive"),
+            "Price": user.get("subscription_price", "0.00 USD"),
+            "UID": user.get("user_id", "N/A")
+        })
 
-    # Создаем DataFrame с колонкой кнопок
-    df = pd.DataFrame(
-        table,
-        columns=["User", "Used", "Limit", "Status", "Price", "UID"]
-    )
-
-    # Добавляем кнопки в таблицу
-    return df
+    return pd.DataFrame(table_data)
 
 
 def statistics_tab():
@@ -51,57 +44,49 @@ def statistics_tab():
         with gr.Row():
             gr.Markdown("## User Statistics")
 
-        # Чекбокс для показа/скрытия неактивных пользователей
+        # Чекбокс для фильтрации активных пользователей
         with gr.Row():
             show_inactive = gr.Checkbox(label="Show inactive users", value=True)
             refresh_button = gr.Button("Refresh Table")
 
-        # Область для отображения информации о выбранном пользователе
+        # Поле поиска
         with gr.Row():
-            selected_user_info = gr.Textbox(
-                label="User Information",
-                interactive=False,
-                value="Click 'View' to see user details.",
-            )
+            search_input = gr.Textbox(label="Search", placeholder="Enter text to filter...")
 
-        # Основная таблица с кнопками
-        def generate_table_with_buttons(show_inactive):
-            """Создает HTML-таблицу с кнопками."""
-            df = create_table_with_buttons(show_inactive)
-            df["Action"] = df["UID"].apply(
-                lambda uid: f"<button class='gr-button' onclick=\"setUID('{uid}')\">View</button>"
-            )
-            table_html = df.drop(columns=["UID"]).to_html(
-                escape=False,
-                index=False,
-                classes="gr-table"
-            )
-            return table_html
-
-        with gr.Row():
-            user_table = gr.HTML(value=generate_table_with_buttons(show_inactive=True))
-
-        # Обновление таблицы
-        refresh_button.click(
-            fn=generate_table_with_buttons,
-            inputs=[show_inactive],
-            outputs=[user_table]
+        # Таблица пользователей
+        user_table = gr.Dataframe(
+            headers=["User", "Used", "Limit", "Status", "Price", "UID", "Action"],
+            interactive=False
         )
 
-        # Передача UID через JavaScript
-        gr.HTML("""
-        <script>
-        function setUID(uid) {
-            const textbox = document.querySelector('textarea[aria-label="selected_user_info"]');
-            textbox.value = uid;
-            textbox.dispatchEvent(new Event('input'));
-        }
-        </script>
-        """)
+        # Область для отображения информации о пользователе
+        with gr.Row():
+            user_info_display = gr.Textbox(
+                label="User Information",
+                interactive=False,
+                value="Select a user to view their details."
+            )
+
+        # Кнопки управления пользователями
+        with gr.Row():
+            block_button = gr.Button("Block User")
+            delete_button = gr.Button("Delete User")
+
+        # Функция обновления таблицы
+        def update_table(show_inactive, search_query):
+            """Обновляет таблицу в зависимости от фильтров."""
+            df = prepare_table_data(show_inactive)
+            if search_query.strip():
+                df = df[df.apply(
+                    lambda row: search_query.lower() in row.to_string().lower(), axis=1
+                )]
+            df["Action"] = df["UID"].apply(lambda uid: f"View ({uid[:6]}...)")
+            return df.drop(columns=["UID"])
 
         # Функция отображения информации о пользователе
-        def show_user_info(uid):
+        def show_user_info(action):
             """Показывает информацию о пользователе по UID."""
+            uid = action.split()[1].strip("()")
             user_records = load_user_records()
             user_info = next(
                 (info for info in user_records.values() if info.get("user_id") == uid),
@@ -111,11 +96,43 @@ def statistics_tab():
                 return f"No user found with UID: {uid}"
             return json.dumps(user_info, indent=4, ensure_ascii=False)
 
-        # Скрытое поле для передачи UID
-        selected_uid = gr.Textbox(visible=False)
+        # Функция блокировки пользователя
+        def block_user(action):
+            """Блокирует выбранного пользователя."""
+            uid = action.split()[1].strip("()")
+            user_records = load_user_records()
+            user = next(
+                (info for info in user_records.values() if info.get("user_id") == uid),
+                None
+            )
+            if not user:
+                return "User not found."
+            user["status"] = "blocked"
+            with open(USER_DB_PATH, "w") as f:
+                json.dump(user_records, f, indent=4)
+            return f"User {user.get('username', 'N/A')} has been blocked."
 
-        selected_uid.change(
+        # Привязка функций к кнопкам
+        refresh_button.click(
+            fn=lambda show_inactive, search_query: update_table(show_inactive, search_query),
+            inputs=[show_inactive, search_input],
+            outputs=[user_table]
+        )
+
+        user_table.select(
             fn=show_user_info,
-            inputs=[selected_uid],
-            outputs=[selected_user_info]
+            inputs=[user_table],
+            outputs=[user_info_display]
+        )
+
+        block_button.click(
+            fn=block_user,
+            inputs=[user_table],
+            outputs=[user_info_display]
+        )
+
+        delete_button.click(
+            fn=lambda action: f"Delete user with UID: {action.split()[1].strip('()')}",
+            inputs=[user_table],
+            outputs=[user_info_display]
         )
