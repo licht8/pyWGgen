@@ -36,6 +36,11 @@ def statistics_tab():
                 value="Select a user to view details.",
             )
 
+        # Кнопки действий
+        with gr.Row():
+            block_button = gr.Button("Block User")
+            delete_button = gr.Button("Delete User")
+
         # Поле поиска
         with gr.Row():
             search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...")
@@ -49,9 +54,9 @@ def statistics_tab():
                 wrap=True
             )
 
-        # Обновление таблицы
+        # Функция обновления таблицы
         def refresh_table(show_inactive):
-            """Обновляет данные таблицы."""
+            """Обновляет данные таблицы в зависимости от чекбокса."""
             return update_table(show_inactive)
 
         refresh_button.click(
@@ -62,9 +67,9 @@ def statistics_tab():
 
         # Поиск и обновление таблицы
         def search_and_update_table(query, show_inactive):
-            """Фильтрует данные таблицы по запросу."""
+            """Фильтрует данные таблицы по запросу в поиске."""
             table = update_table(show_inactive)
-            if query:
+            if query.strip():
                 table = [
                     row for row in table if query.lower() in " ".join(map(str, row)).lower()
                 ]
@@ -85,18 +90,21 @@ def statistics_tab():
             try:
                 # Если данные переданы в виде DataFrame
                 if isinstance(selected_data, pd.DataFrame):
-                    username = selected_data.iloc[0, 0]  # Первый столбец первой строки
+                    uid = selected_data.iloc[0, -1]  # UID в последнем столбце
                 # Если данные переданы в виде списка
                 elif isinstance(selected_data, list):
-                    username = selected_data[0]  # Первый элемент
+                    uid = selected_data[-1]  # UID в последнем элементе
                 else:
                     return "Unsupported data format selected."
 
                 # Получение данных пользователя
                 user_records = load_user_records()
-                user_info = user_records.get(username, {})
+                user_info = next(
+                    (info for info in user_records.values() if info.get("user_id") == uid), 
+                    None
+                )
                 if not user_info:
-                    return f"No detailed information found for user: {username}"
+                    return f"No detailed information found for UID: {uid}"
 
                 # Форматирование информации с эмодзи
                 details = [
@@ -117,6 +125,45 @@ def statistics_tab():
 
         stats_table.select(
             fn=show_user_info,
+            inputs=[stats_table],
+            outputs=[selected_user_info]
+        )
+
+        # Действия блокировки и удаления пользователей
+        def block_user(selected_data):
+            """Блокирует пользователя."""
+            if not selected_data or len(selected_data) == 0:
+                return "No user selected to block."
+            if isinstance(selected_data, pd.DataFrame):
+                uid = selected_data.iloc[0, -1]
+            elif isinstance(selected_data, list):
+                uid = selected_data[-1]
+            else:
+                return "Unsupported data format selected."
+            # Логика блокировки пользователя по UID
+            return f"User with UID {uid} blocked."
+
+        block_button.click(
+            fn=block_user,
+            inputs=[stats_table],
+            outputs=[selected_user_info]
+        )
+
+        def delete_user(selected_data):
+            """Удаляет пользователя."""
+            if not selected_data or len(selected_data) == 0:
+                return "No user selected to delete."
+            if isinstance(selected_data, pd.DataFrame):
+                uid = selected_data.iloc[0, -1]
+            elif isinstance(selected_data, list):
+                uid = selected_data[-1]
+            else:
+                return "Unsupported data format selected."
+            # Логика удаления пользователя по UID
+            return f"User with UID {uid} deleted."
+
+        delete_button.click(
+            fn=delete_user,
             inputs=[stats_table],
             outputs=[selected_user_info]
         )
