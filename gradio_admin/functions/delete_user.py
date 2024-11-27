@@ -15,12 +15,13 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S"
 )
 
-# Отключение логирования для сторонних библиотек
+# Отключение логов для библиотек, генерирующих ненужные сообщения
 logging.getLogger("httpcore").setLevel(logging.CRITICAL)
 logging.getLogger("urllib3").setLevel(logging.CRITICAL)
 logging.getLogger("gradio").setLevel(logging.CRITICAL)
 logging.getLogger("requests").setLevel(logging.CRITICAL)
 logging.getLogger("asyncio").setLevel(logging.CRITICAL)
+logging.getLogger("tornado").setLevel(logging.CRITICAL)  # Используется Gradio
 
 
 def delete_user(username):
