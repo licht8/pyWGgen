@@ -56,7 +56,7 @@ def statistics_tab():
             selected_user_info = gr.Textbox(
                 label="User Information",
                 interactive=False,
-                value="Select a user to view details.",
+                value="Use search or select a row from the table to view user details.",
             )
 
         # Кнопки действий
@@ -103,15 +103,15 @@ def statistics_tab():
             outputs=[stats_table]
         )
 
-        # Получение информации о пользователе при изменении строки
+        # Получение информации о пользователе при выборе строки
         def show_user_info(dataframe):
             """Показывает информацию о выбранном пользователе."""
             if dataframe.empty:
-                return "Select a user to view details."
+                return "Use search or select a row from the table to view user details."
 
             try:
-                # UID находится в последнем столбце выделенной строки
-                user_id = dataframe.iloc[-1, -1]  # Последняя строка, последний столбец (UID)
+                # UID находится в последнем столбце выбранной строки
+                user_id = dataframe.iloc[0, -1]  # Первая строка, последний столбец (UID)
 
                 # Логируем выбор
                 print(f"Selected User ID: {user_id}")
@@ -132,7 +132,8 @@ def statistics_tab():
             except Exception as e:
                 return f"Error processing user information: {str(e)}"
 
-        stats_table.change(
+        # Используем `select` вместо `change`
+        stats_table.select(
             fn=show_user_info,
             inputs=[stats_table],
             outputs=[selected_user_info]
