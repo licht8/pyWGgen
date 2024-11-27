@@ -28,6 +28,8 @@ DEBUG_EMOJI = "🐛"
 INFO_EMOJI = "ℹ️"
 WARNING_EMOJI = "⚠️"
 ERROR_EMOJI = "❌"
+WG_EMOJI = "🌐"
+FIREWALL_EMOJI = "🛡️"
 
 class EmojiLoggerAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
@@ -74,11 +76,23 @@ def is_user_in_server_config(nickname, config_file):
 
 def restart_wireguard(interface="wg0"):
     """
-    Перезапускает WireGuard.
+    Перезапускает WireGuard и показывает его статус.
     """
     try:
         subprocess.run(["sudo", "systemctl", "restart", f"wg-quick@{interface}"], check=True)
         logger.info(f"WireGuard {interface} успешно перезапущен.")
+
+        # Получение статуса WireGuard
+        wg_status = subprocess.check_output(["sudo", "systemctl", "status", f"wg-quick@{interface}"]).decode()
+        for line in wg_status.splitlines():
+            if "Active:" in line:
+                logger.info(f"{WG_EMOJI}  {line.strip()}")
+
+        # Вывод состояния firewall
+        firewall_status = subprocess.check_output(["sudo", "firewall-cmd", "--list-ports"]).decode()
+        for line in firewall_status.splitlines():
+            logger.info(f"{FIREWALL_EMOJI}  {line.strip()}")
+
     except subprocess.CalledProcessError as e:
         logger.error(f"Ошибка перезапуска WireGuard: {e}")
 
@@ -183,6 +197,7 @@ def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr
         "last_handshake": "N/A",  # будет обновляться позже
         "uploaded": "N/A",  # будет обновляться позже
         "downloaded": "N/A",  # будет обновляться позже
+        "transfer": "0.0 KiB received, 0.0 KiB sent",  # Новое поле
         "qr_code_path": qr_code_path,
         "email": email,
         "telegram_id": telegram_id,
