@@ -55,22 +55,145 @@
 - Заполнение всех полей данных, включая контактную информацию, ключи, IP-адрес, реферальные данные, состояние подписки и другую информацию.
 
 Пример записи о пользователе:
+Вот полный и обновленный пример записи, включая все поля, созданные функцией `create_user_record` из файла `main_registration_fields.py`. Также добавлено описание всех полей и их использование.
+
+---
+
+## Описание Полной Структуры Пользователя
+
+Запись о пользователе, генерируемая `create_user_record`, выглядит следующим образом:
+
 ```json
 {
     "username": "JohnDoe",
     "user_id": "123e4567-e89b-12d3-a456-426614174000",
     "group": "guest",
+    "tags": ["default-user"],
+    "priority": 1,
     "created_at": "2024-11-27T12:00:00",
     "expires_at": "2024-12-27T12:00:00",
+    "auto_suspend_date": "2024-12-27T12:00:00",
+    "auto_delete_date": "2024-12-27T12:00:00",
+    "last_config_update": "2024-11-27T12:00:00",
+    "status": "active",
+    "blocked_reason": "N/A",
+    "renewal_requested": false,
     "allowed_ips": "192.168.1.2/32",
+    "allowed_ips_custom": "192.168.1.2/32",
+    "dns_custom": "1.1.1.1,8.8.8.8",
     "public_key": "public_key_example",
     "preshared_key": "preshared_key_example",
+    "endpoint": "N/A",
+    "last_handshake": "N/A",
+    "uploaded": "N/A",
+    "downloaded": "N/A",
+    "transfer": "0.0 KiB received, 0.0 KiB sent",
+    "total_transfer": "0.0 KiB",
+    "data_limit": "100.0 GB",
+    "data_used": "0.0 KiB",
     "qr_code_path": "/path/to/qr.png",
     "email": "john@example.com",
     "telegram_id": "123456789",
-    "status": "active"
+    "contact_method": "telegram",
+    "referral_id": null,
+    "coupon_id": null,
+    "referral_earnings": "0.00 USD",
+    "referral_count": 0,
+    "referral_bonus": "0%",
+    "subscription_plan": "free",
+    "subscription_price": "0.00 USD",
+    "payment_method": "N/A",
+    "last_payment_date": "N/A",
+    "next_payment_date": "N/A",
+    "payment_status": "inactive",
+    "total_spent": "0.00 USD",
+    "auto_renew": false,
+    "transaction_history": [],
+    "preferred_language": "en",
+    "admin_notes": "N/A",
+    "user_notes": "N/A",
+    "ip_history": []
 }
 ```
+
+---
+
+### Описание Полей
+
+| Поле                   | Описание                                                                                                   |
+|-------------------------|-----------------------------------------------------------------------------------------------------------|
+| **`username`**          | Имя пользователя.                                                                                        |
+| **`user_id`**           | Уникальный идентификатор пользователя (UUID).                                                            |
+| **`group`**             | Группа пользователя (например, `guest`, `admin`).                                                       |
+| **`tags`**              | Теги для классификации пользователей. По умолчанию: `["default-user"]`.                                  |
+| **`priority`**          | Приоритет пользователя (числовое значение).                                                             |
+| **`created_at`**        | Время создания записи в формате ISO8601.                                                                |
+| **`expires_at`**        | Дата окончания действия учетной записи.                                                                 |
+| **`auto_suspend_date`** | Дата автоматической приостановки учетной записи.                                                        |
+| **`auto_delete_date`**  | Дата автоматического удаления учетной записи.                                                           |
+| **`last_config_update`**| Время последнего обновления конфигурации.                                                               |
+| **`status`**            | Статус учетной записи: `active`, `inactive`, `blocked`.                                                 |
+| **`blocked_reason`**    | Причина блокировки, если есть.                                                                          |
+| **`renewal_requested`** | Флаг: запросил ли пользователь продление.                                                               |
+| **`allowed_ips`**       | Назначенный IP-адрес для клиента (например, `192.168.1.2/32`).                                          |
+| **`allowed_ips_custom`**| Пользовательский IP, если задан.                                                                         |
+| **`dns_custom`**        | Настраиваемый список DNS серверов (например, `1.1.1.1,8.8.8.8`).                                        |
+| **`public_key`**        | Публичный ключ WireGuard.                                                                                |
+| **`preshared_key`**     | Пресекретный ключ WireGuard.                                                                             |
+| **`endpoint`**          | Адрес сервера WireGuard.                                                                                |
+| **`last_handshake`**    | Дата последнего рукопожатия WireGuard.                                                                  |
+| **`uploaded`**          | Объем данных, загруженных клиентом.                                                                     |
+| **`downloaded`**        | Объем данных, скачанных клиентом.                                                                       |
+| **`transfer`**          | Суммарный трафик за текущую сессию.                                                                     |
+| **`total_transfer`**    | Общее количество переданных данных.                                                                     |
+| **`data_limit`**        | Лимит данных для пользователя.                                                                          |
+| **`data_used`**         | Использованные данные.                                                                                  |
+| **`qr_code_path`**      | Путь к QR-коду для подключения клиента.                                                                 |
+| **`email`**             | Email пользователя.                                                                                     |
+| **`telegram_id`**       | Telegram ID пользователя.                                                                               |
+| **`contact_method`**    | Основной метод связи с пользователем (`telegram` или `email`).                                           |
+| **`referral_id`**       | Идентификатор реферала, если есть.                                                                      |
+| **`coupon_id`**         | Идентификатор купона, если применялся.                                                                  |
+| **`referral_earnings`** | Доход, полученный по реферальной программе.                                                             |
+| **`referral_count`**    | Количество привлеченных рефералов.                                                                      |
+| **`referral_bonus`**    | Процент бонуса за рефералы.                                                                             |
+| **`subscription_plan`** | План подписки (`free`, `premium`).                                                                      |
+| **`subscription_price`**| Стоимость подписки.                                                                                     |
+| **`payment_method`**    | Способ оплаты (`credit_card`, `paypal`, `N/A`).                                                         |
+| **`last_payment_date`** | Дата последнего платежа.                                                                                |
+| **`next_payment_date`** | Дата следующего платежа.                                                                                |
+| **`payment_status`**    | Статус платежа (`active`, `inactive`).                                                                  |
+| **`total_spent`**       | Сумма, потраченная пользователем.                                                                       |
+| **`auto_renew`**        | Автопродление подписки (`true` или `false`).                                                            |
+| **`transaction_history`**| История всех транзакций пользователя.                                                                  |
+| **`preferred_language`**| Предпочтительный язык интерфейса (например, `en`, `ru`).                                                |
+| **`admin_notes`**       | Заметки администратора, связанные с пользователем.                                                      |
+| **`user_notes`**        | Заметки пользователя.                                                                                   |
+| **`ip_history`**        | История всех IP-адресов, используемых пользователем.                                                    |
+
+---
+
+## Использование
+
+### Создание нового пользователя с настройками
+
+#### Команда:
+```bash
+python3 main.py JohnDoe john@example.com 123456789
+```
+
+#### Результат:
+- Создается запись пользователя в базе данных с полями, описанными выше.
+- Генерируется файл конфигурации клиента.
+- Генерируется QR-код для подключения.
+
+---
+
+## Файлы
+
+- **Путь к QR-коду**: `settings.QR_CODE_DIR/JohnDoe.png`
+- **Путь к конфигурации**: `settings.WG_CONFIG_DIR/JohnDoe.conf`
+- **Путь к базе данных пользователей**: `user/data/user_records.json`
 
 ---
 
