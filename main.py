@@ -110,19 +110,20 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
 
         private_key = generate_private_key()
         logger.debug("Приватный ключ сгенерирован.")
-        public_key = generate_public_key(private_key)
+        public_key = generate_public_key(private_key).decode('utf-8')
         logger.debug("Публичный ключ сгенерирован.")
-        preshared_key = generate_preshared_key()
+        preshared_key = generate_preshared_key().decode('utf-8')
         logger.debug("Пресекретный ключ сгенерирован.")
 
         # Генерация IP-адреса
-        address, new_ipv4 = generate_ip(config_file)
-        logger.info(f"IP-адрес сгенерирован: {address}")
+        existing_ips, new_ipv4 = generate_ip(config_file, params['SERVER_SUBNET'])
+        logger.info(f"Существующие IP: {existing_ips}")
+        logger.info(f"IP-адрес сгенерирован: {new_ipv4}")
 
         # Генерация конфигурации клиента
         client_config = create_client_config(
             private_key=private_key,
-            address=address,
+            address=new_ipv4,
             dns_servers=dns_servers,
             server_public_key=server_public_key,
             preshared_key=preshared_key,
@@ -144,15 +145,15 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
         logger.info(f"QR-код сохранён в {qr_path}")
 
         # Добавление пользователя в конфигурацию сервера
-        add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), address)
+        add_user_to_server_config(config_file, nickname, public_key, preshared_key, new_ipv4)
         logger.info("Пользователь добавлен в конфигурацию сервера.")
 
         # Добавление записи пользователя
         user_record = create_user_record(
             username=nickname,
-            address=address,
-            public_key=public_key.decode('utf-8'),
-            preshared_key=preshared_key.decode('utf-8'),
+            address=new_ipv4,
+            public_key=public_key,
+            preshared_key=preshared_key,
             qr_code_path=qr_path,
             email=email,
             telegram_id=telegram_id
