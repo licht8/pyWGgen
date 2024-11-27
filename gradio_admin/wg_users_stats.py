@@ -128,7 +128,10 @@ def statistics_tab():
         action_output = gr.Textbox(label="Результат действия", interactive=False)
 
         # Логика обновления Dropdown при поиске
-        user_input.change(get_user_list, inputs=user_input, outputs=user_dropdown)
+        def update_dropdown(input_text):
+            return gr.Dropdown.update(choices=get_user_list(input_text))
+
+        user_input.change(update_dropdown, inputs=user_input, outputs=user_dropdown)
 
         # Логика выбора пользователя
         user_dropdown.change(get_user_details, inputs=user_dropdown, outputs=[user_table, action_output])
