@@ -106,7 +106,7 @@ def statistics_tab():
         # Выбор строки и отображение данных пользователя
         def show_user_info(selected_data):
             """Показывает информацию о выбранном пользователе."""
-            if not selected_data or len(selected_data) == 0:
+            if selected_data is None or (isinstance(selected_data, pd.DataFrame) and selected_data.empty):
                 return "Select a row from the table to view details."
 
             try:
