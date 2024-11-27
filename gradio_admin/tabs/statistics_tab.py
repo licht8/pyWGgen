@@ -16,17 +16,19 @@ def load_users():
     users.rename(columns={"index": "username"}, inplace=True)  # Преобразуем ключи в столбец "username"
     return users
 
-# Функция сохранения данных в JSON
-def save_users(users):
-    data = users.set_index("username").to_dict(orient="index")
-    with open(USER_DB_PATH, "w") as file:
-        json.dump(data, file, indent=4)
+# Функция для получения списка пользователей
+def get_user_list():
+    users = load_users()
+    return users["username"].tolist() if not users.empty else ["Нет пользователей"]
 
 # Функция для отображения данных выбранного пользователя
 def get_user_details(username):
-    users = load_users()
-    if username == "username" or users.empty or username not in users["username"].values:
+    if username == "username":
         return pd.DataFrame(), "Выберите пользователя, чтобы увидеть данные."
+
+    users = load_users()
+    if users.empty or username not in users["username"].values:
+        return pd.DataFrame(), "Пользователь не найден."
 
     user_data = users[users["username"] == username].transpose()
     user_data.columns = ["Данные"]  # Для удобного отображения в таблице
@@ -35,43 +37,46 @@ def get_user_details(username):
 
     return user_data[["Поле", "Данные"]], None
 
-# Функция для фильтрации пользователей по введенному тексту
-def filter_usernames(input_text):
-    users = load_users()
-    if users.empty:
-        return ["Нет пользователей"]
-
-    filtered_usernames = users["username"][users["username"].str.contains(input_text, case=False)].tolist()
-    return filtered_usernames if filtered_usernames else ["Нет совпадений"]
-
 # Функции управления пользователями
 def block_unblock_user(username):
-    users = load_users()
-    if username == "username" or users.empty or username not in users["username"].values:
+    if username == "username":
         return "Выберите корректного пользователя."
+
+    users = load_users()
+    if users.empty or username not in users["username"].values:
+        return "Пользователь не найден."
 
     user_status = users.loc[users["username"] == username, "status"].iloc[0]
     new_status = "inactive" if user_status == "active" else "active"
     users.loc[users["username"] == username, "status"] = new_status
-    save_users(users)
+    with open(USER_DB_PATH, "w") as file:
+        json.dump(users.set_index("username").to_dict(orient="index"), file, indent=4)
     return f"Пользователь {username} {'заблокирован' if new_status == 'inactive' else 'разблокирован'}."
 
 def delete_user(username):
-    users = load_users()
-    if username == "username" or users.empty or username not in users["username"].values:
+    if username == "username":
         return "Выберите корректного пользователя."
 
+    users = load_users()
+    if users.empty or username not in users["username"].values:
+        return "Пользователь не найден."
+
     users = users[users["username"] != username]
-    save_users(users)
+    with open(USER_DB_PATH, "w") as file:
+        json.dump(users.set_index("username").to_dict(orient="index"), file, indent=4)
     return f"Пользователь {username} удален."
 
 def archive_user(username):
-    users = load_users()
-    if username == "username" or users.empty or username not in users["username"].values:
+    if username == "username":
         return "Выберите корректного пользователя."
 
+    users = load_users()
+    if users.empty or username not in users["username"].values:
+        return "Пользователь не найден."
+
     users.loc[users["username"] == username, "status"] = "archived"
-    save_users(users)
+    with open(USER_DB_PATH, "w") as file:
+        json.dump(users.set_index("username").to_dict(orient="index"), file, indent=4)
     return f"Пользователь {username} архивирован."
 
 # Интерфейс вкладки
@@ -98,14 +103,12 @@ def statistics_tab():
     """) as tab:
         gr.Markdown("# Управление пользователями")
 
-        # Поле для ввода текста для фильтрации пользователей
-        user_input = gr.Textbox(
-            placeholder="Введите имя пользователя для поиска",
-            label="Поиск пользователя"
+        # Динамическое выпадающее меню
+        user_dropdown = gr.Dropdown(
+            choices=["username"], 
+            label="Выберите пользователя",
+            value="username"
         )
-
-        # Динамическое выпадающее меню с placeholder
-        user_dropdown = gr.Dropdown(choices=["username"], label="Выберите пользователя")
 
         # Таблица для отображения данных выбранного пользователя
         user_table = gr.DataFrame(
@@ -124,14 +127,12 @@ def statistics_tab():
         action_output = gr.Textbox(label="Результат действия", interactive=False)
 
         # Логика взаимодействия
-        user_input.change(filter_usernames, inputs=user_input, outputs=user_dropdown)
-        user_dropdown.change(
-            get_user_details, inputs=user_dropdown, outputs=[user_table, action_output]
-        )
-        block_button.click(
-            block_unblock_user, inputs=user_dropdown, outputs=action_output
-        )
+        user_dropdown.change(get_user_details, inputs=user_dropdown, outputs=[user_table, action_output])
+        block_button.click(block_unblock_user, inputs=user_dropdown, outputs=action_output)
         delete_button.click(delete_user, inputs=user_dropdown, outputs=action_output)
         archive_button.click(archive_user, inputs=user_dropdown, outputs=action_output)
+
+        # Обновление списка пользователей при загрузке вкладки
+        user_dropdown.update(choices=get_user_list)
 
     return tab
