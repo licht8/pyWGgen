@@ -26,16 +26,16 @@ def prepare_table_data(show_inactive=True):
     for user in user_records.values():
         if not show_inactive and user.get("status") != "active":
             continue
-        table_data.append([
-            user.get("username", "N/A"),
-            user.get("data_used", "0.0 KiB"),
-            user.get("data_limit", "100.0 GB"),
-            user.get("status", "inactive"),
-            user.get("subscription_price", "0.00 USD"),
-            user.get("user_id", "N/A")
-        ])
+        table_data.append({
+            "User": user.get("username", "N/A"),
+            "Used": user.get("data_used", "0.0 KiB"),
+            "Limit": user.get("data_limit", "100.0 GB"),
+            "Status": user.get("status", "inactive"),
+            "Price": user.get("subscription_price", "0.00 USD"),
+            "UID": user.get("user_id", "N/A")
+        })
 
-    return pd.DataFrame(table_data, columns=["User", "Used", "Limit", "Status", "Price", "UID"])
+    return pd.DataFrame(table_data)
 
 
 def get_user_info(user_id):
@@ -83,7 +83,7 @@ def statistics_tab():
             refresh_button = gr.Button("Refresh Table")
 
         # Таблица данных
-        user_table = gr.Dataframe(prepare_table_data(), label="Users Table", interactive=False)
+        user_table = gr.Dataframe(label="Users Table", interactive=False)
 
         # Подробная информация
         user_info_box = gr.Textbox(label="User Information", lines=10, interactive=False)
@@ -101,9 +101,14 @@ def statistics_tab():
                 df = df[df.apply(lambda row: search_query.lower() in row.to_string().lower(), axis=1)]
             return df
 
+        def select_user(row_data):
+            """Возвращает ID выбранного пользователя."""
+            return row_data["UID"]
+
         refresh_button.click(lambda: prepare_table_data(), outputs=user_table)
         search_box.change(lambda q, show: filter_table(q, show), inputs=[search_box, show_inactive_checkbox], outputs=user_table)
         show_inactive_checkbox.change(lambda q, show: filter_table(q, show), inputs=[search_box, show_inactive_checkbox], outputs=user_table)
-        user_table.select(lambda idx: get_user_info(user_table.value.iloc[idx]["UID"]), outputs=user_info_box)
+        user_table.select(select_user, outputs=selected_user_id)
+        selected_user_id.change(get_user_info, inputs=selected_user_id, outputs=user_info_box)
         block_button.click(block_user, inputs=selected_user_id, outputs=user_info_box)
         delete_button.click(delete_user, inputs=selected_user_id, outputs=user_info_box)
