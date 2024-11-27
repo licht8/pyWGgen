@@ -66,7 +66,6 @@ def restart_wireguard(interface="wg0"):
 
     except subprocess.CalledProcessError as e:
         logger.error(f"Ошибка перезапуска WireGuard: {e}")
-
 def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A"):
     """
     Генерация конфигурации пользователя и QR-кода.
@@ -78,9 +77,9 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
 
     private_key = generate_private_key()
     logger.debug("Приватный ключ сгенерирован.")
-    public_key = generate_public_key(private_key).decode()
+    public_key = generate_public_key(private_key)  # Убрано .decode()
     logger.debug("Публичный ключ сгенерирован.")
-    preshared_key = generate_preshared_key().decode()
+    preshared_key = generate_preshared_key()  # Убрано .decode()
     logger.debug("Пресекретный ключ сгенерирован.")
 
     # Генерация IP-адреса
@@ -116,6 +115,7 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     logger.info("Пользователь добавлен в конфигурацию сервера.")
 
     return config_path, qr_path
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
