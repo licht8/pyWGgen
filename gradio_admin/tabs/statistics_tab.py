@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# gradio_admin/tabs/statistics_tab.py
+# statistics_tab.py
+# Вкладка "Statistics" для Gradio-интерфейса проекта wg_qr_generator
 
 import gradio as gr
 import pandas as pd
@@ -31,14 +32,13 @@ def create_table(show_inactive=True):
             user.get("data_limit", "100.0 GB"),
             user.get("status", "inactive"),
             user.get("subscription_price", "0.00 USD"),
-            user.get("user_id", "N/A")  # UID для передачи через кнопку
+            user.get("user_id", "N/A")  # UID для идентификации
         ])
 
-    df = pd.DataFrame(
+    return pd.DataFrame(
         table,
         columns=["User", "Used", "Limit", "Status", "Price", "UID"]
     )
-    return df
 
 
 def statistics_tab():
@@ -60,17 +60,16 @@ def statistics_tab():
                 value="Use the 'View' button to select a user.",
             )
 
-        # Кнопки действий
+        # Поле поиска
         with gr.Row():
-            block_button = gr.Button("Block User")
-            delete_button = gr.Button("Delete User")
+            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...")
 
-        # Таблица пользователей
+        # Таблица пользователей (без UID)
         with gr.Row():
             user_table = gr.Dataframe(
                 headers=["User", "Used", "Limit", "Status", "Price"],
                 value=create_table(show_inactive=True).drop(columns=["UID"]),
-                interactive=False,  # Таблица только для чтения
+                interactive=False,
             )
 
         # Функция обновления таблицы
@@ -96,26 +95,25 @@ def statistics_tab():
                 return f"No user found with UID: {uid}"
             return json.dumps(user_info, indent=4, ensure_ascii=False)
 
-        # Функция для создания списка кнопок с UID
-        def create_buttons(data):
-            """Создает кнопки для каждой строки с привязкой UID."""
+        # Создание динамических кнопок для каждой строки
+        def create_buttons():
+            """Создает динамические кнопки для каждой строки таблицы."""
             buttons = []
-            for uid in data["UID"]:
-                buttons.append(gr.Button(f"View User ({uid[:6]}...)"))
+            user_data = create_table()
+            for _, row in user_data.iterrows():
+                uid = row["UID"]
+
+                def button_fn(uid=uid):
+                    """Обертка для передачи UID в обработчик."""
+                    return show_user_info(uid)
+
+                # Добавляем кнопку
+                buttons.append(
+                    gr.Button(f"View User ({row['User'][:6]}...)")
+                        .click(fn=button_fn, outputs=[selected_user_info])
+                )
             return buttons
 
-        # Таблица с кнопками
+        # Отображение кнопок
         with gr.Row():
-            table_buttons = gr.Column(create_buttons(create_table()))
-
-        # Привязка кнопок к обработчику
-        def bind_buttons():
-            """Привязывает каждую кнопку к UID."""
-            for i, uid in enumerate(create_table()["UID"]):
-                table_buttons[i].click(
-                    fn=show_user_info,
-                    inputs=[uid],
-                    outputs=[selected_user_info]
-                )
-
-        bind_buttons()
+            button_container = gr.Column(create_buttons())
