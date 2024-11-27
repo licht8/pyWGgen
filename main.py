@@ -213,7 +213,7 @@ if __name__ == "__main__":
         logger.info("Загрузка параметров сервера.")
         params = load_params(params_file)
 
-        logger.info("Генерация конфигурации пользователя.")
+        logger.info("Генерация конфигурации пользователя 🌱.")
         config_file = settings.SERVER_CONFIG_FILE
         config_path, qr_path = generate_config(nickname, params, config_file, email, telegram_id)
 
