@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # statistics_tab.py
-# Вкладка "Statistics" Gradio-интерфейса wg_qr_generator
+# Вкладка "Statistics" с контейнерами для пользователей
 
 import gradio as gr
 import json
@@ -16,124 +16,82 @@ def load_user_records():
         return json.load(f)
 
 
-def prepare_user_choices(show_inactive=True):
-    """Создает список пользователей для Dropdown."""
+def filter_users(search_query, show_inactive):
+    """Фильтрует список пользователей на основе ввода."""
     user_records = load_user_records()
-    user_choices = []
+    filtered_users = []
     for user in user_records.values():
         if not show_inactive and user.get("status") != "active":
             continue
-        user_choices.append(f"{user['username']} ({user['user_id']})")
-    return user_choices
+        if search_query.lower() in user.get("username", "").lower():
+            filtered_users.append(user)
+    return filtered_users
 
 
-def filter_user_choices(search_query, show_inactive):
-    """Фильтрует список пользователей на основе ввода."""
-    choices = prepare_user_choices(show_inactive)
-    if search_query:
-        choices = [choice for choice in choices if search_query.lower() in choice.lower()]
-    return {"choices": choices, "value": None}
-
-
-def get_user_info(selected_user):
-    """Возвращает подробную информацию о пользователе."""
-    if not selected_user:
-        return (
-            "Начните вводить имя пользователя или выберите его из списка ниже. "
-            "После выбора вы сможете увидеть информацию о пользователе и выполнить действия."
+def user_container(user):
+    """Создает контейнер для отображения информации о пользователе."""
+    with gr.Accordion(f"{user['username']} ({user['user_id']})", open=False):
+        gr.Markdown(
+            f"""
+            **Статус:** {user.get('status', 'N/A')}  
+            **Использование данных:** {user.get('data_used', '0.0 KiB')} / {user.get('data_limit', '100.0 GB')}  
+            **План подписки:** {user.get('subscription_plan', 'N/A')}  
+            **Цена:** {user.get('subscription_price', '0.00 USD')}  
+            **Последнее обновление:** {user.get('last_config_update', 'N/A')}
+            """
         )
-    
-    user_id = selected_user.split("(")[-1].strip(")")
-    user_records = load_user_records()
-    for user in user_records.values():
-        if user.get("user_id") == user_id:
-            return json.dumps(user, indent=4)
-    return "Пользователь не найден."
+        with gr.Row():
+            gr.Button("Block")
+            gr.Button("Delete")
+            gr.Button("Archive")
 
 
-def dummy_action(selected_user):
-    """Заглушка для кнопок действий."""
-    if not selected_user:
-        return "Сначала выберите пользователя."
-    return f"Действие выполнено для пользователя: {selected_user}"
+def create_user_list(search_query, show_inactive):
+    """Создает динамический список контейнеров для пользователей."""
+    users = filter_users(search_query, show_inactive)
+    with gr.Column():
+        if not users:
+            gr.Markdown("### Нет пользователей, соответствующих поиску.")
+        for user in users:
+            user_container(user)
 
 
 def statistics_tab():
-    """Создает интерфейс вкладки статистики."""
+    """Создает вкладку 'Statistics'."""
     with gr.Tab("🔍 Statistics"):
         gr.Markdown("## Управление пользователями WireGuard")
 
-        # Верхний блок с фильтром и кнопкой обновления
+        # Верхний блок: фильтры и кнопка обновления
         with gr.Row():
             show_inactive_checkbox = gr.Checkbox(label="Show inactive users", value=True)
             refresh_button = gr.Button("Refresh")
 
-        # Поле информации о пользователе
-        user_info_box = gr.Textbox(
-            label="Информация о пользователе",
-            lines=10,
-            interactive=False,
-            value=(
-                "Начните вводить имя пользователя или выберите его из списка ниже. "
-                "После выбора вы сможете увидеть информацию о пользователе и выполнить действия."
-            )
+        # Поисковая строка
+        search_box = gr.Textbox(
+            label="Поиск пользователей",
+            placeholder="Введите имя пользователя для фильтрации...",
+            interactive=True,
         )
 
-        # Блок кнопок действий
-        with gr.Row():
-            block_button = gr.Button("Block")
-            delete_button = gr.Button("Delete")
-            archive_button = gr.Button("Archive")
+        # Контейнер для динамического списка пользователей
+        user_list = gr.Column()
 
-        # Поле поиска и выпадающее меню
-        with gr.Row():
-            search_box = gr.Textbox(
-                label="Начните вводить тут",
-                placeholder="Введите имя пользователя для поиска...",
-                interactive=True
-            )
-            user_dropdown = gr.Dropdown(
-                choices=prepare_user_choices(),
-                label="Результаты поиска пользователей",
-                interactive=True,
-                value=None
-            )
+        # Логика обновления списка пользователей
+        def update_user_list(search_query, show_inactive):
+            """Обновляет список пользователей на основе фильтров."""
+            with user_list:
+                user_list.clear()
+                create_user_list(search_query, show_inactive)
 
-        # Логика обновления и действий
-        def update_user_choices(search_query, show_inactive):
-            """Обновляет список пользователей и сбрасывает выбор."""
-            choices = prepare_user_choices(show_inactive)
-            if search_query:
-                choices = [choice for choice in choices if search_query.lower() in choice.lower()]
-            return {"choices": choices, "value": None}
+        search_box.change(
+            fn=update_user_list,
+            inputs=[search_box, show_inactive_checkbox],
+            outputs=[]
+        )
 
         refresh_button.click(
-            fn=lambda show_inactive: {"choices": prepare_user_choices(show_inactive), "value": None},
-            inputs=[show_inactive_checkbox],
-            outputs=user_dropdown
+            fn=lambda: update_user_list("", True),
+            inputs=[],
+            outputs=[]
         )
-        search_box.change(
-            fn=update_user_choices,
-            inputs=[search_box, show_inactive_checkbox],
-            outputs=user_dropdown
-        )
-        user_dropdown.change(
-            fn=get_user_info,
-            inputs=[user_dropdown],
-            outputs=user_info_box
-        )
-        block_button.click(
-            fn=dummy_action,
-            inputs=[user_dropdown],
-            outputs=user_info_box
-        )
-        delete_button.click(
-            fn=dummy_action,
-            inputs=[user_dropdown],
-            outputs=user_info_box
-        )
-        archive_button.click(
-            fn=dummy_action,
-            inputs=[user_dropdown],
-            outputs=user_info_box
-        )
+
