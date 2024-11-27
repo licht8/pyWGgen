@@ -73,7 +73,7 @@ def statistics_tab():
             stats_table = gr.Dataframe(
                 headers=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $", "UID"],
                 value=update_table(show_inactive=True),
-                interactive=False,  # Таблица только для чтения
+                interactive=True,  # Таблица теперь редактируемая
             )
 
         # Функция обновления таблицы
@@ -103,21 +103,15 @@ def statistics_tab():
             outputs=[stats_table]
         )
 
-        # Выбор строки и отображение данных пользователя
-        def show_user_info(selected_data):
+        # Получение информации о пользователе на основе редактируемой ячейки
+        def show_user_info(dataframe):
             """Показывает информацию о выбранном пользователе."""
-            if selected_data is None or (isinstance(selected_data, pd.DataFrame) and selected_data.empty):
-                return "Select a row from the table to view details."
+            if dataframe.empty:
+                return "Select a user to view details."
 
             try:
-                # Проверяем формат данных
-                if isinstance(selected_data, list):
-                    # UID находится в последнем элементе строки
-                    user_id = selected_data[-1]
-                elif isinstance(selected_data, pd.DataFrame):
-                    user_id = selected_data.iloc[0, -1]  # UID в последнем столбце DataFrame
-                else:
-                    return "[ERROR] Unsupported data format selected."
+                # Получаем последний выбранный UID
+                user_id = dataframe.iloc[0, -1]  # UID находится в последнем столбце
 
                 # Логируем выбор
                 print(f"Selected User ID: {user_id}")
@@ -138,7 +132,7 @@ def statistics_tab():
             except Exception as e:
                 return f"Error processing user information: {str(e)}"
 
-        stats_table.select(
+        stats_table.change(
             fn=show_user_info,
             inputs=[stats_table],
             outputs=[selected_user_info]
