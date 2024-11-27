@@ -16,6 +16,28 @@ def load_user_records():
     with open(USER_DB_PATH, "r") as f:
         return json.load(f)
 
+def update_table(show_inactive=True):
+    """Создает таблицу для отображения в Gradio."""
+    user_records = load_user_records()
+    table = []
+
+    for user in user_records.values():
+        if not show_inactive and user.get("status") != "active":
+            continue
+        table.append([
+            user.get("username", "N/A"),
+            user.get("data_used", "0.0 KiB"),
+            user.get("data_limit", "100.0 GB"),
+            user.get("status", "inactive"),
+            user.get("subscription_price", "0.00 USD"),
+            user.get("user_id", "N/A")  # Добавляем user_id для идентификации
+        ])
+
+    return pd.DataFrame(
+        table,
+        columns=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $", "UID"]
+    )
+
 def statistics_tab():
     """Возвращает вкладку статистики пользователей WireGuard."""
     with gr.Tab("🔍 Statistics"):
