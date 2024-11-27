@@ -125,19 +125,21 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
 
     private_key = generate_private_key()
     logger.debug("Приватный ключ сгенерирован.")
-    public_key = generate_public_key(private_key)
+    public_key = generate_public_key(private_key).decode()  # Декодируем байты в строку
     logger.debug("Публичный ключ сгенерирован.")
-    preshared_key = generate_preshared_key()
+    preshared_key = generate_preshared_key().decode()  # Декодируем байты в строку
     logger.debug("Пресекретный ключ сгенерирован.")
 
     # Генерация IP-адреса
-    address, new_ipv4 = generate_ip(config_file)
-    logger.info(f"IP-адрес сгенерирован: {address}")
+    existing_ips, new_ipv4 = generate_ip(config_file)
+    logger.info(f"Существующие IP: {existing_ips}")
+    logger.info(f"Подсеть WireGuard: {params['SERVER_SUBNET']}")
+    logger.info(f"IP-адрес сгенерирован: {new_ipv4}")
 
     # Генерация конфигурации клиента
     client_config = create_client_config(
         private_key=private_key,
-        address=address,
+        address=new_ipv4,
         dns_servers=dns_servers,
         server_public_key=server_public_key,
         preshared_key=preshared_key,
@@ -161,7 +163,7 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     # Создаем запись пользователя
     user_record = create_user_record(
         username=nickname,
-        address=address,
+        address=new_ipv4,
         public_key=public_key,
         preshared_key=preshared_key,
         qr_code_path=qr_path,
@@ -173,10 +175,27 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     save_user_record(user_record)
 
     # Добавление пользователя в конфигурацию сервера
-    add_user_to_server_config(config_file, nickname, public_key, preshared_key, address)
+    add_user_to_server_config(config_file, nickname, public_key, preshared_key, new_ipv4)
     logger.info("Пользователь добавлен в конфигурацию сервера.")
 
     return config_path, qr_path
+
+def add_user_to_server_config(config_file, nickname, public_key, preshared_key, allowed_ip):
+    """
+    Добавляет пользователя в конфигурацию сервера WireGuard.
+    """
+    try:
+        with open(config_file, "a") as file:
+            file.write(f"\n### Client {nickname}\n")
+            file.write("[Peer]\n")
+            file.write(f"PublicKey = {public_key}\n")
+            file.write(f"PresharedKey = {preshared_key}\n")
+            file.write(f"AllowedIPs = {allowed_ip}/32\n")  # Убедимся, что формат корректен
+        logger.info(f"Пользователь {nickname} успешно добавлен в {config_file}")
+    except Exception as e:
+        logger.error(f"Ошибка добавления пользователя в конфигурацию сервера: {e}")
+        raise
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
