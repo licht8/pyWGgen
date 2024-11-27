@@ -5,7 +5,7 @@
 import sys
 import os
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 import settings
 from modules.config import load_params
 from modules.keygen import generate_private_key, generate_public_key, generate_preshared_key
@@ -14,6 +14,7 @@ from modules.config_writer import add_user_to_server_config
 from modules.qr_generator import generate_qr_code
 from modules.directory_setup import setup_directories
 from modules.client_config import create_client_config
+from modules.main_registration_fields import create_user_record  # Импорт новой функции
 import subprocess
 import logging
 
@@ -144,10 +145,9 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), address)
     logger.info("Пользователь добавлен в конфигурацию сервера.")
 
-    # Добавление записи пользователя
-    add_user_record(
-        nickname,
-        trial_days=settings.DEFAULT_TRIAL_DAYS,
+    # Добавление записи пользователя с новой функцией
+    user_record = create_user_record(
+        username=nickname,
         address=address,
         public_key=public_key.decode('utf-8'),
         preshared_key=preshared_key.decode('utf-8'),
@@ -156,20 +156,8 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
         telegram_id=telegram_id
     )
 
-    # Перезапуск WireGuard
-    restart_wireguard(params['SERVER_WG_NIC'])
-
-    return config_path, qr_path
-
-def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr_code_path, email, telegram_id):
-    """
-    Добавляет запись о пользователе с расширенными данными.
-    """
-    logger.info(f"Добавление записи пользователя {nickname} в базу данных.")
+    # Сохраняем в базе данных
     user_records_path = os.path.join("user", "data", "user_records.json")
-    expiry_date = datetime.now() + timedelta(days=trial_days)
-
-    # Загружаем существующие записи
     if os.path.exists(user_records_path):
         with open(user_records_path, "r", encoding="utf-8") as file:
             try:
@@ -180,35 +168,16 @@ def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr
     else:
         user_data = {}
 
-    # Проверяем, чтобы не было дубликатов
-    if nickname in user_data:
-        logger.error(f"Пользователь с именем '{nickname}' уже существует в базе данных.")
-        raise ValueError(f"Пользователь с именем '{nickname}' уже существует.")
-
-    # Добавляем новую запись
-    user_data[nickname] = {
-        "username": nickname,
-        "created_at": datetime.now().isoformat(),
-        "expires_at": expiry_date.isoformat(),
-        "allowed_ips": address,
-        "public_key": public_key,
-        "preshared_key": preshared_key,
-        "endpoint": "N/A",  # будет обновляться позже
-        "last_handshake": "N/A",  # будет обновляться позже
-        "uploaded": "N/A",  # будет обновляться позже
-        "downloaded": "N/A",  # будет обновляться позже
-        "transfer": "0.0 KiB received, 0.0 KiB sent",  # Новое поле
-        "qr_code_path": qr_code_path,
-        "email": email,
-        "telegram_id": telegram_id,
-        "status": "inactive"
-    }
-
-    # Сохраняем обновленные данные
+    user_data[nickname] = user_record
     os.makedirs(os.path.dirname(user_records_path), exist_ok=True)
     with open(user_records_path, "w", encoding="utf-8") as file:
         json.dump(user_data, file, indent=4)
     logger.info(f"Данные пользователя {nickname} успешно добавлены в {user_records_path}")
+
+    # Перезапуск WireGuard
+    restart_wireguard(params['SERVER_WG_NIC'])
+
+    return config_path, qr_path
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
