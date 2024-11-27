@@ -10,10 +10,10 @@ from modules.utils import read_json, write_json, get_wireguard_config_path
 # Функция для логирования (аналог log_debug)
 def log_debug(message):
     """
-    Простая функция для вывода сообщений в консоль.
+    Простая функция для вывода сообщений в консоль с временем в формате с миллисекундами.
     :param message: Сообщение для вывода.
     """
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]  # Оставляем миллисекунды
     print(f"{timestamp} - DEBUG    ℹ️  {message}")
 
 def delete_user(username):
