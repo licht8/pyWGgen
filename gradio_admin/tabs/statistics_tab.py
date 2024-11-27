@@ -76,6 +76,10 @@ def archive_user(username):
 
 # Интерфейс вкладки
 def statistics_tab():
+    # Загружаем список пользователей при инициализации
+    users = load_users()
+    initial_usernames = users["username"].tolist() if not users.empty else ["Нет пользователей"]
+
     with gr.Blocks(css="""
         .gr-table-container { 
             overflow-x: auto; 
@@ -105,7 +109,7 @@ def statistics_tab():
         )
 
         # Динамическое выпадающее меню
-        user_dropdown = gr.Dropdown(choices=[], label="Выберите пользователя")
+        user_dropdown = gr.Dropdown(choices=initial_usernames, label="Выберите пользователя")
 
         # Таблица для отображения данных выбранного пользователя
         user_table = gr.DataFrame(
