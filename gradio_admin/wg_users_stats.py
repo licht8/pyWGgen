@@ -29,7 +29,7 @@ def get_user_list(input_text=""):
 
 # Функция для отображения данных выбранного пользователя
 def get_user_details(username):
-    if username == "username" or username in ["Нет пользователей", "Нет совпадений"]:
+    if username in ["username", "Нет пользователей", "Нет совпадений"]:
         return pd.DataFrame(), "Выберите пользователя, чтобы увидеть данные."
 
     users = load_users()
@@ -45,7 +45,7 @@ def get_user_details(username):
 
 # Функции управления пользователями
 def block_unblock_user(username):
-    if username == "username" or username in ["Нет пользователей", "Нет совпадений"]:
+    if username in ["username", "Нет пользователей", "Нет совпадений"]:
         return "Выберите корректного пользователя."
 
     users = load_users()
@@ -60,7 +60,7 @@ def block_unblock_user(username):
     return f"Пользователь {username} {'заблокирован' if new_status == 'inactive' else 'разблокирован'}."
 
 def delete_user(username):
-    if username == "username" or username in ["Нет пользователей", "Нет совпадений"]:
+    if username in ["username", "Нет пользователей", "Нет совпадений"]:
         return "Выберите корректного пользователя."
 
     users = load_users()
@@ -73,7 +73,7 @@ def delete_user(username):
     return f"Пользователь {username} удален."
 
 def archive_user(username):
-    if username == "username" or username in ["Нет пользователей", "Нет совпадений"]:
+    if username in ["username", "Нет пользователей", "Нет совпадений"]:
         return "Выберите корректного пользователя."
 
     users = load_users()
