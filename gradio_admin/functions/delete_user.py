@@ -10,10 +10,14 @@ from modules.utils import read_json, write_json, get_wireguard_config_path
 
 # Настройка логирования
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,  # Установим уровень логирования на INFO
     format="%(asctime)s - %(levelname)-8s ℹ️  %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
+    datefmt="%Y-%m-%d %H:%M:%S"
 )
+
+# Отключение логирования для сторонних библиотек
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 
 def delete_user(username):
@@ -35,7 +39,7 @@ def delete_user(username):
     try:
         # Чтение данных пользователей
         user_data = read_json(user_records_path)
-        logging.debug(f"📂 Данные пользователей успешно загружены.")
+        logging.info(f"📂 Данные пользователей успешно загружены.")
 
         if username not in user_data:
             logging.error(f"❌ Пользователь '{username}' не найден в данных.")
@@ -45,7 +49,7 @@ def delete_user(username):
         user_info = user_data.pop(username)
         user_info["removed_at"] = datetime.now().isoformat()
         write_json(user_records_path, user_data)
-        logging.debug(f"📝 Запись пользователя '{username}' удалена из данных.")
+        logging.info(f"📝 Запись пользователя '{username}' удалена из данных.")
 
         # Извлечение публичного ключа пользователя
         public_key = extract_public_key(username, wg_config_path)
@@ -74,7 +78,7 @@ def extract_public_key(username, config_path):
     :param config_path: Путь к конфигурационному файлу WireGuard.
     :return: Публичный ключ пользователя.
     """
-    logging.debug(f"🔍 Поиск публичного ключа для пользователя '{username}' в {config_path}.")
+    logging.info(f"🔍 Поиск публичного ключа для пользователя '{username}' в {config_path}.")
     try:
         with open(config_path, "r") as f:
             lines = f.readlines()
@@ -85,7 +89,7 @@ def extract_public_key(username, config_path):
                 found_username = True
             elif found_username and line.strip().startswith("PublicKey"):
                 public_key = line.split("=", 1)[1].strip()
-                logging.debug(f"🔑 Найден публичный ключ для '{username}': {public_key}")
+                logging.info(f"🔑 Найден публичный ключ для '{username}': {public_key}")
                 return public_key
         logging.error(f"❌ Публичный ключ для '{username}' не найден.")
         return None
@@ -102,7 +106,7 @@ def remove_peer_from_config(public_key, config_path, client_name):
     :param config_path: Путь к конфигурационному файлу WireGuard.
     :param client_name: Имя клиента.
     """
-    logging.debug(f"🛠️ Удаление конфигурации пользователя '{client_name}' из {config_path}.")
+    logging.info(f"🛠️ Удаление конфигурации пользователя '{client_name}' из {config_path}.")
 
     try:
         with open(config_path, "r") as f:
@@ -114,13 +118,13 @@ def remove_peer_from_config(public_key, config_path, client_name):
         for i, line in enumerate(lines):
             # Если найден комментарий клиента
             if line.strip() == f"### Client {client_name}":
-                logging.debug(f"📌 Найден блок для '{client_name}' на строке {i}. Удаляем...")
+                logging.info(f"📌 Найден блок для '{client_name}' на строке {i}. Удаляем...")
                 skip_lines = 5  # Удаляем 5 строк начиная с этого момента
                 continue
 
             # Пропуск строк, связанных с удаляемым блоком
             if skip_lines > 0:
-                logging.debug(f"⏩ Пропуск строки {i}: {line.strip()}")
+                logging.info(f"⏩ Пропуск строки {i}: {line.strip()}")
                 skip_lines -= 1
                 continue
 
