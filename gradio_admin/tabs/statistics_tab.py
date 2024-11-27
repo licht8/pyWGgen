@@ -30,30 +30,34 @@ def filter_users(search_query, show_inactive):
 
 def user_container(user):
     """Создает контейнер для отображения информации о пользователе."""
-    with gr.Accordion(f"{user['username']} ({user['user_id']})", open=False):
-        gr.Markdown(
-            f"""
-            **Статус:** {user.get('status', 'N/A')}  
-            **Использование данных:** {user.get('data_used', '0.0 KiB')} / {user.get('data_limit', '100.0 GB')}  
-            **План подписки:** {user.get('subscription_plan', 'N/A')}  
-            **Цена:** {user.get('subscription_price', '0.00 USD')}  
-            **Последнее обновление:** {user.get('last_config_update', 'N/A')}
-            """
-        )
-        with gr.Row():
-            gr.Button("Block")
-            gr.Button("Delete")
-            gr.Button("Archive")
+    return gr.Accordion(
+        f"{user['username']} ({user['user_id']})",
+        open=False,
+        children=[
+            gr.Markdown(
+                f"""
+                **Статус:** {user.get('status', 'N/A')}  
+                **Использование данных:** {user.get('data_used', '0.0 KiB')} / {user.get('data_limit', '100.0 GB')}  
+                **План подписки:** {user.get('subscription_plan', 'N/A')}  
+                **Цена:** {user.get('subscription_price', '0.00 USD')}  
+                **Последнее обновление:** {user.get('last_config_update', 'N/A')}
+                """
+            ),
+            gr.Row([
+                gr.Button("Block"),
+                gr.Button("Delete"),
+                gr.Button("Archive"),
+            ])
+        ]
+    )
 
 
-def create_user_list(search_query, show_inactive):
-    """Создает динамический список контейнеров для пользователей."""
+def update_user_list(search_query, show_inactive):
+    """Обновляет список пользователей на основе фильтров."""
     users = filter_users(search_query, show_inactive)
-    with gr.Column():
-        if not users:
-            gr.Markdown("### Нет пользователей, соответствующих поиску.")
-        for user in users:
-            user_container(user)
+    if not users:
+        return [gr.Markdown("### Нет пользователей, соответствующих поиску.")]
+    return [user_container(user) for user in users]
 
 
 def statistics_tab():
@@ -77,21 +81,25 @@ def statistics_tab():
         user_list = gr.Column()
 
         # Логика обновления списка пользователей
-        def update_user_list(search_query, show_inactive):
-            """Обновляет список пользователей на основе фильтров."""
-            with user_list:
-                user_list.clear()
-                create_user_list(search_query, show_inactive)
+        def refresh_list():
+            return update_user_list("", show_inactive_checkbox.value)
 
         search_box.change(
             fn=update_user_list,
             inputs=[search_box, show_inactive_checkbox],
-            outputs=[]
+            outputs=user_list
         )
 
         refresh_button.click(
-            fn=lambda: update_user_list("", True),
+            fn=refresh_list,
             inputs=[],
-            outputs=[]
+            outputs=user_list
         )
 
+        # Инициализация списка пользователей при загрузке
+        refresh_button.click(
+            fn=refresh_list,
+            inputs=[],
+            outputs=user_list,
+            queue=False
+        )
