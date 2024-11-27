@@ -106,19 +106,23 @@ def statistics_tab():
         # Выбор строки и отображение данных пользователя
         def show_user_info(selected_data):
             """Показывает информацию о выбранном пользователе."""
-            if selected_data is None or len(selected_data) == 0:
+            if not selected_data or len(selected_data) == 0:
                 return "Select a row from the table to view details."
 
             try:
                 # Проверяем формат данных
-                if isinstance(selected_data, pd.DataFrame):
-                    user_id = selected_data.iloc[0, -1]  # UID в последнем столбце
-                elif isinstance(selected_data, list):
-                    user_id = selected_data[-1]  # UID в последнем элементе
+                if isinstance(selected_data, list):
+                    # UID находится в последнем элементе строки
+                    user_id = selected_data[-1]
+                elif isinstance(selected_data, pd.DataFrame):
+                    user_id = selected_data.iloc[0, -1]  # UID в последнем столбце DataFrame
                 else:
                     return "[ERROR] Unsupported data format selected."
 
-                # Поиск информации о пользователе по user_id
+                # Логируем выбор
+                print(f"Selected User ID: {user_id}")
+
+                # Поиск информации о пользователе
                 user_records = load_user_records()
                 user_info = next(
                     (info for info in user_records.values() if info.get("user_id") == user_id),
@@ -128,10 +132,7 @@ def statistics_tab():
                 if not user_info:
                     return f"No detailed information found for UID: {user_id}"
 
-                # Логирование выбранного пользователя
-                print(f"Selected User ID: {user_id}")
-
-                # Форматирование полной информации
+                # Форматирование данных для вывода
                 user_details = json.dumps(user_info, indent=4, ensure_ascii=False)
                 return user_details
             except Exception as e:
