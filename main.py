@@ -104,24 +104,19 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     logger.info("+--------- Процесс 🌱 создания пользователя активирован ---------+")
     try:
         logger.info(f"Начало генерации конфигурации для пользователя: {nickname}")
-        logger.debug(f"Загруженные параметры сервера: {params}")
-
-        if 'SERVER_SUBNET' not in params:
-            raise KeyError("Параметр 'SERVER_SUBNET' отсутствует в конфигурации. Проверьте файл params.json.")
-
         server_public_key = params['SERVER_PUB_KEY']
         endpoint = f"{params['SERVER_PUB_IP']}:{params['SERVER_PORT']}"
         dns_servers = f"{params['CLIENT_DNS_1']},{params['CLIENT_DNS_2']}"
 
         private_key = generate_private_key()
         logger.debug("Приватный ключ сгенерирован.")
-        public_key = generate_public_key(private_key).decode('utf-8')
+        public_key = generate_public_key(private_key)
         logger.debug("Публичный ключ сгенерирован.")
-        preshared_key = generate_preshared_key().decode('utf-8')
+        preshared_key = generate_preshared_key()
         logger.debug("Пресекретный ключ сгенерирован.")
 
         # Генерация IP-адреса
-        existing_ips, new_ipv4 = generate_ip(config_file, params['SERVER_SUBNET'])
+        existing_ips, new_ipv4 = generate_ip(config_file)
         logger.info(f"Существующие IP: {existing_ips}")
         logger.info(f"IP-адрес сгенерирован: {new_ipv4}")
 
@@ -150,15 +145,15 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
         logger.info(f"QR-код сохранён в {qr_path}")
 
         # Добавление пользователя в конфигурацию сервера
-        add_user_to_server_config(config_file, nickname, public_key, preshared_key, new_ipv4)
+        add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), new_ipv4)
         logger.info("Пользователь добавлен в конфигурацию сервера.")
 
         # Добавление записи пользователя
         user_record = create_user_record(
             username=nickname,
             address=new_ipv4,
-            public_key=public_key,
-            preshared_key=preshared_key,
+            public_key=public_key.decode('utf-8'),
+            preshared_key=preshared_key.decode('utf-8'),
             qr_code_path=qr_path,
             email=email,
             telegram_id=telegram_id
