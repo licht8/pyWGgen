@@ -4,12 +4,8 @@
 
 import sys
 import os
-
-# Добавляем путь к папке проекта
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 import settings
 from modules.config import load_params
 from modules.keygen import generate_private_key, generate_public_key, generate_preshared_key
@@ -18,13 +14,9 @@ from modules.config_writer import add_user_to_server_config
 from modules.qr_generator import generate_qr_code
 from modules.directory_setup import setup_directories
 from modules.client_config import create_client_config
-from modules.main_registration_fields import create_user_record  # Подключаем новую функцию
+from modules.main_registration_fields import create_user_record
 import subprocess
 import logging
-
-
-
-
 
 # Настройка логгера
 logging.basicConfig(
@@ -37,6 +29,8 @@ DEBUG_EMOJI = "🐛"
 INFO_EMOJI = "ℹ️"
 WARNING_EMOJI = "⚠️"
 ERROR_EMOJI = "❌"
+WG_EMOJI = "🌐"
+FIREWALL_EMOJI = "🛡️"
 
 class EmojiLoggerAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
@@ -52,70 +46,86 @@ class EmojiLoggerAdapter(logging.LoggerAdapter):
 
 logger = EmojiLoggerAdapter(logging.getLogger(__name__), {})
 
-def load_existing_users():
+def restart_wireguard(interface="wg0"):
     """
-    Загружает список существующих пользователей из базы данных.
+    Перезапускает WireGuard и показывает его статус.
     """
-    user_records_path = os.path.join("user", "data", "user_records.json")
-    if os.path.exists(user_records_path):
-        with open(user_records_path, "r", encoding="utf-8") as file:
-            try:
-                user_data = json.load(file)
-                return {user.lower(): user_data[user] for user in user_data}  # Нормализуем имена
-            except json.JSONDecodeError:
-                logger.warning("Ошибка чтения базы данных пользователей, будет создана новая.")
-                return {}
-    return {}
+    try:
+        subprocess.run(["sudo", "systemctl", "restart", f"wg-quick@{interface}"], check=True)
+        logger.info(f"WireGuard {interface} успешно перезапущен.")
 
-def add_user_record(user_record):
+        # Получение статуса WireGuard
+        wg_status = subprocess.check_output(["sudo", "systemctl", "status", f"wg-quick@{interface}"]).decode()
+        for line in wg_status.splitlines():
+            if "Active:" in line:
+                logger.info(f"{WG_EMOJI}  {line.strip()}")
+
+        # Вывод состояния firewall
+        firewall_status = subprocess.check_output(["sudo", "firewall-cmd", "--list-ports"]).decode()
+        logger.info(f"{FIREWALL_EMOJI}  {firewall_status.strip()}")
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Ошибка перезапуска WireGuard: {e}")
+
+def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A"):
     """
-    Сохраняет запись о пользователе в JSON-файл.
+    Генерация конфигурации пользователя и QR-кода.
     """
-    logger.info(f"Добавление записи пользователя {user_record['username']} в базу данных.")
-    user_records_path = os.path.join("user", "data", "user_records.json")
+    logger.info(f"Начало генерации конфигурации для пользователя: {nickname}")
+    server_public_key = params['SERVER_PUB_KEY']
+    endpoint = f"{params['SERVER_PUB_IP']}:{params['SERVER_PORT']}"
+    dns_servers = f"{params['CLIENT_DNS_1']},{params['CLIENT_DNS_2']}"
 
-    # Загружаем существующие записи
-    if os.path.exists(user_records_path):
-        with open(user_records_path, "r", encoding="utf-8") as file:
-            try:
-                user_data = json.load(file)
-            except json.JSONDecodeError:
-                logger.warning("Ошибка чтения базы данных пользователей, будет создана новая.")
-                user_data = {}
-    else:
-        user_data = {}
+    private_key = generate_private_key()
+    logger.debug("Приватный ключ сгенерирован.")
+    public_key = generate_public_key(private_key).decode()
+    logger.debug("Публичный ключ сгенерирован.")
+    preshared_key = generate_preshared_key().decode()
+    logger.debug("Пресекретный ключ сгенерирован.")
 
-    # Проверяем, чтобы не было дубликатов
-    if user_record["username"] in user_data:
-        logger.error(f"Пользователь с именем '{user_record['username']}' уже существует в базе данных.")
-        raise ValueError(f"Пользователь с именем '{user_record['username']}' уже существует.")
+    # Генерация IP-адреса
+    address, new_ipv4 = generate_ip(config_file)
+    logger.info(f"IP-адрес сгенерирован: {address}")
 
-    # Добавляем новую запись
-    user_data[user_record["username"]] = user_record
+    # Генерация конфигурации клиента
+    client_config = create_client_config(
+        private_key=private_key,
+        address=address,
+        dns_servers=dns_servers,
+        server_public_key=server_public_key,
+        preshared_key=preshared_key,
+        endpoint=endpoint
+    )
+    logger.debug("Конфигурация клиента создана.")
 
-    # Сохраняем обновленные данные
-    os.makedirs(os.path.dirname(user_records_path), exist_ok=True)
-    with open(user_records_path, "w", encoding="utf-8") as file:
-        json.dump(user_data, file, indent=4)
-    logger.info(f"Данные пользователя {user_record['username']} успешно добавлены в {user_records_path}")
+    config_path = os.path.join(settings.WG_CONFIG_DIR, f"{nickname}.conf")
+    qr_path = os.path.join(settings.QR_CODE_DIR, f"{nickname}.png")
+
+    # Сохраняем конфигурацию
+    os.makedirs(settings.WG_CONFIG_DIR, exist_ok=True)
+    with open(config_path, "w") as file:
+        file.write(client_config)
+    logger.info(f"Конфигурация клиента сохранена в {config_path}")
+
+    # Генерация QR-кода
+    generate_qr_code(client_config, qr_path)
+    logger.info(f"QR-код сохранён в {qr_path}")
+
+    # Добавление пользователя в конфигурацию сервера
+    add_user_to_server_config(config_file, nickname, public_key, preshared_key, address)
+    logger.info("Пользователь добавлен в конфигурацию сервера.")
+
+    return config_path, qr_path
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        logger.error("Недостаточно аргументов. Использование: python3 main.py <nickname> [email] [telegram_id] [referral_id] [coupon_id]")
+        logger.error("Недостаточно аргументов. Использование: python3 main.py <nickname> [email] [telegram_id]")
         sys.exit(1)
 
     nickname = sys.argv[1]
     email = sys.argv[2] if len(sys.argv) > 2 else "N/A"
     telegram_id = sys.argv[3] if len(sys.argv) > 3 else "N/A"
-    referral_id = sys.argv[4] if len(sys.argv) > 4 else None
-    coupon_id = sys.argv[5] if len(sys.argv) > 5 else None
     params_file = settings.PARAMS_FILE
-
-    # Проверка существующего пользователя
-    existing_users = load_existing_users()
-    if nickname.lower() in existing_users:
-        logger.error(f"Пользователь с именем '{nickname}' уже существует в базе данных.")
-        sys.exit(1)
 
     try:
         logger.info("Инициализация директорий.")
@@ -126,29 +136,11 @@ if __name__ == "__main__":
 
         logger.info("Генерация конфигурации пользователя.")
         config_file = settings.SERVER_CONFIG_FILE
-        private_key = generate_private_key()
-        public_key = generate_public_key(private_key).decode()
-        preshared_key = generate_preshared_key().decode()
-        address, _ = generate_ip(config_file)
+        config_path, qr_path = generate_config(nickname, params, config_file, email, telegram_id)
 
-        qr_path = os.path.join(settings.QR_CODE_DIR, f"{nickname}.png")
-        generate_qr_code("dummy_config_for_test", qr_path)  # Здесь замените на реальную конфигурацию
-
-        user_record = create_user_record(
-            username=nickname,
-            address=address,
-            public_key=public_key,
-            preshared_key=preshared_key,
-            qr_code_path=qr_path,
-            email=email,
-            telegram_id=telegram_id,
-            referral_id=referral_id,
-            coupon_id=coupon_id
-        )
-
-        add_user_record(user_record)
-
-        logger.info(f"✅ Конфигурация сохранена.")
+        logger.info(f"✅ Конфигурация сохранена в {config_path}")
         logger.info(f"✅ QR-код сохранён в {qr_path}")
+        restart_wireguard(params['SERVER_WG_NIC'])
+
     except Exception as e:
         logger.error(f"Ошибка выполнения: {e}")
