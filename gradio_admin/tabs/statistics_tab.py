@@ -27,6 +27,14 @@ def prepare_user_choices(show_inactive=True):
     return user_choices
 
 
+def filter_user_choices(search_query, show_inactive):
+    """Фильтрует список пользователей на основе ввода."""
+    choices = prepare_user_choices(show_inactive)
+    if search_query:
+        choices = [choice for choice in choices if search_query.lower() in choice.lower()]
+    return {"choices": choices, "value": None}
+
+
 def get_user_info(selected_user):
     """Возвращает подробную информацию о пользователе."""
     if not selected_user:
@@ -77,27 +85,33 @@ def statistics_tab():
             delete_button = gr.Button("Delete")
             archive_button = gr.Button("Archive")
 
-        # Выпадающее меню выбора пользователя
-        user_dropdown = gr.Dropdown(
-            choices=prepare_user_choices(),
-            label="Введите имя пользователя или выберите из списка",
-            interactive=True,
-            value=None,  # По умолчанию пользователь не выбран
-            allow_custom_value=False  # Исключает произвольные значения
-        )
+        # Поле поиска и выпадающее меню
+        with gr.Row():
+            search_box = gr.Textbox(
+                label="Начните вводить тут",
+                placeholder="Введите имя пользователя для поиска...",
+                interactive=True
+            )
+            user_dropdown = gr.Dropdown(
+                choices=prepare_user_choices(),
+                label="Результаты поиска пользователей",
+                interactive=True,
+                value=None
+            )
 
         # Логика обновления и действий
-        def update_user_choices(show_inactive):
-            """Обновляет список пользователей."""
-            choices = prepare_user_choices(show_inactive)
-            # Сбрасываем выбор пользователя после обновления
-            if not choices:
-                return {"choices": choices, "value": None}
-            return {"choices": choices, "value": None}
+        def update_user_choices(search_query, show_inactive):
+            """Фильтрует список пользователей на основе ввода."""
+            return filter_user_choices(search_query, show_inactive)
 
         refresh_button.click(
-            fn=update_user_choices,
+            fn=lambda show_inactive: {"choices": prepare_user_choices(show_inactive), "value": None},
             inputs=[show_inactive_checkbox],
+            outputs=user_dropdown
+        )
+        search_box.change(
+            fn=update_user_choices,
+            inputs=[search_box, show_inactive_checkbox],
             outputs=user_dropdown
         )
         user_dropdown.change(
