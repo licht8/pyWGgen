@@ -17,8 +17,8 @@ def load_user_records():
         return json.load(f)
 
 
-def update_table(show_inactive=True):
-    """Создает таблицу для отображения в Gradio."""
+def update_table_with_buttons(show_inactive=True):
+    """Создает таблицу с кнопками для отображения в Gradio."""
     user_records = load_user_records()
     table = []
 
@@ -34,10 +34,16 @@ def update_table(show_inactive=True):
             user.get("user_id", "N/A")  # Добавляем user_id для идентификации
         ])
 
-    return pd.DataFrame(
+    df = pd.DataFrame(
         table,
         columns=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $", "UID"]
     )
+
+    # Добавляем кнопки в таблицу
+    df["Action"] = df["UID"].apply(
+        lambda uid: f"<button class='select-button' onclick='setUserID(\"{uid}\")'>Select</button>"
+    )
+    return df
 
 
 def statistics_tab():
@@ -56,7 +62,7 @@ def statistics_tab():
             selected_user_info = gr.Textbox(
                 label="User Information",
                 interactive=False,
-                value="Use search or select a row from the table to view user details.",
+                value="Use the 'Select' button in the table to view user details.",
             )
 
         # Кнопки действий
@@ -68,18 +74,15 @@ def statistics_tab():
         with gr.Row():
             search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...")
 
-        # Таблица с данными
+        # Таблица с кнопками
         with gr.Row():
-            stats_table = gr.Dataframe(
-                headers=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $", "UID"],
-                value=update_table(show_inactive=True),
-                interactive=True,  # Таблица интерактивная
-            )
+            stats_table = gr.HTML(value=update_table_with_buttons(show_inactive=True).to_html(escape=False, index=False))
 
         # Функция обновления таблицы
         def refresh_table(show_inactive):
             """Обновляет данные таблицы в зависимости от чекбокса."""
-            return update_table(show_inactive)
+            df = update_table_with_buttons(show_inactive)
+            return df.to_html(escape=False, index=False)
 
         refresh_button.click(
             fn=refresh_table,
@@ -90,12 +93,12 @@ def statistics_tab():
         # Поиск и обновление таблицы
         def search_and_update_table(query, show_inactive):
             """Фильтрует данные таблицы по запросу в поиске."""
-            table = update_table(show_inactive)
+            table = update_table_with_buttons(show_inactive)
             if query.strip():
                 table = table[table.apply(
                     lambda row: query.lower() in row.to_string().lower(), axis=1
                 )]
-            return table
+            return table.to_html(escape=False, index=False)
 
         search_input.change(
             fn=search_and_update_table,
@@ -103,39 +106,24 @@ def statistics_tab():
             outputs=[stats_table]
         )
 
-        # Обработка выбора строки через событие редактирования
-        def show_user_info(dataframe):
-            """Показывает информацию о выбранном пользователе."""
-            if dataframe.empty:
-                return "Use search or select a row from the table to view user details."
+        # Получение информации о пользователе через кнопку
+        def show_user_info_by_uid(uid):
+            """Показывает информацию о пользователе по UID."""
+            user_records = load_user_records()
+            user_info = next(
+                (info for info in user_records.values() if info.get("user_id") == uid),
+                None
+            )
 
-            try:
-                # Выбор последней строки в таблице
-                selected_row = dataframe.iloc[-1]  # Последняя строка
+            if not user_info:
+                return f"No detailed information found for UID: {uid}"
 
-                # Логируем выбор
-                selected_uid = selected_row["UID"]
-                print(f"Selected User ID: {selected_uid}")
+            user_details = json.dumps(user_info, indent=4, ensure_ascii=False)
+            return user_details
 
-                # Поиск информации о пользователе
-                user_records = load_user_records()
-                user_info = next(
-                    (info for info in user_records.values() if info.get("user_id") == selected_uid),
-                    None
-                )
-
-                if not user_info:
-                    return f"No detailed information found for UID: {selected_uid}"
-
-                # Форматирование данных для вывода
-                user_details = json.dumps(user_info, indent=4, ensure_ascii=False)
-                return user_details
-            except Exception as e:
-                return f"Error processing user information: {str(e)}"
-
-        # Используем событие change, чтобы отслеживать изменения в таблице
+        # Кнопка для получения данных о пользователе
         stats_table.change(
-            fn=show_user_info,
+            fn=show_user_info_by_uid,
             inputs=[stats_table],
             outputs=[selected_user_info]
         )
