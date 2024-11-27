@@ -25,8 +25,8 @@ def save_users(users):
 # Функция для отображения данных выбранного пользователя
 def get_user_details(username):
     users = load_users()
-    if users.empty or username not in users["username"].values:
-        return pd.DataFrame(), "Пользователь не найден."
+    if username == "username" or users.empty or username not in users["username"].values:
+        return pd.DataFrame(), "Выберите пользователя, чтобы увидеть данные."
 
     user_data = users[users["username"] == username].transpose()
     user_data.columns = ["Данные"]  # Для удобного отображения в таблице
@@ -47,8 +47,8 @@ def filter_usernames(input_text):
 # Функции управления пользователями
 def block_unblock_user(username):
     users = load_users()
-    if users.empty or username not in users["username"].values:
-        return "Пользователь не найден."
+    if username == "username" or users.empty or username not in users["username"].values:
+        return "Выберите корректного пользователя."
 
     user_status = users.loc[users["username"] == username, "status"].iloc[0]
     new_status = "inactive" if user_status == "active" else "active"
@@ -58,8 +58,8 @@ def block_unblock_user(username):
 
 def delete_user(username):
     users = load_users()
-    if users.empty or username not in users["username"].values:
-        return "Пользователь не найден."
+    if username == "username" or users.empty or username not in users["username"].values:
+        return "Выберите корректного пользователя."
 
     users = users[users["username"] != username]
     save_users(users)
@@ -67,8 +67,8 @@ def delete_user(username):
 
 def archive_user(username):
     users = load_users()
-    if users.empty or username not in users["username"].values:
-        return "Пользователь не найден."
+    if username == "username" or users.empty or username not in users["username"].values:
+        return "Выберите корректного пользователя."
 
     users.loc[users["username"] == username, "status"] = "archived"
     save_users(users)
@@ -76,10 +76,6 @@ def archive_user(username):
 
 # Интерфейс вкладки
 def statistics_tab():
-    # Загружаем список пользователей при инициализации
-    users = load_users()
-    initial_usernames = users["username"].tolist() if not users.empty else ["Нет пользователей"]
-
     with gr.Blocks(css="""
         .gr-table-container { 
             overflow-x: auto; 
@@ -104,12 +100,12 @@ def statistics_tab():
 
         # Поле для ввода текста для фильтрации пользователей
         user_input = gr.Textbox(
-            placeholder="Введите имя пользователя или выберите его из списка",
+            placeholder="Введите имя пользователя для поиска",
             label="Поиск пользователя"
         )
 
-        # Динамическое выпадающее меню
-        user_dropdown = gr.Dropdown(choices=initial_usernames, label="Выберите пользователя")
+        # Динамическое выпадающее меню с placeholder
+        user_dropdown = gr.Dropdown(choices=["username"], label="Выберите пользователя")
 
         # Таблица для отображения данных выбранного пользователя
         user_table = gr.DataFrame(
