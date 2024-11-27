@@ -120,7 +120,8 @@ def statistics_tab():
         # Связывание компонентов
         def update_user_choices(show_inactive):
             print("[DEBUG] Обновление списка пользователей...")
-            return gr.Dropdown.update(choices=prepare_user_choices(show_inactive))
+            choices = prepare_user_choices(show_inactive)
+            return {"choices": choices}
 
         refresh_button.click(update_user_choices, inputs=[show_inactive_checkbox], outputs=user_dropdown)
         user_dropdown.change(get_user_info, inputs=[user_dropdown], outputs=user_info_box)
