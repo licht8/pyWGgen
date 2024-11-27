@@ -5,16 +5,17 @@
 import os
 import subprocess
 from datetime import datetime
-from modules.utils import read_json, write_json, get_wireguard_config_path
+from modules.utils import read_json, write_json, get_wireguard_config_path, check_wireguard_status
 
 # Функция для логирования (аналог log_debug)
-def log_debug(message):
+def log_debug(message, level="DEBUG"):
     """
     Простая функция для вывода сообщений в консоль с временем в формате с миллисекундами.
     :param message: Сообщение для вывода.
+    :param level: Уровень сообщения ("INFO", "DEBUG", "ERROR").
     """
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]  # Оставляем миллисекунды
-    print(f"{timestamp} - DEBUG    ℹ️  {message}")
+    print(f"{timestamp} - {level:<8} ℹ️  {message}")
 
 def delete_user(username):
     """
@@ -22,6 +23,17 @@ def delete_user(username):
     :param username: Имя пользователя для удаления.
     :return: Сообщение о результате операции.
     """
+    log_debug("---------- Процесс 🔥 удаления пользователя ----------", level="INFO")
+
+    # Проверка статуса WireGuard перед началом
+    wg_status = check_wireguard_status()
+    if not wg_status["active"]:
+        log_debug("❌ WireGuard неактивен. Удаление невозможно.", level="ERROR")
+        return "❌ WireGuard неактивен. Проверьте состояние сервера."
+
+    log_debug(f"🌐 WireGuard активен: {wg_status['status']}", level="INFO")
+    log_debug(f"🛡️ Открытые порты: {wg_status['ports']}", level="INFO")
+
     base_dir = os.getcwd()
     user_records_path = os.path.join(base_dir, "user", "data", "user_records.json")
     wg_config_path = get_wireguard_config_path()
@@ -29,7 +41,7 @@ def delete_user(username):
     log_debug(f"➡️ Начинаем удаление пользователя: '{username}'.")
 
     if not os.path.exists(user_records_path):
-        log_debug(f"❌ Файл данных пользователей не найден: {user_records_path}")
+        log_debug(f"❌ Файл данных пользователей не найден: {user_records_path}", level="ERROR")
         return "❌ Ошибка: файл данных пользователей отсутствует."
 
     try:
@@ -38,7 +50,7 @@ def delete_user(username):
         log_debug(f"📂 Данные пользователей успешно загружены.")
 
         if username not in user_data:
-            log_debug(f"❌ Пользователь '{username}' не найден в данных.")
+            log_debug(f"❌ Пользователь '{username}' не найден в данных.", level="ERROR")
             return f"❌ Пользователь '{username}' не существует."
 
         # Удаление записи пользователя
@@ -50,7 +62,7 @@ def delete_user(username):
         # Извлечение публичного ключа пользователя
         public_key = extract_public_key(username, wg_config_path)
         if not public_key:
-            log_debug(f"❌ Публичный ключ пользователя '{username}' не найден в конфигурации WireGuard.")
+            log_debug(f"❌ Публичный ключ пользователя '{username}' не найден в конфигурации WireGuard.", level="ERROR")
             return f"❌ Публичный ключ пользователя '{username}' отсутствует."
 
         # Удаление пользователя из WireGuard
@@ -61,9 +73,10 @@ def delete_user(username):
         remove_peer_from_config(public_key, wg_config_path, username)
         log_debug(f"✅ Конфигурация WireGuard успешно обновлена.")
 
+        log_debug("---------- Процесс 🔥 удаления пользователя завершен ----------", level="INFO")
         return f"✅ Пользователь '{username}' успешно удалён."
     except Exception as e:
-        log_debug(f"⚠️ Ошибка при удалении пользователя '{username}': {str(e)}")
+        log_debug(f"⚠️ Ошибка при удалении пользователя '{username}': {str(e)}", level="ERROR")
         return f"❌ Ошибка при удалении пользователя '{username}': {str(e)}"
 
 def extract_public_key(username, config_path):
@@ -86,10 +99,10 @@ def extract_public_key(username, config_path):
                 public_key = line.split("=", 1)[1].strip()
                 log_debug(f"🔑 Найден публичный ключ для '{username}': {public_key}")
                 return public_key
-        log_debug(f"❌ Публичный ключ для '{username}' не найден.")
+        log_debug(f"❌ Публичный ключ для '{username}' не найден.", level="ERROR")
         return None
     except Exception as e:
-        log_debug(f"⚠️ Ошибка при поиске публичного ключа: {str(e)}")
+        log_debug(f"⚠️ Ошибка при поиске публичного ключа: {str(e)}", level="ERROR")
         return None
 
 def remove_peer_from_config(public_key, config_path, client_name):
@@ -131,4 +144,4 @@ def remove_peer_from_config(public_key, config_path, client_name):
 
         log_debug(f"✅ Конфигурация пользователя '{client_name}' удалена.")
     except Exception as e:
-        log_debug(f"⚠️ Ошибка при обновлении конфигурации: {str(e)}")
+        log_debug(f"⚠️ Ошибка при обновлении конфигурации: {str(e)}", level="ERROR")
