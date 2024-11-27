@@ -5,7 +5,7 @@
 import os
 import subprocess
 from datetime import datetime
-from modules.utils import read_json, write_json, get_wireguard_config_path, check_wireguard_status
+from modules.utils import read_json, write_json, get_wireguard_config_path
 
 # Функция для логирования (аналог log_debug)
 def log_debug(message):
@@ -24,15 +24,6 @@ def delete_user(username):
     """
     log_debug("---------- Процесс 🔥 удаления пользователя ----------")
 
-    # Проверка статуса WireGuard перед началом
-    wg_status = check_wireguard_status()
-    if not wg_status["active"]:
-        log_debug("❌ WireGuard неактивен. Удаление невозможно.")
-        return "❌ WireGuard неактивен. Проверьте состояние сервера."
-
-    log_debug(f"🌐 WireGuard активен: {wg_status['status']}")
-    log_debug(f"🛡️ Открытые порты: {wg_status['ports']}")
-
     base_dir = os.getcwd()
     user_records_path = os.path.join(base_dir, "user", "data", "user_records.json")
     wg_config_path = get_wireguard_config_path()
@@ -41,6 +32,7 @@ def delete_user(username):
 
     if not os.path.exists(user_records_path):
         log_debug(f"❌ Файл данных пользователей не найден: {user_records_path}")
+        log_debug("---------- Процесс 🔥 удаления пользователя завершен ----------")
         return "❌ Ошибка: файл данных пользователей отсутствует."
 
     try:
@@ -50,6 +42,7 @@ def delete_user(username):
 
         if username not in user_data:
             log_debug(f"❌ Пользователь '{username}' не найден в данных.")
+            log_debug("---------- Процесс 🔥 удаления пользователя завершен ----------")
             return f"❌ Пользователь '{username}' не существует."
 
         # Удаление записи пользователя
@@ -62,6 +55,7 @@ def delete_user(username):
         public_key = extract_public_key(username, wg_config_path)
         if not public_key:
             log_debug(f"❌ Публичный ключ пользователя '{username}' не найден в конфигурации WireGuard.")
+            log_debug("---------- Процесс 🔥 удаления пользователя завершен ----------")
             return f"❌ Публичный ключ пользователя '{username}' отсутствует."
 
         # Удаление пользователя из WireGuard
@@ -76,6 +70,7 @@ def delete_user(username):
         return f"✅ Пользователь '{username}' успешно удалён."
     except Exception as e:
         log_debug(f"⚠️ Ошибка при удалении пользователя '{username}': {str(e)}")
+        log_debug("---------- Процесс 🔥 удаления пользователя завершен ----------")
         return f"❌ Ошибка при удалении пользователя '{username}': {str(e)}"
 
 def extract_public_key(username, config_path):
