@@ -21,13 +21,10 @@ def load_data(show_inactive=True):
             continue
         table.append({
             "username": user_info.get("username", "N/A"),
-            "email": user_info.get("email", "N/A"),
-            "telegram_id": user_info.get("telegram_id", "N/A"),
-            "allowed_ips": user_info.get("allowed_ips", "N/A"),
             "data_used": user_info.get("data_used", "0.0 KiB"),
             "data_limit": user_info.get("data_limit", "100.0 GB"),
             "status": user_info.get("status", "inactive"),
-            "subscription_plan": user_info.get("subscription_plan", "free"),
+            "subscription_price": user_info.get("subscription_price", "0.00 USD"),
         })
     return table
 
@@ -39,25 +36,13 @@ def update_table(show_inactive):
     for user in users:
         formatted_rows.append([
             user["username"],
-            user["email"],
-            user["telegram_id"],
-            user["allowed_ips"],
             user["data_used"],
             user["data_limit"],
             user["status"],
-            user["subscription_plan"],
+            user["subscription_price"],
         ])
 
     return pd.DataFrame(
         formatted_rows,
-        columns=[
-            "👤 Username",
-            "📧 Email",
-            "📱 Telegram",
-            "🔗 Allowed IPs",
-            "📊 Data Used",
-            "📦 Data Limit",
-            "⚡ Status",
-            "💳 Plan",
-        ]
+        columns=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $"]
     )
