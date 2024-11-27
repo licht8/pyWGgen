@@ -40,8 +40,8 @@ def get_user_info(selected_user):
     """Возвращает подробную информацию о пользователе."""
     print(f"[DEBUG] Запрос информации о выбранном пользователе: {selected_user}")
     if not selected_user:
-        print("[WARNING] Пользователь не выбран.")
-        return "No user selected"
+        print("[INFO] Пользователь не выбран.")
+        return "Введите имя пользователя в поле выше или выберите из выпадающего списка. После выбора появится информация о пользователе."
 
     user_id = selected_user.split("(")[-1].strip(")")
     user_records = load_user_records()
@@ -51,49 +51,14 @@ def get_user_info(selected_user):
             return json.dumps(user, indent=4)
     
     print("[WARNING] Пользователь не найден.")
-    return "User not found."
+    return "Пользователь не найден. Проверьте ввод."
 
 
-def block_user(selected_user):
-    """Блокирует пользователя."""
-    print(f"[DEBUG] Блокировка пользователя: {selected_user}")
+def dummy_action(selected_user):
+    """Заглушка для кнопок."""
     if not selected_user:
-        print("[WARNING] Невозможно заблокировать: пользователь не выбран.")
-        return "No user selected"
-
-    user_id = selected_user.split("(")[-1].strip(")")
-    user_records = load_user_records()
-    for username, user in user_records.items():
-        if user.get("user_id") == user_id:
-            user["status"] = "blocked"
-            with open(USER_DB_PATH, "w") as f:
-                json.dump(user_records, f, indent=4)
-            print(f"[DEBUG] Пользователь {username} заблокирован.")
-            return f"User {username} blocked."
-    
-    print("[WARNING] Пользователь для блокировки не найден.")
-    return "User not found."
-
-
-def delete_user(selected_user):
-    """Удаляет пользователя."""
-    print(f"[DEBUG] Удаление пользователя: {selected_user}")
-    if not selected_user:
-        print("[WARNING] Невозможно удалить: пользователь не выбран.")
-        return "No user selected"
-
-    user_id = selected_user.split("(")[-1].strip(")")
-    user_records = load_user_records()
-    for username, user in list(user_records.items()):
-        if user.get("user_id") == user_id:
-            del user_records[username]
-            with open(USER_DB_PATH, "w") as f:
-                json.dump(user_records, f, indent=4)
-            print(f"[DEBUG] Пользователь {username} удален.")
-            return f"User {username} deleted."
-    
-    print("[WARNING] Пользователь для удаления не найден.")
-    return "User not found."
+        return "Пожалуйста, выберите пользователя для выполнения действий."
+    return f"Действие для пользователя: {selected_user}"
 
 
 def statistics_tab():
@@ -101,21 +66,31 @@ def statistics_tab():
     with gr.Tab("🔍 Statistics"):
         gr.Markdown("## Управление пользователями WireGuard")
 
-        # Фильтры
+        # Фильтры и кнопка обновления
         with gr.Row():
             show_inactive_checkbox = gr.Checkbox(label="Show inactive users", value=True)
             refresh_button = gr.Button("Refresh List")
 
         # Выбор пользователя
-        user_dropdown = gr.Dropdown(choices=prepare_user_choices(), label="Выберите пользователя")
+        user_dropdown = gr.Dropdown(
+            choices=prepare_user_choices(),
+            label="Введите имя пользователя или выберите из списка",
+            interactive=True
+        )
 
         # Подробная информация
-        user_info_box = gr.Textbox(label="Информация о пользователе", lines=10, interactive=False)
+        user_info_box = gr.Textbox(
+            label="Информация о пользователе",
+            lines=10,
+            interactive=False,
+            value="Введите имя пользователя в поле выше или выберите из выпадающего списка. После выбора появится информация о пользователе."
+        )
 
         # Управление пользователями
         with gr.Row():
             block_button = gr.Button("Block User")
             delete_button = gr.Button("Delete User")
+            archive_button = gr.Button("Archive User")
 
         # Связывание компонентов
         def update_user_choices(show_inactive):
@@ -125,5 +100,6 @@ def statistics_tab():
 
         refresh_button.click(fn=update_user_choices, inputs=[show_inactive_checkbox], outputs=user_dropdown)
         user_dropdown.change(fn=get_user_info, inputs=[user_dropdown], outputs=user_info_box)
-        block_button.click(fn=block_user, inputs=[user_dropdown], outputs=user_info_box)
-        delete_button.click(fn=delete_user, inputs=[user_dropdown], outputs=user_info_box)
+        block_button.click(fn=dummy_action, inputs=[user_dropdown], outputs=user_info_box)
+        delete_button.click(fn=dummy_action, inputs=[user_dropdown], outputs=user_info_box)
+        archive_button.click(fn=dummy_action, inputs=[user_dropdown], outputs=user_info_box)
