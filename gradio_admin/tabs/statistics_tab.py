@@ -30,7 +30,10 @@ def prepare_user_choices(show_inactive=True):
 def get_user_info(selected_user):
     """Возвращает подробную информацию о пользователе."""
     if not selected_user:
-        return "Введите имя пользователя или выберите из списка. После выбора появится информация о пользователе."
+        return (
+            "Начните вводить имя пользователя или выберите его из списка ниже. "
+            "После выбора вы сможете увидеть информацию о пользователе и выполнить действия."
+        )
     
     user_id = selected_user.split("(")[-1].strip(")")
     user_records = load_user_records()
@@ -57,19 +60,15 @@ def statistics_tab():
             show_inactive_checkbox = gr.Checkbox(label="Show inactive users", value=True)
             refresh_button = gr.Button("Refresh")
 
-        # Выпадающее меню выбора пользователя
-        user_dropdown = gr.Dropdown(
-            choices=prepare_user_choices(),
-            label="Введите имя пользователя или выберите из списка",
-            interactive=True
-        )
-
-        # Блок информации о пользователе
+        # Поле информации о пользователе
         user_info_box = gr.Textbox(
             label="Информация о пользователе",
             lines=10,
             interactive=False,
-            value="Введите имя пользователя или выберите из списка. После выбора появится информация о пользователе."
+            value=(
+                "Начните вводить имя пользователя или выберите его из списка ниже. "
+                "После выбора вы сможете увидеть информацию о пользователе и выполнить действия."
+            )
         )
 
         # Блок кнопок действий
@@ -77,6 +76,14 @@ def statistics_tab():
             block_button = gr.Button("Block")
             delete_button = gr.Button("Delete")
             archive_button = gr.Button("Archive")
+
+        # Выпадающее меню выбора пользователя
+        user_dropdown = gr.Dropdown(
+            choices=prepare_user_choices(),
+            label="Введите имя пользователя или выберите из списка",
+            interactive=True,
+            value=None  # По умолчанию пользователь не выбран
+        )
 
         # Логика обновления и действий
         def update_user_choices(show_inactive):
