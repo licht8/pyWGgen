@@ -17,19 +17,13 @@ def load_users():
     return users
 
 # Функция для получения списка пользователей
-def get_user_list(input_text=""):
+def get_user_list():
     users = load_users()
-    if users.empty:
-        return ["Нет пользователей"]
-
-    if input_text:
-        filtered_usernames = users["username"][users["username"].str.contains(input_text, case=False)].tolist()
-        return filtered_usernames if filtered_usernames else ["Нет совпадений"]
-    return users["username"].tolist()
+    return users["username"].tolist() if not users.empty else ["Нет пользователей"]
 
 # Функция для отображения данных выбранного пользователя
 def get_user_details(username):
-    if username in ["username", "Нет пользователей", "Нет совпадений"]:
+    if username in ["Нет пользователей", "Нет совпадений"]:
         return pd.DataFrame(), "Выберите пользователя, чтобы увидеть данные."
 
     users = load_users()
@@ -37,15 +31,14 @@ def get_user_details(username):
         return pd.DataFrame(), "Пользователь не найден."
 
     user_data = users[users["username"] == username].transpose()
-    user_data.columns = ["Данные"]  # Для удобного отображения в таблице
+    user_data.columns = ["Данные"]
     user_data.reset_index(inplace=True)
     user_data.rename(columns={"index": "Поле"}, inplace=True)
-
     return user_data[["Поле", "Данные"]], None
 
 # Функции управления пользователями
 def block_unblock_user(username):
-    if username in ["username", "Нет пользователей", "Нет совпадений"]:
+    if username in ["Нет пользователей", "Нет совпадений"]:
         return "Выберите корректного пользователя."
 
     users = load_users()
@@ -60,7 +53,7 @@ def block_unblock_user(username):
     return f"Пользователь {username} {'заблокирован' if new_status == 'inactive' else 'разблокирован'}."
 
 def delete_user(username):
-    if username in ["username", "Нет пользователей", "Нет совпадений"]:
+    if username in ["Нет пользователей", "Нет совпадений"]:
         return "Выберите корректного пользователя."
 
     users = load_users()
@@ -73,7 +66,7 @@ def delete_user(username):
     return f"Пользователь {username} удален."
 
 def archive_user(username):
-    if username in ["username", "Нет пользователей", "Нет совпадений"]:
+    if username in ["Нет пользователей", "Нет совпадений"]:
         return "Выберите корректного пользователя."
 
     users = load_users()
@@ -109,11 +102,8 @@ def statistics_tab():
     """) as tab:
         gr.Markdown("# Управление пользователями")
 
-        # Поле для поиска пользователя
-        user_input = gr.Textbox(placeholder="Введите имя пользователя для поиска", label="Поиск пользователя")
-
         # Выпадающее меню с пользователями
-        user_dropdown = gr.Dropdown(choices=["username"], label="Выберите пользователя")
+        user_dropdown = gr.Dropdown(choices=get_user_list(), label="Выберите пользователя")
 
         # Таблица для отображения данных выбранного пользователя
         user_table = gr.DataFrame(headers=["Поле", "Данные"], interactive=False, label="Данные пользователя")
@@ -126,12 +116,6 @@ def statistics_tab():
 
         # Вывод сообщений
         action_output = gr.Textbox(label="Результат действия", interactive=False)
-
-        # Логика обновления Dropdown при поиске
-        def update_dropdown(input_text):
-            return gr.Dropdown.update(choices=get_user_list(input_text))
-
-        user_input.change(update_dropdown, inputs=user_input, outputs=user_dropdown)
 
         # Логика выбора пользователя
         user_dropdown.change(get_user_details, inputs=user_dropdown, outputs=[user_table, action_output])
