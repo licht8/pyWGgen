@@ -98,12 +98,14 @@ def statistics_tab():
         def filter_table(search_query, show_inactive):
             df = prepare_table_data(show_inactive)
             if search_query:
-                df = df[df.apply(lambda row: search_query.lower() in row.to_string().lower(), axis=1)]
+                df = df[df.apply(lambda row: search_query.lower() in str(row).lower(), axis=1)]
             return df
 
         def select_user(row_data):
             """Возвращает ID выбранного пользователя."""
-            return row_data["UID"]
+            if row_data:
+                return row_data.get("UID", "N/A")
+            return "No user selected"
 
         refresh_button.click(lambda: prepare_table_data(), outputs=user_table)
         search_box.change(lambda q, show: filter_table(q, show), inputs=[search_box, show_inactive_checkbox], outputs=user_table)
