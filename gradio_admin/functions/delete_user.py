@@ -12,7 +12,7 @@ from modules.utils import read_json, write_json, get_wireguard_config_path
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s - %(levelname)-8s ℹ️  %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S,%f"
+    datefmt="%Y-%m-%d %H:%M:%S"
 )
 
 
