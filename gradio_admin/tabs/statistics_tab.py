@@ -129,8 +129,8 @@ def statistics_tab():
 
         def select_user(row_data):
             """Возвращает ID выбранного пользователя."""
+            print(f"[DEBUG] Получены данные строки: {row_data}")
             if row_data:
-                print(f"[DEBUG] Выбран пользователь с данными: {row_data}")
                 return row_data.get("UID", "No user selected")
             print("[WARNING] Пользователь не выбран.")
             return "No user selected"
