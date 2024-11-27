@@ -101,8 +101,11 @@ def statistics_tab():
 
         # Логика обновления и действий
         def update_user_choices(search_query, show_inactive):
-            """Фильтрует список пользователей на основе ввода."""
-            return filter_user_choices(search_query, show_inactive)
+            """Обновляет список пользователей и сбрасывает выбор."""
+            choices = prepare_user_choices(show_inactive)
+            if search_query:
+                choices = [choice for choice in choices if search_query.lower() in choice.lower()]
+            return {"choices": choices, "value": None}
 
         refresh_button.click(
             fn=lambda show_inactive: {"choices": prepare_user_choices(show_inactive), "value": None},
