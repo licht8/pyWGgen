@@ -54,7 +54,7 @@ def load_existing_users():
                 user_data = json.load(file)
                 return {user.lower(): user_data[user] for user in user_data}  # Нормализуем имена
             except json.JSONDecodeError:
-                logger.warning("Ошибка чтения базы данных пользователей.")
+                logger.warning("Ошибка чтения базы данных пользователей, будет создана новая.")
                 return {}
     return {}
 
@@ -131,19 +131,16 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     logger.info("Пользователь добавлен в конфигурацию сервера.")
 
     # Добавление записи пользователя
-    try:
-        add_user_record(
-            nickname,
-            trial_days=settings.DEFAULT_TRIAL_DAYS,
-            address=address,
-            public_key=public_key.decode('utf-8'),
-            preshared_key=preshared_key.decode('utf-8'),
-            qr_code_path=qr_path,  # Передача переменной qr_path
-            email=email,
-            telegram_id=telegram_id
-        )
-    except Exception as e:
-        logger.error(f"Ошибка добавления записи пользователя: {e}")
+    add_user_record(
+        nickname,
+        trial_days=settings.DEFAULT_TRIAL_DAYS,
+        address=address,
+        public_key=public_key.decode('utf-8'),
+        preshared_key=preshared_key.decode('utf-8'),
+        qr_code_path=qr_path,
+        email=email,
+        telegram_id=telegram_id
+    )
 
     # Перезапуск WireGuard
     restart_wireguard(params['SERVER_WG_NIC'])
@@ -186,7 +183,7 @@ def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr
         "last_handshake": "N/A",  # будет обновляться позже
         "uploaded": "N/A",  # будет обновляться позже
         "downloaded": "N/A",  # будет обновляться позже
-        "qr_code_path": qr_code_path,  # Используем переданную переменную qr_code_path
+        "qr_code_path": qr_code_path,
         "email": email,
         "telegram_id": telegram_id,
         "status": "inactive"
