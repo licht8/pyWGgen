@@ -6,7 +6,6 @@ import gradio as gr
 import pandas as pd
 import json
 import os
-from gradio_admin.functions.table_helpers import update_table
 from settings import USER_DB_PATH  # Путь к JSON с данными пользователей
 
 def load_user_records():
@@ -106,20 +105,9 @@ def statistics_tab():
                 if not user_info:
                     return f"No detailed information found for UID: {user_id}"
 
-                # Форматирование информации с эмодзи
-                details = [
-                    f"👤 **Username**: {user_info.get('username', 'N/A')}",
-                    f"📧 **Email**: {user_info.get('email', 'N/A')}",
-                    f"📱 **Telegram**: {user_info.get('telegram_id', 'N/A')}",
-                    f"🔗 **Allowed IPs**: {user_info.get('allowed_ips', 'N/A')}",
-                    f"📊 **Data Used**: {user_info.get('data_used', '0.0 KiB')}",
-                    f"📦 **Data Limit**: {user_info.get('data_limit', '100.0 GB')}",
-                    f"⚡ **Status**: {user_info.get('status', 'inactive')}",
-                    f"💳 **Subscription Plan**: {user_info.get('subscription_plan', 'free')}",
-                    f"🛠️ **Public Key**: {user_info.get('public_key', 'N/A')}",
-                    f"🔑 **Preshared Key**: {user_info.get('preshared_key', 'N/A')}",
-                ]
-                return "\n".join(details)
+                # Форматирование полной информации
+                user_details = json.dumps(user_info, indent=4, ensure_ascii=False)
+                return user_details
             except Exception as e:
                 return f"Error processing user information: {str(e)}"
 
