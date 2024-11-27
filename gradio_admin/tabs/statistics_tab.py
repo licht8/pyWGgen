@@ -57,22 +57,13 @@ def statistics_tab():
                 value="Select a user to view details.",
             )
 
-        # Кнопки действий
-        with gr.Row():
-            block_button = gr.Button("Block User")
-            delete_button = gr.Button("Delete User")
-
-        # Поле поиска
-        with gr.Row():
-            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...")
-
         # Таблица с данными
         with gr.Row():
             stats_table = gr.Dataframe(
                 headers=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $", "UID"],
                 value=update_table(show_inactive=True),
                 interactive=False,  # Таблица только для чтения
-                wrap=True
+                elem_id="stats-table",  # ID для JavaScript
             )
 
         # Функция обновления таблицы
@@ -86,64 +77,52 @@ def statistics_tab():
             outputs=[stats_table]
         )
 
-        # Поиск и обновление таблицы
-        def search_and_update_table(query, show_inactive):
-            """Фильтрует данные таблицы по запросу в поиске."""
-            table = update_table(show_inactive)
-            if query.strip():
-                table = [
-                    row for row in table if query.lower() in " ".join(map(str, row)).lower()
-                ]
-            return table
+        # Функция для отображения информации о пользователе
+        def show_user_info(user_id):
+            """Показывает информацию о выбранном пользователе."""
+            user_records = load_user_records()
+            user_info = next(
+                (info for info in user_records.values() if info.get("user_id") == user_id), 
+                None
+            )
+            if not user_info:
+                return f"No detailed information found for UID: {user_id}"
 
-        search_input.change(
-            fn=search_and_update_table,
-            inputs=[search_input, show_inactive],
-            outputs=[stats_table]
+            return json.dumps(user_info, indent=4, ensure_ascii=False)
+
+        # Скрипт для обработки кликов
+        with gr.Row():
+            gr.Markdown(
+                """
+                <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const table = document.querySelector("#stats-table");
+                    table.addEventListener("click", function(event) {
+                        const row = event.target.closest("tr");
+                        if (row) {
+                            const uid = row.querySelector("td:last-child").innerText;
+                            console.log("Selected UID:", uid);
+                            const userIdInput = document.querySelector("#user-id-input");
+                            userIdInput.value = uid;
+                            userIdInput.dispatchEvent(new Event("input", { bubbles: true }));
+                        }
+                    });
+                });
+                </script>
+                """, 
+                elem_id="js-handler"
+            )
+
+        # Скрытый компонент для передачи user_id
+        user_id_input = gr.Textbox(
+            label="Hidden UID",
+            elem_id="user-id-input",
+            visible=False
         )
 
-        # Выбор строки и отображение данных пользователя
-        def show_user_info(selected_data):
-            """Показывает информацию о выбранном пользователе."""
-            if selected_data is None or len(selected_data) == 0:
-                return "Select a row from the table to view details."
-
-            try:
-                # Проверяем формат данных
-                if isinstance(selected_data, pd.DataFrame):
-                    # Получаем индекс выбранной строки
-                    selected_index = selected_data.index[0]
-                    user_id = selected_data.iloc[selected_index, -1]  # UID в последнем столбце
-                elif isinstance(selected_data, list):
-                    user_id = selected_data[-1]  # UID в последнем элементе
-                else:
-                    return "[ERROR] Unsupported data format selected."
-
-                # Отладка
-                print("[DEBUG] Selected Index:", selected_index)
-                print("[DEBUG] Extracted UID:", user_id)
-
-                # Поиск информации о пользователе по user_id
-                user_records = load_user_records()
-                user_info = next(
-                    (info for info in user_records.values() if info.get("user_id") == user_id), 
-                    None
-                )
-
-                print("[DEBUG] Found User Info:", user_info)
-
-                if not user_info:
-                    return f"No detailed information found for UID: {user_id}"
-
-                # Форматирование полной информации
-                user_details = json.dumps(user_info, indent=4, ensure_ascii=False)
-                return user_details
-            except Exception as e:
-                print("[ERROR] Exception in show_user_info:", str(e))
-                return f"Error processing user information: {str(e)}"
-
-        stats_table.select(
+        # Отслеживание изменений в `user_id_input`
+        user_id_input.change(
             fn=show_user_info,
-            inputs=[stats_table],
+            inputs=[user_id_input],
             outputs=[selected_user_info]
         )
