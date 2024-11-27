@@ -4,6 +4,10 @@
 
 import sys
 import os
+
+# Добавляем путь к папке проекта
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import json
 from datetime import datetime, timedelta
 import settings
@@ -17,6 +21,10 @@ from modules.client_config import create_client_config
 from modules.main_registration_fields import create_user_record  # Подключаем новую функцию
 import subprocess
 import logging
+
+
+
+
 
 # Настройка логгера
 logging.basicConfig(
