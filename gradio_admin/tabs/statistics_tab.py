@@ -82,12 +82,16 @@ def statistics_tab():
             choices=prepare_user_choices(),
             label="Введите имя пользователя или выберите из списка",
             interactive=True,
-            value=None  # По умолчанию пользователь не выбран
+            value="",  # По умолчанию пользователь не выбран
+            allow_custom_value=False  # Исключает произвольные значения
         )
 
         # Логика обновления и действий
         def update_user_choices(show_inactive):
-            return {"choices": prepare_user_choices(show_inactive), "value": None}
+            """Обновляет список пользователей."""
+            choices = prepare_user_choices(show_inactive)
+            # Возвращаем пустое значение выбора для сброса.
+            return {"choices": choices, "value": ""}
 
         refresh_button.click(update_user_choices, inputs=[show_inactive_checkbox], outputs=user_dropdown)
         user_dropdown.change(get_user_info, inputs=[user_dropdown], outputs=user_info_box)
