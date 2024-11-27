@@ -119,6 +119,14 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     Генерация конфигурации пользователя и QR-кода.
     """
     logger.info(f"Начало генерации конфигурации для пользователя: {nickname}")
+    
+    # Проверяем наличие всех необходимых параметров
+    required_keys = ['SERVER_PUB_KEY', 'SERVER_PUB_IP', 'SERVER_PORT', 'CLIENT_DNS_1', 'CLIENT_DNS_2', 'SERVER_SUBNET']
+    for key in required_keys:
+        if key not in params:
+            logger.error(f"Отсутствует необходимый параметр: {key}")
+            raise KeyError(f"Отсутствует необходимый параметр: {key}")
+
     server_public_key = params['SERVER_PUB_KEY']
     endpoint = f"{params['SERVER_PUB_IP']}:{params['SERVER_PORT']}"
     dns_servers = f"{params['CLIENT_DNS_1']},{params['CLIENT_DNS_2']}"
@@ -179,6 +187,7 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     logger.info("Пользователь добавлен в конфигурацию сервера.")
 
     return config_path, qr_path
+
 
 def add_user_to_server_config(config_file, nickname, public_key, preshared_key, allowed_ip):
     """
