@@ -18,8 +18,8 @@ def load_user_records():
         return json.load(f)
 
 
-def create_table(show_inactive=True):
-    """Создает таблицу для отображения в Gradio."""
+def create_html_table(show_inactive=True):
+    """Создает HTML-таблицу с кнопками для отображения в Gradio."""
     user_records = load_user_records()
     table = []
 
@@ -32,13 +32,47 @@ def create_table(show_inactive=True):
             user.get("data_limit", "100.0 GB"),
             user.get("status", "inactive"),
             user.get("subscription_price", "0.00 USD"),
-            user.get("user_id", "N/A")  # UID для идентификации
+            user.get("user_id", "N/A")  # UID для передачи через кнопку
         ])
 
-    return pd.DataFrame(
+    df = pd.DataFrame(
         table,
         columns=["User", "Used", "Limit", "Status", "Price", "UID"]
     )
+
+    # Генерация HTML с кнопками
+    def row_to_html(row):
+        return f"""
+        <tr>
+            <td>{row['User']}</td>
+            <td>{row['Used']}</td>
+            <td>{row['Limit']}</td>
+            <td>{row['Status']}</td>
+            <td>{row['Price']}</td>
+            <td>
+                <button onclick="setUserID('{row['UID']}')" class="btn btn-sm">View</button>
+            </td>
+        </tr>
+        """
+
+    rows_html = "\n".join(df.apply(row_to_html, axis=1))
+    return f"""
+    <table class="gr-table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Used</th>
+                <th>Limit</th>
+                <th>Status</th>
+                <th>Price</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {rows_html}
+        </tbody>
+    </table>
+    """
 
 
 def statistics_tab():
@@ -57,25 +91,17 @@ def statistics_tab():
             selected_user_info = gr.Textbox(
                 label="User Information",
                 interactive=False,
-                value="Use the 'View' button to select a user.",
+                value="Use the 'View' button in the table to select a user.",
             )
 
-        # Поле поиска
+        # Таблица с пользователями
         with gr.Row():
-            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...")
-
-        # Таблица пользователей (без UID)
-        with gr.Row():
-            user_table = gr.Dataframe(
-                headers=["User", "Used", "Limit", "Status", "Price"],
-                value=create_table(show_inactive=True).drop(columns=["UID"]),
-                interactive=False,
-            )
+            user_table = gr.HTML(value=create_html_table(show_inactive=True))
 
         # Функция обновления таблицы
         def refresh_table(show_inactive):
-            """Обновляет данные таблицы в зависимости от чекбокса."""
-            return create_table(show_inactive).drop(columns=["UID"])
+            """Обновляет данные таблицы."""
+            return create_html_table(show_inactive)
 
         refresh_button.click(
             fn=refresh_table,
@@ -95,25 +121,22 @@ def statistics_tab():
                 return f"No user found with UID: {uid}"
             return json.dumps(user_info, indent=4, ensure_ascii=False)
 
-        # Создание динамических кнопок для каждой строки
-        def create_buttons():
-            """Создает динамические кнопки для каждой строки таблицы."""
-            buttons = []
-            user_data = create_table()
-            for _, row in user_data.iterrows():
-                uid = row["UID"]
-
-                def button_fn(uid=uid):
-                    """Обертка для передачи UID в обработчик."""
-                    return show_user_info(uid)
-
-                # Добавляем кнопку
-                buttons.append(
-                    gr.Button(f"View User ({row['User'][:6]}...)")
-                        .click(fn=button_fn, outputs=[selected_user_info])
-                )
-            return buttons
-
-        # Отображение кнопок
+        # Передача UID через кнопку
         with gr.Row():
-            button_container = gr.Column(create_buttons())
+            selected_uid = gr.Textbox(visible=False)
+
+        selected_uid.change(
+            fn=show_user_info,
+            inputs=[selected_uid],
+            outputs=[selected_user_info]
+        )
+
+        # Встраиваем JavaScript для передачи UID в скрытое поле
+        gr.HTML("""
+        <script>
+        function setUserID(uid) {
+            document.querySelector('textarea[aria-label="selected_uid"]').value = uid;
+            document.querySelector('textarea[aria-label="selected_uid"]').dispatchEvent(new Event('input'));
+        }
+        </script>
+        """)
