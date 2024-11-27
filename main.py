@@ -5,11 +5,11 @@
 import sys
 import os
 import json
+import ipaddress
 from datetime import datetime
 import settings
 from modules.config import load_params
 from modules.keygen import generate_private_key, generate_public_key, generate_preshared_key
-from modules.ip_management import generate_ip
 from modules.config_writer import add_user_to_server_config
 from modules.qr_generator import generate_qr_code
 from modules.directory_setup import setup_directories
@@ -97,6 +97,30 @@ def restart_wireguard(interface="wg0"):
     except subprocess.CalledProcessError as e:
         logger.error(f"Ошибка перезапуска WireGuard: {e}")
 
+def generate_next_ip(config_file, subnet="10.66.66.0/24"):
+    """
+    Генерирует следующий доступный IP-адрес в подсети.
+    :param config_file: Путь к файлу конфигурации WireGuard.
+    :param subnet: Подсеть для поиска доступного IP.
+    :return: Следующий доступный IP-адрес.
+    """
+    # Чтение существующих IP из конфигурации
+    existing_ips = []
+    if os.path.exists(config_file):
+        with open(config_file, "r") as f:
+            for line in f:
+                if line.strip().startswith("AllowedIPs"):
+                    ip = line.split("=")[1].strip().split("/")[0]
+                    existing_ips.append(ip)
+
+    # Поиск свободного IP
+    network = ipaddress.ip_network(subnet)
+    for ip in network.hosts():
+        ip_str = str(ip)
+        if ip_str not in existing_ips and not ip_str.endswith(".0") and not ip_str.endswith(".1") and not ip_str.endswith(".255"):
+            return ip_str
+    raise ValueError("Нет доступных IP-адресов в указанной подсети.")
+
 def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A"):
     """
     Генерация конфигурации пользователя и QR-кода.
@@ -116,13 +140,13 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
         logger.debug("Пресекретный ключ сгенерирован.")
 
         # Генерация IP-адреса
-        address, new_ipv4 = generate_ip(config_file)
-        logger.info(f"IP-адрес сгенерирован: {address}")
+        new_ipv4 = generate_next_ip(config_file, params.get('SERVER_SUBNET', '10.66.66.0/24'))
+        logger.info(f"Новый IP-адрес: {new_ipv4}")
 
         # Генерация конфигурации клиента
         client_config = create_client_config(
             private_key=private_key,
-            address=address,
+            address=new_ipv4,
             dns_servers=dns_servers,
             server_public_key=server_public_key,
             preshared_key=preshared_key,
@@ -144,13 +168,13 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
         logger.info(f"QR-код сохранён в {qr_path}")
 
         # Добавление пользователя в конфигурацию сервера
-        add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), address)
+        add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), new_ipv4)
         logger.info("Пользователь добавлен в конфигурацию сервера.")
 
         # Добавление записи пользователя
         user_record = create_user_record(
             username=nickname,
-            address=address,
+            address=new_ipv4,
             public_key=public_key.decode('utf-8'),
             preshared_key=preshared_key.decode('utf-8'),
             qr_code_path=qr_path,
