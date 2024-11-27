@@ -103,7 +103,7 @@ def statistics_tab():
             outputs=[stats_table]
         )
 
-        # Получение информации о пользователе при выборе строки
+        # Обработка выбора строки через столбец UID
         def show_user_info(dataframe):
             """Показывает информацию о выбранном пользователе."""
             if dataframe.empty:
@@ -111,20 +111,20 @@ def statistics_tab():
 
             try:
                 # UID находится в последнем столбце выбранной строки
-                user_id = dataframe.iloc[0, -1]  # Первая строка, последний столбец (UID)
+                selected_uid = dataframe.iloc[0, -1]  # Первая строка, последний столбец (UID)
 
                 # Логируем выбор
-                print(f"Selected User ID: {user_id}")
+                print(f"Selected User ID: {selected_uid}")
 
                 # Поиск информации о пользователе
                 user_records = load_user_records()
                 user_info = next(
-                    (info for info in user_records.values() if info.get("user_id") == user_id),
+                    (info for info in user_records.values() if info.get("user_id") == selected_uid),
                     None
                 )
 
                 if not user_info:
-                    return f"No detailed information found for UID: {user_id}"
+                    return f"No detailed information found for UID: {selected_uid}"
 
                 # Форматирование данных для вывода
                 user_details = json.dumps(user_info, indent=4, ensure_ascii=False)
@@ -132,7 +132,6 @@ def statistics_tab():
             except Exception as e:
                 return f"Error processing user information: {str(e)}"
 
-        # Используем `select` вместо `change`
         stats_table.select(
             fn=show_user_info,
             inputs=[stats_table],
