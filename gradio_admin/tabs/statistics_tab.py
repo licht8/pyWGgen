@@ -123,7 +123,19 @@ def statistics_tab():
                     None
                 )
 
+                if not user_info
                 if not user_info:
                     return f"No detailed information found for UID: {user_id}"
 
-                # Форматирование данных
+                # Форматирование данных для вывода
+                user_details = json.dumps(user_info, indent=4, ensure_ascii=False)
+                return user_details
+            except Exception as e:
+                return f"Error processing user information: {str(e)}"
+
+        # Используем `select` для получения информации о пользователе
+        stats_table.select(
+            fn=show_user_info,
+            inputs=[stats_table],
+            outputs=[selected_user_info]
+        )
