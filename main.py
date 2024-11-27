@@ -158,15 +158,23 @@ def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr
     user_records_path = os.path.join("user", "data", "user_records.json")
     expiry_date = datetime.now() + timedelta(days=trial_days)
 
+    # Загружаем существующие записи
     if os.path.exists(user_records_path):
         with open(user_records_path, "r", encoding="utf-8") as file:
             try:
                 user_data = json.load(file)
             except json.JSONDecodeError:
+                logger.warning("Ошибка чтения базы данных пользователей, будет создана новая.")
                 user_data = {}
     else:
         user_data = {}
 
+    # Проверяем, чтобы не было дубликатов
+    if nickname in user_data:
+        logger.error(f"Пользователь с именем '{nickname}' уже существует в базе данных.")
+        raise ValueError(f"Пользователь с именем '{nickname}' уже существует.")
+
+    # Добавляем новую запись
     user_data[nickname] = {
         "username": nickname,
         "created_at": datetime.now().isoformat(),
@@ -174,16 +182,17 @@ def add_user_record(nickname, trial_days, address, public_key, preshared_key, qr
         "allowed_ips": address,
         "public_key": public_key,
         "preshared_key": preshared_key,
-        "endpoint": "N/A",
-        "last_handshake": "N/A",
-        "uploaded": "N/A",
-        "downloaded": "N/A",
-        "qr_code_path": qr_path,
+        "endpoint": "N/A",  # будет обновляться позже
+        "last_handshake": "N/A",  # будет обновляться позже
+        "uploaded": "N/A",  # будет обновляться позже
+        "downloaded": "N/A",  # будет обновляться позже
+        "qr_code_path": qr_code_path,  # Используем переданную переменную qr_code_path
         "email": email,
         "telegram_id": telegram_id,
         "status": "inactive"
     }
 
+    # Сохраняем обновленные данные
     os.makedirs(os.path.dirname(user_records_path), exist_ok=True)
     with open(user_records_path, "w", encoding="utf-8") as file:
         json.dump(user_data, file, indent=4)
