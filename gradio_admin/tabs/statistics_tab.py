@@ -48,7 +48,7 @@ def statistics_tab():
         # Таблица с данными
         with gr.Row():
             stats_table = gr.Dataframe(
-                headers=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $"],
+                headers=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $", "UID"],
                 value=update_table(show_inactive=True),
                 interactive=False,  # Таблица только для чтения
                 wrap=True
@@ -90,21 +90,21 @@ def statistics_tab():
             try:
                 # Если данные переданы в виде DataFrame
                 if isinstance(selected_data, pd.DataFrame):
-                    uid = selected_data.iloc[0, -1]  # UID в последнем столбце
+                    user_id = selected_data.iloc[0, -1]  # UID в последнем столбце
                 # Если данные переданы в виде списка
                 elif isinstance(selected_data, list):
-                    uid = selected_data[-1]  # UID в последнем элементе
+                    user_id = selected_data[-1]  # UID в последнем элементе
                 else:
                     return "Unsupported data format selected."
 
                 # Получение данных пользователя
                 user_records = load_user_records()
                 user_info = next(
-                    (info for info in user_records.values() if info.get("user_id") == uid), 
+                    (info for info in user_records.values() if info.get("user_id") == user_id), 
                     None
                 )
                 if not user_info:
-                    return f"No detailed information found for UID: {uid}"
+                    return f"No detailed information found for UID: {user_id}"
 
                 # Форматирование информации с эмодзи
                 details = [
@@ -135,13 +135,13 @@ def statistics_tab():
             if not selected_data or len(selected_data) == 0:
                 return "No user selected to block."
             if isinstance(selected_data, pd.DataFrame):
-                uid = selected_data.iloc[0, -1]
+                user_id = selected_data.iloc[0, -1]
             elif isinstance(selected_data, list):
-                uid = selected_data[-1]
+                user_id = selected_data[-1]
             else:
                 return "Unsupported data format selected."
             # Логика блокировки пользователя по UID
-            return f"User with UID {uid} blocked."
+            return f"User with UID {user_id} blocked."
 
         block_button.click(
             fn=block_user,
@@ -154,13 +154,13 @@ def statistics_tab():
             if not selected_data or len(selected_data) == 0:
                 return "No user selected to delete."
             if isinstance(selected_data, pd.DataFrame):
-                uid = selected_data.iloc[0, -1]
+                user_id = selected_data.iloc[0, -1]
             elif isinstance(selected_data, list):
-                uid = selected_data[-1]
+                user_id = selected_data[-1]
             else:
                 return "Unsupported data format selected."
             # Логика удаления пользователя по UID
-            return f"User with UID {uid} deleted."
+            return f"User with UID {user_id} deleted."
 
         delete_button.click(
             fn=delete_user,
