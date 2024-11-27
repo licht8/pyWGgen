@@ -47,6 +47,9 @@ def prepare_table_data(show_inactive=True):
 def get_user_info(user_id):
     """Возвращает подробную информацию о пользователе."""
     print(f"[DEBUG] Запрос информации о пользователе с UID: {user_id}")
+    if user_id == "No user selected" or not user_id:
+        print("[WARNING] Пользователь не выбран.")
+        return "No user selected"
     user_records = load_user_records()
     for user in user_records.values():
         if user.get("user_id") == user_id:
@@ -59,6 +62,9 @@ def get_user_info(user_id):
 def block_user(user_id):
     """Блокирует пользователя."""
     print(f"[DEBUG] Блокировка пользователя с UID: {user_id}")
+    if user_id == "No user selected" or not user_id:
+        print("[WARNING] Невозможно заблокировать: пользователь не выбран.")
+        return "No user selected"
     user_records = load_user_records()
     for username, user in user_records.items():
         if user.get("user_id") == user_id:
@@ -74,6 +80,9 @@ def block_user(user_id):
 def delete_user(user_id):
     """Удаляет пользователя."""
     print(f"[DEBUG] Удаление пользователя с UID: {user_id}")
+    if user_id == "No user selected" or not user_id:
+        print("[WARNING] Невозможно удалить: пользователь не выбран.")
+        return "No user selected"
     user_records = load_user_records()
     for username, user in list(user_records.items()):
         if user.get("user_id") == user_id:
@@ -122,7 +131,7 @@ def statistics_tab():
             """Возвращает ID выбранного пользователя."""
             if row_data:
                 print(f"[DEBUG] Выбран пользователь с данными: {row_data}")
-                return row_data.get("UID", "N/A")
+                return row_data.get("UID", "No user selected")
             print("[WARNING] Пользователь не выбран.")
             return "No user selected"
 
