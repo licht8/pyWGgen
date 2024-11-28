@@ -1,130 +1,126 @@
-import os
-import json
-import pandas as pd
+#!/usr/bin/env python3
+# gradio_admin/tabs/statistics_tab.py
+# Вкладка "Statistics" для Gradio-интерфейса проекта wg_qr_generator
+
 import gradio as gr
-from settings import USER_DB_PATH
+import pandas as pd
+from gradio_admin.functions.table_helpers import update_table
+from gradio_admin.functions.format_helpers import format_user_info
+from gradio_admin.functions.user_records import load_user_records
 
-# Функция загрузки данных из JSON
-def load_users():
-    if not os.path.exists(USER_DB_PATH):
-        return pd.DataFrame()
-    try:
-        with open(USER_DB_PATH, "r") as file:
-            data = json.load(file)
-        users = pd.DataFrame.from_dict(data, orient="index")
-        users.reset_index(inplace=True)
-        users.rename(columns={"index": "username"}, inplace=True)
-        return users
-    except json.JSONDecodeError:
-        return pd.DataFrame()
 
-# Функция фильтрации пользователей
-def filter_users(search_text):
-    users = load_users()
-    if users.empty:
-        return ["Нет доступных пользователей"]
-
-    filtered_users = users["username"][users["username"].str.contains(search_text, case=False)].tolist()
-    return filtered_users if filtered_users else ["Нет совпадений"]
-
-# Функция для отображения данных выбранного пользователя
-def get_user_details(username):
-    users = load_users()
-    if username in ["Нет доступных пользователей", "Нет совпадений"]:
-        return pd.DataFrame(), "Пользователь не найден."
-
-    if username not in users["username"].values:
-        return pd.DataFrame(), "Пользователь не найден."
-
-    user_data = users[users["username"] == username].transpose()
-    user_data.columns = ["Данные"]
-    user_data.reset_index(inplace=True)
-    user_data.rename(columns={"index": "Поле"}, inplace=True)
-    return user_data[["Поле", "Данные"]], None
-
-# Функции управления пользователями
-def block_unblock_user(username):
-    users = load_users()
-    if username not in users["username"].values:
-        return "Пользователь не найден."
-
-    current_status = users.loc[users["username"] == username, "status"].iloc[0]
-    new_status = "inactive" if current_status == "active" else "active"
-    users.loc[users["username"] == username, "status"] = new_status
-
-    # Сохранение изменений
-    data = users.set_index("username").to_dict(orient="index")
-    with open(USER_DB_PATH, "w") as file:
-        json.dump(data, file, indent=4)
-
-    return f"Пользователь {username} {'заблокирован' if new_status == 'inactive' else 'разблокирован'}."
-
-def delete_user(username):
-    users = load_users()
-    if username not in users["username"].values:
-        return "Пользователь не найден."
-
-    users = users[users["username"] != username]
-    data = users.set_index("username").to_dict(orient="index")
-    with open(USER_DB_PATH, "w") as file:
-        json.dump(data, file, indent=4)
-
-    return f"Пользователь {username} удален."
-
-def archive_user(username):
-    users = load_users()
-    if username not in users["username"].values:
-        return "Пользователь не найден."
-
-    users.loc[users["username"] == username, "status"] = "archived"
-    data = users.set_index("username").to_dict(orient="index")
-    with open(USER_DB_PATH, "w") as file:
-        json.dump(data, file, indent=4)
-
-    return f"Пользователь {username} архивирован."
-
-# Интерфейс вкладки
 def statistics_tab():
-    with gr.Blocks() as tab:
-        gr.Markdown("# Управление пользователями")
-
-        # Поле поиска пользователей
-        search_input = gr.Textbox(
-            placeholder="Введите имя пользователя для поиска", label="Поиск пользователя"
-        )
-
-        # Выпадающее меню для выбора пользователя
-        users = load_users()
-        user_dropdown_choices = users["username"].tolist() if not users.empty else ["Нет доступных пользователей"]
-        user_dropdown = gr.Dropdown(
-            choices=user_dropdown_choices, label="Выберите пользователя"
-        )
-
-        # Таблица с данными выбранного пользователя
-        user_table = gr.DataFrame(headers=["Поле", "Данные"], label="Данные пользователя")
-
-        # Кнопки управления пользователем
+    """Возвращает вкладку статистики пользователей WireGuard."""
+    with gr.Tab("🔍 Statistics"):
         with gr.Row():
-            block_button = gr.Button("Block/Unblock")
-            delete_button = gr.Button("Удалить")
-            archive_button = gr.Button("Архивировать")
+            gr.Markdown("## Statistics")
 
-        # Поле вывода результата
-        action_output = gr.Textbox(label="Результат действия", interactive=False)
+        # Чекбокс Show inactive и кнопка Refresh
+        with gr.Row():
+            show_inactive = gr.Checkbox(label="Show inactive", value=True)
+            refresh_button = gr.Button("Refresh")
 
-        # Логика фильтрации пользователей
-        def update_dropdown(search_text):
-            filtered_choices = filter_users(search_text)
-            user_dropdown.choices = filtered_choices
+        # Область для отображения информации о выбранном пользователе
+        with gr.Row():
+            selected_user_info = gr.Textbox(
+                label="User Information", 
+                interactive=False, 
+                value="Use the search below for filtering.",
+                elem_id="user-info-block"  # Добавляем ID для CSS
+            )
 
-        search_input.change(update_dropdown, inputs=search_input, outputs=[])
+        # Кнопки действий на одной строке
+        with gr.Row():
+            block_button = gr.Button("Block", elem_id="block-button")
+            delete_button = gr.Button("Delete", elem_id="delete-button")
 
-        # Логика выбора пользователя
-        user_dropdown.change(get_user_details, inputs=user_dropdown, outputs=[user_table, action_output])
+        # Поле поиска
+        with gr.Row():
+            search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True)
 
-        # Логика управления пользователем
-        block_button.click(block_unblock_user, inputs=user_dropdown, outputs=action_output)
-        delete_button.click(delete_user, inputs=user_dropdown, outputs=action_output)
-        archive_button.click(archive_user, inputs=user_dropdown, outputs=action_output)
+        # Надпись над таблицей
+        with gr.Row():
+            gr.Markdown("Click a cell to view user details after the search.", elem_id="table-help-text", elem_classes=["small-text"])
 
-    return tab
+        # Таблица с данными
+        with gr.Row():
+            stats_table = gr.Dataframe(
+                headers=["👥 User's info", "🆔 Other info"],
+                value=update_table(True),
+                interactive=False,  # Таблица только для чтения
+                wrap=True
+            )
+
+        # Функция для показа информации о пользователе
+        def show_user_info(selected_data, query):
+            """Показывает подробную информацию о выбранном пользователе."""
+            print("[DEBUG] Вызов функции show_user_info")  # Отладка
+            print(f"[DEBUG] Query: {query}")  # Отладка
+
+            # Проверяем, был ли выполнен поиск
+            if not query.strip():
+                return "Please enter a query to filter user data and then Click a cell to view user details  after the search, and perform actions."
+
+            # Проверяем, есть ли данные
+            print(f"[DEBUG] Selected data: {selected_data}")  # Отладка
+            if selected_data is None or (isinstance(selected_data, pd.DataFrame) and selected_data.empty):
+                return "Select a row from the table!"
+            try:
+                # Если данные предоставлены в формате списка
+                if isinstance(selected_data, list):
+                    print(f"[DEBUG] Data format: list, data: {selected_data}")  # Отладка
+                    row = selected_data
+                # Если данные предоставлены в формате DataFrame
+                elif isinstance(selected_data, pd.DataFrame):
+                    print(f"[DEBUG] Data format: DataFrame, data:\n{selected_data}")  # Отладка
+                    row = selected_data.iloc[0].values
+                else:
+                    return "Unsupported data format!"
+
+                print(f"[DEBUG] Extracted row: {row}")  # Отладка
+
+                # Загружаем информацию о пользователе
+                username = row[0].replace("👤 User account : ", "") if len(row) > 0 else "N/A"
+                records = load_user_records()
+                user_data = records.get(username, {})
+
+                # Форматируем данные для вывода
+                user_info = format_user_info(username, user_data, row)
+                print(f"[DEBUG] User info:\n{user_info}")  # Отладка
+                return user_info.strip()
+            except Exception as e:
+                print(f"[DEBUG] Error: {e}")  # Отладка
+                return f"Error processing data: {str(e)}"
+
+        stats_table.select(
+            fn=show_user_info,
+            inputs=[stats_table, search_input],
+            outputs=[selected_user_info]
+        )
+
+        # Обновление данных при нажатии кнопки "Refresh"
+        def refresh_table(show_inactive):
+            """Очищает строку поиска, сбрасывает информацию о пользователе и обновляет таблицу."""
+            return "", "Please enter a query to filter user data and then Click a cell to view user details after the search. and perform actions.", update_table(show_inactive)
+
+        refresh_button.click(
+            fn=refresh_table,
+            inputs=[show_inactive],
+            outputs=[search_input, selected_user_info, stats_table]
+        )
+
+        # Поиск
+        def search_and_update_table(query, show_inactive):
+            """Фильтрует данные таблицы по запросу."""
+            table = update_table(show_inactive)
+            if query:
+                table = [
+                    row for row in table if query.lower() in " ".join(map(str, row)).lower()
+                ]
+            return table
+
+        search_input.change(
+            fn=search_and_update_table,
+            inputs=[search_input, show_inactive],
+            outputs=[stats_table]
+        )
