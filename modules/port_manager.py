@@ -42,10 +42,10 @@ def handle_port_conflict(port):
                     except Exception as e:
                         print(f" ❌ Ошибка при завершении процесса: {e}")
                 elif choice == "2":
-                    print(" 🔄 Возврат в меню...")
+                    print(" 🔄 Возврат в меню...\n")
                     return "ignore"
                 elif choice == "3":
-                    print(" 👋 Завершение работы.")
+                    print(" 👋 Завершение работы.\n")
                     exit(0)
                 else:
                     print("")
