@@ -3,6 +3,7 @@
 # Функции для управления портами через firewalld
 
 import subprocess
+import psutil
 from modules.port_manager import handle_port_conflict
 
 def open_firewalld_port(port):
