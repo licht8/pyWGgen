@@ -6,7 +6,9 @@ import subprocess
 from gradio_admin.main_interface import admin_interface
 from modules.project_status import get_external_ip
 
-from firewall_utils import open_firewalld_port, close_firewalld_port, handle_port_conflict
+
+from modules.firewall_utils import open_firewalld_port, close_firewalld_port, handle_port_conflict
+
 
 def run_gradio_admin_interface(port=7860):
     """Запускает интерфейс Gradio на указанном порту."""
