@@ -67,7 +67,7 @@ def show_main_menu():
             port = 7860
             action = handle_port_conflict(port)  # Проверяем состояние порта
             if action == "ok":
-                print(" ✅ Порт {port} свободен, запускаем Gradio...")
+                print(f" ✅ Порт {port} свободен, запускаем Gradio...")
                 run_gradio_admin_interface(port=port)
             elif action == "kill":
                 print(" ✅ Процесс был завершен, теперь можно запустить Gradio.")
