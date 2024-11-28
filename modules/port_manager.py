@@ -54,7 +54,7 @@ def handle_port_conflict(port):
                     print("")
                     print(" ⚠️  Некорректный выбор. \n Возврат в меню.")
                     return "exit"  # Вернуться в главное меню по умолчанию
-        print(f" ✅ Порт {port} свободен. (port_manager.py)\n ==========================================\n ")
+        # print(f" ✅ Порт {port} свободен. (port_manager.py)\n ==========================================\n ")
         return "ok"
     except Exception as e:
         print(f" ❌ Ошибка: {e}")
