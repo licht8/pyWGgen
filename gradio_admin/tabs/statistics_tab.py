@@ -11,7 +11,7 @@ from gradio_admin.functions.user_records import load_user_records
 
 def statistics_tab():
     """Возвращает вкладку статистики пользователей WireGuard."""
-    with gr.Tab("🔍 Statistics"):
+    #with gr.Tab("🔍 Statistics"):
         with gr.Row():
             gr.Markdown("## Statistics")
 
