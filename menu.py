@@ -67,7 +67,7 @@ def show_main_menu():
         elif choice == "g":
             # Проверяем, занят ли порт перед запуском Gradio
             port = 7860
-            action = handle_port_conflict(port)  # Проверяем состояние порта
+            action = handue_port_conflict(port)  # Проверяем состояние порта
             if action == "ok":
                 print(f"\n ✅  Запускаем Gradio интерфейс http://{get_external_ip()}:{port}")
                 run_gradio_admin_interface(port=port)
@@ -85,7 +85,7 @@ def show_main_menu():
             install_wireguard()
         elif choice == "iw" and wireguard_installed:
             remove_wireguard()
-        elif choice == "dl":
+        elif choice == "du":
             from modules.user_data_cleaner import clean_user_data
             clean_user_data()
         elif choice == "rg":
