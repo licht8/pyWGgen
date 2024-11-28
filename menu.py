@@ -15,7 +15,7 @@ if project_root not in sys.path:
 from modules.wireguard_utils import check_wireguard_installed, install_wireguard, remove_wireguard
 from modules.firewall_utils import open_firewalld_port, close_firewalld_port
 from modules.gradio_utils import run_gradio_admin_interface
-
+from modules.port_manager import handle_port_conflict
 from modules.report_utils import generate_project_report, display_test_report, display_test_summary
 from modules.update_utils import update_project
 from modules.sync import sync_users_with_wireguard
