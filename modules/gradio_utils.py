@@ -16,4 +16,4 @@ def run_gradio_admin_interface(port=7860):
     open_firewalld_port(port)
     print(f" 🌐 Запуск Gradio интерфейса на http://{get_external_ip()}:{port}")
     admin_interface.launch(server_name="0.0.0.0", server_port=port, share=False)
-close_firewalld_port(port)
+    close_firewalld_port(port)
