@@ -5,6 +5,7 @@
 import os
 import sys
 import subprocess
+import psutil
 
 # Установить путь к корню проекта
 project_root = os.path.dirname(os.path.abspath(__file__))
