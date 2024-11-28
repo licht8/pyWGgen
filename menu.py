@@ -46,7 +46,7 @@ def show_main_menu():
             print("iw. ⚙️   Установить WireGuard")
         print(f"--------------------------------------------")
 
-        print(f"rp. 📋  Запустить генерацию отчета")
+        print(f"rg. 📋  Запустить генерацию отчета")
         print(f"sr. 🗂️   Показать краткий отчет")
         print(f"fr. 📄  Показать полный отчет")
         print(f"dg. 🛠️   Запустить диагностику проекта")  # Новый пункт меню
@@ -88,7 +88,7 @@ def show_main_menu():
         elif choice == "dl":
             from modules.user_data_cleaner import clean_user_data
             clean_user_data()
-        elif choice == "rp":
+        elif choice == "rg":
             generate_project_report()
         elif choice == "sr":
             display_test_summary()
