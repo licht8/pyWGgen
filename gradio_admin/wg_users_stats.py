@@ -95,9 +95,9 @@ def statistics_tab():
 
         # Выпадающее меню для выбора пользователя
         users = load_users()
+        user_dropdown_choices = users["username"].tolist() if not users.empty else ["Нет доступных пользователей"]
         user_dropdown = gr.Dropdown(
-            choices=users["username"].tolist() if not users.empty else ["Нет доступных пользователей"],
-            label="Выберите пользователя"
+            choices=user_dropdown_choices, label="Выберите пользователя"
         )
 
         # Таблица с данными выбранного пользователя
@@ -113,11 +113,11 @@ def statistics_tab():
         action_output = gr.Textbox(label="Результат действия", interactive=False)
 
         # Логика фильтрации пользователей
-        def update_user_list(search_text):
+        def update_dropdown(search_text):
             filtered_choices = filter_users(search_text)
-            return gr.Dropdown.update(choices=filtered_choices)
+            user_dropdown.choices = filtered_choices
 
-        search_input.change(update_user_list, inputs=search_input, outputs=user_dropdown)
+        search_input.change(update_dropdown, inputs=search_input, outputs=[])
 
         # Логика выбора пользователя
         user_dropdown.change(get_user_details, inputs=user_dropdown, outputs=[user_table, action_output])
