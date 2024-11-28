@@ -6,6 +6,13 @@ import subprocess
 import psutil
 from modules.port_manager import handle_port_conflict
 
+def get_external_ip():
+    """Получает внешний IP-адрес."""
+    try:
+        return subprocess.check_output(["curl", "-s", "https://ipinfo.io/ip"], text=True).strip()
+    except subprocess.CalledProcessError:
+        return colored("N/A ❌", "red")
+
 def open_firewalld_port(port):
     """Открывает порт в firewalld."""
     # Модуль для управления портами и разрешения конфликтов
