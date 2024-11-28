@@ -6,6 +6,7 @@
 # Обрабатывает ошибки и выводит соответствующие сообщения.
 
 import psutil
+import os
 
 def handle_port_conflict(port):
     """
