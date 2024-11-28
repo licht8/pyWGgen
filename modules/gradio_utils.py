@@ -18,7 +18,7 @@ def check_and_open_port(port):
         if f"{port}/tcp" not in result.stdout:
             subprocess.run(["firewall-cmd", "--add-port", f"{port}/tcp"], check=True)
             subprocess.run(["firewall-cmd", "--runtime-to-permanent"], check=True)
-            print()
+            print(f"")
             print(f" ✅  Порт {port} открыт.")
         else:
             print(f" ℹ️  Порт {port} уже открыт.")
