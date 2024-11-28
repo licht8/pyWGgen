@@ -1,130 +1,62 @@
+#!/usr/bin/env python3
+# gradio_admin/wg_users_stats.py
+# Скрипт для работы со статистикой пользователей WireGuard в проекте wg_qr_generator
+
 import os
 import json
-import pandas as pd
-import gradio as gr
-from settings import USER_DB_PATH
 
-# Функция загрузки данных из JSON
-def load_users():
-    if not os.path.exists(USER_DB_PATH):
-        return pd.DataFrame()
+# Путь к файлу JSON
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+JSON_LOG_PATH = os.path.join(PROJECT_ROOT, "logs/wg_users.json")
+
+
+def load_data(show_inactive):
+    """
+    Загружает данные пользователей WireGuard из JSON-файла и фильтрует их.
+    """
     try:
-        with open(USER_DB_PATH, "r") as file:
-            data = json.load(file)
-        users = pd.DataFrame.from_dict(data, orient="index")
-        users.reset_index(inplace=True)
-        users.rename(columns={"index": "username"}, inplace=True)
-        return users
-    except json.JSONDecodeError:
-        return pd.DataFrame()
+        print(f"Путь к JSON: {JSON_LOG_PATH}")  # Отладка
+        with open(JSON_LOG_PATH, "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        print("JSON-файл не найден!")
+        return [["Нет данных о пользователях"]]
+    except json.JSONDecodeError as e:
+        print(f"Ошибка декодирования JSON: {e}")
+        return [["Ошибка чтения JSON-файла"]]
 
-# Функция фильтрации пользователей
-def filter_users(search_text):
-    users = load_users()
-    if users.empty:
-        return ["Нет доступных пользователей"]
+    # Логика работы с верхним уровнем JSON
+    print(f"Загруженные пользователи: {data}")  # Отладка
 
-    filtered_users = users["username"][users["username"].str.contains(search_text, case=False)].tolist()
-    return filtered_users if filtered_users else ["Нет совпадений"]
+    table = []
 
-# Функция для отображения данных выбранного пользователя
-def get_user_details(username):
-    users = load_users()
-    if username in ["Нет доступных пользователей", "Нет совпадений"]:
-        return pd.DataFrame(), "Пользователь не найден."
+    for username, user_data in data.items():
+        # Пропускаем пользователей со статусом "inactive", если show_inactive == False
+        if not show_inactive and user_data.get("status") == "inactive":
+            continue
 
-    if username not in users["username"].values:
-        return pd.DataFrame(), "Пользователь не найден."
+        # Форматируем статус
+        status_color = "green" if user_data.get("status") == "active" else "red"
+        status_html = f"<span style='color: {status_color}'>{user_data.get('status', 'unknown')}</span>"
 
-    user_data = users[users["username"] == username].transpose()
-    user_data.columns = ["Данные"]
-    user_data.reset_index(inplace=True)
-    user_data.rename(columns={"index": "Поле"}, inplace=True)
-    return user_data[["Поле", "Данные"]], None
+        # Добавляем строку в таблицу
+        table.append([
+            username,
+            user_data.get("endpoint", "N/A"),
+            user_data.get("allowed_ips", "N/A"),
+            user_data.get("uploaded", "N/A"),
+            user_data.get("downloaded", "N/A"),
+            user_data.get("last_handshake", "N/A"),
+            status_html
+        ])
 
-# Функции управления пользователями
-def block_unblock_user(username):
-    users = load_users()
-    if username not in users["username"].values:
-        return "Пользователь не найден."
+    print(f"Форматированная таблица перед возвратом: {table}")  # Отладка
+    return table
 
-    current_status = users.loc[users["username"] == username, "status"].iloc[0]
-    new_status = "inactive" if current_status == "active" else "active"
-    users.loc[users["username"] == username, "status"] = new_status
 
-    # Сохранение изменений
-    data = users.set_index("username").to_dict(orient="index")
-    with open(USER_DB_PATH, "w") as file:
-        json.dump(data, file, indent=4)
-
-    return f"Пользователь {username} {'заблокирован' if new_status == 'inactive' else 'разблокирован'}."
-
-def delete_user(username):
-    users = load_users()
-    if username not in users["username"].values:
-        return "Пользователь не найден."
-
-    users = users[users["username"] != username]
-    data = users.set_index("username").to_dict(orient="index")
-    with open(USER_DB_PATH, "w") as file:
-        json.dump(data, file, indent=4)
-
-    return f"Пользователь {username} удален."
-
-def archive_user(username):
-    users = load_users()
-    if username not in users["username"].values:
-        return "Пользователь не найден."
-
-    users.loc[users["username"] == username, "status"] = "archived"
-    data = users.set_index("username").to_dict(orient="index")
-    with open(USER_DB_PATH, "w") as file:
-        json.dump(data, file, indent=4)
-
-    return f"Пользователь {username} архивирован."
-
-# Интерфейс вкладки
-def statistics_tab():
-    with gr.Blocks() as tab:
-        gr.Markdown("# Управление пользователями")
-
-        # Поле поиска пользователей
-        search_input = gr.Textbox(
-            placeholder="Введите имя пользователя для поиска", label="Поиск пользователя"
-        )
-
-        # Выпадающее меню для выбора пользователя
-        users = load_users()
-        user_dropdown_choices = users["username"].tolist() if not users.empty else ["Нет доступных пользователей"]
-        user_dropdown = gr.Dropdown(
-            choices=user_dropdown_choices, label="Выберите пользователя"
-        )
-
-        # Таблица с данными выбранного пользователя
-        user_table = gr.DataFrame(headers=["Поле", "Данные"], label="Данные пользователя")
-
-        # Кнопки управления пользователем
-        with gr.Row():
-            block_button = gr.Button("Block/Unblock")
-            delete_button = gr.Button("Удалить")
-            archive_button = gr.Button("Архивировать")
-
-        # Поле вывода результата
-        action_output = gr.Textbox(label="Результат действия", interactive=False)
-
-        # Логика фильтрации пользователей
-        def update_dropdown(search_text):
-            filtered_choices = filter_users(search_text)
-            user_dropdown.choices = filtered_choices
-
-        search_input.change(update_dropdown, inputs=search_input, outputs=[])
-
-        # Логика выбора пользователя
-        user_dropdown.change(get_user_details, inputs=user_dropdown, outputs=[user_table, action_output])
-
-        # Логика управления пользователем
-        block_button.click(block_unblock_user, inputs=user_dropdown, outputs=action_output)
-        delete_button.click(delete_user, inputs=user_dropdown, outputs=action_output)
-        archive_button.click(archive_user, inputs=user_dropdown, outputs=action_output)
-
-    return tab
+if __name__ == "__main__":
+    # Тестовая загрузка данных для отладки
+    print("Тестовая загрузка данных...")
+    test_data = load_data(show_inactive=True)
+    for row in test_data:
+        print(row)
