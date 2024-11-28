@@ -4,6 +4,7 @@
 import os
 import subprocess
 from gradio_admin.main_interface import admin_interface
+from modules.project_status import get_external_ip
 
 def check_and_open_port(port):
     """Проверяет, открыт ли порт, и открывает его через firewalld."""
