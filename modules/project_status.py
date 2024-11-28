@@ -12,13 +12,8 @@ import platform
 import psutil
 from datetime import datetime
 from termcolor import colored
+from modules.firewall_utils import get_external_ip
 
-def get_external_ip():
-    """Получает внешний IP-адрес."""
-    try:
-        return subprocess.check_output(["curl", "-s", "https://ipinfo.io/ip"], text=True).strip()
-    except subprocess.CalledProcessError:
-        return colored("N/A ❌", "red")
 
 def get_open_ports():
     """Возвращает список открытых портов в firewalld."""
