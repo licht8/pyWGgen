@@ -4,7 +4,6 @@
 
 import subprocess
 from modules.port_manager import handle_port_conflict
-from firewall_utils import open_firewalld_port(port) close_firewalld_port(port) close_firewalld_port(port) handle_port_conflict(port)
 
 def open_firewalld_port(port):
     """Открывает порт в firewalld."""
