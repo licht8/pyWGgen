@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-# modules/port_manager.py
-# Модуль для управления портами и разрешения конфликтов
-
-import psutil
-import os
-
 def handle_port_conflict(port):
     """
     Проверяет, занят ли порт, и предлагает действия пользователю.
