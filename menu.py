@@ -6,7 +6,7 @@ import os
 import sys
 import subprocess
 import psutil
-from modules.port_manager import handle_port_conflict, get_external_ip
+from modules.firewall_utils import get_external_ip
 
 # Установить путь к корню проекта
 project_root = os.path.dirname(os.path.abspath(__file__))
