@@ -41,7 +41,7 @@ def handle_port_conflict(port):
                     try:
                         os.kill(pid, 9)
                         time.sleep(2)
-                        print(f" ✅ Процесс {process_name} (PID {pid}) был 🔪 завершен 🩸.")
+                        print(f"\n ✅ Процесс {process_name} (PID {pid}) был 🔪 завершен 🩸.")
                         return "kill"  # Убить процесс
                     except Exception as e:
                         print(f" ❌ Ошибка при завершении процесса: {e}")
