@@ -1,0 +1,17 @@
+{
+    "firewall_issue": {
+        "id": "firewall_issue",
+        "title": "🔒 Firewall Configuration Issue",
+        "message": "It seems like there is a problem with your firewall configuration. To fix this issue on CentOS 8 Stream, ensure the following commands are executed:\n\n1️⃣ Open the required port:\n`sudo firewall-cmd --zone=public --add-port=58996/udp --permanent`\n\n2️⃣ Reload the firewall:\n`sudo firewall-cmd --reload`\n\n3️⃣ Check the status:\n`sudo firewall-cmd --list-all`\n\n💡 Tip: Double-check the port number and ensure it matches your WireGuard configuration."
+    },
+    "gradio_not_running": {
+        "id": "gradio_not_running",
+        "title": "🌐 Gradio Service Not Running",
+        "message": "The Gradio service is not currently running. To start it, follow these steps:\n\n1️⃣ Navigate to the project root:\n`cd /path/to/your/project`\n\n2️⃣ Run the Gradio admin interface:\n`python3 main.py`\n\n💡 Tip: Ensure the port (default: 7860) is not in use by another process."
+    },
+    "missing_files": {
+        "id": "missing_files",
+        "title": "📂 Missing Required Files",
+        "message": "Some required files are missing. These files have been recreated automatically, but you should verify their content:\n\n- `user/data/qrcodes`\n- `user/data/wg_configs`\n- `logs`\n\n💡 Tip: Ensure these directories contain the expected data for proper functionality."
+    }
+}
