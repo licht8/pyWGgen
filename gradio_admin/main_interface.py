@@ -18,7 +18,7 @@ with gr.Blocks() as admin_interface:
     with gr.Tab(label="🔍 Статистика"):
         statistics_tab()
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     # Запуск интерфейса на 0.0.0.0 для внешнего доступа
     #admin_interface.launch(server_name="0.0.0.0", server_port=7860, share=True, )
     #run_gradio_admin_interface()
