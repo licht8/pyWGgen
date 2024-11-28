@@ -51,5 +51,5 @@ def handle_port_conflict(port):
         return "ok"
         
     except KeyboardInterrupt:
-        print("\n👋 Выход из программы...")
+        print("\n👋 Выход из программы...\n")
         sys.exit(0)  # Завершение программы по "Ctrl C" без ошибки
