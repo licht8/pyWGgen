@@ -115,9 +115,9 @@ def statistics_tab():
         # Логика фильтрации пользователей
         def update_user_list(search_text):
             filtered_choices = filter_users(search_text)
-            user_dropdown.choices = filtered_choices
+            return gr.Dropdown.update(choices=filtered_choices)
 
-        search_input.change(update_user_list, inputs=search_input, outputs=[])
+        search_input.change(update_user_list, inputs=search_input, outputs=user_dropdown)
 
         # Логика выбора пользователя
         user_dropdown.change(get_user_details, inputs=user_dropdown, outputs=[user_table, action_output])
