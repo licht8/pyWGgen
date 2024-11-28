@@ -15,8 +15,8 @@ with gr.Blocks() as admin_interface:
     with gr.Tab(label="🔥 Удалить пользователя"):
         delete_user_tab()
     
-    with gr.Tab(label="🔍 Статистика"):
-        statistics_tab()
+    #with gr.Tab(label="🔍 Статистика"):
+        #statistics_tab()
 
 if __name__ == "__main__":
     # Запуск интерфейса на 0.0.0.0 для внешнего доступа
