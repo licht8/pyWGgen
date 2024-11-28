@@ -74,7 +74,7 @@ def show_main_menu():
                 print(f" ✅  Теперь запускаем Gradio http://{get_external_ip()}:{port}.")
                 run_gradio_admin_interface(port=port)
             elif action == "restart":
-                print(f" 🔄 Порт {port} все еще занят. \n ==========================================\n ")
+                print(f" 🚫 Порт {port} все еще занят. \n ==========================================\n ")
             elif action == "exit":
                 print(f"\n 🔙 Возврат в главное меню.")
         elif choice == "4":
