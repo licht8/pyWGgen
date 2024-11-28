@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 # Пути к файлам и директориям
 BASE_DIR = "user/data"
@@ -18,5 +19,4 @@ LOG_FILE_PATH = os.path.join(BASE_DIR, "logs", "app.log")
 LOG_LEVEL = "INFO"
 
 # Путь к журналу диагностики
-DIAGNOSTICS_LOG = os.path.join(BASE_DIR, "logs", "diagnostics.log")  # Унифицированный лог диагностики
-DEBUG_REPORT_PATH = os.path.join(BASE_DIR, "logs", "debug_report.txt")  # Альтернативный лог диагностики
+DIAGNOSTICS_LOG = Path(BASE_DIR) / "logs" / "diagnostics.log"
