@@ -12,7 +12,7 @@ def run_gradio_admin_interface(port):
     handle_port_conflict(port)
     print(f"")
     open_firewalld_port(port)
-    print(f" 🌐 Запуск Gradio интерфейса на http://{get_external_ip()}:{port}")
+    print(f"\n 🌐 Запуск Gradio интерфейса на http://{get_external_ip()}:{port}")
     admin_interface.launch(server_name="0.0.0.0", server_port=port, share=False)
     print(f"")
     close_firewalld_port(port)
