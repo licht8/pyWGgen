@@ -1,16 +1,6 @@
 import json
 import time
-import sys
-from pathlib import Path
-
-# Определяем базовый путь к корню проекта
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Пути к отчетам и базе сообщений
-DEBUG_REPORT_PATH = BASE_DIR / "debug_report.txt"  # Путь к отчету диагностики
-TEST_REPORT_PATH = BASE_DIR / "test_report.txt"    # Путь к отчету тестирования
-MESSAGES_DB_PATH = BASE_DIR / "ai_diagnostics" / "messages_db.json"  # Путь к базе сообщений
-
+from settings import DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
     """Парсер для анализа отчетов."""
@@ -36,22 +26,23 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
     return findings
 
 def display_message_slowly(title, message):
-    """Постепенный вывод текста, имитирующий работу ИИ."""
+    """Красивый вывод сообщения с форматированием."""
     print(f"\n{title}\n{'=' * len(title)}\n")
-    for word in message.split():
-        print(word, end=" ", flush=True)
-        time.sleep(0.1)  # Задержка между словами
-    print("\n")
+    for line in message.split("\n"):
+        for word in line.split():
+            print(word, end=" ", flush=True)
+            time.sleep(0.05)  # Задержка между словами
+        print()  # Перенос строки
 
 def main():
     """Основной запуск программы."""
     findings = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
-        print("🎉 Анализ завершён. Вот что мы обнаружили:\n")
+        print("\n🎉 Анализ завершён. Вот что мы обнаружили:\n")
         for finding in findings:
             display_message_slowly(finding["title"], finding["message"])
     else:
-        print("✅ Всё выглядит хорошо! Проблем не обнаружено.")
+        print("\n✅ Всё выглядит хорошо! Проблем не обнаружено.\n")
 
 if __name__ == "__main__":
     main()
