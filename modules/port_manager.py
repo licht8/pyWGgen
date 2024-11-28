@@ -20,8 +20,7 @@ def handle_port_conflict(port):
         for conn in psutil.net_connections():
             if conn.laddr.port == port:
                 pid = conn.pid
-                print(" ")
-                print(f"\033[1m ==========================================\n 🚫  Порт {port} уже занят \n 🐽  процессом с PID 🆔 {pid}.\n ========================================== \033[0m")
+                print(f"\n\033[1m ==========================================\n 🚫  Порт {port} уже занят \n 🐽  процессом с PID 🆔 {pid}.\n ========================================== \033[0m")
 
                 if pid:
                     process_name = psutil.Process(pid).name()
