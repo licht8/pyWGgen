@@ -4,7 +4,6 @@
 
 import psutil
 import os
-import sys
 
 def handle_port_conflict(port):
     """
@@ -24,7 +23,6 @@ def handle_port_conflict(port):
                     process_name = psutil.Process(pid).name()
                     print("")
                     print(f" Процесс, использующий порт: {process_name}\n 🔪 (PID {pid}).")
-
                 else:
                     print(" Не удалось определить процесс, использующий порт.")
 
@@ -34,6 +32,7 @@ def handle_port_conflict(port):
                 print(" 🚪 3. Выйти из программы")
                 print("")
                 choice = input(" Выберите действие [1/2/3]: ").strip()
+                
                 if choice == "1" and pid:
                     try:
                         os.kill(pid, 9)
@@ -42,19 +41,17 @@ def handle_port_conflict(port):
                     except Exception as e:
                         print(f" ❌ Ошибка при завершении процесса: {e}")
                 elif choice == "2":
-                    print(" 🔄 Попытаться снова запустить Gradio интерфейс...\n")
+                    print(" 🔄 Пытаюсь снова запустить Gradio интерфейс...\n")
                     return "ignore"
                 elif choice == "3":
                     print(" 👋 Завершение работы.\n")
-                    #exit(0)
-                    return
+                    return "exit"  # Возвращаем "exit" для выхода в главное меню
                 else:
                     print("")
                     print(" ⚠️  Некорректный выбор. \n Возврат в меню.")
                     return "ignore"
         print(f" ✅ Порт {port} свободен. (port_manager.py)")
         return "ok"
-        
-    except KeyboardInterrupt:
-        print("\n👋 Выход из программы...\n")
-        sys.exit(0)  # Завершение программы по "Ctrl C" без ошибки
+    except Exception as e:
+        print(f" ❌ Ошибка: {e}")
+        return "ignore"
