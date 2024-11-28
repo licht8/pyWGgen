@@ -20,4 +20,4 @@ with gr.Blocks() as admin_interface:
 
 if __name__ == "__main__":
     # Запуск интерфейса на 0.0.0.0 для внешнего доступа
-    admin_interface.launch(server_name="0.0.0.0", server_port=7860, )
+    #admin_interface.launch(server_name="0.0.0.0", server_port=7860, )
