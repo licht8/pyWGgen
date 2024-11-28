@@ -60,9 +60,21 @@ def show_main_menu():
             subprocess.run(["pytest"])
         elif choice == "u":
             update_project()
+
         elif choice == "3":
+            # Проверяем, занят ли порт перед запуском Gradio
             port = 7860
-            run_gradio_admin_interface(port=port)
+            action = handle_port_conflict(port)  # Проверяем состояние порта
+            if action == "ok":
+                print(" ✅ Порт свободен, запускаем Gradio...")
+                run_gradio_admin_interface(port=port)
+            elif action == "kill":
+                print(" ✅ Процесс был завершен, теперь можно запустить Gradio.")
+                run_gradio_admin_interface(port=port)
+            elif action == "restart":
+                print(" 🔄 Порт все еще занят. Пожалуйста, проверьте его снова.")
+            elif action == "exit":
+                print(" 🔙 Возврат в главное меню.")
         elif choice == "4":
             manage_users_menu()
         elif choice == "5":
