@@ -7,6 +7,7 @@
 
 import psutil
 import os
+import time  # Импортируем модуль time
 
 def handle_port_conflict(port):
     """
