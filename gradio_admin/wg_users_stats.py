@@ -116,7 +116,6 @@ def statistics_tab():
         def update_user_list(search_text):
             filtered_choices = filter_users(search_text)
             user_dropdown.choices = filtered_choices
-            return gr.update()
 
         search_input.change(update_user_list, inputs=search_input, outputs=[])
 
