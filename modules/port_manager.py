@@ -46,6 +46,7 @@ def handle_port_conflict(port):
                     print(" 👋 Завершение работы.")
                     exit(0)
                 else:
+                    print("")
                     print(" ⚠️  Некорректный выбор. \n Возврат в меню.")
                     return "ignore"
         print(f" ✅ Порт {port} свободен. (port_manager.py)")
