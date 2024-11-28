@@ -9,8 +9,8 @@ from modules.project_status import get_external_ip
 
 from modules.firewall_utils import open_firewalld_port, close_firewalld_port, handle_port_conflict
 
-port=7860
-def run_gradio_admin_interface(port=7860):
+port=port
+def run_gradio_admin_interface(port=port):
     """Запускает интерфейс Gradio на указанном порту."""
     handle_port_conflict(port)
     open_firewalld_port(port)
