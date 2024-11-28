@@ -40,10 +40,10 @@ def show_main_menu():
         print(f"dl. 🧹  Очистить базу пользователей")
         print("--------------------------------------------")
         if wireguard_installed:
-            print(" 5. ♻️   Переустановить WireGuard")
-            print(" 6. 🗑️   Удалить WireGuard")
+            print("rw. ♻️   Переустановить WireGuard")
+            print("dw. 🗑️   Удалить WireGuard")
         else:
-            print(" 5. ⚙️   Установить WireGuard")
+            print("iw. ⚙️   Установить WireGuard")
         print(f"--------------------------------------------")
 
         print(f"rp. 📋  Запустить генерацию отчета")
@@ -80,10 +80,10 @@ def show_main_menu():
                 print(f"\n 🔙 Возврат в главное меню.")
         elif choice == "4":
             manage_users_menu()
-        elif choice == "5":
+        elif choice == "rw":
             remove_wireguard()
             install_wireguard()
-        elif choice == "6" and wireguard_installed:
+        elif choice == "iw" and wireguard_installed:
             remove_wireguard()
         elif choice == "dl":
             from modules.user_data_cleaner import clean_user_data
