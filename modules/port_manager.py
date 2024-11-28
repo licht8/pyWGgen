@@ -15,7 +15,7 @@ def handle_port_conflict(port):
     for conn in psutil.net_connections():
         if conn.laddr.port == port:
             pid = conn.pid
-            print(f"⚠️ Порт {port} уже занят процессом с PID {pid}.")
+            print(f" ⚠️ Порт {port} уже занят процессом с PID {pid}.")
             if pid:
                 process_name = psutil.Process(pid).name()
                 print(f"Процесс, использующий порт: {process_name} (PID {pid}).")
@@ -31,18 +31,18 @@ def handle_port_conflict(port):
             if choice == "1" and pid:
                 try:
                     os.kill(pid, 9)
-                    print(f"✅ Процесс {process_name} (PID {pid}) был завершен.")
+                    print(f" ✅ Процесс {process_name} (PID {pid}) был завершен.")
                     return "kill"
                 except Exception as e:
-                    print(f"❌ Ошибка при завершении процесса: {e}")
+                    print(f" ❌ Ошибка при завершении процесса: {e}")
             elif choice == "2":
-                print("🔄 Возврат в меню...")
+                print(" 🔄 Возврат в меню...")
                 return "ignore"
             elif choice == "3":
-                print("👋 Завершение работы.")
+                print(" 👋 Завершение работы.")
                 exit(0)
             else:
-                print("⚠️ Некорректный выбор. Возврат в меню.")
+                print(" ⚠️ Некорректный выбор. Возврат в меню.")
                 return "ignore"
-    print(f"✅ Порт {port} свободен.")
+    print(f" ✅ Порт {port} свободен. (port_manager.py)")
     return "ok"
