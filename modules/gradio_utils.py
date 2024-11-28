@@ -18,14 +18,14 @@ def check_and_open_port(port):
         if f"{port}/tcp" not in result.stdout:
             subprocess.run(["firewall-cmd", "--add-port", f"{port}/tcp"], check=True)
             subprocess.run(["firewall-cmd", "--runtime-to-permanent"], check=True)
-            print(f"✅  Порт {port} открыт.")
+            print(f"\n ✅  Порт {port} открыт.")
         else:
-            print(f"ℹ️  Порт {port} уже открыт.")
+            print(f" ℹ️  Порт {port} уже открыт.")
     except Exception as e:
         print(f"❌ Ошибка при настройке порта {port}: {e}")
 
 def run_gradio_admin_interface(port=7860):
     """Запускает интерфейс Gradio на указанном порту."""
     check_and_open_port(port)
-    print(f"🌐 Запуск Gradio интерфейса на http://{get_external_ip()}:{port}")
+    print(f" 🌐 Запуск Gradio интерфейса на http://{get_external_ip()}:{port}")
     admin_interface.launch(server_name="0.0.0.0", server_port=port, share=False)
