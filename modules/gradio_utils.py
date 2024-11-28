@@ -26,5 +26,5 @@ def check_and_open_port(port):
 def run_gradio_admin_interface(port=7860):
     """Запускает интерфейс Gradio на указанном порту."""
     check_and_open_port(port)
-    print(f"🌐 Запуск Gradio интерфейса на http://0.0.0.0:{port}")
+    print(f"🌐 Запуск Gradio интерфейса на http://{get_external_ip()}:{port}")
     admin_interface.launch(server_name="0.0.0.0", server_port=port, share=True)
