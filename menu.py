@@ -68,7 +68,8 @@ def show_main_menu():
             port = 7860
             action = handle_port_conflict(port)  # Проверяем состояние порта
             if action == "ok":
-                print(f"\n ✅  Запускаем Gradio интерфейс http://{get_external_ip()}:{port}.")
+                print(f"")
+                print(f"\n ✅  Запускаем Gradio интерфейс http://{get_external_ip()}:{port}")
                 run_gradio_admin_interface(port=port)
             elif action == "kill":
                 print(f" ✅  Теперь можно запустить Gradio интерфейс http://{get_external_ip()}:{port}.")
