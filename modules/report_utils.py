@@ -9,7 +9,7 @@ TEST_REPORT_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "test
 
 def generate_project_report():
     """Генерация полного отчета."""
-    print("  📋  Запуск генерации отчета...")
+    print("\n  📋  Запуск генерации отчета...")
     generate_report()
 
 def display_test_report():
