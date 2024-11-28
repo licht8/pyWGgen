@@ -21,6 +21,7 @@ def check_and_open_port(port):
             print(f"")
             print(f" ✅  Порт {port} открыт.")
         else:
+            print(f"")
             print(f" ℹ️  Порт {port} уже открыт.")
     except Exception as e:
         print(f"❌ Ошибка при настройке порта {port}: {e}")
