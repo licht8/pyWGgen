@@ -76,7 +76,7 @@ def generate_report():
     with open(TEST_REPORT_PATH, "w") as report_file:
         report_file.write("\n".join(report_lines))
     
-    print(f"✅ Отчет сохранен в {TEST_REPORT_PATH}")
+    print(f"  ✅ Отчет сохранен в {TEST_REPORT_PATH}")
 
 if __name__ == "__main__":
     generate_report()
