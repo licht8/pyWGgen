@@ -61,14 +61,8 @@ def show_main_menu():
         elif choice == "u":
             update_project()
         elif choice == "3":
-            # Проверяем и открываем порт перед запуском Gradio
             port = 7860
-            #print(f"🔓 Открытие порта {port} через firewalld...")
-            #open_firewalld_port(port)
-            handle_port_conflict(port)
             run_gradio_admin_interface(port=port)
-            #print(f"🔒 Закрытие порта {port} через firewalld...")
-            #close_firewalld_port(port)
         elif choice == "4":
             manage_users_menu()
         elif choice == "5":
