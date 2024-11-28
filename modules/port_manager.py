@@ -21,6 +21,7 @@ def handle_port_conflict(port):
                 print(f" ⚠️ - Порт {port} уже занят процессом с PID {pid}.")
                 if pid:
                     process_name = psutil.Process(pid).name()
+                    print("")
                     print(f" Процесс, использующий порт:\n {process_name} 🔪 (PID {pid}).")
                 else:
                     print(" Не удалось определить процесс, использующий порт.")
