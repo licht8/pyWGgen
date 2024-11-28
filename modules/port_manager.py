@@ -18,7 +18,7 @@ def handle_port_conflict(port):
             if conn.laddr.port == port:
                 pid = conn.pid
                 print("\n ")
-                print(f"\033[1m ⚠️  Порт {port} уже занят процессом с PID {pid}.\033[0m")
+                print(f"\033[1m ⚠️  Порт {port} уже занят \n  процессом с PID 🆔 {pid}.\033[0m")
 
                 if pid:
                     process_name = psutil.Process(pid).name()
