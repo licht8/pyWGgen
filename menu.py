@@ -6,6 +6,7 @@ import os
 import sys
 import subprocess
 from modules.firewall_utils import get_external_ip
+from settings import DIAGNOSTICS_LOG
 
 # Установить путь к корню проекта
 project_root = os.path.dirname(os.path.abspath(__file__))
@@ -21,10 +22,7 @@ from modules.report_utils import generate_project_report, display_test_report, d
 from modules.update_utils import update_project
 from modules.sync import sync_users_with_wireguard
 from modules.manage_users_menu import manage_users_menu
-from modules.debugger import run_diagnostics  # Исправленный импорт функции диагностики
-
-# Путь к файлу журнала диагностики
-DIAGNOSTICS_LOG = os.path.join(project_root, "logs", "diagnostics.log")
+from modules.debugger import run_diagnostics
 
 
 def show_diagnostics_log():
@@ -62,7 +60,7 @@ def show_main_menu():
         print(f" sr. 🗂️   Показать краткий отчет")
         print(f" fr. 📄  Показать полный отчет")
         print(f" dg. 🛠️   Запустить диагностику проекта")
-        print(f" sd. 🛠️   Показать журнал диагностики")  # Новый пункт меню
+        print(f" sd. 📋  Показать журнал диагностики")  # Новый пункт меню
         print(f"\n\t 0 или q. Выход")
         print(f" ==========================================\n")
         
@@ -77,9 +75,8 @@ def show_main_menu():
         elif choice == "up":
             update_project()
         elif choice == "g":
-            # Проверяем, занят ли порт перед запуском Gradio
             port = 7860
-            action = handle_port_conflict(port)  # Проверяем состояние порта
+            action = handle_port_conflict(port)
             if action == "ok":
                 print(f"\n ✅  Запускаем Gradio интерфейс http://{get_external_ip()}:{port}")
                 run_gradio_admin_interface(port=port)
@@ -87,7 +84,7 @@ def show_main_menu():
                 print(f" ✅  Теперь запускаем Gradio http://{get_external_ip()}:{port}.")
                 run_gradio_admin_interface(port=port)
             elif action == "restart":
-                print(f" 🚫 Порт {port} все еще занят. \n ==========================================\n ")
+                print(f" 🚫 Порт {port} все еще занят.")
             elif action == "exit":
                 print(f"\n 🔙 Возврат в главное меню.")
         elif choice == "u":
@@ -113,7 +110,7 @@ def show_main_menu():
             sync_users_with_wireguard()
         elif choice == "dg":
             print("🔍  Запуск диагностики проекта...")
-            run_diagnostics()  # Вызов функции диагностики
+            run_diagnostics()
         elif choice == "sd":
             print("📋  Показ журнала диагностики...")
             show_diagnostics_log()
