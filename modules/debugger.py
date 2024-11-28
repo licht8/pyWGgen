@@ -12,13 +12,12 @@ Date: [Today's Date]
 
 import os
 import sys
-import json
 from datetime import datetime
 from pathlib import Path
+from settings import DIAGNOSTICS_LOG  # Используем унифицированный путь для файла лога
 
 # Constants
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-REPORT_FILE = PROJECT_ROOT / "modules" / "debug_report.txt"
 EXCLUDE_DIRS = ['venv', '.pytest_cache', '.git', 'temp', '__pycache__']
 MAX_VISIBLE_FILES = 100  # Maximum files/folders visible in the structure report
 ICONS = {
@@ -29,11 +28,8 @@ ICONS = {
 }
 
 
-# Function to collect Python environment details
 def get_python_environment():
-    """
-    Collect details about the current Python environment.
-    """
+    """Collect details about the current Python environment."""
     return {
         "Python Executable": sys.executable,
         "Python Version": sys.version,
@@ -41,21 +37,15 @@ def get_python_environment():
     }
 
 
-# Function to collect project structure, with excluded directories
 def get_project_structure(root_dir, exclude_dirs, max_visible_files):
-    """
-    Generate a structured representation of the project directory.
-    Excludes specified directories from the structure report.
-    """
+    """Generate a structured representation of the project directory."""
     structure = ["=== Project Structure ==="]
     for root, dirs, files in os.walk(root_dir):
-        # Exclude unwanted directories
         dirs[:] = [d for d in dirs if d not in exclude_dirs]
         relative_path = os.path.relpath(root, root_dir)
         structure.append(f"{ICONS['dir']} {relative_path}")
         total_items = len(dirs) + len(files)
 
-        # Truncate display for large directories
         if total_items > max_visible_files:
             structure.append(f"  ├── 📂 Contains {len(dirs)} folders and {len(files)} files")
         else:
@@ -66,11 +56,8 @@ def get_project_structure(root_dir, exclude_dirs, max_visible_files):
     return "\n".join(structure)
 
 
-# Function to verify required files and directories
 def check_required_items(required_items):
-    """
-    Check the existence of required files and directories.
-    """
+    """Check the existence of required files and directories."""
     results = []
     for item in required_items:
         item_path = PROJECT_ROOT / item
@@ -78,7 +65,6 @@ def check_required_items(required_items):
             results.append(f"{ICONS['check']} Exists: {item}")
         else:
             results.append(f"{ICONS['cross']} Missing: {item}")
-            # Create missing directories or files
             if item_path.suffix:  # It's a file
                 item_path.parent.mkdir(parents=True, exist_ok=True)
                 item_path.write_text("{}")  # Create an empty JSON file
@@ -89,11 +75,8 @@ def check_required_items(required_items):
     return "\n".join(results)
 
 
-# Function to search for specific functions in project files
 def search_functions_in_files(functions, root_dir):
-    """
-    Search for specific function definitions across the project files.
-    """
+    """Search for specific function definitions across the project files."""
     results = {func: [] for func in functions}
     for root, dirs, files in os.walk(root_dir):
         dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
@@ -109,20 +92,15 @@ def search_functions_in_files(functions, root_dir):
     return results
 
 
-# Function to write the diagnostic report
 def write_report(report_data, output_file):
-    """
-    Write the generated diagnostic report to a file.
-    """
+    """Write the generated diagnostic report to a file."""
+    os.makedirs(output_file.parent, exist_ok=True)  # Ensure log directory exists
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(report_data)
 
 
-# Main diagnostic function
 def run_diagnostics():
-    """
-    Main function to generate and write the diagnostic report.
-    """
+    """Main function to generate and write the diagnostic report."""
     timestamp = datetime.now().isoformat()
     required_items = [
         "user/data/qrcodes",
@@ -139,13 +117,11 @@ def run_diagnostics():
         "sync_users_with_wireguard"
     ]
 
-    # Collect data
     python_env = get_python_environment()
     project_structure = get_project_structure(PROJECT_ROOT, EXCLUDE_DIRS, MAX_VISIBLE_FILES)
     required_checks = check_required_items(required_items)
     function_search_results = search_functions_in_files(functions_to_search, PROJECT_ROOT)
 
-    # Generate report
     report = [
         f"=== Diagnostic Report for wg_qr_generator ===",
         f"Timestamp: {timestamp}",
@@ -166,11 +142,9 @@ def run_diagnostics():
     ]
     report_data = "\n".join(report)
 
-    # Write to file
-    write_report(report_data, REPORT_FILE)
-    print(f"Diagnostic report written to {REPORT_FILE}")
+    write_report(report_data, DIAGNOSTICS_LOG)
+    print(f"Diagnostic report written to {DIAGNOSTICS_LOG}")
 
 
-# Run diagnostics when executed as a script
 if __name__ == "__main__":
     run_diagnostics()
