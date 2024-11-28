@@ -3,10 +3,14 @@ import time
 import sys
 from pathlib import Path
 
-# Пути к файлам
-DEBUG_REPORT_PATH = Path("debug_report.txt")  # Путь к отчету диагностики
-TEST_REPORT_PATH = Path("test_report.txt")    # Путь к отчету тестирования
-MESSAGES_DB_PATH = Path("messages_db.json")   # Путь к базе сообщений
+# Определяем базовый путь к корню проекта
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Пути к отчетам и базе сообщений
+DEBUG_REPORT_PATH = BASE_DIR / "debug_report.txt"  # Путь к отчету диагностики
+TEST_REPORT_PATH = BASE_DIR / "test_report.txt"    # Путь к отчету тестирования
+MESSAGES_DB_PATH = BASE_DIR / "ai_diagnostics" / "messages_db.json"  # Путь к базе сообщений
+
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
     """Парсер для анализа отчетов."""
