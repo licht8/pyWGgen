@@ -22,7 +22,7 @@ LOG_LEVEL = "INFO"
 # Пути к отчетам и базе сообщений
 DEBUG_REPORT_PATH = BASE_DIR / "debug_report.txt"  # Путь к отчету диагностики
 TEST_REPORT_PATH = BASE_DIR / "test_report.txt"    # Путь к отчету тестирования
-MESSAGES_DB_PATH = BASE_DIR / "ai_diagnostics/messages_db.json"  # Путь к базе сообщений
+MESSAGES_DB_PATH = BASE_DIR / "wg_qr_generator/ai_diagnostics/messages_db.json"  # Путь к базе сообщений
 
 # Путь к журналу диагностики
 DIAGNOSTICS_LOG = BASE_DIR / "user/data/logs/diagnostics.log"
