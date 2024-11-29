@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
-# Справочная система для проекта wg_qr_generator.
+# Справочная система для проекта wg_qr_generator с улучшенным форматированием текста.
 # Версия: 1.5
 # Обновлено: 2024-11-29
 
@@ -21,36 +21,57 @@ from ai_diagnostics.ai_diagnostics import display_message_slowly
 
 HELP_JSON_PATH = PROJECT_ROOT / "ai_diagnostics" / "ai_help" / "ai_help.json"
 
+LINE_WIDTH = {
+    "menu": 60,  # Ширина строк для меню
+    "details": 70,  # Ширина строк для подробного описания
+    "general": 80  # Максимальная ширина строк
+}
+
+
+def wrap_text(text, width, indent=4):
+    """
+    Форматирует текст по ширине с заданным отступом.
+    
+    Args:
+        text (str): Исходный текст.
+        width (int): Максимальная ширина строки.
+        indent (int): Отступ в пробелах.
+
+    Returns:
+        str: Отформатированный текст.
+    """
+    words = text.split()
+    lines = []
+    current_line = ""
+
+    for word in words:
+        if len(current_line) + len(word) + 1 > width:
+            lines.append(" " * indent + current_line)
+            current_line = word
+        else:
+            if current_line:
+                current_line += " "
+            current_line += word
+
+    if current_line:
+        lines.append(" " * indent + current_line)
+
+    return "\n".join(lines)
+
 
 def load_help_data():
-    """Загружает справочные данные из JSON файлов."""
-    help_data = {}
-    for file in Path(HELP_JSON_PATH).parent.glob("*.json"):
-        try:
-            with open(file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                for key, section in data.items():
-                    if not all(k in section for k in ("title", "short", "long")):
-                        print(f"⚠️  Проблема в разделе '{key}' в файле {file}: отсутствует один из ключей ('title', 'short', 'long').")
-                help_data.update(data)
-        except json.JSONDecodeError as e:
-            print(f"⚠️  Ошибка загрузки файла {file}: {e}")
-    return help_data
-
-
-def format_text(text, max_length=70):
-    """Форматирует текст с ограничением по длине строки."""
-    words = text.split()
-    lines, current_line = [], []
-    for word in words:
-        if sum(len(w) for w in current_line) + len(current_line) + len(word) <= max_length:
-            current_line.append(word)
-        else:
-            lines.append(" ".join(current_line))
-            current_line = [word]
-    if current_line:
-        lines.append(" ".join(current_line))
-    return "\n".join(lines)
+    """Загружает справочные данные из JSON файла."""
+    try:
+        with open(HELP_JSON_PATH, "r", encoding="utf-8") as file:
+            data = json.load(file)
+            # Проверка структуры данных
+            for key, section in data.items():
+                if "title" not in section or "short" not in section or "long" not in section:
+                    print(f"⚠️  Проблема в разделе '{key}': отсутствует один из ключей ('title', 'short', 'long').")
+            return data
+    except Exception as e:
+        print(f"Ошибка загрузки справочного файла: {e}")
+        return None
 
 
 def save_help_section(section):
@@ -59,7 +80,7 @@ def save_help_section(section):
     with open(filename, "w", encoding="utf-8") as file:
         file.write(f"{section['title']}\n")
         file.write("=" * len(section['title']) + "\n")
-        file.write(format_text(section.get('long', "Подробная информация отсутствует.")) + "\n")
+        file.write(wrap_text(section.get('long', "Подробная информация отсутствует."), LINE_WIDTH["details"]) + "\n")
     print(f"\n   📁  Раздел сохранён в файл: {filename}\n")
 
 
@@ -69,15 +90,17 @@ def display_help_menu(help_data):
     print("   ======================")
     for idx, section in enumerate(help_data.values(), start=1):
         print(f"   {idx}. {section['title']}")
-        print(f"        {format_text(section['short'], max_length=60)}\n")
+        print(wrap_text(section['short'], LINE_WIDTH["menu"]) + "\n")
     print("   0. Выйти из справки\n")
 
 
 def display_detailed_help(section):
     """Выводит подробное описание выбранного раздела."""
+    if 'long' not in section:
+        print(f"⚠️  Проблема в разделе '{section['title']}': отсутствует ключ 'long'.")
     print(f"\n   {section['title']}")
     print(f"   {'=' * len(section['title'])}")
-    display_message_slowly(format_text(section.get('long', "Подробная информация отсутствует.")))
+    display_message_slowly(wrap_text(section.get('long', "Подробная информация отсутствует."), LINE_WIDTH["details"]))
     print("\n   🔹 Хотите сохранить этот раздел? (y/n): ", end="")
     if input().strip().lower() == "y":
         save_help_section(section)
@@ -104,8 +127,11 @@ def interactive_help():
                 section = list(help_data.values())[index - 1]
                 display_detailed_help(section)
                 continue
+            else:
+                print("\n   ❌  Неверный выбор. Попробуйте снова.\n")
+                continue
 
-        # Поиск по ключевым словам, включая числа
+        # Поиск по ключевым словам
         matched_sections = [section for section in help_data.values()
                             if user_input in section['title'].lower() or
                             user_input in section['short'].lower() or
@@ -116,7 +142,7 @@ def interactive_help():
         elif len(matched_sections) > 1:
             print("\n   🔍  Найдено несколько совпадений:")
             for idx, section in enumerate(matched_sections, start=1):
-                print(f"   {idx}. {section['title']} - {format_text(section['short'], max_length=60)}")
+                print(f"   {idx}. {section['title']} - {wrap_text(section['short'], LINE_WIDTH['menu'])}")
             choice = input("\n   Выберите номер подходящего варианта: ").strip()
             if choice.isdigit() and 1 <= int(choice) <= len(matched_sections):
                 display_detailed_help(matched_sections[int(choice) - 1])
