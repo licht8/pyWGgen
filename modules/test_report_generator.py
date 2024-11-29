@@ -8,6 +8,7 @@
 import os
 import json
 import subprocess
+import sys  # Добавлен импорт sys
 from datetime import datetime
 from pathlib import Path
 from prettytable import PrettyTable
