@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Скрипт для работы со справочной системой проекта wg_qr_generator.
-# Версия: 1.0
+# Версия: 1.1
 # Обновлено: 2024-11-29
 
 import json
-import time
+import sys
 from pathlib import Path
+
+# Добавляем корневую директорию проекта в sys.path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.append(str(PROJECT_ROOT))
+
+# Импорт модулей
 from settings import HELP_JSON_PATH
 from ai_diagnostics.modules.pause_rules import apply_pause, get_pause_rules
 from ai_diagnostics.ai_diagnostics import display_message_slowly
