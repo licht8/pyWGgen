@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 2.3
-# Обновлено: 2024-11-29 16:45
-
+# Версия: 2.4
+# Обновлено: 2024-11-29
 
 import json
 import sys
@@ -170,7 +169,8 @@ def search_in_matches(matches):
             matches = [section for section in matches
                        if user_input in section['title'].lower() or
                        user_input in section['short'].lower() or
-                       user_input in section.get('long', "").lower()]
+                       user_input in section.get('long', "").lower() or
+                       user_input.isdigit() and user_input in section['title']]
             if len(matches) == 1:
                 return matches[0]
             elif not matches:
@@ -205,7 +205,8 @@ def interactive_help():
             matched_sections = [section for section in help_data.values()
                                 if user_input in section['title'].lower() or
                                 user_input in section['short'].lower() or
-                                user_input in section.get('long', "").lower()]
+                                user_input in section.get('long', "").lower() or
+                                user_input.isdigit() and user_input in section['title']]
 
             if len(matched_sections) == 1:
                 display_detailed_help(matched_sections[0])
