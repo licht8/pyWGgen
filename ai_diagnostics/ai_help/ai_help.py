@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 1.2
+# Версия: 1.2.1
 # Обновлено: 2024-11-29
 
 import json
@@ -38,7 +38,7 @@ def save_help_section(section):
     with open(filename, "w", encoding="utf-8") as file:
         file.write(f"{section['title']}\n")
         file.write("=" * len(section['title']) + "\n")
-        file.write(section['long'] + "\n")
+        file.write(section.get('long', "Подробная информация отсутствует.") + "\n")
     print(f"\n   📁  Раздел сохранён в файл: {filename}\n")
 
 
@@ -56,7 +56,7 @@ def display_detailed_help(section):
     """Выводит подробное описание выбранного раздела."""
     print(f"\n   {section['title']}")
     print(f"   {'=' * len(section['title'])}")
-    display_message_slowly(section['long'])
+    display_message_slowly(section.get('long', "Подробная информация отсутствует."))
     print("\n   🔹 Хотите сохранить этот раздел? (y/n): ", end="")
     if input().strip().lower() == "y":
         save_help_section(section)
@@ -80,7 +80,7 @@ def interactive_help():
         matched_sections = [section for section in help_data.values()
                             if user_input in section['title'].lower() or
                             user_input in section['short'].lower() or
-                            user_input in section['long'].lower()]
+                            user_input in section.get('long', "").lower()]
 
         if len(matched_sections) == 1:
             display_detailed_help(matched_sections[0])
