@@ -62,7 +62,7 @@ def generate_debug_report():
     display_message_slowly(
         f"""
 ✅  Отчёт диагностики обновлён...
-✅  Отчёт сохранён в\n✅   {DEBUG_REPORT_PATH}
+✅  Отчёт сохранён в:\n✅  {DEBUG_REPORT_PATH}
         """
     )
 
@@ -76,7 +76,7 @@ def generate_test_report():
     display_message_slowly(
         f"""
 ✅  Тестовый отчёт обновлён...
-✅  Отчёт сохранён в\n✅    {TEST_REPORT_PATH}
+✅  Отчёт сохранён в:\n✅  {TEST_REPORT_PATH}
         """
     )
 
