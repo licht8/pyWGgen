@@ -3,8 +3,8 @@
 # ===========================================
 # Настройки проекта wg_qr_generator
 # ===========================================
-# Этот файл содержит основные настройки проекта, включая пути к файлам, 
-# директориям, конфигурациям, а также глобальные параметры. 
+# Этот файл содержит основные настройки проекта, включая пути к файлам,
+# директориям, конфигурациям, а также глобальные параметры.
 # Он централизует все важные переменные для упрощения поддержки проекта.
 #
 # Пример использования:
@@ -16,6 +16,8 @@
 # print(f"Порт для запуска Gradio: {GRADIO_PORT}")
 #
 # ВАЖНО: Все пути и параметры следует указывать относительно BASE_DIR.
+#
+# Версия: Пт. 29 ноября 11:40
 
 from pathlib import Path
 
@@ -44,6 +46,9 @@ DEBUG_REPORT_PATH = PROJECT_DIR / "ai_diagnostics/debug_report.txt"  # Путь 
 TEST_REPORT_PATH = PROJECT_DIR / "ai_diagnostics/test_report.txt"    # Путь к отчету тестирования
 MESSAGES_DB_PATH = PROJECT_DIR / "ai_diagnostics/messages_db.json"   # Путь к базе сообщений
 
+# Пути к справке
+HELP_JSON_PATH = PROJECT_DIR / "ai_diagnostics/ai_help/ai_help.json"  # Новый путь для справочной системы
+
 # Путь к журналу диагностики
 DIAGNOSTICS_LOG = BASE_DIR / "user/data/logs/diagnostics.log"
 
@@ -65,6 +70,7 @@ def check_paths():
         "DEBUG_REPORT_PATH": DEBUG_REPORT_PATH,
         "TEST_REPORT_PATH": TEST_REPORT_PATH,
         "MESSAGES_DB_PATH": MESSAGES_DB_PATH,
+        "HELP_JSON_PATH": HELP_JSON_PATH,  # Проверяем новый путь
         "DIAGNOSTICS_LOG": DIAGNOSTICS_LOG,
     }
     status = []
