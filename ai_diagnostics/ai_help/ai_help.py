@@ -155,13 +155,15 @@ def search_in_matches(matches):
 
         user_input = input("\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
 
+        # Если ввод - число
         if user_input.isdigit():
-            # Сначала проверяем как номер варианта
             index = int(user_input)
+
+            # Проверить как индекс
             if 1 <= index <= len(matches):
                 return matches[index - 1]
 
-            # Если не номер, проверяем как ключевое слово
+            # Проверить как ключевое слово
             num_matches = [
                 section for section in matches
                 if user_input in section['title'] or
@@ -169,26 +171,26 @@ def search_in_matches(matches):
                 user_input in section.get('long', "")
             ]
             if len(num_matches) == 1:
-                return num_matches[0]  # Если найдено одно совпадение
+                return num_matches[0]
             elif len(num_matches) > 1:
-                matches = num_matches  # Уточняем поиск
+                matches = num_matches
                 continue
             else:
                 print("\n   ❌  Ничего не найдено. Попробуйте снова.")
-        else:
-            # Повторный текстовый поиск
-            matches = [
-                section for section in matches
-                if user_input in section['title'].lower() or
-                user_input in section['short'].lower() or
-                user_input in section.get('long', "").lower()
-            ]
-            if len(matches) == 1:
-                return matches[0]
-            elif not matches:
-                print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
-                break
+                continue
 
+        # Если текстовый ввод
+        matches = [
+            section for section in matches
+            if user_input in section['title'].lower() or
+            user_input in section['short'].lower() or
+            user_input in section.get('long', "").lower()
+        ]
+        if len(matches) == 1:
+            return matches[0]
+        elif not matches:
+            print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
+            break
 
 
 def interactive_help():
