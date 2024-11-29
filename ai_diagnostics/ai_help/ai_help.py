@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 1.8
+# Версия: 1.9
 # Обновлено: 2024-11-29
 
 import json
@@ -28,18 +28,22 @@ LINE_WIDTH = {
 
 
 def wrap_text(text, width, indent=4):
-    """Форматирует текст по ширине строки с заданным отступом."""
+    """
+    Форматирует текст по ширине строки с заданным отступом.
+    """
     words = text.split()
     lines = []
     current_line = ""
 
     for word in words:
+        # Учитываем длину текущей строки + пробел + длину нового слова
         if len(current_line) + len(word) + 1 > width:
             lines.append(" " * indent + current_line)
             current_line = word
         else:
             current_line += ("" if current_line == "" else " ") + word
 
+    # Добавляем последнюю строку, если она есть
     if current_line:
         lines.append(" " * indent + current_line)
 
@@ -78,7 +82,7 @@ def display_help_menu(help_data):
     print("   ======================")
     for idx, section in enumerate(help_data.values(), start=1):
         print(f"   {idx}. {section['title']}")
-        print(wrap_text(section['short'], LINE_WIDTH["menu"]) + "\n")
+        print(wrap_text(section['short'], LINE_WIDTH["menu"], indent=6) + "\n")
     print("   0. Выйти из справки\n")
 
 
@@ -103,7 +107,7 @@ def search_in_matches(matches):
         print("\n   🔍  Найдено несколько совпадений:")
         for idx, section in enumerate(matches, start=1):
             print(f"   {idx}. {section['title']}")
-            print(wrap_text(section['short'], LINE_WIDTH["menu"]) + "\n")
+            print(wrap_text(section['short'], LINE_WIDTH["menu"], indent=6) + "\n")
 
         user_input = input("\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
 
