@@ -117,6 +117,7 @@ def display_detailed_help(section):
     elif user_input in {"0", "q"}:
         print("\n   📖  Возврат в главное меню.")
 
+
 def search_in_matches(matches):
     """Обрабатывает повторный поиск в найденных совпадениях."""
     while True:
