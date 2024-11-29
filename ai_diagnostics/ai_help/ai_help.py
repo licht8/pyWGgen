@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 2.1
+# Версия: 2.2
 # Обновлено: 2024-11-29
 
 import json
@@ -46,12 +46,12 @@ def wrap_text(text, width, indent=4):
         words = line.split()
         for word in words:
             if len(current_line) + len(word) + 1 > width:
-                lines.append(indent_str + current_line)
+                lines.append(f"{indent_str}{current_line}")
                 current_line = word
             else:
                 current_line += ("" if current_line == "" else " ") + word
         if current_line:
-            lines.append(indent_str + current_line)
+            lines.append(f"{indent_str}{current_line}")
             current_line = ""
 
     return "\n".join(lines)
@@ -76,18 +76,18 @@ def save_help_section(section):
     filename = f"{section['title'].strip()}.txt".replace(" ", "_")
     with open(filename, "w", encoding="utf-8") as file:
         file.write(f"{section['title']}\n")
-        file.write("=" * len(section['title']) + "\n")
-        file.write(wrap_text(section.get('long', "Подробная информация отсутствует."), LINE_WIDTH["details"]) + "\n")
+        file.write(f"{'=' * len(section['title'])}\n")
+        file.write(f"{wrap_text(section.get('long', 'Подробная информация отсутствует.'), LINE_WIDTH['details'])}\n")
     print(f"\n   📁  Раздел сохранён в файл: {filename}\n")
 
 def display_help_menu(help_data):
     """Выводит главное меню справочной системы."""
-    print("\n   📖  Справочная система")
-    print("   ======================")
+    print(f"\n   📖  Справочная система")
+    print(f"   ======================")
     for idx, section in enumerate(help_data.values(), start=1):
         print(f"   {idx}. {section['title']}")
-        print(wrap_text(section['short'], LINE_WIDTH["menu"], indent=6) + "\n")
-    print("   0. Выйти из справки\n")
+        print(f"{wrap_text(section['short'], LINE_WIDTH['menu'], indent=6)}\n")
+    print(f"   0. Выйти из справки\n")
 
 def display_detailed_help(section):
     """Выводит подробное описание выбранного раздела."""
@@ -95,30 +95,30 @@ def display_detailed_help(section):
         print(f"⚠️  Проблема в разделе '{section['title']}': отсутствует ключ 'long'.")
     print(f"\n   {section['title']}")
     print(f"   {'=' * len(section['title'])}")
-    display_message_slowly(wrap_text(section.get('long', "Подробная информация отсутствует."), LINE_WIDTH["details"]))
-    print("\n   🔹 Хотите сохранить этот раздел? ( д/н ): ", end="")
+    display_message_slowly(f"{wrap_text(section.get('long', 'Подробная информация отсутствует.'), LINE_WIDTH['details'])}")
+    print(f"\n   🔹 Хотите сохранить этот раздел? ( д/н ): ", end="")
     user_input = input().strip().lower()
     if user_input in {"д", "y"}:
         save_help_section(section)
     elif user_input in {"0", "q"}:
-        print("\n   📖  Возврат в главное меню.")
+        print(f"\n   📖  Возврат в главное меню.")
 
 def search_in_matches(matches):
     """Обрабатывает повторный поиск в найденных совпадениях."""
     while True:
-        print("\n   🔍  Найдено несколько совпадений:")
+        print(f"\n   🔍  Найдено несколько совпадений:")
         for idx, section in enumerate(matches, start=1):
             print(f"   {idx}. {section['title']}")
-            print(wrap_text(section['short'], LINE_WIDTH["menu"], indent=6) + "\n")
+            print(f"{wrap_text(section['short'], LINE_WIDTH['menu'], indent=6)}\n")
 
-        user_input = input("\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
+        user_input = input(f"\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
 
         if user_input.isdigit():
             index = int(user_input)
             if 1 <= index <= len(matches):
                 return matches[index - 1]
             else:
-                print("\n   ❌  Неверный выбор. Попробуйте снова.")
+                print(f"\n   ❌  Неверный выбор. Попробуйте снова.")
         else:
             matches = [section for section in matches
                        if user_input in section['title'].lower() or
@@ -127,22 +127,22 @@ def search_in_matches(matches):
             if len(matches) == 1:
                 return matches[0]
             elif not matches:
-                print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
+                print(f"\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
                 break
 
 def interactive_help():
     """Основной цикл взаимодействия со справочной системой."""
     help_data = load_help_files()
     if not help_data:
-        print("   ❌  Справочная информация недоступна.")
+        print(f"   ❌  Справочная информация недоступна.")
         return
 
     while True:
         display_help_menu(help_data)
-        user_input = input("   Выберите номер раздела или введите ключевое слово: ").strip().lower()
+        user_input = input(f"   Выберите номер раздела или введите ключевое слово: ").strip().lower()
 
         if user_input in {"0", "q", "exit"}:
-            print("\n   📖  Выход из справочной системы.")
+            print(f"\n   📖  Выход из справочной системы.")
             break
 
         if user_input.isdigit():
@@ -164,7 +164,7 @@ def interactive_help():
             if matches:
                 display_detailed_help(matches)
         else:
-            print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.\n")
+            print(f"\n   ❌  Ничего не найдено. Попробуйте другой запрос.\n")
 
 if __name__ == "__main__":
     interactive_help()
