@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 1.7 (промежуточная стабильная)
-# Обновлено: 2024-11-29 14:23
+# Версия: 1.8
+# Обновлено: 2024-11-29
 
 import json
 import sys
@@ -19,6 +19,31 @@ sys.path.append(str(MODULES_DIR))
 # Импорты
 from pause_rules import apply_pause, get_pause_rules
 from ai_diagnostics.ai_diagnostics import display_message_slowly
+
+# Конфигурация для форматирования текста
+LINE_WIDTH = {
+    "menu": 60,
+    "details": 70
+}
+
+
+def wrap_text(text, width, indent=4):
+    """Форматирует текст по ширине строки с заданным отступом."""
+    words = text.split()
+    lines = []
+    current_line = ""
+
+    for word in words:
+        if len(current_line) + len(word) + 1 > width:
+            lines.append(" " * indent + current_line)
+            current_line = word
+        else:
+            current_line += ("" if current_line == "" else " ") + word
+
+    if current_line:
+        lines.append(" " * indent + current_line)
+
+    return "\n".join(lines)
 
 
 def load_help_files():
@@ -43,25 +68,8 @@ def save_help_section(section):
     with open(filename, "w", encoding="utf-8") as file:
         file.write(f"{section['title']}\n")
         file.write("=" * len(section['title']) + "\n")
-        file.write(section.get('long', "Подробная информация отсутствует.") + "\n")
+        file.write(wrap_text(section.get('long', "Подробная информация отсутствует."), LINE_WIDTH["details"]) + "\n")
     print(f"\n   📁  Раздел сохранён в файл: {filename}\n")
-
-
-def format_text(text, width=70, indent=4):
-    """Форматирует текст с заданной шириной и отступом."""
-    words = text.split()
-    lines = []
-    current_line = " " * indent  # Инициализация строки с отступом
-
-    for word in words:
-        if len(current_line) + len(word) + 1 > width:
-            lines.append(current_line.rstrip())
-            current_line = " " * indent + word + " "
-        else:
-            current_line += word + " "
-    
-    lines.append(current_line.rstrip())  # Добавляем последнюю строку
-    return "\n".join(lines)
 
 
 def display_help_menu(help_data):
@@ -70,17 +78,8 @@ def display_help_menu(help_data):
     print("   ======================")
     for idx, section in enumerate(help_data.values(), start=1):
         print(f"   {idx}. {section['title']}")
-        print(f"{format_text(section['short'], indent=8)}\n")
+        print(wrap_text(section['short'], LINE_WIDTH["menu"]) + "\n")
     print("   0. Выйти из справки\n")
-
-
-def display_search_results(matched_sections):
-    """Отображает результаты поиска."""
-    print("\n   🔍  Найдено несколько совпадений:")
-    for idx, section in enumerate(matched_sections, start=1):
-        print(f"   {idx}. {section['title']} -")
-        formatted_short = format_text(section['short'], width=70, indent=8)
-        print(formatted_short)
 
 
 def display_detailed_help(section):
@@ -89,10 +88,41 @@ def display_detailed_help(section):
         print(f"⚠️  Проблема в разделе '{section['title']}': отсутствует ключ 'long'.")
     print(f"\n   {section['title']}")
     print(f"   {'=' * len(section['title'])}")
-    display_message_slowly(section.get('long', "Подробная информация отсутствует."))
-    print("\n   🔹 Хотите сохранить этот раздел? (y/n): ", end="")
-    if input().strip().lower() == "y":
+    display_message_slowly(wrap_text(section.get('long', "Подробная информация отсутствует."), LINE_WIDTH["details"]))
+    print("\n   🔹 Хотите сохранить этот раздел? ( д/н ): ", end="")
+    user_input = input().strip().lower()
+    if user_input in {"д", "y"}:
         save_help_section(section)
+    elif user_input in {"0", "q"}:
+        print("\n   📖  Возврат в главное меню.")
+
+
+def search_in_matches(matches):
+    """Обрабатывает повторный поиск в найденных совпадениях."""
+    while True:
+        print("\n   🔍  Найдено несколько совпадений:")
+        for idx, section in enumerate(matches, start=1):
+            print(f"   {idx}. {section['title']}")
+            print(wrap_text(section['short'], LINE_WIDTH["menu"]) + "\n")
+
+        user_input = input("\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
+
+        if user_input.isdigit():  # Выбор по номеру
+            index = int(user_input)
+            if 1 <= index <= len(matches):
+                return matches[index - 1]
+            else:
+                print("\n   ❌  Неверный выбор. Попробуйте снова.")
+        else:  # Повторный поиск
+            matches = [section for section in matches
+                       if user_input in section['title'].lower() or
+                       user_input in section['short'].lower() or
+                       user_input in section.get('long', "").lower()]
+            if len(matches) == 1:
+                return matches[0]
+            elif not matches:
+                print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
+                break
 
 
 def interactive_help():
@@ -129,12 +159,9 @@ def interactive_help():
         if len(matched_sections) == 1:
             display_detailed_help(matched_sections[0])
         elif len(matched_sections) > 1:
-            display_search_results(matched_sections)
-            choice = input("\n   Выберите номер подходящего варианта: ").strip()
-            if choice.isdigit() and 1 <= int(choice) <= len(matched_sections):
-                display_detailed_help(matched_sections[int(choice) - 1])
-            else:
-                print("\n   ❌  Неверный выбор. Попробуйте снова.")
+            result = search_in_matches(matched_sections)
+            if result:
+                display_detailed_help(result)
         else:
             print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.\n")
 
