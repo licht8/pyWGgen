@@ -163,8 +163,22 @@ def search_in_matches(matches):
             if 1 <= index <= len(matches):
                 return matches[index - 1]
 
-            print("\n   ❌  Неверный выбор. Попробуйте снова.")
-            continue
+            # Если номер не найден, интерпретируем как текст
+            print("\n   🔍  Повторный поиск по ключевому слову...")
+            filtered_matches = [
+                section for section in matches
+                if user_input in section['title'].lower() or
+                user_input in section['short'].lower() or
+                user_input in section.get('long', "").lower()
+            ]
+            if len(filtered_matches) == 1:
+                return filtered_matches[0]
+            elif len(filtered_matches) > 1:
+                matches = filtered_matches  # Обновляем список совпадений
+                continue
+            else:
+                print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
+                break
 
         # Если ввод - текст
         filtered_matches = [
