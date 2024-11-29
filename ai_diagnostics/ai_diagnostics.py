@@ -28,7 +28,7 @@ def run_command(command):
 
 def generate_debug_report():
     """Запускает дебаггер для создания свежего debug_report.txt."""
-    print("\n   🤖  Генерация отчёта диагностики (debug_report)...")
+    print("\n   🤖  Генерация отчёта диагностики...")
     print("   " + "=" * 40)  # Добавляем разделитель
     command = [sys.executable, PROJECT_ROOT / "modules" / "debugger.py"]
     output = run_command(command)
@@ -37,7 +37,7 @@ def generate_debug_report():
 
 def generate_test_report():
     """Запускает тестирование проекта для создания test_report.txt."""
-    print("\n   🤖  Генерация тестового отчёта (test_report)...")
+    print("\n   🤖  Генерация тестового отчёта...")
     print("   " + "=" * 40)  # Добавляем разделитель
     command = [sys.executable, PROJECT_ROOT / "modules" / "test_report_generator.py"]
     output = run_command(command)
