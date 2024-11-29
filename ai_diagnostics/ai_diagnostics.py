@@ -2,7 +2,7 @@
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Генерирует отчёты и анализирует их, предоставляя рекомендации по исправлению проблем.
-# Версия: 3.1
+# Версия: 3.2
 # Обновлено: 2024-11-29
 
 import json
@@ -16,11 +16,10 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-# Проверяем sys.path для отладки
-print("sys.path:", sys.path)
-
-# Импорт настроек и модулей
+# Импорт настроек
 from settings import DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH
+
+# Импорт правил пауз
 from ai_diagnostics.modules.pause_rules import get_pause_rules, apply_pause
 
 
@@ -63,7 +62,7 @@ def generate_debug_report():
     """Запускает дебаггер для создания свежего debug_report.txt."""
     print("")
     animate_message("🤖  Генерация отчёта диагностики")
-    command = [sys.executable, PROJECT_ROOT / "modules" / "debugger.py"]
+    command = [sys.executable, PROJECT_ROOT / "ai_diagnostics" / "modules" / "debugger.py"]
     run_command(command)
     display_message_slowly(
         f"""
@@ -77,7 +76,7 @@ def generate_test_report():
     """Запускает тестирование проекта для создания test_report.txt."""
     print("")
     animate_message("🤖  Генерация тестового отчёта")
-    command = [sys.executable, PROJECT_ROOT / "modules" / "test_report_generator.py"]
+    command = [sys.executable, PROJECT_ROOT / "ai_diagnostics" / "modules" / "test_report_generator.py"]
     run_command(command)
     display_message_slowly(
         f"""
@@ -147,7 +146,10 @@ def main():
     generate_debug_report()
     generate_test_report()
 
+    # Удаляем дублирующий вызов
     animate_message("🎉  Завершаю анализ, пожалуйста подождите 🤖")
+    
+    # Вывод результатов анализа
     display_message_slowly("🎯  Вот что мы обнаружили:")
 
     # Запуск анализа
