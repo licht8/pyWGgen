@@ -145,7 +145,6 @@ def display_detailed_help(section):
     elif user_input in {"0", "q"}:
         print("\n   📖  Возврат в главное меню.")
 
-
 def search_in_matches(matches):
     """Обрабатывает повторный поиск в найденных совпадениях."""
     while True:
@@ -164,14 +163,13 @@ def search_in_matches(matches):
                 user_input in section.get('long', "")
             ]
             if len(num_matches) == 1:
-                return num_matches[0]  # Автоматически возвращаем, если единственное совпадение
+                return num_matches[0]  # Если найдено единственное совпадение
             elif len(num_matches) > 1:
-                matches = num_matches
+                matches = num_matches  # Уточняем поиск среди найденных
                 continue
             else:
-                # Обработка как индекса, если не найдено текстовое совпадение
                 index = int(user_input)
-                if 1 <= index <= len(matches):
+                if 1 <= index <= len(matches):  # Если ввод соответствует номеру варианта
                     return matches[index - 1]
                 else:
                     print("\n   ❌  Неверный выбор. Попробуйте снова.")
@@ -187,6 +185,7 @@ def search_in_matches(matches):
             elif not matches:
                 print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
                 break
+
 
 
 def interactive_help():
