@@ -2,7 +2,7 @@
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Генерирует отчёты и анализирует их, предоставляя рекомендации по исправлению проблем.
-# Версия: 2.9
+# Версия: 3.0
 # Обновлено: 2024-11-29
 
 import json
@@ -108,20 +108,19 @@ def display_message_slowly(title, message, paths):
     """Красивый вывод сообщения с форматированием."""
     formatted_message = format_message(message, paths)
     print(f"\n       {title}\n       {'=' * (len(title) + 2)}\n")  # Исправлены полоски "=="
-    for i, line in enumerate(formatted_message.split("\n")):
+    lines = formatted_message.split("\n")
+    for i, line in enumerate(lines):
         if not line.strip():
             print("       ")
             continue
-
-        # Добавлена пауза между блоками
-        if "1️⃣" in line and i + 2 < len(formatted_message.split("\n")) and "2️⃣" in formatted_message.split("\n")[i + 2]:
-            time.sleep(1)  # Пауза в 1 секунду
 
         print("       ", end="")
         for char in line:
             print(char, end="", flush=True)
             time.sleep(0.01)  # Уменьшено время на вывод символов
         print()
+        if "1️⃣" in line:  # Проверяем наличие "1️⃣"
+            time.sleep(1)  # Добавляем паузу в 1 секунду перед следующим блоком
         time.sleep(0.05)  # Уменьшено время между строками
 
 
