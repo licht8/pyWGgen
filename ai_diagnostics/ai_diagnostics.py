@@ -2,14 +2,12 @@
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Генерирует отчёты и анализирует их, предоставляя рекомендации по исправлению проблем.
-# Версия: 2.8
-# Обновлено: 2024-11-29
+# Версия: 1.2
 
 import json
 import time
 import sys
 import subprocess
-import random
 from pathlib import Path
 
 # Добавляем корневую директорию проекта в sys.path
@@ -24,36 +22,25 @@ def run_command(command):
     """Запускает внешнюю команду и возвращает её результат."""
     try:
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
-        return result.stdout.strip()
+        return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Ошибка: {e.stderr.strip()}"
 
 
-def animate_message(message):
-    """Выводит анимированное сообщение с эффектом перемигивания '...'. Время перемигивания до 2 секунд."""
-    for _ in range(3):  # Три итерации перемигивания
-        for dots in range(1, 4):
-            print(f"\r   {message}{'.' * dots}{' ' * (3 - dots)}", end="", flush=True)
-            time.sleep(random.uniform(0.2, 0.5))  # Задержка от 0.2 до 0.5 секунд
-    print(f"\r   {message} 🤖", flush=True)  # Завершающее сообщение с иконкой
-
-
 def generate_debug_report():
     """Запускает дебаггер для создания свежего debug_report.txt."""
-    print("\n")  # Добавлена строка перед генерацией
-    animate_message("🤖  Генерация отчёта диагностики")
+    print("\n   🤖  Генерация отчёта диагностики 🤖")
     command = [sys.executable, PROJECT_ROOT / "modules" / "debugger.py"]
     output = run_command(command)
-    print(f"     ✅  Отчёт диагностики обновлён...\n     ✅  Отчёт сохранён в {DEBUG_REPORT_PATH}")
+    print(f"     ✅  Отчёт диагностики обновлён...\n     ✅  Отчёт сохранён в {DEBUG_REPORT_PATH}\n")
 
 
 def generate_test_report():
     """Запускает тестирование проекта для создания test_report.txt."""
-    print("\n")  # Добавлена строка перед генерацией
-    animate_message("🤖  Генерация тестового отчёта")
+    print("\n   🤖  Генерация тестового отчёта 🤖")
     command = [sys.executable, PROJECT_ROOT / "modules" / "test_report_generator.py"]
     output = run_command(command)
-    print(f"     ✅  Тестовый отчёт обновлён...\n     ✅  Отчёт сохранён в {TEST_REPORT_PATH}")
+    print(f"     ✅  Тестовый отчёт обновлён...\n     ✅  Отчёт сохранён в {TEST_REPORT_PATH}\n")
 
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
@@ -105,37 +92,46 @@ def format_message(message, paths):
 
 
 def display_message_slowly(title, message, paths):
-    """Красивый вывод сообщения с форматированием."""
+    """Красивый вывод сообщения с форматированием и паузой между блоками."""
     formatted_message = format_message(message, paths)
-    print(f"\n       {title}\n       {'=' * (len(title) + 2)}\n")  # Исправлены полоски "=="
-    for line in formatted_message.split("\n"):
-        if not line.strip():
-            print("       ")
+    print(f"\n   {title}\n   {' ' * 2}{'=' * len(title)}\n")  # Заголовок с отступами
+
+    lines = formatted_message.split("\n")
+    for i, line in enumerate(lines):
+        if not line.strip():  # Пустая строка
+            print("   ")
             continue
-        print("       ", end="")
+
+        # Пауза между блоками 1️⃣ и 2️⃣
+        if "1️⃣" in line and i + 2 < len(lines) and "2️⃣" in lines[i + 2]:
+            time.sleep(1)  # Пауза между 1️⃣ и 2️⃣
+
+        print("   ", end="")
         for char in line:
             print(char, end="", flush=True)
-            time.sleep(0.01)  # Уменьшено время на вывод символов
-        print()
-        time.sleep(0.05)  # Уменьшено время между строками
+            time.sleep(0.02)  # Постепенный вывод
+        print()  # Завершение строки
+        time.sleep(0.1)  # Пауза между строками
+
+    print("\n")
 
 
 def main():
     """Основной запуск программы."""
+    # Генерация свежих данных
     generate_debug_report()
     generate_test_report()
-    print(f"\n   🎉  Завершаю анализ, пожалуйста подождите 🤖")
-    print(f"   🎯  Вот что мы обнаружили:\n")  # Исправлен отступ на один уровень вниз
 
     # Запуск анализа
+    print("\n   🎉  Завершаю анализ, пожалуйста подождите 🤖")
     paths = get_paths_from_settings()
     findings = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
+        print("\n  🎯  Вот что мы обнаружили:\n")
         for finding in findings:
             display_message_slowly(finding["title"], finding["message"], paths)
     else:
-        print("\n       ✅  Всё выглядит хорошо! Проблем не обнаружено.")
-    print("\n")
+        print("\n   ✅  Всё выглядит хорошо! Проблем не обнаружено.\n")
 
 
 if __name__ == "__main__":
