@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Генерирует отчёты и анализирует их, предоставляя рекомендации по исправлению проблем.
-# Версия: 3.1
+# Версия: 3.2
 # Обновлено: 2024-11-29
 
 import json
@@ -14,11 +13,10 @@ from pathlib import Path
 
 # Добавляем корневую директорию проекта в sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-AI_DIAGNOSTICS_DIR = PROJECT_ROOT / "ai_diagnostics"
-MODULES_DIR = AI_DIAGNOSTICS_DIR / "modules"
+MODULES_DIR = PROJECT_ROOT / "ai_diagnostics" / "modules"
 
-sys.path.append(str(AI_DIAGNOSTICS_DIR))  # Добавляем ai_diagnostics
-sys.path.append(str(MODULES_DIR))  # Добавляем ai_diagnostics/modules
+sys.path.append(str(PROJECT_ROOT))  # Добавляем путь к корню проекта
+sys.path.append(str(MODULES_DIR))  # Добавляем путь к модулям
 
 # Импорт из настроек и модулей
 from settings import DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH
