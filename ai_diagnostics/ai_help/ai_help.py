@@ -109,23 +109,36 @@ def search_in_matches(matches):
 
         user_input = input("\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
 
-        if user_input.isdigit():  # Выбор по номеру
+        if user_input.isdigit():  # Если ввод — число
+            num_matches = [section for section in matches
+                           if user_input in section['title'] or
+                           user_input in section['short'] or
+                           user_input in section.get('long', "")]
+            if len(num_matches) == 1:
+                return num_matches[0]
+            elif len(num_matches) > 1:
+                matches = num_matches
+                continue
+            else:
+                print("\n   ❌  Ничего не найдено для числового ключевика. Попробуйте снова.")
+                continue
+        elif user_input.isdigit():  # Если введён номер варианта
             index = int(user_input)
             if 1 <= index <= len(matches):
                 return matches[index - 1]
             else:
                 print("\n   ❌  Неверный выбор. Попробуйте снова.")
-        else:  # Повторный поиск с учётом числовых ключевиков
+        else:  # Повторный текстовый поиск
             matches = [section for section in matches
                        if user_input in section['title'].lower() or
                        user_input in section['short'].lower() or
-                       user_input in section.get('long', "").lower() or
-                       user_input.isdigit() and user_input in section['title']]
+                       user_input in section.get('long', "").lower()]
             if len(matches) == 1:
                 return matches[0]
             elif not matches:
                 print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
                 break
+
 
 
 
