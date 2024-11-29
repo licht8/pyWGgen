@@ -34,23 +34,22 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
     return findings
 
 def display_message_slowly(title, message):
-    """Красивый вывод сообщения с отступами и постепенным отображением текста."""
+    """Красивый вывод сообщения с отступами и сохранением всех пробелов."""
     # Отображение заголовка
     print(f"\n  {title}\n  {'=' * len(title)}\n")  # Отступы перед заголовком
 
     # Обработка каждой строки сообщения
     for line in message.split("\n"):
         if not line.strip():  # Пустая строка
-            print("  ")
+            print("  ")  # Два пробела отступа
             continue
 
-        # Постепенный вывод строки с сохранением начальных пробелов
-        initial_spaces = len(line) - len(line.lstrip())
-        print(" " * (2 + initial_spaces), end="")  # Добавляем 2 пробела + начальные пробелы из строки
-        for word in line.split():
-            print(word, end=" ", flush=True)
-            time.sleep(0.05)  # Задержка между словами
-        print()  # Завершаем строку после вывода всех слов
+        # Постепенный вывод строки
+        print("  ", end="")  # Отступ перед строкой
+        for word in line:  # Итерируем по каждому символу, включая пробелы
+            print(word, end="", flush=True)
+            time.sleep(0.02)  # Задержка между символами
+        print()  # Завершаем строку после вывода всех символов
         time.sleep(0.1)  # Небольшая пауза между строками
 
 def main():
