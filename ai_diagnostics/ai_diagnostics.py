@@ -69,7 +69,7 @@ def generate_debug_report():
 
 def generate_test_report():
     """Запускает тестирование проекта для создания test_report.txt."""
-    print("\n")
+    print("")
     animate_message("🤖  Генерация тестового отчёта")
     command = [sys.executable, PROJECT_ROOT / "modules" / "test_report_generator.py"]
     run_command(command)
