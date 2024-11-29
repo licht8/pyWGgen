@@ -2,7 +2,7 @@
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Генерирует отчёты и анализирует их, предоставляя рекомендации по исправлению проблем.
-# Версия: 2.1
+# Версия: 2.2
 # Обновлено: 2024-11-29
 # Пример использования:
 #   python3 ai_diagnostics.py
@@ -11,6 +11,7 @@ import json
 import time
 import sys
 import subprocess
+import random
 from pathlib import Path
 
 # Добавляем корневую директорию проекта в sys.path
@@ -31,11 +32,11 @@ def run_command(command):
 
 
 def animate_message(message):
-    """Выводит анимированное сообщение с эффектом перемигивания '...'."""
+    """Выводит анимированное сообщение с эффектом перемигивания '...'. Время перемигивания случайное."""
     for _ in range(3):
         for dots in range(1, 4):
             print(f"\r   {message}{'.' * dots}{' ' * (3 - dots)}", end="", flush=True)
-            time.sleep(0.3)
+            time.sleep(random.uniform(0.3, 2))  # Рандомная задержка от 0.3 до 2 секунд
     print("\r" + " " * len(message + "..." * 3), end="\r")
 
 
@@ -47,7 +48,7 @@ def generate_debug_report():
     output = run_command(command)
     print(f"     ✅  Отчёт диагностики обновлён...")
     time.sleep(0.5)
-    print(f"     ✅  Отчёт сохранён в {DEBUG_REPORT_PATH}\n")
+    print(f"     ✅  Отчёт сохранён в {DEBUG_REPORT_PATH}")
 
 
 def generate_test_report():
@@ -58,7 +59,7 @@ def generate_test_report():
     output = run_command(command)
     print(f"     ✅  Тестовый отчёт обновлён...")
     time.sleep(0.5)
-    print(f"     ✅  Отчёт сохранён в {TEST_REPORT_PATH}\n")
+    print(f"     ✅  Отчёт сохранён в {TEST_REPORT_PATH}")
 
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
@@ -123,7 +124,6 @@ def display_message_slowly(title, message, paths):
             time.sleep(0.02)
         print()
         time.sleep(0.1)
-    print("\n")
 
 
 def main():
@@ -134,7 +134,7 @@ def main():
 
     # Завершающее сообщение
     animate_message(" 🎉  Завершаю анализ, пожалуйста подождите")
-    print("\nВот что мы обнаружили:\n")
+    print("\nВот что мы обнаружили:")
 
     # Запуск анализа
     paths = get_paths_from_settings()
@@ -143,7 +143,7 @@ def main():
         for finding in findings:
             display_message_slowly(finding["title"], finding["message"], paths)
     else:
-        print("\n     ✅  Всё выглядит хорошо! Проблем не обнаружено.\n")
+        print("\n     ✅  Всё выглядит хорошо! Проблем не обнаружено.")
 
 
 if __name__ == "__main__":
