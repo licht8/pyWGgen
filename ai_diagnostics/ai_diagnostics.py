@@ -28,18 +28,21 @@ def run_command(command):
 
 def generate_debug_report():
     """Запускает дебаггер для создания свежего debug_report.txt."""
-    print("\n 🤖  Генерация отчёта диагностики (debug_report)...")
+    print("\n   🤖  Генерация отчёта диагностики (debug_report)...")
+    print("   " + "=" * 40)  # Добавляем разделитель
     command = [sys.executable, PROJECT_ROOT / "modules" / "debugger.py"]
     output = run_command(command)
-    print(f"   ✅  Отчёт диагностики обновлён.\n   {output}")
+    print(f"     ✅  Отчёт диагностики обновлён.\n     {output}")
 
 
 def generate_test_report():
     """Запускает тестирование проекта для создания test_report.txt."""
-    print("\n 🤖  Генерация тестового отчёта (test_report)...")
+    print("\n   🤖  Генерация тестового отчёта (test_report)...")
+    print("   " + "=" * 40)  # Добавляем разделитель
     command = [sys.executable, PROJECT_ROOT / "modules" / "test_report_generator.py"]
     output = run_command(command)
-    print(f"   ✅  Тестовый отчёт обновлён.\n   {output}")
+    print(f"     ✅  Тестовый отчёт обновлён.\n     {output}")
+
 
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
