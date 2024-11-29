@@ -39,11 +39,11 @@ def display_message_slowly(title, message):
     clean_title = title.strip()
 
     # Определяем длину заголовка без учёта пробелов
-    title_length = len(clean_title)
+    title_length = len(clean_title) + 1  # Увеличиваем длину разделителя на 1
 
     # Отображение заголовка с корректно выровненным разделителем
     print(f"\n  {clean_title}")  # Выводим заголовок с отступом
-    print(f"  {'=' * title_length}\n")  # Разделитель точно под заголовком
+    print(f"  {'=' * title_length}\n")  # Разделитель на 1 символ длиннее
 
     # Обработка каждой строки сообщения
     for line in message.split("\n"):
@@ -61,7 +61,6 @@ def display_message_slowly(title, message):
 
     # Добавляем пустую строку после сообщения
     print("\n")
-
 
 
 def main():
