@@ -1,3 +1,22 @@
+#!/usr/bin/env python3
+# wg_qr_generator/settings.py
+# ===========================================
+# Настройки проекта wg_qr_generator
+# ===========================================
+# Этот файл содержит основные настройки проекта, включая пути к файлам, 
+# директориям, конфигурациям, а также глобальные параметры. 
+# Он централизует все важные переменные для упрощения поддержки проекта.
+#
+# Пример использования:
+# ---------------------
+# from settings import BASE_DIR, WG_CONFIG_DIR, GRADIO_PORT
+# 
+# print(f"Корневая директория проекта: {BASE_DIR}")
+# print(f"Директория конфигураций WireGuard: {WG_CONFIG_DIR}")
+# print(f"Порт для запуска Gradio: {GRADIO_PORT}")
+#
+# ВАЖНО: Все пути и параметры следует указывать относительно BASE_DIR.
+
 from pathlib import Path
 
 # Определяем базовый путь к корню проекта
@@ -28,12 +47,39 @@ MESSAGES_DB_PATH = PROJECT_DIR / "ai_diagnostics/messages_db.json"   # Путь 
 # Путь к журналу диагностики
 DIAGNOSTICS_LOG = BASE_DIR / "user/data/logs/diagnostics.log"
 
+# Порт для Gradio
+GRADIO_PORT = 7860
+
+
+def check_paths():
+    """Проверяет существование файлов и директорий."""
+    paths = {
+        "BASE_DIR": BASE_DIR,
+        "PROJECT_DIR": PROJECT_DIR,
+        "WG_CONFIG_DIR": WG_CONFIG_DIR,
+        "QR_CODE_DIR": QR_CODE_DIR,
+        "USER_DB_PATH": USER_DB_PATH,
+        "IP_DB_PATH": IP_DB_PATH,
+        "SERVER_CONFIG_FILE": Path(SERVER_CONFIG_FILE),
+        "PARAMS_FILE": Path(PARAMS_FILE),
+        "DEBUG_REPORT_PATH": DEBUG_REPORT_PATH,
+        "TEST_REPORT_PATH": TEST_REPORT_PATH,
+        "MESSAGES_DB_PATH": MESSAGES_DB_PATH,
+        "DIAGNOSTICS_LOG": DIAGNOSTICS_LOG,
+    }
+    status = []
+    for name, path in paths.items():
+        exists = "✅  Доступен" if path.exists() else "❌  Отсутствует"
+        status.append(f"{name}: {exists} ({path})")
+    return "\n".join(status)
+
+
 if __name__ == "__main__":
-    print(f"BASE_DIR: {BASE_DIR}")
-    print(f"PROJECT_DIR: {PROJECT_DIR}")
-    print(f"WG_CONFIG_DIR: {WG_CONFIG_DIR}")
-    print(f"QR_CODE_DIR: {QR_CODE_DIR}")
-    print(f"DEBUG_REPORT_PATH: {DEBUG_REPORT_PATH}")
-    print(f"TEST_REPORT_PATH: {TEST_REPORT_PATH}")
-    print(f"MESSAGES_DB_PATH: {MESSAGES_DB_PATH}")
-    print(f"DIAGNOSTICS_LOG: {DIAGNOSTICS_LOG}")
+    print("\n=== 🛠️  Состояние проекта wg_qr_generator  ===\n")
+    print(f"  Корневая директория проекта: {BASE_DIR}")
+    print(f"  Рабочая директория проекта: {PROJECT_DIR}")
+    print(f"  Порт для запуска Gradio: {GRADIO_PORT}\n")
+
+    print("=== 📂  Проверка файлов и директорий  ===\n")
+    print(check_paths())
+    print("\n")
