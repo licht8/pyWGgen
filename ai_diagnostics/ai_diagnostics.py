@@ -11,6 +11,8 @@ import sys
 import subprocess
 import random
 from pathlib import Path
+from ai_diagnostics.modules.pause_rules import get_pause_rules, apply_pause
+
 
 # Добавляем корневую директорию проекта в sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
