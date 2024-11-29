@@ -60,7 +60,7 @@ def main():
     """Основной запуск программы."""
     findings = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
-        print("\n🎉  Анализ завершён. Вот что мы обнаружили:\n")
+        print("\n🎉  Анализ завершён. Вот что мы обнаружили:")
         for finding in findings:
             display_message_slowly(finding["title"], finding["message"])
     else:
