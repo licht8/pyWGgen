@@ -2,7 +2,7 @@
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Генерирует отчёты и анализирует их, предоставляя рекомендации по исправлению проблем.
-# Версия: 2.3
+# Версия: 2.4
 # Обновлено: 2024-11-29
 
 import json
@@ -40,24 +40,18 @@ def animate_message(message):
 
 def generate_debug_report():
     """Запускает дебаггер для создания свежего debug_report.txt."""
-    animate_message("🤖  Генерация отчёта диагностики")
-    print("\n   ========================================")
+    print("\n   🤖  Генерация отчёта диагностики 🤖")
     command = [sys.executable, PROJECT_ROOT / "modules" / "debugger.py"]
     output = run_command(command)
-    print(f"     ✅  Отчёт диагностики обновлён...")
-    time.sleep(0.5)
-    print(f"     ✅  Отчёт сохранён в {DEBUG_REPORT_PATH}")
+    print(f"     ✅  Отчёт диагностики обновлён...\n     ✅  Отчёт сохранён в {DEBUG_REPORT_PATH}")
 
 
 def generate_test_report():
     """Запускает тестирование проекта для создания test_report.txt."""
-    animate_message("🤖  Генерация тестового отчёта")
-    print("\n   ========================================")
+    print("\n   🤖  Генерация тестового отчёта 🤖")
     command = [sys.executable, PROJECT_ROOT / "modules" / "test_report_generator.py"]
     output = run_command(command)
-    print(f"     ✅  Тестовый отчёт обновлён...")
-    time.sleep(0.5)
-    print(f"     ✅  Отчёт сохранён в {TEST_REPORT_PATH}")
+    print(f"     ✅  Тестовый отчёт обновлён...\n     ✅  Отчёт сохранён в {TEST_REPORT_PATH}")
 
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
@@ -111,12 +105,12 @@ def format_message(message, paths):
 def display_message_slowly(title, message, paths):
     """Красивый вывод сообщения с форматированием."""
     formatted_message = format_message(message, paths)
-    print(f"\n     {title}\n     {'=' * len(title)}\n")
+    print(f"\n       {title}\n       {'=' * len(title)}\n")
     for line in formatted_message.split("\n"):
         if not line.strip():
-            print("     ")
+            print("       ")
             continue
-        print("     ", end="")
+        print("       ", end="")
         for char in line:
             print(char, end="", flush=True)
             time.sleep(0.02)
@@ -131,8 +125,8 @@ def main():
     generate_test_report()
 
     # Завершающее сообщение
-    animate_message(" 🎉  Завершаю анализ, пожалуйста подождите")
-    print("\n\nВот что мы обнаружили:\n")
+    animate_message("🎉  Завершаю анализ, пожалуйста подождите 🤖")
+    print("\n\n  Вот что мы обнаружили:\n")
 
     # Запуск анализа
     paths = get_paths_from_settings()
@@ -141,7 +135,7 @@ def main():
         for finding in findings:
             display_message_slowly(finding["title"], finding["message"], paths)
     else:
-        print("\n     ✅  Всё выглядит хорошо! Проблем не обнаружено.")
+        print("\n       ✅  Всё выглядит хорошо! Проблем не обнаружено.")
     print("\n")
 
 
