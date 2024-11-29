@@ -55,7 +55,7 @@ def display_message_slowly(message):
 
 def generate_debug_report():
     """Запускает дебаггер для создания свежего debug_report.txt."""
-    print("\n")
+    print("")
     animate_message("🤖  Генерация отчёта диагностики")
     command = [sys.executable, PROJECT_ROOT / "modules" / "debugger.py"]
     run_command(command)
