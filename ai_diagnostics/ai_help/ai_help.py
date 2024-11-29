@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 2.0
-# Обновлено: 2024-11-29 15:21
+# Версия: 2.1
+# Обновлено: 2024-11-29
 
 import json
 import sys
@@ -26,27 +26,35 @@ LINE_WIDTH = {
     "details": 70
 }
 
-
 def wrap_text(text, width, indent=4):
     """
-    Форматирует текст по ширине строки с заданным отступом.
+    Форматирует текст по ширине строки с сохранением форматирования из JSON.
+
+    Args:
+        text (str): Исходный текст.
+        width (int): Максимальная ширина строки.
+        indent (int): Отступ в пробелах.
+
+    Returns:
+        str: Отформатированный текст.
     """
-    words = text.split()
     lines = []
     current_line = ""
+    indent_str = " " * indent
 
-    for word in words:
-        if len(current_line) + len(word) + 1 > width:
-            lines.append(" " * indent + current_line)
-            current_line = word
-        else:
-            current_line += ("" if current_line == "" else " ") + word
-
-    if current_line:
-        lines.append(" " * indent + current_line)
+    for line in text.split("\n"):
+        words = line.split()
+        for word in words:
+            if len(current_line) + len(word) + 1 > width:
+                lines.append(indent_str + current_line)
+                current_line = word
+            else:
+                current_line += ("" if current_line == "" else " ") + word
+        if current_line:
+            lines.append(indent_str + current_line)
+            current_line = ""
 
     return "\n".join(lines)
-
 
 def load_help_files():
     """Загружает все JSON файлы из HELP_DIR."""
@@ -63,7 +71,6 @@ def load_help_files():
             print(f"⚠️  Ошибка загрузки файла {json_file}: {e}")
     return help_data
 
-
 def save_help_section(section):
     """Сохраняет раздел справки в файл."""
     filename = f"{section['title'].strip()}.txt".replace(" ", "_")
@@ -73,7 +80,6 @@ def save_help_section(section):
         file.write(wrap_text(section.get('long', "Подробная информация отсутствует."), LINE_WIDTH["details"]) + "\n")
     print(f"\n   📁  Раздел сохранён в файл: {filename}\n")
 
-
 def display_help_menu(help_data):
     """Выводит главное меню справочной системы."""
     print("\n   📖  Справочная система")
@@ -82,7 +88,6 @@ def display_help_menu(help_data):
         print(f"   {idx}. {section['title']}")
         print(wrap_text(section['short'], LINE_WIDTH["menu"], indent=6) + "\n")
     print("   0. Выйти из справки\n")
-
 
 def display_detailed_help(section):
     """Выводит подробное описание выбранного раздела."""
@@ -98,7 +103,6 @@ def display_detailed_help(section):
     elif user_input in {"0", "q"}:
         print("\n   📖  Возврат в главное меню.")
 
-
 def search_in_matches(matches):
     """Обрабатывает повторный поиск в найденных совпадениях."""
     while True:
@@ -109,26 +113,13 @@ def search_in_matches(matches):
 
         user_input = input("\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
 
-        if user_input.isdigit():  # Если ввод — число
-            num_matches = [section for section in matches
-                           if user_input in section['title'] or
-                           user_input in section['short'] or
-                           user_input in section.get('long', "")]
-            if len(num_matches) == 1:
-                return num_matches[0]
-            elif len(num_matches) > 1:
-                matches = num_matches
-                continue
-            else:
-                print("\n   ❌  Ничего не найдено для числового ключевика. Попробуйте снова.")
-                continue
-        elif user_input.isdigit():  # Если введён номер варианта
+        if user_input.isdigit():
             index = int(user_input)
             if 1 <= index <= len(matches):
                 return matches[index - 1]
             else:
                 print("\n   ❌  Неверный выбор. Попробуйте снова.")
-        else:  # Повторный текстовый поиск
+        else:
             matches = [section for section in matches
                        if user_input in section['title'].lower() or
                        user_input in section['short'].lower() or
@@ -138,7 +129,6 @@ def search_in_matches(matches):
             elif not matches:
                 print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
                 break
-
 
 def interactive_help():
     """Основной цикл взаимодействия со справочной системой."""
@@ -155,23 +145,17 @@ def interactive_help():
             print("\n   📖  Выход из справочной системы.")
             break
 
-        if user_input.isdigit():  # Проверяем, является ли ввод числом
+        if user_input.isdigit():
             index = int(user_input)
-            if 1 <= index <= len(help_data):  # Если это номер раздела
+            if 1 <= index <= len(help_data):
                 section = list(help_data.values())[index - 1]
                 display_detailed_help(section)
                 continue
-            else:
-                # Если номер раздела отсутствует, переключаемся на поиск
-                matched_sections = [section for section in help_data.values()
-                                    if user_input in section['title'].lower() or
-                                    user_input in section['short'].lower() or
-                                    user_input in section.get('long', "").lower()]
-        else:  # Поиск по тексту
-            matched_sections = [section for section in help_data.values()
-                                if user_input in section['title'].lower() or
-                                user_input in section['short'].lower() or
-                                user_input in section.get('long', "").lower()]
+
+        matched_sections = [section for section in help_data.values()
+                            if user_input in section['title'].lower() or
+                            user_input in section['short'].lower() or
+                            user_input in section.get('long', "").lower()]
 
         if len(matched_sections) == 1:
             display_detailed_help(matched_sections[0])
