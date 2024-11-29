@@ -1,6 +1,7 @@
 import json
 import time
 import sys
+import subprocess
 from pathlib import Path
 
 # Добавляем корневую директорию проекта в sys.path
@@ -9,6 +10,31 @@ sys.path.append(str(PROJECT_ROOT))
 
 # Импорт настроек
 from settings import DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH
+
+
+def run_command(command):
+    """Запускает внешнюю команду и возвращает её результат."""
+    try:
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"Ошибка: {e.stderr.strip()}"
+
+
+def generate_debug_report():
+    """Запускает дебаггер для создания свежего debug_report.txt."""
+    print("\n🤖  Генерация отчёта диагностики (debug_report)...")
+    command = [sys.executable, PROJECT_ROOT / "modules" / "debugger.py"]
+    output = run_command(command)
+    print(f"  ✅  Отчёт диагностики обновлён.\n  {output}")
+
+
+def generate_test_report():
+    """Запускает тестирование проекта для создания test_report.txt."""
+    print("\n🤖  Генерация тестового отчёта (test_report)...")
+    command = [sys.executable, PROJECT_ROOT / "modules" / "test_report_generator.py"]
+    output = run_command(command)
+    print(f"  ✅  Тестовый отчёт обновлён.\n  {output}")
 
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
@@ -55,7 +81,7 @@ def get_paths_from_settings():
 def format_message(message, paths):
     """Форматирует сообщение, заменяя переменные путями из settings.py."""
     for key, path in paths.items():
-        print(f"[DEBUG] Replacing {{{key}}} with {path}")  # Отладочный вывод
+        # print(f"[DEBUG] Replacing {{{key}}} with {path}")  # Закомментированная отладка
         message = message.replace(f"{{{key}}}", str(path))
     return message
 
@@ -63,7 +89,7 @@ def format_message(message, paths):
 def display_message_slowly(title, message, paths):
     """Красивый вывод сообщения с форматированием."""
     formatted_message = format_message(message, paths)
-    print(f"\n  {title}\n  {'=' * len(title)}\n")
+    print(f"\n  {title}\n    {'=' * len(title)}\n")
     for line in formatted_message.split("\n"):
         if not line.strip():
             print("  ")
@@ -78,6 +104,11 @@ def display_message_slowly(title, message, paths):
 
 
 def main():
+    # Генерация свежих данных
+    generate_debug_report()
+    generate_test_report()
+
+    # Запуск анализа
     paths = get_paths_from_settings()
     findings = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
