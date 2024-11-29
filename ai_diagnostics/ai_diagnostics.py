@@ -2,7 +2,7 @@
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Генерирует отчёты и анализирует их, предоставляя рекомендации по исправлению проблем.
-# Версия: 3.0
+# Версия: 3.1
 # Обновлено: 2024-11-29
 
 import json
@@ -11,15 +11,18 @@ import sys
 import subprocess
 import random
 from pathlib import Path
-from ai_diagnostics.modules.pause_rules import get_pause_rules, apply_pause
-
 
 # Добавляем корневую директорию проекта в sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.append(str(PROJECT_ROOT))
+AI_DIAGNOSTICS_DIR = PROJECT_ROOT / "ai_diagnostics"
+MODULES_DIR = AI_DIAGNOSTICS_DIR / "modules"
 
-# Импорт настроек
+sys.path.append(str(AI_DIAGNOSTICS_DIR))  # Добавляем ai_diagnostics
+sys.path.append(str(MODULES_DIR))  # Добавляем ai_diagnostics/modules
+
+# Импорт из настроек и модулей
 from settings import DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH
+from pause_rules import get_pause_rules, apply_pause
 
 
 def run_command(command):
@@ -55,7 +58,6 @@ def display_message_slowly(message):
             apply_pause(char, rules)  # Применяем паузу для символов
         print()  # Завершение строки
         time.sleep(0.05)  # Дополнительная пауза между строками
-
 
 
 def generate_debug_report():
@@ -140,19 +142,14 @@ def display_analysis_result(title, message, paths):
     display_message_slowly(f"\n   {title}\n   {'=' * (len(title) + 2)}\n")
     display_message_slowly(formatted_message)
 
+
 def main():
     """Основной запуск программы."""
     generate_debug_report()
     generate_test_report()
 
-    # Удаляем дублирующий вызов
     animate_message("🎉  Завершаю анализ, пожалуйста подождите 🤖")
-    
-    # Вывод результатов анализа
     display_message_slowly("🎯  Вот что мы обнаружили:")
-
-
-
 
     # Запуск анализа
     paths = get_paths_from_settings()
