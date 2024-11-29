@@ -2,7 +2,7 @@
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Генерирует отчёты и анализирует их, предоставляя рекомендации по исправлению проблем.
-# Версия: 2.6
+# Версия: 2.7
 # Обновлено: 2024-11-29
 
 import json
@@ -40,6 +40,7 @@ def animate_message(message):
 
 def generate_debug_report():
     """Запускает дебаггер для создания свежего debug_report.txt."""
+    print("\n")  # Добавлена строка перед генерацией
     animate_message("🤖  Генерация отчёта диагностики")
     command = [sys.executable, PROJECT_ROOT / "modules" / "debugger.py"]
     output = run_command(command)
@@ -48,6 +49,7 @@ def generate_debug_report():
 
 def generate_test_report():
     """Запускает тестирование проекта для создания test_report.txt."""
+    print("\n")  # Добавлена строка перед генерацией
     animate_message("🤖  Генерация тестового отчёта")
     command = [sys.executable, PROJECT_ROOT / "modules" / "test_report_generator.py"]
     output = run_command(command)
@@ -105,7 +107,7 @@ def format_message(message, paths):
 def display_message_slowly(title, message, paths):
     """Красивый вывод сообщения с форматированием."""
     formatted_message = format_message(message, paths)
-    print(f"\n       {title}\n       {'=' * len(title)}\n")
+    print(f"\n       {title}\n       {'=' * (len(title) + 2)}\n")  # Исправлены полоски "=="
     for line in formatted_message.split("\n"):
         if not line.strip():
             print("       ")
@@ -120,14 +122,10 @@ def display_message_slowly(title, message, paths):
 
 def main():
     """Основной запуск программы."""
-    # Генерация свежих данных
     generate_debug_report()
-    print()
     generate_test_report()
-    print("\n")
-    animate_message("🎉  Завершаю анализ, пожалуйста подождите")
-
-    print("\n\n  🎯  Вот что мы обнаружили:\n")  # Добавлен эмодзи перед заголовком
+    print("\n🎉  Завершаю анализ, пожалуйста подождите 🤖")
+    print("\n  🎯  Вот что мы обнаружили:\n")  # Добавлен эмодзи и пустая строка
 
     # Запуск анализа
     paths = get_paths_from_settings()
