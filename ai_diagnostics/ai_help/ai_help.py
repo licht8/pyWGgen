@@ -1,93 +1,94 @@
 #!/usr/bin/env python3
-# ai_help/ai_help.py
-# Скрипт для интерактивной справки проекта wg_qr_generator.
+# ai_diagnostics/ai_help/ai_help.py
+# Скрипт для работы со справочной системой проекта wg_qr_generator.
 # Версия: 1.0
 # Обновлено: 2024-11-29
 
 import json
-import sys
 import time
 from pathlib import Path
-
-# Добавляем корневую директорию проекта
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-sys.path.append(str(PROJECT_ROOT))
-
-# Импортируем модули и настройки
 from settings import HELP_JSON_PATH
 from ai_diagnostics.modules.pause_rules import apply_pause, get_pause_rules
-
-def display_message_slowly(message):
-    """Имитация печати ИИ."""
-    rules = get_pause_rules()  # Получаем правила пауз
-    for line in message.split("\n"):
-        if not line.strip():  # Пустая строка
-            print("   ")
-            apply_pause("\n", rules)
-            continue
-
-        print("   ", end="")
-        for char in line:
-            print(char, end="", flush=True)
-            apply_pause(char, rules)
-        print()  # Завершение строки
-        time.sleep(0.05)
+from ai_diagnostics.ai_diagnostics import display_message_slowly
 
 
 def load_help_data():
-    """Загружает справочные данные из JSON файла."""
+    """Загружает справочную информацию из JSON файла."""
     try:
         with open(HELP_JSON_PATH, "r", encoding="utf-8") as file:
             return json.load(file)
     except Exception as e:
         print(f"Ошибка загрузки справочного файла: {e}")
-        return {}
+        return None
 
 
 def display_help_menu(help_data):
-    """Показывает меню разделов справки."""
+    """Выводит главное меню справочной системы."""
     print("\n   📖  Справочная система")
     print("   ======================")
-    for idx, (key, section) in enumerate(help_data.items(), start=1):
+    for idx, key in enumerate(help_data, start=1):
+        section = help_data[key]
         print(f"   {idx}. {section['title']}")
         print(f"      {section['short']}\n")
-    print("   0. Выйти из справки\n")
+    print("   0. Выйти из справки")
 
 
 def display_detailed_help(section):
-    """Показывает подробную информацию по разделу справки."""
-    display_message_slowly(f"\n{section['title']}\n{'=' * (len(section['title']) + 2)}")
-    display_message_slowly(section["detailed"])
+    """Выводит подробную информацию о разделе."""
+    print(f"\n   {section['title']}\n   {'=' * (len(section['title']) + 3)}")
+    display_message_slowly(section["long"])
+
+
+def search_help(query, help_data):
+    """Ищет разделы справки по запросу."""
+    query = query.lower()
+    results = []
+    for key, section in help_data.items():
+        if query in section["title"].lower() or query in section["short"].lower() or query in section["long"].lower():
+            results.append(section)
+    return results
+
+
+def handle_numeric_selection(selection, help_data):
+    """Обрабатывает выбор пользователя через цифру."""
+    try:
+        selection = int(selection)
+        keys = list(help_data.keys())
+        if selection == 0:
+            print("\n   📖  Выход из справочной системы.\n")
+            return None
+        elif 1 <= selection <= len(keys):
+            section = help_data[keys[selection - 1]]
+            display_detailed_help(section)
+        else:
+            print("\n   ❌  Неверный выбор. Попробуйте снова.")
+    except ValueError:
+        print("\n   ❌  Введите номер раздела.")
+    return True
 
 
 def interactive_help():
-    """Основная логика интерактивной справочной системы."""
+    """Интерактивное меню справочной системы."""
     help_data = load_help_data()
-    if not help_data:
-        print("   ❌  Справочная информация недоступна.")
+    if help_data is None:
+        print("\n   ❌  Справочная информация недоступна.\n")
         return
-
+    
     while True:
         display_help_menu(help_data)
-        choice = input("   Выберите номер раздела или введите ключевое слово: ").strip().lower()
-
-        if choice == "0" or choice in {"выход", "exit"}:
-            print("   👋  До свидания!")
+        user_input = input("\n   Выберите номер раздела или введите ключевое слово: ").strip().lower()
+        if user_input in {"q", "exit"}:
+            print("\n   📖  Выход из справочной системы.\n")
             break
-
-        matched_sections = [
-            section for section in help_data.values()
-            if choice in section["id"] or choice in section["title"].lower()
-        ]
-
-        if len(matched_sections) == 1:
-            display_detailed_help(matched_sections[0])
-        elif len(matched_sections) > 1:
-            print("   🔎  Найдено несколько совпадений:")
-            for section in matched_sections:
-                print(f"   - {section['title']}")
+        elif user_input.isdigit():
+            if handle_numeric_selection(user_input, help_data) is None:
+                break
         else:
-            print("   ❓  Ничего не найдено. Попробуйте снова.\n")
+            matched_sections = search_help(user_input, help_data)
+            if matched_sections:
+                display_detailed_help(matched_sections[0])
+            else:
+                print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.\n")
 
 
 if __name__ == "__main__":
