@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# modules/debugger.py
 # -*- coding: utf-8 -*-
 """
 Debugger Module for wg_qr_generator
@@ -6,20 +7,21 @@ Debugger Module for wg_qr_generator
 This module generates a diagnostic report to help identify potential
 issues within the project structure, dependencies, and functionality.
 
-Author: [Your Name]
-Date: [Today's Date]
 """
 
 import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from settings import DIAGNOSTICS_LOG  # Используем унифицированный путь для файла лога
 
-# Constants
+# Добавляем корневую директорию проекта в sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(PROJECT_ROOT))
+
+from settings import DIAGNOSTICS_LOG
+
 EXCLUDE_DIRS = ['venv', '.pytest_cache', '.git', 'temp', '__pycache__']
-MAX_VISIBLE_FILES = 100  # Maximum files/folders visible in the structure report
+MAX_VISIBLE_FILES = 100
 ICONS = {
     "dir": "📂",
     "file": "📄",
@@ -29,7 +31,6 @@ ICONS = {
 
 
 def get_python_environment():
-    """Collect details about the current Python environment."""
     return {
         "Python Executable": sys.executable,
         "Python Version": sys.version,
@@ -38,7 +39,6 @@ def get_python_environment():
 
 
 def get_project_structure(root_dir, exclude_dirs, max_visible_files):
-    """Generate a structured representation of the project directory."""
     structure = ["=== Project Structure ==="]
     for root, dirs, files in os.walk(root_dir):
         dirs[:] = [d for d in dirs if d not in exclude_dirs]
@@ -57,7 +57,6 @@ def get_project_structure(root_dir, exclude_dirs, max_visible_files):
 
 
 def check_required_items(required_items):
-    """Check the existence of required files and directories."""
     results = []
     for item in required_items:
         item_path = PROJECT_ROOT / item
@@ -65,42 +64,23 @@ def check_required_items(required_items):
             results.append(f"{ICONS['check']} Exists: {item}")
         else:
             results.append(f"{ICONS['cross']} Missing: {item}")
-            if item_path.suffix:  # It's a file
+            if item_path.suffix:
                 item_path.parent.mkdir(parents=True, exist_ok=True)
-                item_path.write_text("{}")  # Create an empty JSON file
+                item_path.write_text("{}")
                 results.append(f"{ICONS['check']} File created: {item}")
-            else:  # It's a directory
+            else:
                 item_path.mkdir(parents=True, exist_ok=True)
                 results.append(f"{ICONS['check']} Directory created: {item}")
     return "\n".join(results)
 
 
-def search_functions_in_files(functions, root_dir):
-    """Search for specific function definitions across the project files."""
-    results = {func: [] for func in functions}
-    for root, dirs, files in os.walk(root_dir):
-        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
-        for file in files:
-            if file.endswith(".py"):
-                file_path = os.path.join(root, file)
-                with open(file_path, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
-                for i, line in enumerate(lines):
-                    for func in functions:
-                        if f"def {func}(" in line:
-                            results[func].append(f"{file_path}:{i + 1}")
-    return results
-
-
 def write_report(report_data, output_file):
-    """Write the generated diagnostic report to a file."""
-    os.makedirs(output_file.parent, exist_ok=True)  # Ensure log directory exists
+    os.makedirs(output_file.parent, exist_ok=True)
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(report_data)
 
 
 def run_diagnostics():
-    """Main function to generate and write the diagnostic report."""
     timestamp = datetime.now().isoformat()
     required_items = [
         "user/data/qrcodes",
@@ -120,10 +100,9 @@ def run_diagnostics():
     python_env = get_python_environment()
     project_structure = get_project_structure(PROJECT_ROOT, EXCLUDE_DIRS, MAX_VISIBLE_FILES)
     required_checks = check_required_items(required_items)
-    function_search_results = search_functions_in_files(functions_to_search, PROJECT_ROOT)
 
     report = [
-        f"=== Diagnostic Report for wg_qr_generator ===",
+        f"=== Diagnostic Report ===",
         f"Timestamp: {timestamp}",
         "",
         "=== Python Environment ===",
@@ -132,18 +111,11 @@ def run_diagnostics():
         project_structure,
         "",
         "=== Required Files/Dirs Status ===",
-        required_checks,
-        "",
-        "=== Function Search Report ===",
-        "\n".join([
-            f"{ICONS['check']} {func} found in:\n  " + "\n  ".join(locations) if locations else f"{ICONS['cross']} {func} not found."
-            for func, locations in function_search_results.items()
-        ])
+        required_checks
     ]
     report_data = "\n".join(report)
-
     write_report(report_data, DIAGNOSTICS_LOG)
-    print(f"Diagnostic report written to {DIAGNOSTICS_LOG}")
+    print(f"✅  Отчёт сохранён в {DIAGNOSTICS_LOG}")
 
 
 if __name__ == "__main__":
