@@ -2,7 +2,7 @@
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Генерирует отчёты и анализирует их, предоставляя рекомендации по исправлению проблем.
-# Версия: 3.0
+# Версия: 2.9
 # Обновлено: 2024-11-29
 
 import json
@@ -38,22 +38,47 @@ def animate_message(message):
     print(f"\r   {message} 🤖", flush=True)  # Завершающее сообщение с иконкой
 
 
+def display_message_slowly(message):
+    """Имитация печати ИИ."""
+    for line in message.split("\n"):
+        if not line.strip():  # Пустая строка
+            print("       ")
+            continue
+
+        print("       ", end="")
+        for char in line:
+            print(char, end="", flush=True)
+            time.sleep(0.01)  # Эффект печати символов
+        print()  # Завершение строки
+        time.sleep(0.05)  # Пауза между строками
+
+
 def generate_debug_report():
     """Запускает дебаггер для создания свежего debug_report.txt."""
-    print("\n")  # Добавлена строка перед генерацией
+    print("\n")
     animate_message("🤖  Генерация отчёта диагностики")
     command = [sys.executable, PROJECT_ROOT / "modules" / "debugger.py"]
     output = run_command(command)
-    print(f"     ✅  Отчёт диагностики обновлён...\n     ✅  Отчёт сохранён в {DEBUG_REPORT_PATH}")
+    display_message_slowly(
+        f"""
+        ✅  Отчёт диагностики обновлён...
+        ✅  Отчёт сохранён в {DEBUG_REPORT_PATH}
+        """
+    )
 
 
 def generate_test_report():
     """Запускает тестирование проекта для создания test_report.txt."""
-    print("\n")  # Добавлена строка перед генерацией
+    print("\n")
     animate_message("🤖  Генерация тестового отчёта")
     command = [sys.executable, PROJECT_ROOT / "modules" / "test_report_generator.py"]
     output = run_command(command)
-    print(f"     ✅  Тестовый отчёт обновлён...\n     ✅  Отчёт сохранён в {TEST_REPORT_PATH}")
+    display_message_slowly(
+        f"""
+        ✅  Тестовый отчёт обновлён...
+        ✅  Отчёт сохранён в {TEST_REPORT_PATH}
+        """
+    )
 
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
@@ -104,48 +129,29 @@ def format_message(message, paths):
     return message
 
 
-def display_message_slowly(title, message, paths):
-    """Красивый вывод сообщения с имитацией ввода ИИ."""
+def display_analysis_result(title, message, paths):
+    """Красивый вывод результата анализа с имитацией ввода ИИ."""
     formatted_message = format_message(message, paths)
-    print(f"\n       {title}\n       {'=' * (len(title) + 2)}\n")  # Исправлены полоски "=="
-
-    lines = formatted_message.split("\n")
-    for i, line in enumerate(lines):
-        if not line.strip():  # Пустая строка
-            # Проверяем, начинается ли следующий блок с "2️⃣", чтобы избежать лишней строки
-            if i + 1 < len(lines) and lines[i + 1].strip().startswith("2️⃣"):
-                continue
-            print("       ")  # Добавляем только одну строку
-            continue
-
-        print("       ", end="")
-        for char in line:
-            print(char, end="", flush=True)
-            time.sleep(0.01)  # Эффект печати символов
-
-        print()  # Завершение строки
-
-        # Добавляем паузу перед блоками
-        if "1️⃣" in line or "2️⃣" in line:  # Перед следующим пунктом пауза
-            time.sleep(0.5)
-        time.sleep(0.05)  # Пауза между строками
+    display_message_slowly(f"\n       {title}\n       {'=' * (len(title) + 2)}\n")
+    display_message_slowly(formatted_message)
 
 
 def main():
     """Основной запуск программы."""
     generate_debug_report()
     generate_test_report()
-    print("\n   🎉  Завершаю анализ, пожалуйста подождите 🤖")
-    print("  🎯  Вот что мы обнаружили:\n")  # Исправлен отступ на один уровень вниз
+
+    display_message_slowly("\n   🎉  Завершаю анализ, пожалуйста подождите 🤖")
+    display_message_slowly("  🎯  Вот что мы обнаружили:\n")
 
     # Запуск анализа
     paths = get_paths_from_settings()
     findings = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
         for finding in findings:
-            display_message_slowly(finding["title"], finding["message"], paths)
+            display_analysis_result(finding["title"], finding["message"], paths)
     else:
-        print("\n       ✅  Всё выглядит хорошо! Проблем не обнаружено.")
+        display_message_slowly("\n       ✅  Всё выглядит хорошо! Проблем не обнаружено.")
     print("\n")
 
 
