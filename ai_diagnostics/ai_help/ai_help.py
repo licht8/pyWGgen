@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 2.2
+# Версия: 2.3
 # Обновлено: 2024-11-29
 
 import json
 import sys
 from pathlib import Path
+from importlib.util import spec_from_file_location, module_from_spec
 
 # Добавляем пути к корню проекта и модулям
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 MODULES_DIR = PROJECT_ROOT / "ai_diagnostics" / "modules"
 HELP_DIR = PROJECT_ROOT / "ai_diagnostics" / "ai_help"
-SETTINGS_PATH = PROJECT_ROOT / "settings.py"
+SETTINGS_FILE = PROJECT_ROOT / "settings.py"
 
 sys.path.append(str(PROJECT_ROOT))
 sys.path.append(str(MODULES_DIR))
@@ -26,22 +27,6 @@ LINE_WIDTH = {
     "menu": 60,
     "details": 70
 }
-
-# Загружаем переменные из settings.py
-try:
-    settings = {}
-    with open(SETTINGS_PATH, "r", encoding="utf-8") as f:
-        exec(f.read(), settings)
-except FileNotFoundError:
-    settings = {"PROJECT_DIR": str(PROJECT_ROOT)}
-
-def replace_variables(text, variables):
-    """
-    Заменяет переменные формата {VAR} в тексте значениями из словаря variables.
-    """
-    for key, value in variables.items():
-        text = text.replace(f"{{{key}}}", value)
-    return text
 
 def wrap_text_preserve_formatting(text, width, indent=4):
     """
@@ -68,6 +53,24 @@ def wrap_text_preserve_formatting(text, width, indent=4):
 
     return "\n".join(lines)
 
+def load_settings():
+    """Загружает настройки из settings.py."""
+    settings = {}
+    if SETTINGS_FILE.exists():
+        spec = spec_from_file_location("settings", SETTINGS_FILE)
+        settings_module = module_from_spec(spec)
+        spec.loader.exec_module(settings_module)
+        settings = {key: getattr(settings_module, key) for key in dir(settings_module) if not key.startswith("__")}
+    return settings
+
+SETTINGS = load_settings()
+
+def replace_variables(text):
+    """Заменяет переменные вида {VARIABLE} на значения из SETTINGS."""
+    for key, value in SETTINGS.items():
+        text = text.replace(f"{{{key}}}", str(value))
+    return text
+
 def load_help_files():
     """Загружает все JSON файлы из HELP_DIR."""
     help_data = {}
@@ -76,7 +79,7 @@ def load_help_files():
             with open(json_file, "r", encoding="utf-8") as file:
                 data = json.load(file)
                 for key, section in data.items():
-                    if "title" not in section or "short" not in section or "long" not in section:
+                    if "title" not in section or ("short" not in section and "long" not in section):
                         print(f"⚠️  Проблема в разделе '{key}': отсутствует один из ключей ('title', 'short', 'long').")
                 help_data.update(data)
         except Exception as e:
@@ -106,16 +109,55 @@ def display_detailed_help(section):
     """Выводит подробное описание выбранного раздела."""
     if 'long' not in section:
         print(f"⚠️  Проблема в разделе '{section['title']}': отсутствует ключ 'long'.")
-    print(f"\n   {section['title']}")
-    print(f"   {'=' * len(section['title'])}\n")
-    text = replace_variables(section.get('long', "Подробная информация отсутствует."), settings)
-    display_message_slowly(wrap_text_preserve_formatting(text, LINE_WIDTH["details"]))
+        return
+    
+    # Заголовок с отступами
+    print(f"\n   {section['title']}\n")
+    print(f"   {'=' * (len(section['title'].strip()) + 4)}\n")
+    
+    # Замена переменных в тексте
+    formatted_text = replace_variables(section.get('long', "Подробная информация отсутствует."))
+    
+    # Обработка форматирования из JSON
+    formatted_text = formatted_text.replace("\n", "\n\n")  # Увеличиваем пробелы между блоками
+    formatted_text = wrap_text_preserve_formatting(formatted_text, LINE_WIDTH["details"], indent=6)
+    
+    # Вывод текста
+    display_message_slowly(formatted_text)
+    
     print("\n   🔹 Хотите сохранить этот раздел? ( д/н ): ", end="")
     user_input = input().strip().lower()
     if user_input in {"д", "y"}:
         save_help_section(section)
     elif user_input in {"0", "q"}:
         print("\n   📖  Возврат в главное меню.")
+
+def search_in_matches(matches):
+    """Обрабатывает повторный поиск в найденных совпадениях."""
+    while True:
+        print("\n   🔍  Найдено несколько совпадений:")
+        for idx, section in enumerate(matches, start=1):
+            print(f"   {idx}. {section['title']}")
+            print(wrap_text_preserve_formatting(section['short'], LINE_WIDTH["menu"], indent=6) + "\n")
+
+        user_input = input("\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
+
+        if user_input.isdigit():  # Если введён номер варианта
+            index = int(user_input)
+            if 1 <= index <= len(matches):
+                return matches[index - 1]
+            else:
+                print("\n   ❌  Неверный выбор. Попробуйте снова.")
+        else:  # Повторный текстовый поиск
+            matches = [section for section in matches
+                       if user_input in section['title'].lower() or
+                       user_input in section['short'].lower() or
+                       user_input in section.get('long', "").lower()]
+            if len(matches) == 1:
+                return matches[0]
+            elif not matches:
+                print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
+                break
 
 def interactive_help():
     """Основной цикл взаимодействия со справочной системой."""
@@ -147,15 +189,12 @@ def interactive_help():
             if len(matched_sections) == 1:
                 display_detailed_help(matched_sections[0])
             elif len(matched_sections) > 1:
-                print("\n   🔍  Найдено несколько совпадений:")
-                for idx, section in enumerate(matched_sections, start=1):
-                    print(f"   {idx}. {section['title']}")
-                    print(wrap_text_preserve_formatting(section['short'], LINE_WIDTH["menu"], indent=6) + "\n")
-                choice = input("\n   Введите номер варианта или уточняющее ключевое слово: ").strip()
-                if choice.isdigit() and 1 <= int(choice) <= len(matched_sections):
-                    display_detailed_help(matched_sections[int(choice) - 1])
+                matches = search_in_matches(matched_sections)
+                if matches:
+                    display_detailed_help(matches)
             else:
                 print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.\n")
+
 
 if __name__ == "__main__":
     interactive_help()
