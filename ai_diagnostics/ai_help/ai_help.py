@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 1.6
+# Версия: 1.5 (с компактным отображением совпадений)
 # Обновлено: 2024-11-29
 
 import json
@@ -19,41 +19,6 @@ sys.path.append(str(MODULES_DIR))
 # Импорты
 from pause_rules import apply_pause, get_pause_rules
 from ai_diagnostics.ai_diagnostics import display_message_slowly
-
-# Конфигурация для форматирования текста
-LINE_WIDTH = {
-    "menu": 60,
-    "details": 70
-}
-
-
-def wrap_text(text, width, indent=4):
-    """
-    Форматирует текст по ширине строки с заданным отступом.
-
-    Args:
-        text (str): Исходный текст.
-        width (int): Максимальная ширина строки.
-        indent (int): Отступ в пробелах.
-
-    Returns:
-        str: Отформатированный текст.
-    """
-    words = text.split()
-    lines = []
-    current_line = ""
-
-    for word in words:
-        if len(current_line) + len(word) + 1 > width:
-            lines.append(" " * indent + current_line)
-            current_line = word
-        else:
-            current_line += ("" if current_line == "" else " ") + word
-
-    if current_line:
-        lines.append(" " * indent + current_line)
-
-    return "\n".join(lines)
 
 
 def load_help_files():
@@ -78,8 +43,25 @@ def save_help_section(section):
     with open(filename, "w", encoding="utf-8") as file:
         file.write(f"{section['title']}\n")
         file.write("=" * len(section['title']) + "\n")
-        file.write(wrap_text(section.get('long', "Подробная информация отсутствует."), LINE_WIDTH["details"]) + "\n")
+        file.write(section.get('long', "Подробная информация отсутствует.") + "\n")
     print(f"\n   📁  Раздел сохранён в файл: {filename}\n")
+
+
+def format_text(text, width=70, indent=4):
+    """Форматирует текст с заданной шириной и отступом."""
+    words = text.split()
+    lines = []
+    current_line = " " * indent  # Инициализация строки с отступом
+
+    for word in words:
+        if len(current_line) + len(word) + 1 > width:
+            lines.append(current_line.rstrip())
+            current_line = " " * indent + word + " "
+        else:
+            current_line += word + " "
+    
+    lines.append(current_line.rstrip())  # Добавляем последнюю строку
+    return "\n".join(lines)
 
 
 def display_help_menu(help_data):
@@ -88,8 +70,17 @@ def display_help_menu(help_data):
     print("   ======================")
     for idx, section in enumerate(help_data.values(), start=1):
         print(f"   {idx}. {section['title']}")
-        print(wrap_text(section['short'], LINE_WIDTH["menu"]) + "\n")
+        print(f"{format_text(section['short'], indent=8)}\n")
     print("   0. Выйти из справки\n")
+
+
+def display_search_results(matched_sections):
+    """Отображает результаты поиска."""
+    print("\n   🔍  Найдено несколько совпадений:")
+    for idx, section in enumerate(matched_sections, start=1):
+        print(f"   {idx}. {section['title']} -")
+        formatted_short = format_text(section['short'], width=70, indent=8)
+        print(formatted_short)
 
 
 def display_detailed_help(section):
@@ -98,7 +89,7 @@ def display_detailed_help(section):
         print(f"⚠️  Проблема в разделе '{section['title']}': отсутствует ключ 'long'.")
     print(f"\n   {section['title']}")
     print(f"   {'=' * len(section['title'])}")
-    display_message_slowly(wrap_text(section.get('long', "Подробная информация отсутствует."), LINE_WIDTH["details"]))
+    display_message_slowly(section.get('long', "Подробная информация отсутствует."))
     print("\n   🔹 Хотите сохранить этот раздел? (y/n): ", end="")
     if input().strip().lower() == "y":
         save_help_section(section)
@@ -138,9 +129,7 @@ def interactive_help():
         if len(matched_sections) == 1:
             display_detailed_help(matched_sections[0])
         elif len(matched_sections) > 1:
-            print("\n   🔍  Найдено несколько совпадений:")
-            for idx, section in enumerate(matched_sections, start=1):
-                print(f"   {idx}. {section['title']} - {wrap_text(section['short'], LINE_WIDTH['menu'])}")
+            display_search_results(matched_sections)
             choice = input("\n   Выберите номер подходящего варианта: ").strip()
             if choice.isdigit() and 1 <= int(choice) <= len(matched_sections):
                 display_detailed_help(matched_sections[int(choice) - 1])
