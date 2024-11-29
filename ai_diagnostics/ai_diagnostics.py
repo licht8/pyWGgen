@@ -105,23 +105,30 @@ def format_message(message, paths):
 
 
 def display_message_slowly(title, message, paths):
-    """Красивый вывод сообщения с форматированием."""
+    """Красивый вывод сообщения с имитацией ввода ИИ."""
     formatted_message = format_message(message, paths)
     print(f"\n       {title}\n       {'=' * (len(title) + 2)}\n")  # Исправлены полоски "=="
+
     lines = formatted_message.split("\n")
     for i, line in enumerate(lines):
-        if not line.strip():
-            print("       ")
+        if not line.strip():  # Пустая строка
+            # Проверяем, начинается ли следующий блок с "2️⃣", чтобы избежать лишней строки
+            if i + 1 < len(lines) and lines[i + 1].strip().startswith("2️⃣"):
+                continue
+            print("       ")  # Добавляем только одну строку
             continue
 
         print("       ", end="")
         for char in line:
             print(char, end="", flush=True)
-            time.sleep(0.01)  # Уменьшено время на вывод символов
-        print()
-        if "1️⃣" in line:  # Проверяем наличие "1️⃣"
-            time.sleep(1)  # Добавляем паузу в 1 секунду перед следующим блоком
-        time.sleep(0.05)  # Уменьшено время между строками
+            time.sleep(0.01)  # Эффект печати символов
+
+        print()  # Завершение строки
+
+        # Добавляем паузу перед блоками
+        if "1️⃣" in line or "2️⃣" in line:  # Перед следующим пунктом пауза
+            time.sleep(0.5)
+        time.sleep(0.05)  # Пауза между строками
 
 
 def main():
