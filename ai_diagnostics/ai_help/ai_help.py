@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 1.3
+# Версия: 1.4 (с отладкой)
 # Обновлено: 2024-11-29
 
 import json
@@ -26,7 +26,12 @@ def load_help_data():
     """Загружает справочные данные из JSON файла."""
     try:
         with open(HELP_JSON_PATH, "r", encoding="utf-8") as file:
-            return json.load(file)
+            data = json.load(file)
+            # Проверка структуры данных
+            for key, section in data.items():
+                if "title" not in section or "short" not in section or "long" not in section:
+                    print(f"⚠️  Проблема в разделе '{key}': отсутствует один из ключей ('title', 'short', 'long').")
+            return data
     except Exception as e:
         print(f"Ошибка загрузки справочного файла: {e}")
         return None
@@ -54,6 +59,8 @@ def display_help_menu(help_data):
 
 def display_detailed_help(section):
     """Выводит подробное описание выбранного раздела."""
+    if 'long' not in section:
+        print(f"⚠️  Проблема в разделе '{section['title']}': отсутствует ключ 'long'.")
     print(f"\n   {section['title']}")
     print(f"   {'=' * len(section['title'])}")
     display_message_slowly(section.get('long', "Подробная информация отсутствует."))
