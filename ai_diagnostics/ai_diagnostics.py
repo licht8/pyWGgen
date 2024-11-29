@@ -2,6 +2,10 @@
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Генерирует отчёты и анализирует их, предоставляя рекомендации по исправлению проблем.
+# Версия: 2.1
+# Обновлено: 2024-11-29
+# Пример использования:
+#   python3 ai_diagnostics.py
 
 import json
 import time
@@ -21,28 +25,40 @@ def run_command(command):
     """Запускает внешнюю команду и возвращает её результат."""
     try:
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
-        return result.stdout
+        return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         return f"Ошибка: {e.stderr.strip()}"
 
 
+def animate_message(message):
+    """Выводит анимированное сообщение с эффектом перемигивания '...'."""
+    for _ in range(3):
+        for dots in range(1, 4):
+            print(f"\r   {message}{'.' * dots}{' ' * (3 - dots)}", end="", flush=True)
+            time.sleep(0.3)
+    print("\r" + " " * len(message + "..." * 3), end="\r")
+
+
 def generate_debug_report():
     """Запускает дебаггер для создания свежего debug_report.txt."""
-    print("\n   🤖  Генерация отчёта диагностики...")
-    print("   " + "=" * 40)  # Добавляем разделитель
+    animate_message("🤖  Генерация отчёта диагностики")
+    print("\n   ========================================")
     command = [sys.executable, PROJECT_ROOT / "modules" / "debugger.py"]
     output = run_command(command)
-    print(f"     ✅  Отчёт диагностики обновлён.\n     {output}")
+    print(f"     ✅  Отчёт диагностики обновлён...")
+    time.sleep(0.5)
+    print(f"     ✅  Отчёт сохранён в {DEBUG_REPORT_PATH}\n")
 
 
 def generate_test_report():
     """Запускает тестирование проекта для создания test_report.txt."""
-    print("\n   🤖  Генерация тестового отчёта...")
-    print("   " + "=" * 40)  # Добавляем разделитель
+    animate_message("🤖  Генерация тестового отчёта")
+    print("\n   ========================================")
     command = [sys.executable, PROJECT_ROOT / "modules" / "test_report_generator.py"]
     output = run_command(command)
-    print(f"     ✅  Тестовый отчёт обновлён.\n     {output}")
-
+    print(f"     ✅  Тестовый отчёт обновлён...")
+    time.sleep(0.5)
+    print(f"     ✅  Отчёт сохранён в {TEST_REPORT_PATH}\n")
 
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
@@ -110,22 +126,24 @@ def display_message_slowly(title, message, paths):
     print("\n")
 
 
-
 def main():
     """Основной запуск программы."""
     # Генерация свежих данных
     generate_debug_report()
     generate_test_report()
 
+    # Завершающее сообщение
+    animate_message(" 🎉  Завершаю анализ, пожалуйста подождите")
+    print("\nВот что мы обнаружили:\n")
+
     # Запуск анализа
     paths = get_paths_from_settings()
     findings = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
-        print("\n 🎉  Анализ завершён. Вот что мы обнаружили:\n")
         for finding in findings:
             display_message_slowly(finding["title"], finding["message"], paths)
     else:
-        print("\n ✅  Всё выглядит хорошо! Проблем не обнаружено.\n")
+        print("\n     ✅  Всё выглядит хорошо! Проблем не обнаружено.\n")
 
 
 if __name__ == "__main__":
