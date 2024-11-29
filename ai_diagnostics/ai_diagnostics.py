@@ -10,6 +10,7 @@ sys.path.append(str(PROJECT_ROOT))
 # Импорт настроек
 from settings import DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH
 
+
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
     """Парсер для анализа отчетов."""
     with open(messages_db_path, "r", encoding="utf-8") as db_file:
@@ -33,45 +34,55 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
     
     return findings
 
-def display_message_slowly(title, message):
-    """Красивый вывод сообщения с отступами и сохранением всех пробелов."""
-    # Убираем лишние пробелы у заголовка для подсчёта длины
-    clean_title = title.strip()
 
-    # Определяем длину заголовка без учёта пробелов
-    title_length = len(clean_title) + 1  # Увеличиваем длину разделителя на 1
+def get_paths_from_settings():
+    """Собирает пути из settings.py."""
+    from settings import BASE_DIR, WG_CONFIG_DIR, QR_CODE_DIR, USER_DB_PATH, DEBUG_REPORT_PATH, TEST_REPORT_PATH
+    return {
+        "BASE_DIR": BASE_DIR,
+        "WG_CONFIG_DIR": WG_CONFIG_DIR,
+        "QR_CODE_DIR": QR_CODE_DIR,
+        "USER_DB_PATH": USER_DB_PATH,
+        "DEBUG_REPORT_PATH": DEBUG_REPORT_PATH,
+        "TEST_REPORT_PATH": TEST_REPORT_PATH
+    }
 
-    # Отображение заголовка с корректно выровненным разделителем
-    print(f"\n  {clean_title}")  # Выводим заголовок с отступом
-    print(f"  {'=' * title_length}\n")  # Разделитель на 1 символ длиннее
 
-    # Обработка каждой строки сообщения
-    for line in message.split("\n"):
-        if not line.strip():  # Пустая строка
-            print("  ")  # Два пробела отступа
+def format_message(message, paths):
+    """Форматирует сообщение, заменяя переменные путями из settings.py."""
+    for key, path in paths.items():
+        print(f"[DEBUG] Replacing {{{key}}} with {path}")  # Отладочный вывод
+        message = message.replace(f"{{{key}}}", str(path))
+    return message
+
+
+def display_message_slowly(title, message, paths):
+    """Красивый вывод сообщения с форматированием."""
+    formatted_message = format_message(message, paths)
+    print(f"\n  {title}\n  {'=' * len(title)}\n")
+    for line in formatted_message.split("\n"):
+        if not line.strip():
+            print("  ")
             continue
-
-        # Постепенный вывод строки
-        print("  ", end="")  # Отступ перед строкой
+        print("  ", end="")
         for word in line:
             print(word, end="", flush=True)
-            time.sleep(0.02)  # Задержка между символами
-        print()  # Завершаем строку после вывода всех символов
-        time.sleep(0.1)  # Небольшая пауза между строками
-
-    # Добавляем пустую строку после сообщения
+            time.sleep(0.02)
+        print()
+        time.sleep(0.1)
     print("\n")
 
 
 def main():
-    """Основной запуск программы."""
+    paths = get_paths_from_settings()
     findings = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
-        print("\n🎉  Анализ завершён. Вот что мы обнаружили:")
+        print("\n🎉  Анализ завершён. Вот что мы обнаружили:\n")
         for finding in findings:
-            display_message_slowly(finding["title"], finding["message"])
+            display_message_slowly(finding["title"], finding["message"], paths)
     else:
         print("\n✅  Всё выглядит хорошо! Проблем не обнаружено.\n")
+
 
 if __name__ == "__main__":
     main()
