@@ -2,10 +2,8 @@
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Генерирует отчёты и анализирует их, предоставляя рекомендации по исправлению проблем.
-# Версия: 2.2
+# Версия: 2.3
 # Обновлено: 2024-11-29
-# Пример использования:
-#   python3 ai_diagnostics.py
 
 import json
 import time
@@ -37,7 +35,7 @@ def animate_message(message):
         for dots in range(1, 4):
             print(f"\r   {message}{'.' * dots}{' ' * (3 - dots)}", end="", flush=True)
             time.sleep(random.uniform(0.3, 2))  # Рандомная задержка от 0.3 до 2 секунд
-    print("\r" + " " * len(message + "..." * 3), end="\r")
+    print(f"\r   {message} 🤖", flush=True)  # Завершающее сообщение с иконкой
 
 
 def generate_debug_report():
@@ -113,12 +111,12 @@ def format_message(message, paths):
 def display_message_slowly(title, message, paths):
     """Красивый вывод сообщения с форматированием."""
     formatted_message = format_message(message, paths)
-    print(f"\n   {title}\n   {' ' * 2}{'=' * len(title)}\n")  # Добавляем два пробела перед "="
+    print(f"\n     {title}\n     {'=' * len(title)}\n")
     for line in formatted_message.split("\n"):
         if not line.strip():
-            print("   ")
+            print("     ")
             continue
-        print("   ", end="")
+        print("     ", end="")
         for char in line:
             print(char, end="", flush=True)
             time.sleep(0.02)
@@ -134,7 +132,7 @@ def main():
 
     # Завершающее сообщение
     animate_message(" 🎉  Завершаю анализ, пожалуйста подождите")
-    print("\nВот что мы обнаружили:")
+    print("\n\nВот что мы обнаружили:\n")
 
     # Запуск анализа
     paths = get_paths_from_settings()
@@ -144,6 +142,7 @@ def main():
             display_message_slowly(finding["title"], finding["message"], paths)
     else:
         print("\n     ✅  Всё выглядит хорошо! Проблем не обнаружено.")
+    print("\n")
 
 
 if __name__ == "__main__":
