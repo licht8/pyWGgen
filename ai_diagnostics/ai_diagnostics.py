@@ -34,13 +34,15 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
     return findings
 
 def display_message_slowly(title, message):
-    """Красивый вывод сообщения с форматированием."""
+    """Красивый вывод сообщения с постепенным отображением текста."""
     print(f"\n  {title}\n  {'=' * len(title)}\n")  # Отступы перед заголовком
     for line in message.split("\n"):
-        if line.strip():  # Сохраняем строки с пробелами
-            print(f"  {line}")  # Отображаем строку с отступами
-        else:
-            print()  # Оставляем пустую строку для визуального разделения
+        print("  ", end="")  # Отступ для каждой строки
+        for word in line.split():  # Постепенный вывод каждого слова
+            print(word, end=" ", flush=True)
+            time.sleep(0.05)  # Задержка между словами
+        print()  # Завершаем строку после вывода всех слов в ней
+        time.sleep(0.1)  # Небольшая пауза между строками для удобства
 
 def main():
     """Основной запуск программы."""
