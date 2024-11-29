@@ -20,18 +20,9 @@ LOG_FILE_PATH = BASE_DIR / "user/data/logs/app.log"
 LOG_LEVEL = "INFO"
 
 # Пути к отчетам и базе сообщений
-DEBUG_REPORT_PATH = BASE_DIR / "debug_report.txt"  # Путь к отчету диагностики
-TEST_REPORT_PATH = BASE_DIR / "test_report.txt"    # Путь к отчету тестирования
+DEBUG_REPORT_PATH = BASE_DIR / "wg_qr_generator/ai_diagnostics/debug_report.txt"  # Путь к отчету диагностики
+TEST_REPORT_PATH = BASE_DIR / "wg_qr_generator/ai_diagnostics/test_report.txt"    # Путь к отчету тестирования
 MESSAGES_DB_PATH = BASE_DIR / "wg_qr_generator/ai_diagnostics/messages_db.json"  # Путь к базе сообщений
 
 # Путь к журналу диагностики
 DIAGNOSTICS_LOG = BASE_DIR / "user/data/logs/diagnostics.log"
-
-if __name__ == "__main__":
-    print(f"BASE_DIR: {BASE_DIR}")
-    print(f"WG_CONFIG_DIR: {WG_CONFIG_DIR}")
-    print(f"QR_CODE_DIR: {QR_CODE_DIR}")
-    print(f"DEBUG_REPORT_PATH: {DEBUG_REPORT_PATH}")
-    print(f"TEST_REPORT_PATH: {TEST_REPORT_PATH}")
-    print(f"MESSAGES_DB_PATH: {MESSAGES_DB_PATH}")
-    print(f"DIAGNOSTICS_LOG: {DIAGNOSTICS_LOG}")
