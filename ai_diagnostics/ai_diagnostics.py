@@ -37,9 +37,13 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
 
 def get_paths_from_settings():
     """Собирает пути из settings.py."""
-    from settings import BASE_DIR, WG_CONFIG_DIR, QR_CODE_DIR, USER_DB_PATH, DEBUG_REPORT_PATH, TEST_REPORT_PATH
+    from settings import (
+        BASE_DIR, PROJECT_DIR, WG_CONFIG_DIR, QR_CODE_DIR,
+        USER_DB_PATH, DEBUG_REPORT_PATH, TEST_REPORT_PATH
+    )
     return {
         "BASE_DIR": BASE_DIR,
+        "PROJECT_DIR": PROJECT_DIR,
         "WG_CONFIG_DIR": WG_CONFIG_DIR,
         "QR_CODE_DIR": QR_CODE_DIR,
         "USER_DB_PATH": USER_DB_PATH,
