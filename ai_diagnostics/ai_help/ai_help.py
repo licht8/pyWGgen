@@ -158,31 +158,29 @@ def search_in_matches(matches):
             if 1 <= index <= len(matches):
                 return matches[index - 1]
             else:
-                print("\n   ❌  Неверный выбор. Попробуйте снова.")
-        else:  # Поиск по тексту
+                # Если число не соответствует варианту, ищем как ключевое слово
+                numeric_matches = [section for section in matches
+                                   if user_input in section['title'] or
+                                   user_input in section['short'] or
+                                   user_input in section.get('long', "")]
+                if len(numeric_matches) == 1:
+                    return numeric_matches[0]
+                elif len(numeric_matches) > 1:
+                    matches = numeric_matches
+                    continue
+                else:
+                    print("\n   ❌  Неверный выбор. Попробуйте снова.")
+        else:  # Повторный текстовый поиск
             filtered_matches = [section for section in matches
                                  if user_input in section['title'].lower() or
                                  user_input in section['short'].lower() or
                                  user_input in section.get('long', "").lower()]
-
-            if filtered_matches:
-                # Если нашли только один результат, возвращаем его
-                if len(filtered_matches) == 1:
-                    return filtered_matches[0]
-                # Если есть несколько совпадений, продолжаем поиск среди них
+            if len(filtered_matches) == 1:
+                return filtered_matches[0]
+            elif len(filtered_matches) > 1:
                 matches = filtered_matches
+                continue
             else:
-                # Проверяем, если пользователь ввел число как текст (например, "50")
-                if user_input.isdigit():
-                    filtered_matches = [section for section in matches
-                                         if user_input in section['title'] or
-                                         user_input in section['short'] or
-                                         user_input in section.get('long', "")]
-                    if filtered_matches:
-                        if len(filtered_matches) == 1:
-                            return filtered_matches[0]
-                        matches = filtered_matches
-                        continue
                 print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
                 break
 
