@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 2.4
+# Версия: 2.5
 # Обновлено: 2024-11-29
 
 import json
@@ -30,9 +30,7 @@ LINE_WIDTH = {
 
 
 def wrap_text(text, width, indent=4):
-    """
-    Форматирует текст по ширине строки с заданным отступом.
-    """
+    """Форматирует текст по ширине строки с заданным отступом."""
     words = text.split()
     lines = []
     current_line = ""
@@ -51,18 +49,13 @@ def wrap_text(text, width, indent=4):
 
 
 def preserve_json_formatting(text, indent=4):
-    """
-    Форматирует текст, полностью сохраняя оригинальные отступы и переносы из JSON.
-    """
+    """Форматирует текст, полностью сохраняя оригинальные отступы и переносы из JSON."""
     lines = []
     for line in text.split("\n"):
-        # Сохраняем каждую строку с заданным отступом
         if line.strip():  # Если строка не пустая, добавляем отступ
             lines.append(" " * indent + line)
         else:  # Если строка пустая, добавляем пустую строку без отступов
             lines.append("")
-
-    # Возвращаем текст с сохранённым форматированием
     return "\n".join(lines)
 
 
@@ -169,8 +162,7 @@ def search_in_matches(matches):
             matches = [section for section in matches
                        if user_input in section['title'].lower() or
                        user_input in section['short'].lower() or
-                       user_input in section.get('long', "").lower() or
-                       user_input.isdigit() and user_input in section['title']]
+                       user_input in section.get('long', "").lower()]
             if len(matches) == 1:
                 return matches[0]
             elif not matches:
@@ -200,22 +192,25 @@ def interactive_help():
                 display_detailed_help(section)
                 continue
             else:
-                print("\n   ❌  Неверный выбор. Попробуйте снова.\n")
+                # Число как ключевое слово
+                matched_sections = [section for section in help_data.values()
+                                    if user_input in section['title'] or
+                                    user_input in section['short'] or
+                                    user_input in section.get('long', "")]
         else:  # Поиск по тексту
             matched_sections = [section for section in help_data.values()
                                 if user_input in section['title'].lower() or
                                 user_input in section['short'].lower() or
-                                user_input in section.get('long', "").lower() or
-                                user_input.isdigit() and user_input in section['title']]
+                                user_input in section.get('long', "").lower()]
 
-            if len(matched_sections) == 1:
-                display_detailed_help(matched_sections[0])
-            elif len(matched_sections) > 1:
-                matches = search_in_matches(matched_sections)
-                if matches:
-                    display_detailed_help(matches)
-            else:
-                print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.\n")
+        if len(matched_sections) == 1:
+            display_detailed_help(matched_sections[0])
+        elif len(matched_sections) > 1:
+            matches = search_in_matches(matched_sections)
+            if matches:
+                display_detailed_help(matches)
+        else:
+            print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.\n")
 
 
 if __name__ == "__main__":
