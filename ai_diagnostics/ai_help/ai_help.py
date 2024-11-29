@@ -140,8 +140,6 @@ def search_in_matches(matches):
                 break
 
 
-
-
 def interactive_help():
     """Основной цикл взаимодействия со справочной системой."""
     help_data = load_help_files()
@@ -157,31 +155,32 @@ def interactive_help():
             print("\n   📖  Выход из справочной системы.")
             break
 
-        if user_input.isdigit():  # Обработка цифрового ввода
+        if user_input.isdigit():  # Проверяем, является ли ввод числом
             index = int(user_input)
-            if 1 <= index <= len(help_data):
+            if 1 <= index <= len(help_data):  # Если это номер раздела
                 section = list(help_data.values())[index - 1]
                 display_detailed_help(section)
                 continue
             else:
-                print("\n   ❌  Неверный выбор. Попробуйте снова.\n")
-                continue
-
-        # Поиск по ключевым словам
-        matched_sections = [section for section in help_data.values()
-                            if user_input in section['title'].lower() or
-                            user_input in section['short'].lower() or
-                            user_input in section.get('long', "").lower()]
+                # Если номер раздела отсутствует, переключаемся на поиск
+                matched_sections = [section for section in help_data.values()
+                                    if user_input in section['title'].lower() or
+                                    user_input in section['short'].lower() or
+                                    user_input in section.get('long', "").lower()]
+        else:  # Поиск по тексту
+            matched_sections = [section for section in help_data.values()
+                                if user_input in section['title'].lower() or
+                                user_input in section['short'].lower() or
+                                user_input in section.get('long', "").lower()]
 
         if len(matched_sections) == 1:
             display_detailed_help(matched_sections[0])
         elif len(matched_sections) > 1:
-            result = search_in_matches(matched_sections)
-            if result:
-                display_detailed_help(result)
+            matches = search_in_matches(matched_sections)
+            if matches:
+                display_detailed_help(matches)
         else:
             print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.\n")
-
 
 if __name__ == "__main__":
     interactive_help()
