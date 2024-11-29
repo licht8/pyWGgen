@@ -2,7 +2,7 @@
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
 # Версия: 2.0
-# Обновлено: 2024-11-29
+# Обновлено: 2024-11-29 15:21
 
 import json
 import sys
