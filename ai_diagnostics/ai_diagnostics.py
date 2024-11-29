@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 3.5
+# Версия: 3.2
 # Обновлено: 2024-11-29
 
 import json
@@ -44,21 +44,25 @@ def animate_message(message):
 def display_message_slowly(message):
     """Имитация печати ИИ с учётом пауз."""
     rules = get_pause_rules()  # Получаем правила пауз
-    for char in message:
-        if char == "\n":  # Обработка новой строки
-            print("\n   ", end="", flush=True)
-            apply_pause(char, rules)
+    for line in message.split("\n"):
+        if not line.strip():  # Пустая строка
+            print("   ")
+            apply_pause("\n", rules)  # Пауза для новой строки
             continue
-        print(char, end="", flush=True)
-        apply_pause(char, rules)
-    print()  # Завершение строки
+
+        print("   ", end="")
+        for char in line:
+            print(char, end="", flush=True)
+            apply_pause(char, rules)  # Применяем паузу для символов
+        print()  # Завершение строки
+        time.sleep(0.05)  # Дополнительная пауза между строками
 
 
 def generate_debug_report():
     """Запускает дебаггер для создания свежего debug_report.txt."""
     print("")
     animate_message("🤖  Генерация отчёта диагностики")
-    command = [sys.executable, PROJECT_ROOT / "ai_diagnostics" / "modules" / "debugger.py"]
+    command = [sys.executable, PROJECT_ROOT / "modules" / "debugger.py"]
     run_command(command)
     display_message_slowly(
         f"""
@@ -72,7 +76,7 @@ def generate_test_report():
     """Запускает тестирование проекта для создания test_report.txt."""
     print("")
     animate_message("🤖  Генерация тестового отчёта")
-    command = [sys.executable, PROJECT_ROOT / "ai_diagnostics" / "modules" / "test_report_generator.py"]
+    command = [sys.executable, PROJECT_ROOT / "modules" / "test_report_generator.py"]
     run_command(command)
     display_message_slowly(
         f"""
