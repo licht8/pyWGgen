@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 2.3
+# Версия: 2.2
 # Обновлено: 2024-11-29
 
 import json
@@ -28,36 +28,43 @@ LINE_WIDTH = {
     "details": 70
 }
 
-def wrap_text_preserve_formatting(text, width, indent=4):
+
+def wrap_text(text, width, indent=4):
     """
-    Форматирует текст по ширине строки, сохраняя явное форматирование (\n).
+    Форматирует текст по ширине строки с заданным отступом.
     """
+    words = text.split()
     lines = []
-    for paragraph in text.split("\n"):
-        if not paragraph.strip():
-            # Добавляем пустую строку, но только если предыдущая не была пустой
-            if lines and lines[-1].strip():
-                lines.append("")
-            continue
+    current_line = ""
 
-        words = paragraph.split()
-        current_line = ""
+    for word in words:
+        if len(current_line) + len(word) + 1 > width:
+            lines.append(" " * indent + current_line)
+            current_line = word
+        else:
+            current_line += ("" if current_line == "" else " ") + word
 
-        for word in words:
-            if len(current_line) + len(word) + 1 > width:
-                lines.append(" " * indent + current_line.strip())
-                current_line = word
-            else:
-                current_line += ("" if current_line == "" else " ") + word
-
-        if current_line:
-            lines.append(" " * indent + current_line.strip())
-
-    # Убираем лишние пустые строки в конце текста
-    while lines and not lines[-1].strip():
-        lines.pop()
+    if current_line:
+        lines.append(" " * indent + current_line)
 
     return "\n".join(lines)
+
+
+def preserve_json_formatting(text, indent=4):
+    """
+    Форматирует текст, полностью сохраняя оригинальные отступы и переносы из JSON.
+    """
+    lines = []
+    for line in text.split("\n"):
+        # Сохраняем каждую строку с заданным отступом
+        if line.strip():  # Если строка не пустая, добавляем отступ
+            lines.append(" " * indent + line)
+        else:  # Если строка пустая, добавляем пустую строку без отступов
+            lines.append("")
+
+    # Возвращаем текст с сохранённым форматированием
+    return "\n".join(lines)
+
 
 def load_settings():
     """Загружает настройки из settings.py."""
@@ -69,13 +76,16 @@ def load_settings():
         settings = {key: getattr(settings_module, key) for key in dir(settings_module) if not key.startswith("__")}
     return settings
 
+
 SETTINGS = load_settings()
+
 
 def replace_variables(text):
     """Заменяет переменные вида {VARIABLE} на значения из SETTINGS."""
     for key, value in SETTINGS.items():
         text = text.replace(f"{{{key}}}", str(value))
     return text
+
 
 def load_help_files():
     """Загружает все JSON файлы из HELP_DIR."""
@@ -92,15 +102,16 @@ def load_help_files():
             print(f"⚠️  Ошибка загрузки файла {json_file}: {e}")
     return help_data
 
+
 def save_help_section(section):
     """Сохраняет раздел справки в файл."""
     filename = f"{section['title'].strip()}.txt".replace(" ", "_")
     with open(filename, "w", encoding="utf-8") as file:
         file.write(f"{section['title']}\n")
         file.write("=" * len(section['title']) + "\n")
-        file.write(wrap_text_preserve_formatting(section.get('long', "Подробная информация отсутствует."),
-                                                 LINE_WIDTH["details"]) + "\n")
+        file.write(wrap_text(section.get('long', "Подробная информация отсутствует."), LINE_WIDTH["details"]) + "\n")
     print(f"\n   📁  Раздел сохранён в файл: {filename}\n")
+
 
 def display_help_menu(help_data):
     """Выводит главное меню справочной системы."""
@@ -108,8 +119,9 @@ def display_help_menu(help_data):
     print("   ======================")
     for idx, section in enumerate(help_data.values(), start=1):
         print(f"   {idx}. {section['title']}")
-        print(wrap_text_preserve_formatting(section['short'], LINE_WIDTH["menu"], indent=6) + "\n")
+        print(wrap_text(section['short'], LINE_WIDTH["menu"], indent=6) + "\n")
     print("   0. Выйти из справки\n")
+
 
 def display_detailed_help(section):
     """Выводит подробное описание выбранного раздела."""
@@ -136,13 +148,14 @@ def display_detailed_help(section):
     elif user_input in {"0", "q"}:
         print("\n   📖  Возврат в главное меню.")
 
+
 def search_in_matches(matches):
     """Обрабатывает повторный поиск в найденных совпадениях."""
     while True:
         print("\n   🔍  Найдено несколько совпадений:")
         for idx, section in enumerate(matches, start=1):
             print(f"   {idx}. {section['title']}")
-            print(wrap_text_preserve_formatting(section['short'], LINE_WIDTH["menu"], indent=6) + "\n")
+            print(wrap_text(section['short'], LINE_WIDTH["menu"], indent=6) + "\n")
 
         user_input = input("\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
 
@@ -162,6 +175,7 @@ def search_in_matches(matches):
             elif not matches:
                 print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
                 break
+
 
 def interactive_help():
     """Основной цикл взаимодействия со справочной системой."""
@@ -184,6 +198,8 @@ def interactive_help():
                 section = list(help_data.values())[index - 1]
                 display_detailed_help(section)
                 continue
+            else:
+                print("\n   ❌  Неверный выбор. Попробуйте снова.\n")
         else:  # Поиск по тексту
             matched_sections = [section for section in help_data.values()
                                 if user_input in section['title'].lower() or
