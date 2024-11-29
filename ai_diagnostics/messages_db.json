@@ -1,17 +1,17 @@
 {
     "firewall_issue": {
         "id": "firewall_issue",
-        "title": "🔒 Firewall Configuration Issue",
-        "message": "It seems like there is a problem with your firewall configuration. To fix this issue on CentOS 8 Stream, ensure the following commands are executed:\n\n1️⃣ Open the required port:\n`sudo firewall-cmd --zone=public --add-port=58996/udp --permanent`\n\n2️⃣ Reload the firewall:\n`sudo firewall-cmd --reload`\n\n3️⃣ Check the status:\n`sudo firewall-cmd --list-all`\n\n💡 Tip: Double-check the port number and ensure it matches your WireGuard configuration."
+        "title": "  🔒  Проблема с настройкой фаервола",
+        "message": "  Выявлена проблема с настройкой фаервола. Чтобы устранить её на CentOS 8 Stream, выполните следующие команды:\n\n  1️⃣  Откройте необходимый порт:\n      sudo firewall-cmd --zone=public --add-port=58996/udp --permanent\n\n  2️⃣  Перезагрузите фаервол:\n      sudo firewall-cmd --reload\n\n  3️⃣  Проверьте статус:\n      sudo firewall-cmd --list-all\n\n  💡  Совет: Убедитесь, что номер порта совпадает с вашим WireGuard конфигом."
     },
     "gradio_not_running": {
         "id": "gradio_not_running",
-        "title": "🌐 Gradio Service Not Running",
-        "message": "The Gradio service is not currently running. To start it, follow these steps:\n\n1️⃣ Navigate to the project root:\n`cd /path/to/your/project`\n\n2️⃣ Run the Gradio admin interface:\n`python3 main.py`\n\n💡 Tip: Ensure the port (default: 7860) is not in use by another process."
+        "title": "  🌐  Gradio не запущен",
+        "message": "  Сервис Gradio в данный момент не запущен. Чтобы запустить его, выполните следующие шаги:\n\n  1️⃣  Перейдите в корневую директорию проекта:\n      cd /path/to/your/project\n\n  2️⃣  Запустите Gradio интерфейс:\n      python3 main.py\n\n  💡  Совет: Убедитесь, что порт (по умолчанию: 7860) не занят другим процессом."
     },
     "missing_files": {
         "id": "missing_files",
-        "title": "📂 Missing Required Files",
-        "message": "Some required files are missing. These files have been recreated automatically, but you should verify their content:\n\n- `user/data/qrcodes`\n- `user/data/wg_configs`\n- `logs`\n\n💡 Tip: Ensure these directories contain the expected data for proper functionality."
+        "title": "  📂  Отсутствуют необходимые файлы",
+        "message": "  Некоторые необходимые файлы отсутствуют. Они были автоматически созданы, но убедитесь в их корректности:\n\n  - user/data/qrcodes\n  - user/data/wg_configs\n  - logs\n\n  💡  Совет: Проверьте, что эти директории содержат ожидаемые данные для корректной работы."
     }
 }
