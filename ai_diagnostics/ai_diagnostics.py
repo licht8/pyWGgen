@@ -142,7 +142,7 @@ def main():
     generate_test_report()
 
     display_message_slowly("\n🎉  Завершаю анализ, пожалуйста подождите 🤖")
-    display_message_slowly("🎯  Вот что мы обнаружили:\n")
+    display_message_slowly("🎯  Вот что мы обнаружили:")
 
     # Запуск анализа
     paths = get_paths_from_settings()
