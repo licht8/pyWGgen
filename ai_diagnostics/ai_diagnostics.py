@@ -41,18 +41,21 @@ def animate_message(message):
 
 
 def display_message_slowly(message):
-    """Имитация печати ИИ."""
+    """Имитация печати ИИ с учётом пауз."""
+    rules = get_pause_rules()  # Получаем правила пауз
     for line in message.split("\n"):
         if not line.strip():  # Пустая строка
             print("   ")
+            apply_pause("\n", rules)  # Пауза для новой строки
             continue
 
         print("   ", end="")
         for char in line:
             print(char, end="", flush=True)
-            time.sleep(0.01)  # Эффект печати символов
+            apply_pause(char, rules)  # Применяем паузу для символов
         print()  # Завершение строки
-        time.sleep(0.05)  # Пауза между строками
+        time.sleep(0.05)  # Дополнительная пауза между строками
+
 
 
 def generate_debug_report():
