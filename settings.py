@@ -35,4 +35,3 @@ if __name__ == "__main__":
     print(f"TEST_REPORT_PATH: {TEST_REPORT_PATH}")
     print(f"MESSAGES_DB_PATH: {MESSAGES_DB_PATH}")
     print(f"DIAGNOSTICS_LOG: {DIAGNOSTICS_LOG}")
-
