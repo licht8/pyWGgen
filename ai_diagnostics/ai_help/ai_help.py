@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 2.2
-# Обновлено: 2024-11-29
+# Версия: 2.3
+# Обновлено: 2024-11-29 16:45
+
 
 import json
 import sys
