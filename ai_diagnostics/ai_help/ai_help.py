@@ -155,7 +155,13 @@ def search_in_matches(matches):
 
         user_input = input("\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
 
-        if user_input.isdigit():  # Если ввод — число
+        if user_input.isdigit():
+            # Сначала проверяем как номер варианта
+            index = int(user_input)
+            if 1 <= index <= len(matches):
+                return matches[index - 1]
+
+            # Если не номер, проверяем как ключевое слово
             num_matches = [
                 section for section in matches
                 if user_input in section['title'] or
@@ -163,17 +169,14 @@ def search_in_matches(matches):
                 user_input in section.get('long', "")
             ]
             if len(num_matches) == 1:
-                return num_matches[0]  # Если найдено единственное совпадение
+                return num_matches[0]  # Если найдено одно совпадение
             elif len(num_matches) > 1:
-                matches = num_matches  # Уточняем поиск среди найденных
+                matches = num_matches  # Уточняем поиск
                 continue
             else:
-                index = int(user_input)
-                if 1 <= index <= len(matches):  # Если ввод соответствует номеру варианта
-                    return matches[index - 1]
-                else:
-                    print("\n   ❌  Неверный выбор. Попробуйте снова.")
-        else:  # Повторный текстовый поиск
+                print("\n   ❌  Ничего не найдено. Попробуйте снова.")
+        else:
+            # Повторный текстовый поиск
             matches = [
                 section for section in matches
                 if user_input in section['title'].lower() or
