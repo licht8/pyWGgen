@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 2.4
+# Версия: 2.5
 # Обновлено: 2024-11-29
-# Эта версия включает корректный поиск числовых ключевых слов (например, "50").
+# Эта версия включает:
+# - Исправление поиска числовых ключевых слов в повторных попытках.
+# - Улучшение обработки ввода при поиске внутри найденных совпадений.
+# - Сохранение корректного форматирования текста.
 
 import json
 import sys
@@ -153,34 +156,33 @@ def search_in_matches(matches):
 
         user_input = input("\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
 
-        if user_input.isdigit():  # Если введён номер варианта
+        if user_input.isdigit():  # Если ввод — число
+            num_matches = [section for section in matches
+                           if user_input in section['title'] or
+                           user_input in section['short'] or
+                           user_input in section.get('long', "")]
+            if len(num_matches) == 1:
+                return num_matches[0]
+            elif len(num_matches) > 1:
+                matches = num_matches
+                continue
+            else:
+                print("\n   ❌  Ничего не найдено для числового ключевика. Попробуйте снова.")
+                continue
+        elif user_input.isdigit():  # Если введён номер варианта
             index = int(user_input)
             if 1 <= index <= len(matches):
                 return matches[index - 1]
             else:
-                # Если число не соответствует варианту, ищем как ключевое слово
-                numeric_matches = [section for section in matches
-                                   if user_input in section['title'] or
-                                   user_input in section['short'] or
-                                   user_input in section.get('long', "")]
-                if len(numeric_matches) == 1:
-                    return numeric_matches[0]
-                elif len(numeric_matches) > 1:
-                    matches = numeric_matches
-                    continue
-                else:
-                    print("\n   ❌  Неверный выбор. Попробуйте снова.")
+                print("\n   ❌  Неверный выбор. Попробуйте снова.")
         else:  # Повторный текстовый поиск
-            filtered_matches = [section for section in matches
-                                 if user_input in section['title'].lower() or
-                                 user_input in section['short'].lower() or
-                                 user_input in section.get('long', "").lower()]
-            if len(filtered_matches) == 1:
-                return filtered_matches[0]
-            elif len(filtered_matches) > 1:
-                matches = filtered_matches
-                continue
-            else:
+            matches = [section for section in matches
+                       if user_input in section['title'].lower() or
+                       user_input in section['short'].lower() or
+                       user_input in section.get('long', "").lower()]
+            if len(matches) == 1:
+                return matches[0]
+            elif not matches:
                 print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
                 break
 
@@ -200,10 +202,23 @@ def interactive_help():
             print("\n   📖  Выход из справочной системы.")
             break
 
-        matched_sections = [section for section in help_data.values()
-                            if user_input in section['title'].lower() or
-                            user_input in section['short'].lower() or
-                            user_input in section.get('long', "").lower()]
+        if user_input.isdigit():  # Проверяем, является ли ввод числом
+            index = int(user_input)
+            if 1 <= index <= len(help_data):  # Если это номер раздела
+                section = list(help_data.values())[index - 1]
+                display_detailed_help(section)
+                continue
+            else:
+                # Число как ключевое слово
+                matched_sections = [section for section in help_data.values()
+                                    if user_input in section['title'] or
+                                    user_input in section['short'] or
+                                    user_input in section.get('long', "")]
+        else:  # Поиск по тексту
+            matched_sections = [section for section in help_data.values()
+                                if user_input in section['title'].lower() or
+                                user_input in section['short'].lower() or
+                                user_input in section.get('long', "").lower()]
 
         if len(matched_sections) == 1:
             display_detailed_help(matched_sections[0])
@@ -212,18 +227,7 @@ def interactive_help():
             if matches:
                 display_detailed_help(matches)
         else:
-            # Проверяем, если пользователь ввел цифру как текст (например, "50")
-            if user_input.isdigit():
-                matches = [section for section in help_data.values()
-                           if user_input in section['title'] or
-                           user_input in section['short'] or
-                           user_input in section.get('long', "")]
-                if matches:
-                    display_detailed_help(matches[0])
-                else:
-                    print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.\n")
-            else:
-                print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.\n")
+            print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.\n")
 
 
 if __name__ == "__main__":
