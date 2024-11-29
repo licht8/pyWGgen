@@ -53,9 +53,11 @@ def display_message_slowly(message):
         print("   ", end="")
         for char in line:
             print(char, end="", flush=True)
-            apply_pause(char, rules)  # Применяем паузу для символов
+            time.sleep(0.03)  # Увеличено время на вывод символа
+            apply_pause(char, rules)  # Применяем паузу для знаков препинания
         print()  # Завершение строки
-        time.sleep(0.05)  # Дополнительная пауза между строками
+        time.sleep(0.1)  # Увеличена пауза между строками
+
 
 
 def generate_debug_report():
