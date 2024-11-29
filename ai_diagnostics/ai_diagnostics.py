@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 3.4
+# Версия: 3.5
 # Обновлено: 2024-11-29
 
 import json
@@ -44,18 +44,14 @@ def animate_message(message):
 def display_message_slowly(message):
     """Имитация печати ИИ с учётом пауз."""
     rules = get_pause_rules()  # Получаем правила пауз
-    for line in message.split("\n"):
-        if not line.strip():  # Пустая строка
-            print("   ")
-            apply_pause("\n", rules)  # Пауза для новой строки
+    for char in message:
+        if char == "\n":  # Обработка новой строки
+            print("\n   ", end="", flush=True)
+            apply_pause(char, rules)
             continue
-
-        print("   ", end="")
-        for char in line:
-            print(char, end="", flush=True)
-            apply_pause(char, rules)  # Применяем паузу для символов
-        print()  # Завершение строки
-        time.sleep(0.02)  # Лёгкая пауза между строками
+        print(char, end="", flush=True)
+        apply_pause(char, rules)
+    print()  # Завершение строки
 
 
 def generate_debug_report():
