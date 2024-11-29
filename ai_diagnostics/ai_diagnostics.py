@@ -38,30 +38,20 @@ def display_message_slowly(title, message):
     # Отображение заголовка
     print(f"\n  {title}\n  {'=' * len(title)}\n")  # Отступы перед заголовком
 
-    # Отладочная информация
-    print("\n[DEBUG] Начало обработки сообщения\n")
-    print(f"[DEBUG] Исходный текст:\n{message}\n")
-
     # Обработка каждой строки сообщения
     for line in message.split("\n"):
-        # Отладка для каждой строки
-        print(f"[DEBUG] Обработка строки: {repr(line)}")
-        
-        # Если строка пустая, просто переносим
-        if not line.strip():
-            print("  [DEBUG] Пустая строка")
-            print("  ")  # Пустая строка с отступом
+        if not line.strip():  # Пустая строка
+            print("  ")
             continue
-        
-        # Постепенный вывод строки с отступами
-        print("  ", end="")  # Отступ перед строкой
+
+        # Постепенный вывод строки с сохранением начальных пробелов
+        initial_spaces = len(line) - len(line.lstrip())
+        print(" " * (2 + initial_spaces), end="")  # Добавляем 2 пробела + начальные пробелы из строки
         for word in line.split():
             print(word, end=" ", flush=True)
             time.sleep(0.05)  # Задержка между словами
         print()  # Завершаем строку после вывода всех слов
         time.sleep(0.1)  # Небольшая пауза между строками
-
-    print("\n[DEBUG] Конец обработки сообщения\n")
 
 def main():
     """Основной запуск программы."""
