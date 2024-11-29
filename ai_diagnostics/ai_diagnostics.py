@@ -61,8 +61,8 @@ def generate_debug_report():
     run_command(command)
     display_message_slowly(
         f"""
-    ✅  Отчёт диагностики обновлён...
-    ✅  Отчёт сохранён в {DEBUG_REPORT_PATH}
+✅  Отчёт диагностики обновлён...
+✅  Отчёт сохранён в {DEBUG_REPORT_PATH}
         """
     )
 
@@ -75,8 +75,8 @@ def generate_test_report():
     run_command(command)
     display_message_slowly(
         f"""
-        ✅  Тестовый отчёт обновлён...
-        ✅  Отчёт сохранён в {TEST_REPORT_PATH}
+✅  Тестовый отчёт обновлён...
+✅  Отчёт сохранён в {TEST_REPORT_PATH}
         """
     )
 
