@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 1.9
+# Версия: 2.0
 # Обновлено: 2024-11-29
 
 import json
@@ -36,14 +36,12 @@ def wrap_text(text, width, indent=4):
     current_line = ""
 
     for word in words:
-        # Учитываем длину текущей строки + пробел + длину нового слова
         if len(current_line) + len(word) + 1 > width:
             lines.append(" " * indent + current_line)
             current_line = word
         else:
             current_line += ("" if current_line == "" else " ") + word
 
-    # Добавляем последнюю строку, если она есть
     if current_line:
         lines.append(" " * indent + current_line)
 
