@@ -37,11 +37,10 @@ def display_message_slowly(title, message):
     """Красивый вывод сообщения с форматированием."""
     print(f"\n  {title}\n  {'=' * len(title)}\n")  # Отступы перед заголовком
     for line in message.split("\n"):
-        print(f"  ", end="")  # Отступ перед каждой строкой
-        for word in line.split():
-            print(word, end=" ", flush=True)
-            time.sleep(0.05)  # Задержка между словами
-        print()  # Перенос строки
+        if line.strip():  # Сохраняем строки с пробелами
+            print(f"  {line}")  # Отображаем строку с отступами
+        else:
+            print()  # Оставляем пустую строку для визуального разделения
 
 def main():
     """Основной запуск программы."""
