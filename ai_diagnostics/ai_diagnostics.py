@@ -35,8 +35,15 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
 
 def display_message_slowly(title, message):
     """Красивый вывод сообщения с отступами и сохранением всех пробелов."""
-    # Отображение заголовка
-    print(f"\n  {title}\n  {'=' * len(title)}\n")  # Отступы перед заголовком
+    # Убираем лишние пробелы у заголовка для подсчёта длины
+    clean_title = title.strip()
+
+    # Определяем длину заголовка без учёта пробелов
+    title_length = len(clean_title)
+
+    # Отображение заголовка с корректно выровненным разделителем
+    print(f"\n  {clean_title}")  # Выводим заголовок с отступом
+    print(f"  {'=' * title_length}\n")  # Разделитель точно под заголовком
 
     # Обработка каждой строки сообщения
     for line in message.split("\n"):
@@ -54,6 +61,7 @@ def display_message_slowly(title, message):
 
     # Добавляем пустую строку после сообщения
     print("\n")
+
 
 
 def main():
