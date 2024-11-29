@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# ai_diagnostics/ai_diagnostics.py
+# Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
+# Генерирует отчёты и анализирует их, предоставляя рекомендации по исправлению проблем.
+
 import json
 import time
 import sys
@@ -23,18 +28,18 @@ def run_command(command):
 
 def generate_debug_report():
     """Запускает дебаггер для создания свежего debug_report.txt."""
-    print("\n🤖  Генерация отчёта диагностики (debug_report)...")
+    print("\n 🤖  Генерация отчёта диагностики (debug_report)...")
     command = [sys.executable, PROJECT_ROOT / "modules" / "debugger.py"]
     output = run_command(command)
-    print(f"  ✅  Отчёт диагностики обновлён.\n  {output}")
+    print(f"   ✅  Отчёт диагностики обновлён.\n   {output}")
 
 
 def generate_test_report():
     """Запускает тестирование проекта для создания test_report.txt."""
-    print("\n🤖  Генерация тестового отчёта (test_report)...")
+    print("\n 🤖  Генерация тестового отчёта (test_report)...")
     command = [sys.executable, PROJECT_ROOT / "modules" / "test_report_generator.py"]
     output = run_command(command)
-    print(f"  ✅  Тестовый отчёт обновлён.\n  {output}")
+    print(f"   ✅  Тестовый отчёт обновлён.\n   {output}")
 
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
@@ -81,7 +86,6 @@ def get_paths_from_settings():
 def format_message(message, paths):
     """Форматирует сообщение, заменяя переменные путями из settings.py."""
     for key, path in paths.items():
-        # print(f"[DEBUG] Replacing {{{key}}} with {path}")  # Закомментированная отладка
         message = message.replace(f"{{{key}}}", str(path))
     return message
 
@@ -89,14 +93,14 @@ def format_message(message, paths):
 def display_message_slowly(title, message, paths):
     """Красивый вывод сообщения с форматированием."""
     formatted_message = format_message(message, paths)
-    print(f"\n  {title}\n    {'=' * len(title)}\n")
+    print(f"\n   {title}\n   {'=' * len(title)}\n")
     for line in formatted_message.split("\n"):
         if not line.strip():
-            print("  ")
+            print("   ")
             continue
-        print("  ", end="")
-        for word in line:
-            print(word, end="", flush=True)
+        print("   ", end="")
+        for char in line:
+            print(char, end="", flush=True)
             time.sleep(0.02)
         print()
         time.sleep(0.1)
@@ -104,6 +108,7 @@ def display_message_slowly(title, message, paths):
 
 
 def main():
+    """Основной запуск программы."""
     # Генерация свежих данных
     generate_debug_report()
     generate_test_report()
@@ -112,11 +117,11 @@ def main():
     paths = get_paths_from_settings()
     findings = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
-        print("\n🎉  Анализ завершён. Вот что мы обнаружили:\n")
+        print("\n 🎉  Анализ завершён. Вот что мы обнаружили:\n")
         for finding in findings:
             display_message_slowly(finding["title"], finding["message"], paths)
     else:
-        print("\n✅  Всё выглядит хорошо! Проблем не обнаружено.\n")
+        print("\n ✅  Всё выглядит хорошо! Проблем не обнаружено.\n")
 
 
 if __name__ == "__main__":
