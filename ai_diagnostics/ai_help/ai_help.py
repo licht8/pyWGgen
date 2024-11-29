@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 1.2.1
+# Версия: 1.3
 # Обновлено: 2024-11-29
 
 import json
@@ -77,6 +77,17 @@ def interactive_help():
             print("\n   📖  Выход из справочной системы.")
             break
 
+        if user_input.isdigit():  # Обработка цифрового ввода
+            index = int(user_input)
+            if 1 <= index <= len(help_data):
+                section = list(help_data.values())[index - 1]
+                display_detailed_help(section)
+                continue
+            else:
+                print("\n   ❌  Неверный выбор. Попробуйте снова.\n")
+                continue
+
+        # Поиск по ключевым словам
         matched_sections = [section for section in help_data.values()
                             if user_input in section['title'].lower() or
                             user_input in section['short'].lower() or
@@ -89,7 +100,7 @@ def interactive_help():
             for idx, section in enumerate(matched_sections, start=1):
                 print(f"   {idx}. {section['title']} - {section['short']}")
             choice = input("\n   Выберите номер подходящего варианта: ").strip()
-            if choice.isdigit() and 0 < int(choice) <= len(matched_sections):
+            if choice.isdigit() and 1 <= int(choice) <= len(matched_sections):
                 display_detailed_help(matched_sections[int(choice) - 1])
             else:
                 print("\n   ❌  Неверный выбор. Попробуйте снова.")
