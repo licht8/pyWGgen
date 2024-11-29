@@ -93,7 +93,7 @@ def format_message(message, paths):
 def display_message_slowly(title, message, paths):
     """Красивый вывод сообщения с форматированием."""
     formatted_message = format_message(message, paths)
-    print(f"\n   {title}\n   {'=' * len(title)}\n")
+    print(f"\n   {title}\n   {' ' * 2}{'=' * len(title)}\n")  # Добавляем два пробела перед "="
     for line in formatted_message.split("\n"):
         if not line.strip():
             print("   ")
@@ -105,6 +105,7 @@ def display_message_slowly(title, message, paths):
         print()
         time.sleep(0.1)
     print("\n")
+
 
 
 def main():
