@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 3.3
+# Версия: 3.4
 # Обновлено: 2024-11-29
 
 import json
@@ -55,7 +55,7 @@ def display_message_slowly(message):
             print(char, end="", flush=True)
             apply_pause(char, rules)  # Применяем паузу для символов
         print()  # Завершение строки
-        time.sleep(0.05)  # Дополнительная пауза между строками
+        time.sleep(0.02)  # Лёгкая пауза между строками
 
 
 def generate_debug_report():
