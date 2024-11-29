@@ -159,39 +159,28 @@ def search_in_matches(matches):
         if user_input.isdigit():
             index = int(user_input)
 
-            # Проверить как индекс
+            # Проверка как номер из списка совпадений
             if 1 <= index <= len(matches):
                 return matches[index - 1]
 
-            # Проверить как ключевое слово
-            num_matches = [
-                section for section in matches
-                if user_input in section['title'] or
-                user_input in section['short'] or
-                user_input in section.get('long', "")
-            ]
-            if len(num_matches) == 1:
-                return num_matches[0]
-            elif len(num_matches) > 1:
-                matches = num_matches
-                continue
-            else:
-                print("\n   ❌  Ничего не найдено. Попробуйте снова.")
-                continue
+            print("\n   ❌  Неверный выбор. Попробуйте снова.")
+            continue
 
-        # Если текстовый ввод
-        matches = [
+        # Если ввод - текст
+        filtered_matches = [
             section for section in matches
             if user_input in section['title'].lower() or
             user_input in section['short'].lower() or
             user_input in section.get('long', "").lower()
         ]
-        if len(matches) == 1:
-            return matches[0]
-        elif not matches:
+        if len(filtered_matches) == 1:
+            return filtered_matches[0]
+        elif len(filtered_matches) > 1:
+            matches = filtered_matches  # Обновляем список совпадений
+            continue
+        else:
             print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
             break
-
 
 def interactive_help():
     """Основной цикл взаимодействия со справочной системой."""
