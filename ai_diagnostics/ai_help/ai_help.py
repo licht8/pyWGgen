@@ -93,15 +93,25 @@ def display_detailed_help(section):
     """Выводит подробное описание выбранного раздела."""
     if 'long' not in section:
         print(f"⚠️  Проблема в разделе '{section['title']}': отсутствует ключ 'long'.")
-    print(f"\n   {section['title']}")
-    print(f"   {'=' * len(section['title'])}")
-    display_message_slowly(f"{wrap_text(section.get('long', 'Подробная информация отсутствует.'), LINE_WIDTH['details'])}")
-    print(f"\n   🔹 Хотите сохранить этот раздел? ( д/н ): ", end="")
+        return
+    
+    print(f"\n   {section['title']}\n")  # Пустая строка после заголовка
+    print(f"   {'=' * len(section['title'].strip())}\n")  # Линия разделителя
+    
+    formatted_text = wrap_text(section.get('long', "Подробная информация отсутствует."), LINE_WIDTH["details"])
+    
+    # Добавление отступов для списков
+    formatted_text = formatted_text.replace('1️⃣', '  1️⃣').replace('2️⃣', '  2️⃣').replace('💡', '  💡')
+    
+    display_message_slowly(formatted_text)
+    
+    print("\n   🔹 Хотите сохранить этот раздел? ( д/н ): ", end="")
     user_input = input().strip().lower()
     if user_input in {"д", "y"}:
         save_help_section(section)
     elif user_input in {"0", "q"}:
-        print(f"\n   📖  Возврат в главное меню.")
+        print("\n   📖  Возврат в главное меню.")
+
 
 def search_in_matches(matches):
     """Обрабатывает повторный поиск в найденных совпадениях."""
