@@ -116,21 +116,19 @@ def display_detailed_help(section):
     if 'long' not in section:
         print(f"⚠️  Проблема в разделе '{section['title']}': отсутствует ключ 'long'.")
         return
-    
-    # Заголовок с отступами
+
+    # Заголовок
     print(f"\n   {section['title']}\n")
     print(f"   {'=' * (len(section['title'].strip()) + 4)}\n")
-    
-    # Замена переменных в тексте
+
+    # Замена переменных и сохранение форматирования
     formatted_text = replace_variables(section.get('long', "Подробная информация отсутствует."))
-    
-    # Обработка форматирования из JSON
-    formatted_text = formatted_text.replace("\n", "\n\n")  # Увеличиваем пробелы между блоками
-    formatted_text = wrap_text_preserve_formatting(formatted_text, LINE_WIDTH["details"], indent=6)
-    
+    formatted_text = preserve_json_formatting(formatted_text)
+
     # Вывод текста
     display_message_slowly(formatted_text)
-    
+
+    # Сохранение раздела
     print("\n   🔹 Хотите сохранить этот раздел? ( д/н ): ", end="")
     user_input = input().strip().lower()
     if user_input in {"д", "y"}:
