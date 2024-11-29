@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 1.4 (с отладкой)
+# Версия: 1.4 (с отладкой и динамической загрузкой JSON)
 # Обновлено: 2024-11-29
 
 import json
@@ -11,6 +11,7 @@ from pathlib import Path
 # Добавляем пути к корню проекта и модулям
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 MODULES_DIR = PROJECT_ROOT / "ai_diagnostics" / "modules"
+HELP_DIR = PROJECT_ROOT / "ai_diagnostics" / "ai_help"
 
 sys.path.append(str(PROJECT_ROOT))
 sys.path.append(str(MODULES_DIR))
@@ -19,22 +20,21 @@ sys.path.append(str(MODULES_DIR))
 from pause_rules import apply_pause, get_pause_rules
 from ai_diagnostics.ai_diagnostics import display_message_slowly
 
-HELP_JSON_PATH = PROJECT_ROOT / "ai_diagnostics" / "ai_help" / "ai_help.json"
 
-
-def load_help_data():
-    """Загружает справочные данные из JSON файла."""
-    try:
-        with open(HELP_JSON_PATH, "r", encoding="utf-8") as file:
-            data = json.load(file)
-            # Проверка структуры данных
-            for key, section in data.items():
-                if "title" not in section or "short" not in section or "long" not in section:
-                    print(f"⚠️  Проблема в разделе '{key}': отсутствует один из ключей ('title', 'short', 'long').")
-            return data
-    except Exception as e:
-        print(f"Ошибка загрузки справочного файла: {e}")
-        return None
+def load_help_files():
+    """Загружает все JSON файлы из HELP_DIR."""
+    help_data = {}
+    for json_file in HELP_DIR.rglob("*.json"):
+        try:
+            with open(json_file, "r", encoding="utf-8") as file:
+                data = json.load(file)
+                for key, section in data.items():
+                    if "title" not in section or "short" not in section or "long" not in section:
+                        print(f"⚠️  Проблема в разделе '{key}': отсутствует один из ключей ('title', 'short', 'long').")
+                help_data.update(data)
+        except Exception as e:
+            print(f"⚠️  Ошибка загрузки файла {json_file}: {e}")
+    return help_data
 
 
 def save_help_section(section):
@@ -71,7 +71,7 @@ def display_detailed_help(section):
 
 def interactive_help():
     """Основной цикл взаимодействия со справочной системой."""
-    help_data = load_help_data()
+    help_data = load_help_files()
     if not help_data:
         print("   ❌  Справочная информация недоступна.")
         return
