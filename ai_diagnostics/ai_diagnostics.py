@@ -1,5 +1,13 @@
 import json
 import time
+import sys
+from pathlib import Path
+
+# Добавляем корневую директорию в sys.path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(PROJECT_ROOT))
+
+# Импорт настроек
 from settings import DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
