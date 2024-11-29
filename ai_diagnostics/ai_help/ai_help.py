@@ -35,7 +35,9 @@ def wrap_text_preserve_formatting(text, width, indent=4):
     lines = []
     for paragraph in text.split("\n"):
         if not paragraph.strip():
-            lines.append("")  # Пустая строка для переноса
+            # Добавляем пустую строку, но только если предыдущая не была пустой
+            if lines and lines[-1].strip():
+                lines.append("")
             continue
 
         words = paragraph.split()
@@ -50,6 +52,10 @@ def wrap_text_preserve_formatting(text, width, indent=4):
 
         if current_line:
             lines.append(" " * indent + current_line.strip())
+
+    # Убираем лишние пустые строки в конце текста
+    while lines and not lines[-1].strip():
+        lines.pop()
 
     return "\n".join(lines)
 
