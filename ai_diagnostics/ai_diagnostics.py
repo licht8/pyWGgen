@@ -35,8 +35,9 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
 
 def display_message_slowly(title, message):
     """Красивый вывод сообщения с форматированием."""
-    print(f"\n{title}\n{'=' * len(title)}\n")
+    print(f"\n  {title}\n  {'=' * len(title)}\n")  # Отступы перед заголовком
     for line in message.split("\n"):
+        print(f"  ", end="")  # Отступ перед каждой строкой
         for word in line.split():
             print(word, end=" ", flush=True)
             time.sleep(0.05)  # Задержка между словами
@@ -46,11 +47,11 @@ def main():
     """Основной запуск программы."""
     findings = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
-        print("\n🎉 Анализ завершён. Вот что мы обнаружили:\n")
+        print("\n🎉  Анализ завершён. Вот что мы обнаружили:\n")
         for finding in findings:
             display_message_slowly(finding["title"], finding["message"])
     else:
-        print("\n✅ Всё выглядит хорошо! Проблем не обнаружено.\n")
+        print("\n✅  Всё выглядит хорошо! Проблем не обнаружено.\n")
 
 if __name__ == "__main__":
     main()
