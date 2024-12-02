@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 3.7
-# Обновлено: 2024-11-29
-# Эта версия включает корректную подстановку путей и улучшенное форматирование сообщений.
+# Версия: 3.8
+# Обновлено: 2024-12-02
+# Эта версия включает вызов обобщенного отчета, улучшенную обработку путей и форматирование сообщений.
 
 import json
 import time
@@ -15,6 +15,7 @@ from pathlib import Path
 # Добавляем корневую директорию проекта в sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODULES_DIR = PROJECT_ROOT / "modules"
+DIAGNOSTICS_DIR = PROJECT_ROOT / "ai_diagnostics"
 
 sys.path.append(str(PROJECT_ROOT))  # Добавляем путь к корню проекта
 sys.path.append(str(MODULES_DIR))  # Добавляем путь к модулям
@@ -22,18 +23,10 @@ sys.path.append(str(MODULES_DIR))  # Добавляем путь к модуля
 # Импорт из настроек
 from settings import DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH, PROJECT_DIR
 
-
 # Правильные пути для скриптов
 DEBUGGER_SCRIPT = MODULES_DIR / "debugger.py"
 TEST_REPORT_GENERATOR_SCRIPT = MODULES_DIR / "test_report_generator.py"
-
-def generate_summary():
-    """Вызов генерации обобщенного отчета."""
-    command = [sys.executable, PROJECT_ROOT / "ai_diagnostics" / "ai_diagnostics_summary.py"]
-    subprocess.run(command)
-
-# Вызов функции в основном процессе
-generate_summary()
+SUMMARY_SCRIPT = DIAGNOSTICS_DIR / "ai_diagnostics_summary.py"
 
 
 def run_command(command):
@@ -148,6 +141,13 @@ def display_analysis_result(title, message, paths):
     display_message_slowly(formatted_message)
 
 
+def generate_summary_report():
+    """Вызов генерации обобщенного отчета."""
+    print("\n 🤖 Создание обобщенного отчета...")
+    command = [sys.executable, str(SUMMARY_SCRIPT)]
+    subprocess.run(command)
+
+
 def main():
     """Основной запуск программы."""
     debug_log("Начало выполнения диагностики.")
@@ -170,6 +170,9 @@ def main():
     else:
         display_message_slowly(" ✅  Всё выглядит хорошо! Проблем не обнаружено.")
     print("\n")
+
+    # Генерация обобщенного отчета
+    generate_summary_report()
 
 
 if __name__ == "__main__":
