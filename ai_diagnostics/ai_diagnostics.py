@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 4.1
+# Версия: 4.2
 # Обновлено: 2024-12-02
-# Добавлена обработка проблем с фаерволом и автоматическое исправление через команды.
+# Добавлена отладочная информация и улучшена логика проверки портов.
 
 import json
 import time
@@ -32,6 +32,7 @@ from settings import (
     PRINT_SPEED,
     LINE_DELAY,
     GRADIO_PORT,
+    WIREGUARD_PORT,
 )
 
 # Настраиваем logging
@@ -46,7 +47,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Порты для проверки
-WIREGUARD_PORT = 51820
 REQUIRED_PORTS = [WIREGUARD_PORT, GRADIO_PORT]
 
 # Скрипты
@@ -86,10 +86,13 @@ def display_message_slowly(message):
 
 def check_ports():
     """Проверяет состояние необходимых портов."""
-    command = ["ss", "-tuln"]
+    logger.debug(f"Проверяемые порты: {REQUIRED_PORTS}")
+    command = ["firewall-cmd", "--list-ports"]
     result = run_command(command)
-    open_ports = {line.split(":")[-1].split()[0] for line in result.splitlines() if ":" in line}
-    missing_ports = [port for port in REQUIRED_PORTS if str(port) not in open_ports]
+    logger.debug(f"Открытые порты (firewall-cmd --list-ports): {result}")
+    open_ports = {int(port.split("/")[0]) for port in result.split()}
+    missing_ports = [port for port in REQUIRED_PORTS if port not in open_ports]
+    logger.debug(f"Отсутствующие порты: {missing_ports}")
     return missing_ports
 
 
