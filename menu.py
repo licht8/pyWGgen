@@ -122,7 +122,7 @@ def show_main_menu():
             print(f" 🤖  Запуск справочной системы...")
             os.system("python3 ai_diagnostics/ai_help/ai_help.py")
         elif choice == "aid":
-            print(f" 🤖  Запуск интерактивной диагностики проекта...")
+            print(f"   🤖  Запуск интерактивной диагностики проекта...")
             os.system("python3 ai_diagnostics/ai_diagnostics.py")
         elif choice in {"0", "q"}:
             print("\n 👋  Выход. До свидания!\n")
