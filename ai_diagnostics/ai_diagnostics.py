@@ -3,7 +3,7 @@
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Версия: 4.1
 # Обновлено: 2024-12-02
-# Добавлена автоматизация исправления проблем через команды из messages_db.json.
+# Добавлена обработка проблем с фаерволом и автоматическое исправление через команды.
 
 import json
 import time
@@ -31,6 +31,7 @@ from settings import (
     ANIMATION_SPEED,
     PRINT_SPEED,
     LINE_DELAY,
+    GRADIO_PORT,
 )
 
 # Настраиваем logging
@@ -44,7 +45,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Правильные пути для скриптов
+# Порты для проверки
+WIREGUARD_PORT = 51820
+REQUIRED_PORTS = [WIREGUARD_PORT, GRADIO_PORT]
+
+# Скрипты
 DEBUGGER_SCRIPT = MODULES_DIR / "debugger.py"
 TEST_REPORT_GENERATOR_SCRIPT = MODULES_DIR / "test_report_generator.py"
 SUMMARY_SCRIPT = DIAGNOSTICS_DIR / "ai_diagnostics_summary.py"
@@ -60,16 +65,16 @@ def run_command(command):
 
 
 def animate_message(message):
-    """Выводит анимированное сообщение с эффектом перемигивания ' ...'. Время перемигивания зависит от ANIMATION_SPEED."""
-    for _ in range(3):  # Три итерации перемигивания
+    """Выводит анимированное сообщение с эффектом перемигивания."""
+    for _ in range(3):
         for dots in range(1, 4):
-            print(f"\r   {message} {'.' * dots}{' ' * (3 - dots)}", end="", flush=True)
+            print(f"\r   {message}{'.' * dots}{' ' * (3 - dots)}", end="", flush=True)
             time.sleep(ANIMATION_SPEED)
-    print(f"\r   {message} 🔎 ", flush=True)  # Завершающее сообщение с иконкой
+    print(f"\r   {message} 🔎 ", flush=True)
 
 
 def display_message_slowly(message):
-    """Имитация печати ИИ. Скорость определяется PRINT_SPEED и LINE_DELAY."""
+    """Имитация печати ИИ."""
     for line in message.split("\n"):
         print("   ", end="")
         for char in line:
@@ -77,6 +82,15 @@ def display_message_slowly(message):
             time.sleep(PRINT_SPEED)
         print()
         time.sleep(LINE_DELAY)
+
+
+def check_ports():
+    """Проверяет состояние необходимых портов."""
+    command = ["ss", "-tuln"]
+    result = run_command(command)
+    open_ports = {line.split(":")[-1].split()[0] for line in result.splitlines() if ":" in line}
+    missing_ports = [port for port in REQUIRED_PORTS if str(port) not in open_ports]
+    return missing_ports
 
 
 def execute_commands(commands):
@@ -89,66 +103,21 @@ def execute_commands(commands):
     return "\n".join(results)
 
 
-def generate_debug_report():
-    """Запускает дебаггер для создания debug_report."""
-    print("")
-    animate_message(" 🤖  Генерация отчёта диагностики")
-    command = [sys.executable, str(DEBUGGER_SCRIPT)]
-    result = run_command(command)
-    logger.debug(f"Ожидаемый путь к debug_report: {DEBUG_REPORT_PATH}")
-    if not DEBUG_REPORT_PATH.exists():
-        logger.warning(f" ⚠️ Debug Report не был создан! Результат команды: {result}")
-    else:
-        logger.info(f" ✅ Debug Report успешно создан.")
-
-
-def generate_test_report():
-    """Запускает тестирование проекта для создания test_report."""
-    print("")
-    animate_message(" 🤖  Генерация тестового отчёта")
-    command = [sys.executable, str(TEST_REPORT_GENERATOR_SCRIPT)]
-    result = run_command(command)
-    logger.debug(f"Ожидаемый путь к test_report: {TEST_REPORT_PATH}")
-    if not TEST_REPORT_PATH.exists():
-        logger.warning(f" ⚠️ Test Report не был создан! Результат команды: {result}")
-    else:
-        logger.info(f" ✅ Test Report успешно создан.")
-
-
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
     """Парсер для анализа отчетов."""
     try:
         with open(messages_db_path, "r", encoding="utf-8") as db_file:
             messages_db = json.load(db_file)
     except FileNotFoundError:
-        logger.error(f" ❌ Файл messages_db.json не найден:\n 📂  {messages_db_path}")
+        logger.error(f" ❌ Файл messages_db.json не найден: {messages_db_path}")
         return []
 
     findings = []
 
-    # Анализ debug_report
-    if debug_report_path.exists():
-        with open(debug_report_path, "r", encoding="utf-8") as debug_file:
-            debug_report = debug_file.read()
-            logger.debug(f"Содержимое Debug Report: {debug_report[:500]}...")  # Первые 500 символов
-            if "firewall-cmd --add-port" in debug_report:
-                findings.append(messages_db.get("firewall_issue", {"title": "Ошибка Firewall", "message": "Нет описания", "commands": []}))
-    else:
-        logger.warning(f" ⚠️ Debug Report отсутствует по пути: {debug_report_path}")
-
-    # Анализ test_report
-    if test_report_path.exists():
-        with open(test_report_path, "r", encoding="utf-8") as test_file:
-            test_report = test_file.read()
-            logger.debug(f"Содержимое Test Report: {test_report[:500]}...")  # Первые 500 символов
-            if "Gradio: ❌" in test_report:
-                findings.append(messages_db.get("gradio_not_running", {"title": "Gradio Error", "message": "Нет описания", "commands": []}))
-            if "Missing" in test_report:
-                findings.append(messages_db.get("missing_files", {"title": "Отсутствующие файлы", "message": "Нет описания", "commands": []}))
-            if "user_records.json: ❌" in test_report:
-                findings.append(messages_db.get("missing_user_records", {"title": "Ошибка Users", "message": "Нет описания", "commands": []}))
-    else:
-        logger.warning(f" ⚠️ Test Report отсутствует по пути: {test_report_path}")
+    # Проверка портов
+    missing_ports = check_ports()
+    if missing_ports:
+        findings.append(messages_db.get("ports_closed", {"title": "🔒 Закрытые порты", "message": "Необходимые порты закрыты.", "commands": []}))
 
     return findings
 
@@ -184,7 +153,7 @@ def format_message(message, paths):
 
 def generate_summary_report():
     """Вызов генерации обобщенного отчета."""
-    print(f"\n 🤖 Создание обобщенного отчета...")
+    print("\n 🤖 Создание обобщенного отчета...")
     command = [sys.executable, str(SUMMARY_SCRIPT)]
     subprocess.run(command)
 
@@ -192,10 +161,6 @@ def generate_summary_report():
 def main():
     """Основной запуск программы."""
     logger.info("Начало выполнения диагностики.")
-
-    generate_debug_report()
-    generate_test_report()
-
     animate_message(" 🎉  Завершаю анализ, пожалуйста подождите 🤖")
     display_message_slowly("\n 🎯  Вот что мы обнаружили:")
 
