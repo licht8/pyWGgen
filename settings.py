@@ -51,7 +51,7 @@ LOG_DIR = BASE_DIR / "user/data/logs"
 DIAGNOSTICS_LOG = LOG_DIR / "diagnostics.log"
 SUMMARY_REPORT_PATH = LOG_DIR / "summary_report.txt"
 LOG_FILE_PATH = LOG_DIR / "app.log"                  # Файл для записи логов
-LOG_LEVEL = "DEBUG"                                  # Уровень логирования: DEBUG, INFO, WARNING, ERROR
+LOG_LEVEL = "WARNING"                                  # Уровень логирования: DEBUG, INFO, WARNING, ERROR
 
 # Пути к отчетам и базе сообщений
 DEBUG_REPORT_PATH = BASE_DIR / "ai_diagnostics/debug_report.txt"  # Путь к отчету диагностики
