@@ -182,7 +182,7 @@ def main():
         for finding in findings:
             display_analysis_result(finding["title"], finding["message"], paths)
     else:
-        display_message_slowly(" ✅  Всё выглядит хорошо! Проблем не обнаружено.")
+        display_message_slowly(" ✅  Всё выглядит хорошо!\n 👍  Проблем не обнаружено.")
     print("\n")
 
     # Генерация обобщенного отчета
