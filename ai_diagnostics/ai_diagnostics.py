@@ -38,7 +38,7 @@ from utils import get_wireguard_subnet
 
 # Настраиваем logging
 logging.basicConfig(
-    level=LOG_LEVEL,
+    level=logging.getLevelName(LOG_LEVEL),  # Приводим LOG_LEVEL из settings в подходящий формат
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         logging.FileHandler(LOG_FILE_PATH, encoding="utf-8"),
@@ -46,6 +46,7 @@ logging.basicConfig(
     ],
 )
 logger = logging.getLogger(__name__)
+
 
 # Проверяемые порты
 WIREGUARD_PORT = 51820
