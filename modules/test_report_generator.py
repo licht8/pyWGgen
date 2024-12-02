@@ -57,7 +57,7 @@ def generate_report():
     timestamp = datetime.utcnow().isoformat()
     user_records = load_json(USER_DB_PATH)
 
-    report_lines = [f" === 📝  Отчет о состоянии проекта wg_qr_generator  ===", f" 📅  Дата и время: {timestamp}\n"]
+    report_lines = [f"\n === 📝  Отчет о состоянии проекта wg_qr_generator  ===", f" 📅  Дата и время: {timestamp}\n"]
 
     # Проверка структуры
     report_lines.append(" === 📂  Проверка структуры проекта  ===")
