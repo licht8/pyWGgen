@@ -170,7 +170,7 @@ def main():
     generate_test_report()
 
     animate_message(" 🎉  Завершаю анализ, пожалуйста подождите 🤖 ")
-    display_message_slowly(" 🎯  Вот что мы обнаружили:")
+    display_message_slowly(f"\n 🎯  Вот что мы обнаружили:")
 
     paths = {
         "DEBUG_REPORT_PATH": DEBUG_REPORT_PATH,
