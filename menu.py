@@ -6,8 +6,7 @@ import os
 import sys
 import subprocess
 from modules.firewall_utils import get_external_ip
-from settings import DIAGNOSTICS_LOG
-from settings import LOG_DIR
+from settings import LOG_DIR, LOG_FILE_PATH, DIAGNOSTICS_LOG
 
 # Установить путь к корню проекта
 project_root = os.path.dirname(os.path.abspath(__file__))
