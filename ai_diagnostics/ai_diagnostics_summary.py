@@ -9,6 +9,7 @@ import subprocess
 from pathlib import Path
 import sys
 import logging
+from settings import PROJECT_DIR, SUMMARY_REPORT_PATH, TEST_REPORT_PATH, USER_DB_PATH, LOG_LEVEL
 
 # Добавляем корневую директорию проекта в sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
