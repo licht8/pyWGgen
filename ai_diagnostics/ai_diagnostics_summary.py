@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics_summary.py
 # Скрипт для создания обобщенного отчета о состоянии проекта wg_qr_generator.
-# Версия: 1.3
+# Версия: 1.4
 # Обновлено: 2024-12-02
-# Включает проверку портов, статуса WireGuard и фаервола.
 
+import json
 import subprocess
 from pathlib import Path
 import sys
@@ -14,16 +14,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))  # Добавляем корень проекта в sys.path
 
 # Импортируем настройки
-from settings import PROJECT_DIR
-
-# Пути для отчетов
-LOG_DIR = PROJECT_DIR / "user" / "data" / "logs"
-SUMMARY_REPORT_PATH = LOG_DIR / "summary_report.txt"
-DEBUG_REPORT_PATH = PROJECT_DIR / "ai_diagnostics" / "debug_report.txt"
-TEST_REPORT_PATH = PROJECT_DIR / "ai_diagnostics" / "test_report.txt"
-
-# Убедимся, что директория логов существует
-LOG_DIR.mkdir(parents=True, exist_ok=True)
+from settings import PROJECT_DIR, SUMMARY_REPORT_PATH, TEST_REPORT_PATH, USER_DB_PATH
 
 
 def run_command(command):
@@ -68,26 +59,30 @@ def check_wireguard_status():
     return status, wg_info
 
 
-def parse_test_report():
-    """Парсит тестовый отчет для получения количества пользователей."""
-    if TEST_REPORT_PATH.exists():
-        with open(TEST_REPORT_PATH, "r", encoding="utf-8") as file:
-            content = file.read()
-            total_users = content.count("peer")
-            return total_users
-    return 0
+def count_users():
+    """Считает количество пользователей из user_records.json."""
+    if USER_DB_PATH.exists():
+        with open(USER_DB_PATH, "r", encoding="utf-8") as file:
+            user_data = json.load(file)
+            return len(user_data), "user_records.json"
+    return 0, "Отсутствует файл user_records.json"
+
+
+def count_peers(wg_info):
+    """Считает количество peer в выводе wg show."""
+    return sum(1 for line in wg_info.splitlines() if line.startswith("peer:"))
 
 
 def generate_summary():
     """Создает обобщенный отчет."""
     print(" 🤖 Создание обобщенного отчета...")
 
-    # Проверка пользователей
-    total_users = parse_test_report()
+    # Получение данных о пользователях
+    total_users, user_source = count_users()
 
     # Проверка WireGuard
     wg_status, wg_info = check_wireguard_status()
-    peers_count = wg_info.count("peer:") if "peer:" in wg_info else 0
+    peers_count = count_peers(wg_info)
 
     # Проверка портов
     open_ports = check_ports()
@@ -99,9 +94,9 @@ def generate_summary():
     summary = [
         " === 📋 Обобщенный отчет о состоянии проекта ===",
         "\n 📂 Пользователи:",
-        f"- Общее количество пользователей: {total_users}",
+        f"- Общее количество пользователей: {total_users} (Источник: {user_source})",
         "\n 🔒 WireGuard:",
-        f" - Общее количество peer: {peers_count}",
+        f" - Общее количество peer: {peers_count} (Источник: wg show)",
         f" - Статус WireGuard: {wg_status}",
         f" - Информация о WireGuard:\n{wg_info if wg_status == 'active' else ''}",
         "\n 🌐 Gradio:",
