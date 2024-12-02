@@ -10,6 +10,7 @@ import sys
 import subprocess
 import logging
 from pathlib import Path
+from settings import LOG_FILE_PATH, LOG_DIR
 
 # Добавляем корневую директорию проекта в sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -120,8 +121,8 @@ def check_masquerade_rules():
         ipv4_network = wireguard_subnet.split("/")[0].rsplit(".", 1)[0] + ".0/24"  # Преобразуем в "10.66.66.0/24"
         ipv6_rule = 'rule family="ipv6" source address="fd42:42:42::0/24" masquerade'
         required_rules = [
-            f'rule family="ipv4" source address="{ipv4_network}" masquerade',
-            ipv6_rule
+            {"type": "IPv4", "rule": ipv4_network},
+            {"type": "IPv6", "rule": "fd42:42:42::0/24"}
         ]
     except Exception as e:
         logger.error(f"Ошибка при извлечении подсети WireGuard: {e}")
@@ -130,7 +131,8 @@ def check_masquerade_rules():
     # Проверяем наличие правил
     missing_rules = []
     for rule in required_rules:
-        if rule not in result:
+        rule_str = f'rule family="{rule["type"].lower()}" source address="{rule["rule"]}" masquerade'
+        if rule_str not in result:
             missing_rules.append(rule)
 
     logger.debug(f"Отсутствующие правила маскарадинга: {missing_rules}")
