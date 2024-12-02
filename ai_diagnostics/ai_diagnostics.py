@@ -153,7 +153,9 @@ def check_gradio_status():
 
 
 def parse_reports(messages_db_path):
-    """Парсер для анализа отчетов."""
+    """
+    Парсер для анализа отчетов. Сообщения извлекаются из messages_db.json.
+    """
     try:
         with open(messages_db_path, "r", encoding="utf-8") as db_file:
             messages_db = json.load(db_file)
@@ -164,31 +166,39 @@ def parse_reports(messages_db_path):
     findings = []
     suggestions = []
 
+    # Проверка закрытых портов
     closed_ports = check_ports()
     if closed_ports:
-        findings.append(messages_db["ports_closed"])
+        report = messages_db.get("ports_closed", {})
+        if report:
+            report["message"] = report["message"].format(
+                PROJECT_DIR=PROJECT_DIR,
+                USER_DB_PATH=USER_DB_PATH,
+                QR_CODE_DIR=QR_CODE_DIR
+            )
+            findings.append(report)
 
+    # Проверка маскарадинга
     missing_masquerade_rules = check_masquerade_rules()
     if missing_masquerade_rules:
-        findings.append({
-            "title": "🔒 Проблемы с маскарадингом",
-            "message": f"Следующие правила маскарадинга отсутствуют:\n{', '.join(missing_masquerade_rules)}",
-            "commands": ["sudo systemctl restart wg-quick@wg0"]
-        })
-
-    if not check_gradio_status():
-        suggestions.append(messages_db["gradio_not_running"])
-
-    # Подстановка переменных
-    for finding in findings + suggestions:
-        if "message" in finding:
-            finding["message"] = finding["message"].format(
-                USER_DB_PATH=USER_DB_PATH,
-                QR_CODE_DIR=QR_CODE_DIR,
-                PROJECT_DIR=PROJECT_DIR  # Добавил PROJECT_DIR
+        report = messages_db.get("masquerade_issue", {})
+        if report:
+            report["message"] = report["message"].format(
+                MISSING_RULES=", ".join(missing_masquerade_rules)
             )
+            findings.append(report)
+
+    # Проверка статуса Gradio
+    if not check_gradio_status():
+        report = messages_db.get("gradio_not_running", {})
+        if report:
+            report["message"] = report["message"].format(
+                PROJECT_DIR=PROJECT_DIR
+            )
+            suggestions.append(report)
 
     return findings, suggestions
+
 
 
 def display_message_slowly(message):
