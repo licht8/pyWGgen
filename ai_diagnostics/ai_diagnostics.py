@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 5.0
+# Версия: 5.1
 # Обновлено: 2024-12-02
 
 import json
@@ -61,48 +61,28 @@ def run_command(command):
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        return f"Ошибка: {e.stderr.strip()}"
-
-
-def animate_message(message):
-    """Выводит анимированное сообщение с эффектом перемигивания."""
-    for _ in range(3):
-        for dots in range(1, 4):
-            print(f"\r   {message}{'.' * dots}{' ' * (3 - dots)}", end="", flush=True)
-            time.sleep(ANIMATION_SPEED)
-    print(f"\r   {message} 🔎 ", flush=True)
-
-
-def display_message_slowly(message):
-    """Имитация печати ИИ."""
-    for line in message.split("\n"):
-        print("   ", end="")
-        for char in line:
-            print(char, end="", flush=True)
-            time.sleep(PRINT_SPEED)
-        print()
-        time.sleep(LINE_DELAY)
+        logger.error(f"Ошибка при выполнении команды '{' '.join(command)}': {e.stderr.strip()}")
+        return None
 
 
 def check_ports():
     """Проверяет состояние необходимых портов с выводом отладки."""
     command = ["sudo", "firewall-cmd", "--list-all"]
     result = run_command(command)
+    if not result:
+        return []
+
     logger.debug(f"Результат команды проверки фаервола:\n{result}")
 
     open_ports = []
     for line in result.splitlines():
         if "ports:" in line:
-            logger.debug(f"Обрабатываем строку портов: {line.strip()}")
             try:
                 ports_line = line.split("ports:")[1].strip()
                 open_ports.extend(port.strip() for port in ports_line.split())
             except IndexError:
                 logger.warning("Не удалось обработать строку портов.")
                 continue
-
-    logger.debug(f"Обнаруженные открытые порты: {open_ports}")
-    logger.debug(f"Требуемые порты для проверки: {REQUIRED_PORTS}")
 
     closed_ports = [port for port in REQUIRED_PORTS if port not in open_ports]
     return closed_ports
@@ -112,11 +92,14 @@ def check_masquerade_rules():
     """Проверяет наличие правил маскарадинга для WireGuard."""
     command = ["sudo", "firewall-cmd", "--list-all"]
     result = run_command(command)
+    if not result:
+        return ["Ошибка: не удалось выполнить команду для проверки маскарадинга."]
+
     logger.debug(f"Результат команды проверки маскарадинга:\n{result}")
 
     try:
         wireguard_subnet = get_wireguard_subnet()
-        ipv4_rule = f'rule family="ipv4" source address="{wireguard_subnet}" masquerade'
+        ipv4_rule = f'rule family="ipv4" source address="{wireguard_subnet.split("/")[0]}/24" masquerade'
         ipv6_rule = 'rule family="ipv6" source address="fd42:42:42::0/24" masquerade'
         required_rules = [ipv4_rule, ipv6_rule]
     except Exception as e:
@@ -124,7 +107,6 @@ def check_masquerade_rules():
         return ["Ошибка: не удалось определить необходимые правила маскарадинга."]
 
     missing_rules = [rule for rule in required_rules if rule not in result]
-    logger.debug(f"Отсутствующие правила маскарадинга: {missing_rules}")
     return missing_rules
 
 
@@ -132,25 +114,15 @@ def check_gradio_status():
     """Проверяет, запущен ли Gradio на порту."""
     command = ["ss", "-tuln"]
     result = run_command(command)
+    if not result:
+        return False
+
     logger.debug(f"Результат команды проверки Gradio:\n{result}")
 
     for line in result.splitlines():
         if f":{GRADIO_PORT} " in line and "LISTEN" in line:
-            logger.debug("Gradio обнаружен как работающий.")
             return True
-    logger.debug("Gradio не обнаружен как работающий.")
     return False
-
-
-def execute_commands(commands):
-    """Выполняет список команд и возвращает результат."""
-    results = []
-    for command in commands:
-        logger.info(f"Выполняю команду: {command}")
-        result = run_command(command.split())
-        results.append(f"{command}:\n{result}")
-    time.sleep(3)
-    return "\n".join(results)
 
 
 def parse_reports(messages_db_path):
@@ -183,14 +155,15 @@ def parse_reports(messages_db_path):
     return findings, suggestions
 
 
-def display_suggestions(suggestions):
-    """Выводит рекомендации для улучшения состояния."""
-    for suggestion in suggestions:
-        title = suggestion["title"]
-        message = suggestion["message"]
-
-        display_message_slowly(f"\n   {title}\n   {'=' * (len(title) + 2)}\n")
-        display_message_slowly(message)
+def display_message_slowly(message):
+    """Имитация печати ИИ."""
+    for line in message.split("\n"):
+        print("   ", end="")
+        for char in line:
+            print(char, end="", flush=True)
+            time.sleep(PRINT_SPEED)
+        print()
+        time.sleep(LINE_DELAY)
 
 
 def handle_findings(findings):
@@ -212,17 +185,9 @@ def handle_findings(findings):
                 display_message_slowly(f"\n 📝  Результат выполнения команд:\n{results}")
 
 
-def generate_summary_report():
-    """Вызов генерации обобщенного отчета."""
-    print("\n 🤖 Создание обобщенного отчета...")
-    command = [sys.executable, str(SUMMARY_SCRIPT)]
-    subprocess.run(command)
-
-
 def main():
     """Основной запуск программы."""
     logger.info("Начало выполнения диагностики.")
-    animate_message(" 🎉  Завершаю анализ, пожалуйста подождите 🤖")
     display_message_slowly("\n 🎯  Вот что мы обнаружили:")
 
     findings, suggestions = parse_reports(MESSAGES_DB_PATH)
@@ -231,13 +196,14 @@ def main():
         handle_findings(findings)
 
     if suggestions:
-        display_suggestions(suggestions)
+        for suggestion in suggestions:
+            display_message_slowly(f"\n {suggestion['title']}\n {suggestion['message']}")
 
     if not findings and not suggestions:
         display_message_slowly(" ✅  Всё выглядит хорошо!\n 👍  Проблем не обнаружено.")
 
     print("\n")
-    generate_summary_report()
+    subprocess.run([sys.executable, str(SUMMARY_SCRIPT)])
 
 
 if __name__ == "__main__":
