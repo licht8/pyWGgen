@@ -27,6 +27,14 @@ from settings import DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH, PROJ
 DEBUGGER_SCRIPT = MODULES_DIR / "debugger.py"
 TEST_REPORT_GENERATOR_SCRIPT = MODULES_DIR / "test_report_generator.py"
 
+def generate_summary():
+    """Вызов генерации обобщенного отчета."""
+    command = [sys.executable, PROJECT_ROOT / "ai_diagnostics" / "ai_diagnostics_summary.py"]
+    subprocess.run(command)
+
+# Вызов функции в основном процессе
+generate_summary()
+
 
 def run_command(command):
     """Запускает внешнюю команду и возвращает её результат."""
