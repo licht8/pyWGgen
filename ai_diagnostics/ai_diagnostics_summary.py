@@ -122,7 +122,7 @@ def generate_summary():
     with open(SUMMARY_REPORT_PATH, "w", encoding="utf-8") as file:
         file.write("\n".join(summary))
 
-    print(f" ✅ Обобщенный отчет сохранен: {SUMMARY_REPORT_PATH}")
+    print(f" ✅ Обобщенный отчет сохранен:\n 📂  {SUMMARY_REPORT_PATH}")
 
 
 if __name__ == "__main__":
