@@ -100,6 +100,7 @@ def execute_commands(commands):
         logger.info(f"Выполняю команду: {command}")
         result = run_command(command.split())
         results.append(f"{command}:\n{result}")
+    time.sleep(3)  # Небольшая задержка перед повторной проверкой
     return "\n".join(results)
 
 
