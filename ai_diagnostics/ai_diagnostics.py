@@ -3,7 +3,7 @@
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Версия: 3.4
 # Обновлено: 2024-11-29
-# Добавлен отладочный вывод.
+# Эта версия включает расширенную отладку, обработку ошибок отсутствующих файлов и улучшенную генерацию отчетов.
 
 import json
 import time
@@ -24,21 +24,18 @@ from settings import DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH
 from pause_rules import get_pause_rules, apply_pause
 
 
-def debug_log(message):
-    """Выводит сообщение отладки."""
-    print(f"🛠️ [DEBUG] {message}")
-
-
 def run_command(command):
     """Запускает внешнюю команду и возвращает её результат."""
     try:
-        debug_log(f"Выполняю команду: {' '.join(map(str, command))}")
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
-        debug_log(f"Результат команды: {result.stdout.strip()}")
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        debug_log(f"Ошибка выполнения команды: {e.stderr.strip()}")
         return f"Ошибка: {e.stderr.strip()}"
+
+
+def debug_log(message):
+    """Выводит сообщение для отладки."""
+    print(f"🛠️ [DEBUG] {message}")
 
 
 def animate_message(message):
@@ -71,59 +68,54 @@ def display_message_slowly(message):
 def generate_debug_report():
     """Запускает дебаггер для создания свежего debug_report.txt."""
     print("")
-    animate_message("🤖  Генерация отчёта диагностики")
+    animate_message(" 🤖  Генерация отчёта диагностики")
     command = [sys.executable, PROJECT_ROOT / "ai_diagnostics" / "modules" / "debugger.py"]
-    run_command(command)
+    result = run_command(command)
     debug_log(f"Ожидаемый путь к debug_report: {DEBUG_REPORT_PATH}")
     if not DEBUG_REPORT_PATH.exists():
-        debug_log("⚠️ Debug Report не был создан!")
+        debug_log(f" ⚠️ Debug Report не был создан! Результат команды: {result}")
     else:
-        debug_log("✅ Debug Report успешно создан.")
+        debug_log(" ✅ Debug Report успешно создан.")
 
 
 def generate_test_report():
     """Запускает тестирование проекта для создания test_report.txt."""
     print("")
-    animate_message("🤖  Генерация тестового отчёта")
+    animate_message(" 🤖  Генерация тестового отчёта")
     command = [sys.executable, PROJECT_ROOT / "ai_diagnostics" / "modules" / "test_report_generator.py"]
-    run_command(command)
+    result = run_command(command)
     debug_log(f"Ожидаемый путь к test_report: {TEST_REPORT_PATH}")
     if not TEST_REPORT_PATH.exists():
-        debug_log("⚠️ Test Report не был создан!")
+        debug_log(f" ⚠️ Test Report не был создан! Результат команды: {result}")
     else:
-        debug_log("✅ Test Report успешно создан.")
+        debug_log(" ✅ Test Report успешно создан.")
 
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
     """Парсер для анализа отчетов."""
-    debug_log(f"Чтение базы сообщений: {messages_db_path}")
     with open(messages_db_path, "r", encoding="utf-8") as db_file:
         messages_db = json.load(db_file)
-
+    
     findings = []
 
-    debug_log(f"Чтение debug_report: {debug_report_path}")
-    if not debug_report_path.exists():
-        debug_log("⚠️ Debug Report отсутствует!")
-    else:
-        with open(debug_report_path, "r", encoding="utf-8") as debug_file:
-            debug_report = debug_file.read()
-            debug_log(f"Содержимое Debug Report: {debug_report[:200]}...")  # Показываем первые 200 символов
-            if "firewall-cmd --add-port" in debug_report:
-                findings.append(messages_db["firewall_issue"])
-
-    debug_log(f"Чтение test_report: {test_report_path}")
-    if not test_report_path.exists():
-        debug_log("⚠️ Test Report отсутствует!")
-    else:
-        with open(test_report_path, "r", encoding="utf-8") as test_file:
-            test_report = test_file.read()
-            debug_log(f"Содержимое Test Report: {test_report[:200]}...")  # Показываем первые 200 символов
-            if "Gradio: ❌" in test_report:
-                findings.append(messages_db["gradio_not_running"])
-            if "Missing" in test_report:
-                findings.append(messages_db["missing_files"])
-
+    # Анализ debug_report
+    with open(debug_report_path, "r", encoding="utf-8") as debug_file:
+        debug_report = debug_file.read()
+        debug_log(f"Содержимое Debug Report: {debug_report[:500]}...")  # Первые 500 символов
+        if "firewall-cmd --add-port" in debug_report:
+            findings.append(messages_db["firewall_issue"])
+    
+    # Анализ test_report
+    with open(test_report_path, "r", encoding="utf-8") as test_file:
+        test_report = test_file.read()
+        debug_log(f"Содержимое Test Report: {test_report[:500]}...")  # Первые 500 символов
+        if "Gradio: ❌" in test_report:
+            findings.append(messages_db["gradio_not_running"])
+        if "Missing" in test_report:
+            findings.append(messages_db["missing_files"])
+        if "user_records.json: ❌" in test_report:
+            findings.append(messages_db["missing_user_records"])
+    
     return findings
 
 
@@ -163,22 +155,21 @@ def display_analysis_result(title, message, paths):
 def main():
     """Основной запуск программы."""
     debug_log("Начало выполнения диагностики.")
+
     generate_debug_report()
     generate_test_report()
 
-    animate_message("🎉  Завершаю анализ, пожалуйста подождите 🤖")
-    display_message_slowly("🎯  Вот что мы обнаружили:")
+    animate_message(" 🎉  Завершаю анализ, пожалуйста подождите 🤖")
+    display_message_slowly(" 🎯  Вот что мы обнаружили:")
 
     # Запуск анализа
     paths = get_paths_from_settings()
     findings = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
-        debug_log(f"Обнаружено проблем: {len(findings)}")
         for finding in findings:
             display_analysis_result(finding["title"], finding["message"], paths)
     else:
-        debug_log("✅ Проблемы не обнаружены.")
-        display_message_slowly("✅  Всё выглядит хорошо! Проблем не обнаружено.")
+        display_message_slowly(" ✅  Всё выглядит хорошо! Проблем не обнаружено.")
     print("\n")
 
 
