@@ -19,6 +19,7 @@ from modules.firewall_utils import open_firewalld_port, close_firewalld_port
 from modules.gradio_utils import run_gradio_admin_interface
 from modules.port_manager import handle_port_conflict
 from modules.report_utils import generate_project_report, display_test_report, display_test_summary
+from modules.report_utils import display_summary_report
 from modules.update_utils import update_project
 from modules.sync import sync_users_with_wireguard
 from modules.manage_users_menu import manage_users_menu
@@ -105,7 +106,7 @@ def show_main_menu():
             generate_project_report()
         elif choice == "sr":
             print("📂  Отображение краткого отчета...")
-            display_test_summary()
+            display_summary_report()
         elif choice == "fr":
             print("📄  Отображение полного отчета...")
             display_test_report()
