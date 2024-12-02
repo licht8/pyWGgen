@@ -246,7 +246,7 @@ def handle_findings(findings):
             if user_input in ["y", "д"]:  # Поддержка английского "y" и русского "д"
                 display_message_slowly(" ⚙️  Исправляю...")
                 results = execute_commands(commands)
-                display_message_slowly(f"\n 📝  Результат выполнения команд:\n{results}")
+                display_message_slowly(f"\n 📝  Результат выполнения команд:\n     {results}")
             elif user_input in ["n", "н"]:  # Поддержка английского "n" и русского "н"
                 display_message_slowly(" 🚫 Пропускаю исправление.")
             else:
