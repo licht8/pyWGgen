@@ -25,6 +25,16 @@ from modules.sync import sync_users_with_wireguard
 from modules.manage_users_menu import manage_users_menu
 from modules.debugger import run_diagnostics
 
+# Проверяем и создаем директории и файлы
+def initialize_project():
+    """Инициализация проекта: создание необходимых директорий и файлов."""
+    LOG_DIR.mkdir(parents=True, exist_ok=True)  # Создает директорию, если ее нет
+    if not LOG_FILE_PATH.exists():
+        LOG_FILE_PATH.touch()  # Создает пустой файл, если он отсутствует
+        print(f"Создан пустой файл лога: {LOG_FILE_PATH}")
+
+# Вызов функции инициализации
+initialize_project()
 
 def show_diagnostics_log():
     """Отображает содержимое журнала диагностики."""
@@ -35,6 +45,16 @@ def show_diagnostics_log():
     else:
         print("\n ❌  Журнал диагностики отсутствует.\n")
 
+# Проверяем и создаем директории и файлы
+def initialize_project():
+    """Инициализация проекта: создание необходимых директорий и файлов."""
+    LOG_DIR.mkdir(parents=True, exist_ok=True)  # Создает директорию, если ее нет
+    if not LOG_FILE_PATH.exists():
+        LOG_FILE_PATH.touch()  # Создает пустой файл, если он отсутствует
+        print(f"Создан пустой файл лога: {LOG_FILE_PATH}")
+
+# Вызов функции инициализации
+initialize_project()
 
 def show_main_menu():
     """Отображение основного меню."""
