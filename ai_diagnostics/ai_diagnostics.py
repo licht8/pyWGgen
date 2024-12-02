@@ -87,9 +87,9 @@ def generate_debug_report():
     result = run_command(command)
     logger.debug(f"Ожидаемый путь к debug_report: {DEBUG_REPORT_PATH}")
     if not DEBUG_REPORT_PATH.exists():
-        logger.warning(f"⚠️ Debug Report не был создан! Результат команды: {result}")
+        logger.warning(f" ⚠️ Debug Report не был создан! Результат команды: {result}")
     else:
-        logger.info(f"✅ Debug Report успешно создан.")
+        logger.info(f" ✅ Debug Report успешно создан.")
 
 
 def generate_test_report():
@@ -100,9 +100,9 @@ def generate_test_report():
     result = run_command(command)
     logger.debug(f"Ожидаемый путь к test_report: {TEST_REPORT_PATH}")
     if not TEST_REPORT_PATH.exists():
-        logger.warning(f"⚠️ Test Report не был создан! Результат команды: {result}")
+        logger.warning(f" ⚠️ Test Report не был создан! Результат команды: {result}")
     else:
-        logger.info(f"✅ Test Report успешно создан.")
+        logger.info(f" ✅ Test Report успешно создан.")
 
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
@@ -111,7 +111,7 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
         with open(messages_db_path, "r", encoding="utf-8") as db_file:
             messages_db = json.load(db_file)
     except FileNotFoundError:
-        logger.error(f"❌ Файл messages_db.json не найден:\n 📂  {messages_db_path}")
+        logger.error(f" ❌ Файл messages_db.json не найден:\n 📂  {messages_db_path}")
         return []
 
     findings = []
@@ -124,7 +124,7 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
             if "firewall-cmd --add-port" in debug_report:
                 findings.append(messages_db.get("firewall_issue", {"title": "Ошибка Firewall", "message": "Нет описания"}))
     else:
-        logger.warning(f"⚠️ Debug Report отсутствует по пути: {debug_report_path}")
+        logger.warning(f" ⚠️ Debug Report отсутствует по пути: {debug_report_path}")
 
     # Анализ test_report
     if test_report_path.exists():
@@ -138,7 +138,7 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
             if "user_records.json: ❌" in test_report:
                 findings.append(messages_db.get("missing_user_records", {"title": "Ошибка Users", "message": "Нет описания"}))
     else:
-        logger.warning(f"⚠️ Test Report отсутствует по пути: {test_report_path}")
+        logger.warning(f" ⚠️ Test Report отсутствует по пути: {test_report_path}")
 
     return findings
 
@@ -171,7 +171,7 @@ def main():
     generate_debug_report()
     generate_test_report()
 
-    animate_message(" 🎉  Завершаю анализ, пожалуйста подождите 🤖 ")
+    animate_message(" 🎉  Завершаю анализ, пожалуйста подождите 🤖")
     display_message_slowly(f"\n 🎯  Вот что мы обнаружили:")
 
     paths = {
