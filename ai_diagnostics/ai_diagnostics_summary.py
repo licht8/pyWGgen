@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics_summary.py
 # Скрипт для создания обобщенного отчета о состоянии проекта wg_qr_generator.
-# Версия: 1.2
+# Версия: 1.3
 # Обновлено: 2024-12-02
 # Включает проверку портов, статуса WireGuard и фаервола.
 
 import subprocess
 from pathlib import Path
+import sys
+
+# Добавляем корневую директорию проекта в sys.path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(PROJECT_ROOT))  # Добавляем корень проекта в sys.path
+
+# Импортируем настройки
 from settings import PROJECT_DIR
 
 # Пути для отчетов
