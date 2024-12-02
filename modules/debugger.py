@@ -115,7 +115,7 @@ def run_diagnostics():
     ]
     report_data = "\n".join(report)
     write_report(report_data, DIAGNOSTICS_LOG)
-    print(f" ✅  Отчёт сохранён в {DIAGNOSTICS_LOG}")
+    print(f"  ✅  Отчёт сохранён в:\n 📂  {DIAGNOSTICS_LOG}")
 
 
 if __name__ == "__main__":
