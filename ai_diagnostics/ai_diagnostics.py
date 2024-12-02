@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 3.9
+# Версия: 4.0
 # Обновлено: 2024-12-02
-# Включает использование библиотеки logging для управления логами и настройки скорости анимации из settings.py.
+# Добавлена автоматизация исправления проблем через команды из messages_db.json.
 
 import json
 import time
@@ -79,30 +79,14 @@ def display_message_slowly(message):
         time.sleep(LINE_DELAY)
 
 
-def generate_debug_report():
-    """Запускает дебаггер для создания debug_report."""
-    print("")
-    animate_message(f" 🤖  Генерация отчёта диагностики")
-    command = [sys.executable, str(DEBUGGER_SCRIPT)]
-    result = run_command(command)
-    logger.debug(f"Ожидаемый путь к debug_report: {DEBUG_REPORT_PATH}")
-    if not DEBUG_REPORT_PATH.exists():
-        logger.warning(f" ⚠️ Debug Report не был создан! Результат команды: {result}")
-    else:
-        logger.info(f" ✅ Debug Report успешно создан.")
-
-
-def generate_test_report():
-    """Запускает тестирование проекта для создания test_report."""
-    print("")
-    animate_message(f" 🤖  Генерация тестового отчёта")
-    command = [sys.executable, str(TEST_REPORT_GENERATOR_SCRIPT)]
-    result = run_command(command)
-    logger.debug(f"Ожидаемый путь к test_report: {TEST_REPORT_PATH}")
-    if not TEST_REPORT_PATH.exists():
-        logger.warning(f" ⚠️ Test Report не был создан! Результат команды: {result}")
-    else:
-        logger.info(f" ✅ Test Report успешно создан.")
+def execute_commands(commands):
+    """Выполняет список команд и возвращает результат."""
+    results = []
+    for command in commands:
+        logger.info(f"Выполняю команду: {command}")
+        result = run_command(command.split())
+        results.append(f"{command}:\n{result}")
+    return "\n".join(results)
 
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
@@ -122,7 +106,7 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
             debug_report = debug_file.read()
             logger.debug(f"Содержимое Debug Report: {debug_report[:500]}...")  # Первые 500 символов
             if "firewall-cmd --add-port" in debug_report:
-                findings.append(messages_db.get("firewall_issue", {"title": "Ошибка Firewall", "message": "Нет описания"}))
+                findings.append(messages_db.get("firewall_issue", {"title": "Ошибка Firewall", "message": "Нет описания", "commands": []}))
     else:
         logger.warning(f" ⚠️ Debug Report отсутствует по пути: {debug_report_path}")
 
@@ -132,36 +116,37 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
             test_report = test_file.read()
             logger.debug(f"Содержимое Test Report: {test_report[:500]}...")  # Первые 500 символов
             if "Gradio: ❌" in test_report:
-                findings.append(messages_db.get("gradio_not_running", {"title": "Gradio Error", "message": "Нет описания"}))
+                findings.append(messages_db.get("gradio_not_running", {"title": "Gradio Error", "message": "Нет описания", "commands": []}))
             if "Missing" in test_report:
-                findings.append(messages_db.get("missing_files", {"title": "Отсутствующие файлы", "message": "Нет описания"}))
+                findings.append(messages_db.get("missing_files", {"title": "Отсутствующие файлы", "message": "Нет описания", "commands": []}))
             if "user_records.json: ❌" in test_report:
-                findings.append(messages_db.get("missing_user_records", {"title": "Ошибка Users", "message": "Нет описания"}))
+                findings.append(messages_db.get("missing_user_records", {"title": "Ошибка Users", "message": "Нет описания", "commands": []}))
     else:
         logger.warning(f" ⚠️ Test Report отсутствует по пути: {test_report_path}")
 
     return findings
 
 
-def format_message(message, paths):
-    """Форматирует сообщение, заменяя переменные путями."""
-    for key, path in paths.items():
-        message = message.replace(f"{{{key}}}", str(path))
-    return message
+def handle_findings(findings, paths):
+    """Обрабатывает обнаруженные проблемы."""
+    for finding in findings:
+        title = finding["title"]
+        message = format_message(finding["message"], paths)
+        commands = finding.get("commands", [])
 
+        display_message_slowly(f"\n   {title}\n   {'=' * (len(title) + 2)}\n")
+        display_message_slowly(message)
 
-def display_analysis_result(title, message, paths):
-    """Красивый вывод результата анализа."""
-    formatted_message = format_message(message, paths)
-    display_message_slowly(f"\n   {title}\n   {'=' * (len(title) + 2)}\n")
-    display_message_slowly(formatted_message)
-
-
-def generate_summary_report():
-    """Вызов генерации обобщенного отчета."""
-    print(f"\n 🤖 Создание обобщенного отчета...")
-    command = [sys.executable, str(SUMMARY_SCRIPT)]
-    subprocess.run(command)
+        if commands:
+            display_message_slowly("\n 🛠  Найдены команды для устранения проблемы. Попробовать выполнить их автоматически? (y/n): ")
+            user_input = input().strip().lower()
+            if user_input == "y":
+                display_message_slowly(" ⚙️  Выполняю команды...")
+                results = execute_commands(commands)
+                display_message_slowly(f"\n 📝  Результат выполнения команд:\n{results}")
+                display_message_slowly(" 🔄  Перезапускаю диагностику...")
+                main()  # Повторный запуск диагностики
+                return  # Завершаем текущую итерацию
 
 
 def main():
@@ -181,8 +166,7 @@ def main():
     }
     findings = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
-        for finding in findings:
-            display_analysis_result(finding["title"], finding["message"], paths)
+        handle_findings(findings, paths)
     else:
         display_message_slowly(f" ✅  Всё выглядит хорошо!\n 👍  Проблем не обнаружено.")
     print("\n")
