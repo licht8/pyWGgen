@@ -70,7 +70,7 @@ def display_summary_report():
         with open(SUMMARY_REPORT_PATH, "r", encoding="utf-8") as file:
             content = file.read()
 
-        print("\n=== 📋 Обобщенный отчет о состоянии проекта ===\n")
+        #print("\n=== 📋 Обобщенный отчет о состоянии проекта ===\n")
         print(content)
 
     except Exception as e:
