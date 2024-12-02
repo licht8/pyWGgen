@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics_summary.py
 # Скрипт для создания обобщенного отчета о состоянии проекта wg_qr_generator.
-# Версия: 1.6
+# Версия: 1.7
 # Обновлено: 2024-12-02
 
 import json
@@ -151,10 +151,15 @@ def generate_summary():
         " - Проверьте, что порты для Gradio и WireGuard доступны через фаервол."
     ]
 
+    # Подстановка переменных
+    formatted_summary = "\n".join(summary).format(
+        PROJECT_DIR=PROJECT_DIR  # Добавил подстановку PROJECT_DIR
+    )
+
     # Сохраняем отчет
     try:
         with open(SUMMARY_REPORT_PATH, "w", encoding="utf-8") as file:
-            file.write("\n".join(summary))
+            file.write(formatted_summary)
         logger.info(f"Обобщенный отчет сохранен: {SUMMARY_REPORT_PATH}")
         print(f" ✅ Обобщенный отчет сохранен:\n 📂 {SUMMARY_REPORT_PATH}")
     except IOError as e:
