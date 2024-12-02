@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics_summary.py
 # Скрипт для создания обобщенного отчета о состоянии проекта wg_qr_generator.
-# Версия: 1.5
+# Версия: 1.6
 # Обновлено: 2024-12-02
 
 import json
@@ -9,18 +9,17 @@ import subprocess
 from pathlib import Path
 import sys
 import logging
-from settings import PROJECT_DIR, SUMMARY_REPORT_PATH, TEST_REPORT_PATH, USER_DB_PATH, LOG_LEVEL
 
 # Добавляем корневую директорию проекта в sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))  # Добавляем корень проекта в sys.path
 
 # Импортируем настройки
-from settings import PROJECT_DIR, SUMMARY_REPORT_PATH, TEST_REPORT_PATH, USER_DB_PATH
+from settings import PROJECT_DIR, SUMMARY_REPORT_PATH, USER_DB_PATH, LOG_LEVEL
 
 # Настройка логирования
 logging.basicConfig(
-    level=logging.getLevelName(LOG_LEVEL),  # Используем значение из settings
+    level=logging.getLevelName(LOG_LEVEL),  # Используем уровень из settings
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         logging.FileHandler("diagnostics_summary.log", encoding="utf-8"),
@@ -45,6 +44,10 @@ def check_ports():
     command = ["ss", "-tuln"]
     result = run_command(command)
     open_ports = []
+    if not result:
+        logger.warning("Не удалось получить список открытых портов.")
+        return open_ports
+
     for line in result.splitlines():
         if ":51820" in line:
             open_ports.append("51820 (WireGuard)")
@@ -84,17 +87,24 @@ def check_wireguard_status():
 def count_users():
     """Считает количество пользователей из user_records.json."""
     if USER_DB_PATH.exists():
-        with open(USER_DB_PATH, "r", encoding="utf-8") as file:
-            user_data = json.load(file)
-            user_count = len(user_data)
-            logger.debug(f"Обнаружено пользователей: {user_count}")
-            return user_count, "user_records.json"
+        try:
+            with open(USER_DB_PATH, "r", encoding="utf-8") as file:
+                user_data = json.load(file)
+                user_count = len(user_data)
+                logger.debug(f"Обнаружено пользователей: {user_count}")
+                return user_count, "user_records.json"
+        except json.JSONDecodeError:
+            logger.error("Ошибка чтения файла user_records.json.")
+            return 0, "Ошибка чтения user_records.json"
     logger.warning("Файл user_records.json отсутствует.")
     return 0, "Отсутствует файл user_records.json"
 
 
 def count_peers(wg_info):
     """Считает количество peer в выводе wg show."""
+    if not wg_info:
+        logger.warning("WireGuard информация недоступна.")
+        return 0
     peer_count = sum(1 for line in wg_info.splitlines() if line.startswith("peer:"))
     logger.debug(f"Количество peer: {peer_count}")
     return peer_count
@@ -141,11 +151,15 @@ def generate_summary():
         " - Проверьте, что порты для Gradio и WireGuard доступны через фаервол."
     ]
 
-    with open(SUMMARY_REPORT_PATH, "w", encoding="utf-8") as file:
-        file.write("\n".join(summary))
-
-    logger.info(f"Обобщенный отчет сохранен: {SUMMARY_REPORT_PATH}")
-    print(f" ✅ Обобщенный отчет сохранен:\n 📂 {SUMMARY_REPORT_PATH}")
+    # Сохраняем отчет
+    try:
+        with open(SUMMARY_REPORT_PATH, "w", encoding="utf-8") as file:
+            file.write("\n".join(summary))
+        logger.info(f"Обобщенный отчет сохранен: {SUMMARY_REPORT_PATH}")
+        print(f" ✅ Обобщенный отчет сохранен:\n 📂 {SUMMARY_REPORT_PATH}")
+    except IOError as e:
+        logger.error(f"Ошибка записи обобщенного отчета: {e}")
+        print(f" ❌ Ошибка сохранения отчета: {e}")
 
 
 if __name__ == "__main__":
