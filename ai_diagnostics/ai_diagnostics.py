@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 3.4
+# Версия: 3.5
 # Обновлено: 2024-11-29
-# Эта версия включает расширенную отладку, обработку ошибок отсутствующих файлов и улучшенную генерацию отчетов.
+# Эта версия включает обработку KeyError, расширенную отладку и улучшенное логирование.
 
 import json
 import time
@@ -103,18 +103,30 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
         debug_report = debug_file.read()
         debug_log(f"Содержимое Debug Report: {debug_report[:500]}...")  # Первые 500 символов
         if "firewall-cmd --add-port" in debug_report:
-            findings.append(messages_db["firewall_issue"])
-    
+            if "firewall_issue" in messages_db:
+                findings.append(messages_db["firewall_issue"])
+            else:
+                debug_log("⚠️ Ключ 'firewall_issue' отсутствует в messages_db.")
+
     # Анализ test_report
     with open(test_report_path, "r", encoding="utf-8") as test_file:
         test_report = test_file.read()
         debug_log(f"Содержимое Test Report: {test_report[:500]}...")  # Первые 500 символов
         if "Gradio: ❌" in test_report:
-            findings.append(messages_db["gradio_not_running"])
+            if "gradio_not_running" in messages_db:
+                findings.append(messages_db["gradio_not_running"])
+            else:
+                debug_log("⚠️ Ключ 'gradio_not_running' отсутствует в messages_db.")
         if "Missing" in test_report:
-            findings.append(messages_db["missing_files"])
+            if "missing_files" in messages_db:
+                findings.append(messages_db["missing_files"])
+            else:
+                debug_log("⚠️ Ключ 'missing_files' отсутствует в messages_db.")
         if "user_records.json: ❌" in test_report:
-            findings.append(messages_db["missing_user_records"])
+            if "missing_user_records" in messages_db:
+                findings.append(messages_db["missing_user_records"])
+            else:
+                debug_log("⚠️ Ключ 'missing_user_records' отсутствует в messages_db.")
     
     return findings
 
