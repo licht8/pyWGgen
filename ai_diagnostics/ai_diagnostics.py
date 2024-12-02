@@ -174,7 +174,8 @@ def parse_reports(messages_db_path):
             report["message"] = report["message"].format(
                 PROJECT_DIR=PROJECT_DIR,
                 USER_DB_PATH=USER_DB_PATH,
-                QR_CODE_DIR=QR_CODE_DIR
+                QR_CODE_DIR=QR_CODE_DIR,
+                GRADIO_PORT=GRADIO_PORT  # Добавлена подстановка для GRADIO_PORT
             )
             findings.append(report)
 
@@ -184,9 +185,24 @@ def parse_reports(messages_db_path):
         report = messages_db.get("masquerade_issue", {})
         if report:
             report["message"] = report["message"].format(
-                MISSING_RULES=", ".join(missing_masquerade_rules)
+                PROJECT_DIR=PROJECT_DIR,
+                MISSING_RULES=", ".join(missing_masquerade_rules),
+                GRADIO_PORT=GRADIO_PORT
             )
             findings.append(report)
+
+    # Проверка состояния Gradio
+    if not check_gradio_status():
+        report = messages_db.get("gradio_not_running", {})
+        if report:
+            report["message"] = report["message"].format(
+                PROJECT_DIR=PROJECT_DIR,
+                GRADIO_PORT=GRADIO_PORT
+            )
+            suggestions.append(report)
+
+    return findings, suggestions
+
 
     # Проверка статуса Gradio
     if not check_gradio_status():
