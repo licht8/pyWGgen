@@ -3,7 +3,7 @@
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Версия: 3.5
 # Обновлено: 2024-11-29
-# Эта версия включает обновление путей к модулям генерации отчётов.
+# Эта версия включает обработку KeyError, расширенную отладку и улучшенное логирование.
 
 import json
 import time
@@ -14,7 +14,7 @@ from pathlib import Path
 
 # Добавляем корневую директорию проекта в sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-MODULES_DIR = PROJECT_ROOT / "modules"
+MODULES_DIR = PROJECT_ROOT / "ai_diagnostics" / "modules"
 
 sys.path.append(str(PROJECT_ROOT))  # Добавляем путь к корню проекта
 sys.path.append(str(MODULES_DIR))  # Добавляем путь к модулям
@@ -69,7 +69,7 @@ def generate_debug_report():
     """Запускает дебаггер для создания свежего debug_report.txt."""
     print("")
     animate_message(" 🤖  Генерация отчёта диагностики")
-    command = [sys.executable, MODULES_DIR / "debugger.py"]
+    command = [sys.executable, PROJECT_ROOT / "ai_diagnostics" / "modules" / "debugger.py"]
     result = run_command(command)
     debug_log(f"Ожидаемый путь к debug_report: {DEBUG_REPORT_PATH}")
     if not DEBUG_REPORT_PATH.exists():
@@ -82,7 +82,7 @@ def generate_test_report():
     """Запускает тестирование проекта для создания test_report.txt."""
     print("")
     animate_message(" 🤖  Генерация тестового отчёта")
-    command = [sys.executable, MODULES_DIR / "test_report_generator.py"]
+    command = [sys.executable, PROJECT_ROOT / "ai_diagnostics" / "modules" / "test_report_generator.py"]
     result = run_command(command)
     debug_log(f"Ожидаемый путь к test_report: {TEST_REPORT_PATH}")
     if not TEST_REPORT_PATH.exists():
@@ -103,18 +103,30 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
         debug_report = debug_file.read()
         debug_log(f"Содержимое Debug Report: {debug_report[:500]}...")  # Первые 500 символов
         if "firewall-cmd --add-port" in debug_report:
-            findings.append(messages_db["firewall_issue"])
-    
+            if "firewall_issue" in messages_db:
+                findings.append(messages_db["firewall_issue"])
+            else:
+                debug_log("⚠️ Ключ 'firewall_issue' отсутствует в messages_db.")
+
     # Анализ test_report
     with open(test_report_path, "r", encoding="utf-8") as test_file:
         test_report = test_file.read()
         debug_log(f"Содержимое Test Report: {test_report[:500]}...")  # Первые 500 символов
         if "Gradio: ❌" in test_report:
-            findings.append(messages_db["gradio_not_running"])
+            if "gradio_not_running" in messages_db:
+                findings.append(messages_db["gradio_not_running"])
+            else:
+                debug_log("⚠️ Ключ 'gradio_not_running' отсутствует в messages_db.")
         if "Missing" in test_report:
-            findings.append(messages_db["missing_files"])
+            if "missing_files" in messages_db:
+                findings.append(messages_db["missing_files"])
+            else:
+                debug_log("⚠️ Ключ 'missing_files' отсутствует в messages_db.")
         if "user_records.json: ❌" in test_report:
-            findings.append(messages_db["missing_user_records"])
+            if "missing_user_records" in messages_db:
+                findings.append(messages_db["missing_user_records"])
+            else:
+                debug_log("⚠️ Ключ 'missing_user_records' отсутствует в messages_db.")
     
     return findings
 
