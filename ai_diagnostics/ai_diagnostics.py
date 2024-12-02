@@ -201,14 +201,14 @@ def parse_reports(messages_db_path):
 
 
 
-def display_message_slowly(message):
-    """Имитация печати ИИ."""
+def display_message_slowly(message, end="\n"):
+    """Имитация печати ИИ с поддержкой параметра end."""
     for line in message.split("\n"):
         print("   ", end="")
         for char in line:
             print(char, end="", flush=True)
             time.sleep(PRINT_SPEED)
-        print()
+        print(end, end="", flush=True)
         time.sleep(LINE_DELAY)
 
 
