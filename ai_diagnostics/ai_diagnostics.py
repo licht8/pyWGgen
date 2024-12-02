@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 4.8
+# Версия: 4.9
 # Обновлено: 2024-12-02
 
 import json
@@ -105,6 +105,22 @@ def check_ports():
     return closed_ports
 
 
+def check_masquerade_rules():
+    """Проверяет наличие правил маскарадинга для WireGuard."""
+    command = ["sudo", "firewall-cmd", "--list-all"]
+    result = run_command(command)
+    logger.debug(f"Результат команды проверки маскарадинга:\n{result}")
+
+    required_rules = [
+        'rule family="ipv4" source address="10.66.66.0/24" masquerade',
+        'rule family="ipv6" source address="fd42:42:42::0/24" masquerade',
+    ]
+
+    missing_rules = [rule for rule in required_rules if rule not in result]
+    logger.debug(f"Отсутствующие правила маскарадинга: {missing_rules}")
+    return missing_rules
+
+
 def check_gradio_status():
     """Проверяет, запущен ли Gradio на порту."""
     command = ["ss", "-tuln"]
@@ -145,6 +161,9 @@ def parse_reports(messages_db_path):
     closed_ports = check_ports()
     if closed_ports:
         findings.append(messages_db["ports_closed"])
+
+    if check_masquerade_rules():
+        findings.append(messages_db["wg_not_running"])
 
     if not check_gradio_status():
         suggestions.append(messages_db["gradio_not_running"])
