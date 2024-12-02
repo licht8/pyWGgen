@@ -10,16 +10,20 @@ import sys
 import subprocess
 import logging
 from pathlib import Path
-from settings import LOG_FILE_PATH, LOG_DIR
 
-# Добавляем корневую директорию проекта в sys.path
+# Определяем пути проекта
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODULES_DIR = PROJECT_ROOT / "modules"
 DIAGNOSTICS_DIR = PROJECT_ROOT / "ai_diagnostics"
 SETTINGS_PATH = PROJECT_ROOT / "settings.py"
 
+# Добавляем пути в sys.path
 sys.path.append(str(PROJECT_ROOT))  # Добавляем путь к корню проекта
 sys.path.append(str(MODULES_DIR))  # Добавляем путь к модулям
+
+# Проверяем наличие файла settings.py
+if not SETTINGS_PATH.exists():
+    raise FileNotFoundError(f"Файл настроек settings.py не найден по пути: {SETTINGS_PATH}")
 
 # Импорт из настроек
 from settings import (
@@ -41,6 +45,9 @@ from settings import (
 from utils import get_wireguard_subnet
 
 # Настраиваем logging
+LOG_DIR = Path(LOG_FILE_PATH).parent
+LOG_DIR.mkdir(parents=True, exist_ok=True)  # Убедимся, что директория для логов существует
+
 logging.basicConfig(
     level=logging.getLevelName(LOG_LEVEL),  # Приводим LOG_LEVEL из settings в подходящий формат
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -51,13 +58,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 # Проверяемые порты
 WIREGUARD_PORT = 51820
 REQUIRED_PORTS = [f"{WIREGUARD_PORT}/udp", f"{GRADIO_PORT}/tcp"]
 
 # Скрипты
 SUMMARY_SCRIPT = DIAGNOSTICS_DIR / "ai_diagnostics_summary.py"
+
 
 def execute_commands(commands):
     """Выполняет список команд и возвращает результат."""
