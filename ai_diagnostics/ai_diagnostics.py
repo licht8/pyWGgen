@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 4.6
+# Версия: 4.7
 # Обновлено: 2024-12-02
-# Исправлена обработка строк с портами.
+# Исправлено: все сообщения вынесены в messages_db.json, добавлена проверка Gradio.
 
 import json
 import time
@@ -50,8 +50,6 @@ WIREGUARD_PORT = 51820
 REQUIRED_PORTS = [f"{WIREGUARD_PORT}/udp", f"{GRADIO_PORT}/tcp"]
 
 # Скрипты
-DEBUGGER_SCRIPT = MODULES_DIR / "debugger.py"
-TEST_REPORT_GENERATOR_SCRIPT = MODULES_DIR / "test_report_generator.py"
 SUMMARY_SCRIPT = DIAGNOSTICS_DIR / "ai_diagnostics_summary.py"
 
 
@@ -95,8 +93,8 @@ def check_ports():
         if "ports:" in line:
             logger.debug(f"Обрабатываем строку портов: {line.strip()}")
             try:
-                ports_line = line.split("ports:")[1].strip()  # Извлекаем содержимое после 'ports:'
-                open_ports.extend(port.strip() for port in ports_line.split())  # Разделяем и очищаем список портов
+                ports_line = line.split("ports:")[1].strip()
+                open_ports.extend(port.strip() for port in ports_line.split())
             except IndexError:
                 logger.warning("Не удалось обработать строку портов.")
                 continue
@@ -108,6 +106,14 @@ def check_ports():
     return closed_ports
 
 
+def check_gradio_status():
+    """Проверяет, запущен ли Gradio на порту."""
+    command = ["ss", "-tuln"]
+    result = run_command(command)
+    logger.debug(f"Результат команды проверки Gradio:\n{result}")
+    return f"{GRADIO_PORT}/tcp" in result
+
+
 def execute_commands(commands):
     """Выполняет список команд и возвращает результат."""
     results = []
@@ -115,11 +121,11 @@ def execute_commands(commands):
         logger.info(f"Выполняю команду: {command}")
         result = run_command(command.split())
         results.append(f"{command}:\n{result}")
-    time.sleep(3)  # Небольшая задержка перед повторной проверкой
+    time.sleep(3)
     return "\n".join(results)
 
 
-def parse_reports(debug_report_path, test_report_path, messages_db_path):
+def parse_reports(messages_db_path):
     """Парсер для анализа отчетов."""
     try:
         with open(messages_db_path, "r", encoding="utf-8") as db_file:
@@ -131,24 +137,32 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
     findings = []
     suggestions = []
 
-    # Проверка портов
     closed_ports = check_ports()
     if closed_ports:
-        findings.append(
-            messages_db.get(
-                "ports_closed",
-                {"title": "🔒 Закрытые порты", "message": "Необходимые порты закрыты.", "commands": []},
-            )
-        )
+        findings.append(messages_db["ports_closed"])
+
+    gradio_status = check_gradio_status()
+    if not gradio_status:
+        suggestions.append(messages_db["gradio_not_running"])
 
     return findings, suggestions
 
 
-def handle_findings(findings, paths):
+def display_suggestions(suggestions):
+    """Выводит рекомендации для улучшения состояния."""
+    for suggestion in suggestions:
+        title = suggestion["title"]
+        message = suggestion["message"]
+
+        display_message_slowly(f"\n   {title}\n   {'=' * (len(title) + 2)}\n")
+        display_message_slowly(message)
+
+
+def handle_findings(findings):
     """Обрабатывает обнаруженные проблемы."""
     for finding in findings:
         title = finding["title"]
-        message = format_message(finding["message"], paths)
+        message = finding["message"]
         commands = finding.get("commands", [])
 
         display_message_slowly(f"\n   {title}\n   {'=' * (len(title) + 2)}\n")
@@ -161,16 +175,6 @@ def handle_findings(findings, paths):
                 display_message_slowly(" ⚙️  Выполняю команды...")
                 results = execute_commands(commands)
                 display_message_slowly(f"\n 📝  Результат выполнения команд:\n{results}")
-                display_message_slowly(" 🔄  Перезапускаю диагностику...")
-                main()  # Повторный запуск диагностики
-                return  # Завершаем текущую итерацию
-
-
-def format_message(message, paths):
-    """Форматирует сообщение, заменяя переменные путями."""
-    for key, path in paths.items():
-        message = message.replace(f"{{{key}}}", str(path))
-    return message
 
 
 def generate_summary_report():
@@ -186,15 +190,15 @@ def main():
     animate_message(" 🎉  Завершаю анализ, пожалуйста подождите 🤖")
     display_message_slowly("\n 🎯  Вот что мы обнаружили:")
 
-    paths = {
-        "DEBUG_REPORT_PATH": DEBUG_REPORT_PATH,
-        "TEST_REPORT_PATH": TEST_REPORT_PATH,
-        "PROJECT_DIR": PROJECT_DIR,
-    }
-    findings, _ = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
+    findings, suggestions = parse_reports(MESSAGES_DB_PATH)
+
     if findings:
-        handle_findings(findings, paths)
-    else:
+        handle_findings(findings)
+
+    if suggestions:
+        display_suggestions(suggestions)
+
+    if not findings and not suggestions:
         display_message_slowly(" ✅  Всё выглядит хорошо!\n 👍  Проблем не обнаружено.")
 
     print("\n")
