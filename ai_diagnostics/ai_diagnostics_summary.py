@@ -1,103 +1,117 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics_summary.py
 # Скрипт для создания обобщенного отчета о состоянии проекта wg_qr_generator.
-# Версия: 1.0
+# Версия: 1.1
 # Обновлено: 2024-12-02
+# Включает проверку портов, статуса WireGuard и фаервола.
 
-import json
 import os
 import subprocess
-import matplotlib.pyplot as plt
 from pathlib import Path
 
-# Путь к корневой директории проекта
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-LOGS_DIR = PROJECT_ROOT / "user" / "data" / "logs"
-USER_DB_PATH = PROJECT_ROOT / "user" / "data" / "user_records.json"
-WG_CONFIG_DIR = PROJECT_ROOT / "user" / "data" / "wg_configs"
+# Пути для отчетов
+LOG_DIR = Path("/root/pyWGgen/user/data/logs")
+SUMMARY_REPORT_PATH = LOG_DIR / "summary_report.txt"
+DEBUG_REPORT_PATH = Path("/root/pyWGgen/wg_qr_generator/ai_diagnostics/debug_report.txt")
+TEST_REPORT_PATH = Path("/root/pyWGgen/wg_qr_generator/ai_diagnostics/test_report.txt")
+PROJECT_DIR = Path("/root/pyWGgen/wg_qr_generator")
 
-def load_user_data(user_db_path):
-    """Загружает данные пользователей из user_records.json."""
-    if user_db_path.exists():
-        with open(user_db_path, "r", encoding="utf-8") as file:
-            try:
-                return json.load(file)
-            except json.JSONDecodeError:
-                print(" ❌ Ошибка: Невозможно прочитать user_records.json.")
-                return []
-    else:
-        print(" ❌ Файл user_records.json отсутствует.")
-        return []
+# Проверяем наличие путей
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-def count_wg_peers(wg_config_dir):
-    """Считает количество peer в конфигурациях WireGuard."""
-    if not wg_config_dir.exists():
-        print(" ❌ Директория с конфигурациями WireGuard отсутствует.")
-        return 0
-    return sum(1 for file in wg_config_dir.glob("*.conf"))
 
-def check_gradio_port(port=7860):
-    """Проверяет доступность порта Gradio."""
-    command = f"lsof -i:{port}"
-    result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    return result.returncode == 0
+def run_command(command):
+    """Выполняет команду в терминале и возвращает результат."""
+    try:
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        return f"Ошибка: {e.stderr.strip()}"
 
-def generate_graph(user_count, peer_count):
-    """Создает график для визуализации количества пользователей и peer."""
-    labels = ["Users", "Peers"]
-    values = [user_count, peer_count]
-    plt.bar(labels, values)
-    plt.title("Users vs. Peers")
-    plt.ylabel("Count")
-    plt.savefig(LOGS_DIR / "users_vs_peers.png")
-    print(f" 📊 График сохранен: {LOGS_DIR / 'users_vs_peers.png'}")
 
-def generate_summary_report(user_count, peer_count, is_gradio_running):
-    """Создает текстовый обобщенный отчет."""
-    report = f"""
-=== 📋 Обобщенный отчет о состоянии проекта ===
+def check_ports():
+    """Проверяет открытые порты."""
+    command = ["ss", "-tuln"]
+    result = run_command(command)
+    open_ports = []
+    for line in result.splitlines():
+        if ":51820" in line:
+            open_ports.append("51820 (WireGuard)")
+        if ":7860" in line:
+            open_ports.append("7860 (Gradio)")
+    return open_ports
 
-📂 Пользователи:
-- Общее количество пользователей: {user_count}
 
-🔒 WireGuard:
-- Общее количество peer: {peer_count}
+def check_firewall():
+    """Проверяет состояние фаервола и список открытых портов."""
+    command_status = ["firewall-cmd", "--state"]
+    command_ports = ["firewall-cmd", "--list-ports"]
+    status = run_command(command_status)
+    if status != "running":
+        return f"Фаервол: {status}", []
+    open_ports = run_command(command_ports).split()
+    return f"Фаервол: Активен", open_ports
 
-🌐 Gradio:
-- Статус: {"Запущен" if is_gradio_running else "Не запущен"}
-- Для запуска: 
-  1️⃣ Перейдите в директорию проекта: cd {PROJECT_ROOT}
-  2️⃣ Выполните команду: python3 main.py
 
-🎯 Рекомендации:
-- Убедитесь, что количество peer совпадает с количеством пользователей.
-- Если Gradio не запущен, выполните предложенные действия.
+def check_wireguard_status():
+    """Проверяет состояние WireGuard."""
+    command_status = ["systemctl", "is-active", "wg-quick@wg0.service"]
+    command_peers = ["wg", "show"]
+    status = run_command(command_status)
+    wg_info = run_command(command_peers) if status == "active" else "WireGuard не активен."
+    return status, wg_info
 
-"""
-    summary_path = LOGS_DIR / "summary_report.txt"
-    with open(summary_path, "w", encoding="utf-8") as file:
-        file.write(report)
-    print(f"📄 Обобщенный отчет сохранен: {summary_path}")
 
-def main():
-    """Основной запуск программы."""
-    print("🤖 Создание обобщенного отчета...")
+def generate_summary():
+    """Создает обобщенный отчет."""
+    print(" 🤖 Создание обобщенного отчета...")
+    
+    # Проверка пользователей
+    total_users = 0
+    if TEST_REPORT_PATH.exists():
+        with open(TEST_REPORT_PATH, "r", encoding="utf-8") as file:
+            content = file.read()
+            total_users = content.count("peer")  # Подсчет peer как пользователей
+    
+    # Проверка WireGuard
+    wg_status, wg_info = check_wireguard_status()
+    peers_count = wg_info.count("peer:") if "peer:" in wg_info else 0
+    
+    # Проверка портов
+    open_ports = check_ports()
+    
+    # Проверка фаервола
+    firewall_status, firewall_ports = check_firewall()
+    
+    # Формируем отчет
+    summary = [
+        "=== 📋 Обобщенный отчет о состоянии проекта ===",
+        "\n📂 Пользователи:",
+        f"- Общее количество пользователей: {total_users}",
+        "\n🔒 WireGuard:",
+        f"- Общее количество peer: {peers_count}",
+        f"- Статус WireGuard: {wg_status}",
+        f"- Информация о WireGuard:\n{wg_info if wg_status == 'active' else ''}",
+        "\n🌐 Gradio:",
+        f"- Статус: {'Не запущен' if '7860 (Gradio)' not in open_ports else 'Запущен'}",
+        "  - Для запуска:",
+        f"    1️⃣ Перейдите в директорию проекта: cd {PROJECT_DIR}",
+        "    2️⃣ Выполните команду: python3 main.py",
+        "\n🔥 Фаервол:",
+        f"- {firewall_status}",
+        "- Открытые порты:",
+        f"  - {', '.join(firewall_ports) if firewall_ports else 'Нет открытых портов'}",
+        "\n🎯 Рекомендации:",
+        "- Убедитесь, что количество peer совпадает с количеством пользователей.",
+        "- Если Gradio не запущен, выполните предложенные действия.",
+        "- Проверьте, что порты для Gradio и WireGuard доступны через фаервол."
+    ]
+    
+    with open(SUMMARY_REPORT_PATH, "w", encoding="utf-8") as file:
+        file.write("\n".join(summary))
+    
+    print(f" ✅ Обобщенный отчет сохранен: {SUMMARY_REPORT_PATH}")
 
-    # Загружаем данные пользователей
-    user_data = load_user_data(USER_DB_PATH)
-    user_count = len(user_data)
-
-    # Считаем количество peer
-    peer_count = count_wg_peers(WG_CONFIG_DIR)
-
-    # Проверяем доступность Gradio
-    is_gradio_running = check_gradio_port()
-
-    # Генерируем график
-    generate_graph(user_count, peer_count)
-
-    # Создаем текстовый отчет
-    generate_summary_report(user_count, peer_count, is_gradio_running)
 
 if __name__ == "__main__":
-    main()
+    generate_summary()
