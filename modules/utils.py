@@ -57,7 +57,7 @@ def get_wireguard_subnet(config_path=None):
     """
     Извлечение подсети WireGuard из конфигурационного файла.
     :param config_path: Путь к конфигурационному файлу.
-    :return: Подсеть в формате строки (например, "10.96.96.1/24").
+    :return: Подсеть в формате строки (например, "10.66.66.1/24").
     """
     if config_path is None:
         config_path = get_wireguard_config_path()
