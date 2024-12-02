@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics_summary.py
 # Скрипт для создания обобщенного отчета о состоянии проекта wg_qr_generator.
-# Версия: 1.1
+# Версия: 1.2
 # Обновлено: 2024-12-02
 # Включает проверку портов, статуса WireGuard и фаервола.
 
-import os
 import subprocess
 from pathlib import Path
+from settings import PROJECT_DIR
 
 # Пути для отчетов
-LOG_DIR = Path("/root/pyWGgen/user/data/logs")
+LOG_DIR = PROJECT_DIR / "user" / "data" / "logs"
 SUMMARY_REPORT_PATH = LOG_DIR / "summary_report.txt"
-DEBUG_REPORT_PATH = Path("/root/pyWGgen/wg_qr_generator/ai_diagnostics/debug_report.txt")
-TEST_REPORT_PATH = Path("/root/pyWGgen/wg_qr_generator/ai_diagnostics/test_report.txt")
-PROJECT_DIR = Path("/root/pyWGgen/wg_qr_generator")
+DEBUG_REPORT_PATH = PROJECT_DIR / "ai_diagnostics" / "debug_report.txt"
+TEST_REPORT_PATH = PROJECT_DIR / "ai_diagnostics" / "test_report.txt"
 
-# Проверяем наличие путей
+# Убедимся, что директория логов существует
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -62,27 +61,33 @@ def check_wireguard_status():
     return status, wg_info
 
 
-def generate_summary():
-    """Создает обобщенный отчет."""
-    print(" 🤖 Создание обобщенного отчета...")
-    
-    # Проверка пользователей
-    total_users = 0
+def parse_test_report():
+    """Парсит тестовый отчет для получения количества пользователей."""
     if TEST_REPORT_PATH.exists():
         with open(TEST_REPORT_PATH, "r", encoding="utf-8") as file:
             content = file.read()
-            total_users = content.count("peer")  # Подсчет peer как пользователей
-    
+            total_users = content.count("peer")
+            return total_users
+    return 0
+
+
+def generate_summary():
+    """Создает обобщенный отчет."""
+    print(" 🤖 Создание обобщенного отчета...")
+
+    # Проверка пользователей
+    total_users = parse_test_report()
+
     # Проверка WireGuard
     wg_status, wg_info = check_wireguard_status()
     peers_count = wg_info.count("peer:") if "peer:" in wg_info else 0
-    
+
     # Проверка портов
     open_ports = check_ports()
-    
+
     # Проверка фаервола
     firewall_status, firewall_ports = check_firewall()
-    
+
     # Формируем отчет
     summary = [
         "=== 📋 Обобщенный отчет о состоянии проекта ===",
@@ -106,10 +111,10 @@ def generate_summary():
         "- Если Gradio не запущен, выполните предложенные действия.",
         "- Проверьте, что порты для Gradio и WireGuard доступны через фаервол."
     ]
-    
+
     with open(SUMMARY_REPORT_PATH, "w", encoding="utf-8") as file:
         file.write("\n".join(summary))
-    
+
     print(f" ✅ Обобщенный отчет сохранен: {SUMMARY_REPORT_PATH}")
 
 
