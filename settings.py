@@ -17,13 +17,12 @@
 #
 # ВАЖНО: Все пути и параметры следует указывать относительно BASE_DIR.
 #
-# Версия: 1.2 (2024-12-02)
+# Версия: 1.3 (2024-12-02)
 
 from pathlib import Path
 
 # Определяем базовый путь к корню проекта
-BASE_DIR = Path(__file__).resolve().parent.parent  # Путь к корню проекта
-PROJECT_DIR = BASE_DIR / "wg_qr_generator"         # Путь к рабочей директории проекта
+BASE_DIR = Path(__file__).resolve().parent  # Путь к корневой директории wg_qr_generator
 
 # Пути к файлам и директориям
 WG_CONFIG_DIR = BASE_DIR / "user/data/wg_configs"
@@ -45,12 +44,16 @@ LOG_FILE_PATH = LOG_DIR / "app.log"
 LOG_LEVEL = "INFO"
 
 # Пути к отчетам и базе сообщений
-DEBUG_REPORT_PATH = PROJECT_DIR / "ai_diagnostics/debug_report.txt"  # Путь к отчету диагностики
-TEST_REPORT_PATH = PROJECT_DIR / "ai_diagnostics/test_report.txt"    # Путь к отчету тестирования
-MESSAGES_DB_PATH = PROJECT_DIR / "ai_diagnostics/messages_db.json"   # Путь к базе сообщений
+DEBUG_REPORT_PATH = BASE_DIR / "ai_diagnostics/debug_report.txt"  # Путь к отчету диагностики
+TEST_REPORT_PATH = BASE_DIR / "ai_diagnostics/test_report.txt"    # Путь к отчету тестирования
+MESSAGES_DB_PATH = BASE_DIR / "ai_diagnostics/messages_db.json"   # Путь к базе сообщений
 
 # Пути к справке
-HELP_JSON_PATH = PROJECT_DIR / "ai_diagnostics/ai_help/ai_help.json"  # Новый путь для справочной системы
+HELP_JSON_PATH = BASE_DIR / "ai_diagnostics/ai_help/ai_help.json"  # Новый путь для справочной системы
+
+# Дополнительные пути для модулей и утилит
+MODULES_DIR = BASE_DIR / "modules"
+AI_DIAGNOSTICS_DIR = BASE_DIR / "ai_diagnostics"
 
 # Порт для Gradio
 GRADIO_PORT = 7860
@@ -60,7 +63,6 @@ def check_paths():
     """Проверяет существование файлов и директорий."""
     paths = {
         "BASE_DIR": BASE_DIR,
-        "PROJECT_DIR": PROJECT_DIR,
         "WG_CONFIG_DIR": WG_CONFIG_DIR,
         "QR_CODE_DIR": QR_CODE_DIR,
         "USER_DB_PATH": USER_DB_PATH,
@@ -74,6 +76,8 @@ def check_paths():
         "TEST_REPORT_PATH": TEST_REPORT_PATH,
         "MESSAGES_DB_PATH": MESSAGES_DB_PATH,
         "HELP_JSON_PATH": HELP_JSON_PATH,
+        "MODULES_DIR": MODULES_DIR,
+        "AI_DIAGNOSTICS_DIR": AI_DIAGNOSTICS_DIR,
     }
     status = []
     for name, path in paths.items():
@@ -85,7 +89,6 @@ def check_paths():
 if __name__ == "__main__":
     print("\n=== 🛠️  Состояние проекта wg_qr_generator  ===\n")
     print(f"  Корневая директория проекта: {BASE_DIR}")
-    print(f"  Рабочая директория проекта: {PROJECT_DIR}")
     print(f"  Порт для запуска Gradio: {GRADIO_PORT}\n")
 
     print("=== 📂  Проверка файлов и директорий  ===\n")
