@@ -23,10 +23,10 @@ from settings import DIAGNOSTICS_LOG
 EXCLUDE_DIRS = ['venv', '.pytest_cache', '.git', 'temp', '__pycache__']
 MAX_VISIBLE_FILES = 100
 ICONS = {
-    "dir": "📂",
-    "file": "📄",
-    "check": "✅",
-    "cross": "❌"
+    "dir": " 📂",
+    "file": " 📄",
+    "check": " ✅",
+    "cross": " ❌"
 }
 
 
@@ -115,7 +115,7 @@ def run_diagnostics():
     ]
     report_data = "\n".join(report)
     write_report(report_data, DIAGNOSTICS_LOG)
-    print(f"✅  Отчёт сохранён в {DIAGNOSTICS_LOG}")
+    print(f" ✅  Отчёт сохранён в {DIAGNOSTICS_LOG}")
 
 
 if __name__ == "__main__":
