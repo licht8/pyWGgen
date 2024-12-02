@@ -71,9 +71,9 @@ def generate_debug_report():
     result = run_command(command)
     debug_log(f"Ожидаемый путь к debug_report: {DEBUG_REPORT_PATH}")
     if not DEBUG_REPORT_PATH.exists():
-        debug_log(f" ⚠️ Debug Report не был создан! Результат команды: {result}")
+        debug_log(f"⚠️ Debug Report не был создан! Результат команды: {result}")
     else:
-        debug_log(" ✅ Debug Report успешно создан.")
+        debug_log(f"✅ Debug Report успешно создан.")
 
 
 def generate_test_report():
