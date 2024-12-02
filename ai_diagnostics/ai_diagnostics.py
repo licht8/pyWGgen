@@ -16,6 +16,7 @@ from settings import LOG_FILE_PATH, LOG_DIR
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODULES_DIR = PROJECT_ROOT / "modules"
 DIAGNOSTICS_DIR = PROJECT_ROOT / "ai_diagnostics"
+SETTINGS_PATH = PROJECT_ROOT / "settings.py"
 
 sys.path.append(str(PROJECT_ROOT))  # Добавляем путь к корню проекта
 sys.path.append(str(MODULES_DIR))  # Добавляем путь к модулям
