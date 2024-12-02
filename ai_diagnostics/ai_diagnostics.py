@@ -3,13 +3,12 @@
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Версия: 3.9
 # Обновлено: 2024-12-02
-# Включает использование библиотеки logging для управления логами.
+# Включает использование библиотеки logging для управления логами и настройки скорости анимации из settings.py.
 
 import json
 import time
 import sys
 import subprocess
-import random
 import logging
 from pathlib import Path
 
@@ -29,6 +28,9 @@ from settings import (
     PROJECT_DIR,
     LOG_LEVEL,
     LOG_FILE_PATH,
+    ANIMATION_SPEED,
+    PRINT_SPEED,
+    LINE_DELAY,
 )
 
 # Настраиваем logging
@@ -58,23 +60,23 @@ def run_command(command):
 
 
 def animate_message(message):
-    """Выводит анимированное сообщение с эффектом перемигивания '...'. Время перемигивания до 2 секунд."""
+    """Выводит анимированное сообщение с эффектом перемигивания '...'. Время перемигивания зависит от ANIMATION_SPEED."""
     for _ in range(3):  # Три итерации перемигивания
         for dots in range(1, 4):
             print(f"\r   {message}{'.' * dots}{' ' * (3 - dots)}", end="", flush=True)
-            time.sleep(random.uniform(0.2, 0.5))  # Задержка от 0.2 до 0.5 секунд
+            time.sleep(ANIMATION_SPEED)
     print(f"\r   {message} 🤖", flush=True)  # Завершающее сообщение с иконкой
 
 
 def display_message_slowly(message):
-    """Имитация печати ИИ."""
+    """Имитация печати ИИ. Скорость определяется PRINT_SPEED и LINE_DELAY."""
     for line in message.split("\n"):
         print("   ", end="")
         for char in line:
             print(char, end="", flush=True)
-            time.sleep(0.03)
+            time.sleep(PRINT_SPEED)
         print()
-        time.sleep(0.1)
+        time.sleep(LINE_DELAY)
 
 
 def generate_debug_report():
