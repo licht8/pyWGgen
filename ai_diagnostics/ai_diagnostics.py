@@ -184,10 +184,36 @@ def parse_reports(messages_db_path):
             report["message"] = report["message"].format(
                 PROJECT_DIR=PROJECT_DIR,
                 USER_DB_PATH=USER_DB_PATH,
-                QR_CODE_DIR=QR_CODE_DIR,
-                GRADIO_PORT=GRADIO_PORT  # Добавлена подстановка для GRADIO_PORT
+                QR_CODE_DIR=QR_CODE_DIR
             )
             findings.append(report)
+
+    # Проверка маскарадинга
+    missing_masquerade_rules = check_masquerade_rules()
+    if missing_masquerade_rules:
+        # Преобразуем элементы в строки, если это словари
+        formatted_rules = [
+            rule if isinstance(rule, str) else json.dumps(rule, ensure_ascii=False)
+            for rule in missing_masquerade_rules
+        ]
+        report = messages_db.get("masquerade_issue", {})
+        if report:
+            report["message"] = report["message"].format(
+                MISSING_RULES="\n".join(formatted_rules)  # Используем перенос строки для наглядности
+            )
+            findings.append(report)
+
+    # Проверка состояния Gradio
+    if not check_gradio_status():
+        report = messages_db.get("gradio_not_running", {})
+        if report:
+            report["message"] = report["message"].format(
+                PROJECT_DIR=PROJECT_DIR,
+                GRADIO_PORT=GRADIO_PORT
+            )
+            suggestions.append(report)
+
+    return findings, suggestions
 
     # Проверка маскарадинга
     missing_masquerade_rules = check_masquerade_rules()
