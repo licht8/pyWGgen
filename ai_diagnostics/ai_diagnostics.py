@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 3.8
+# Версия: 3.9
 # Обновлено: 2024-12-02
-# Эта версия включает вызов обобщенного отчета, улучшенную обработку путей и форматирование сообщений.
+# Включает использование библиотеки logging для управления логами.
 
 import json
 import time
 import sys
 import subprocess
 import random
+import logging
 from pathlib import Path
 
 # Добавляем корневую директорию проекта в sys.path
@@ -21,7 +22,25 @@ sys.path.append(str(PROJECT_ROOT))  # Добавляем путь к корню 
 sys.path.append(str(MODULES_DIR))  # Добавляем путь к модулям
 
 # Импорт из настроек
-from settings import DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH, PROJECT_DIR
+from settings import (
+    DEBUG_REPORT_PATH,
+    TEST_REPORT_PATH,
+    MESSAGES_DB_PATH,
+    PROJECT_DIR,
+    LOG_LEVEL,
+    LOG_FILE_PATH,
+)
+
+# Настраиваем logging
+logging.basicConfig(
+    level=LOG_LEVEL,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_FILE_PATH, encoding="utf-8"),
+        logging.StreamHandler(sys.stdout),
+    ],
+)
+logger = logging.getLogger(__name__)
 
 # Правильные пути для скриптов
 DEBUGGER_SCRIPT = MODULES_DIR / "debugger.py"
@@ -36,11 +55,6 @@ def run_command(command):
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         return f"Ошибка: {e.stderr.strip()}"
-
-
-def debug_log(message):
-    """Выводит сообщение для отладки."""
-    print(f" 🛠️ [DEBUG] {message}")
 
 
 def animate_message(message):
@@ -69,11 +83,11 @@ def generate_debug_report():
     animate_message(" 🤖  Генерация отчёта диагностики")
     command = [sys.executable, str(DEBUGGER_SCRIPT)]
     result = run_command(command)
-    debug_log(f"Ожидаемый путь к debug_report: {DEBUG_REPORT_PATH}")
+    logger.debug(f"Ожидаемый путь к debug_report: {DEBUG_REPORT_PATH}")
     if not DEBUG_REPORT_PATH.exists():
-        debug_log(f"⚠️ Debug Report не был создан! Результат команды: {result}")
+        logger.warning(f"⚠️ Debug Report не был создан! Результат команды: {result}")
     else:
-        debug_log(f"✅ Debug Report успешно создан.")
+        logger.info(f"✅ Debug Report успешно создан.")
 
 
 def generate_test_report():
@@ -82,11 +96,11 @@ def generate_test_report():
     animate_message(" 🤖  Генерация тестового отчёта")
     command = [sys.executable, str(TEST_REPORT_GENERATOR_SCRIPT)]
     result = run_command(command)
-    debug_log(f"Ожидаемый путь к test_report: {TEST_REPORT_PATH}")
+    logger.debug(f"Ожидаемый путь к test_report: {TEST_REPORT_PATH}")
     if not TEST_REPORT_PATH.exists():
-        debug_log(f"⚠️ Test Report не был создан! Результат команды: {result}")
+        logger.warning(f"⚠️ Test Report не был создан! Результат команды: {result}")
     else:
-        debug_log(f"✅ Test Report успешно создан.")
+        logger.info(f"✅ Test Report успешно создан.")
 
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
@@ -95,7 +109,7 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
         with open(messages_db_path, "r", encoding="utf-8") as db_file:
             messages_db = json.load(db_file)
     except FileNotFoundError:
-        debug_log(f" ❌ Файл messages_db.json не найден:\n 📂  {messages_db_path}")
+        logger.error(f"❌ Файл messages_db.json не найден:\n 📂  {messages_db_path}")
         return []
 
     findings = []
@@ -104,17 +118,17 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
     if debug_report_path.exists():
         with open(debug_report_path, "r", encoding="utf-8") as debug_file:
             debug_report = debug_file.read()
-            debug_log(f"Содержимое Debug Report: {debug_report[:500]}...")  # Первые 500 символов
+            logger.debug(f"Содержимое Debug Report: {debug_report[:500]}...")  # Первые 500 символов
             if "firewall-cmd --add-port" in debug_report:
                 findings.append(messages_db.get("firewall_issue", {"title": "Ошибка Firewall", "message": "Нет описания"}))
     else:
-        debug_log(f"⚠️ Debug Report отсутствует по пути: {debug_report_path}")
+        logger.warning(f"⚠️ Debug Report отсутствует по пути: {debug_report_path}")
 
     # Анализ test_report
     if test_report_path.exists():
         with open(test_report_path, "r", encoding="utf-8") as test_file:
             test_report = test_file.read()
-            debug_log(f"Содержимое Test Report: {test_report[:500]}...")  # Первые 500 символов
+            logger.debug(f"Содержимое Test Report: {test_report[:500]}...")  # Первые 500 символов
             if "Gradio: ❌" in test_report:
                 findings.append(messages_db.get("gradio_not_running", {"title": "Gradio Error", "message": "Нет описания"}))
             if "Missing" in test_report:
@@ -122,7 +136,7 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
             if "user_records.json: ❌" in test_report:
                 findings.append(messages_db.get("missing_user_records", {"title": "Ошибка Users", "message": "Нет описания"}))
     else:
-        debug_log(f"⚠️ Test Report отсутствует по пути: {test_report_path}")
+        logger.warning(f"⚠️ Test Report отсутствует по пути: {test_report_path}")
 
     return findings
 
@@ -150,7 +164,7 @@ def generate_summary_report():
 
 def main():
     """Основной запуск программы."""
-    debug_log("Начало выполнения диагностики.")
+    logger.info("Начало выполнения диагностики.")
 
     generate_debug_report()
     generate_test_report()
