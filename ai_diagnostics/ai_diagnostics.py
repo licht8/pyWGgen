@@ -223,10 +223,10 @@ def handle_findings(findings):
         display_message_slowly(message)
 
         if commands:
-            display_message_slowly("\n 🛠  Попробовать устранить проблему автоматически? (y/n): ")
+            display_message_slowly("\n 🛠  Исправить автоматически? (y/n): ")
             user_input = input().strip().lower()
             if user_input == "y":
-                display_message_slowly(" ⚙️  Устраняю проблему...")
+                display_message_slowly(" ⚙️  Исправляю...")
                 results = execute_commands(commands)
                 display_message_slowly(f"\n 📝  Результат выполнения команд:\n{results}")
 
