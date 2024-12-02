@@ -171,7 +171,15 @@ def parse_reports(messages_db_path):
     if closed_ports:
         findings.append(messages_db["ports_closed"])
 
-    if check_masquerade_rules():
+    missing_masquerade_rules = check_masquerade_rules()
+    if missing_masquerade_rules:
+        findings.append({
+            "title": "🔒 Проблемы с маскарадингом",
+            "message": f"Следующие правила маскарадинга отсутствуют:\n{', '.join(missing_masquerade_rules)}",
+            "commands": ["sudo systemctl restart wg-quick@wg0"]
+        })
+
+    if not check_wireguard_status():
         findings.append(messages_db["wg_not_running"])
 
     if not check_gradio_status():
