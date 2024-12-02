@@ -95,7 +95,7 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
         with open(messages_db_path, "r", encoding="utf-8") as db_file:
             messages_db = json.load(db_file)
     except FileNotFoundError:
-        debug_log(f"❌ Файл messages_db.json не найден: {messages_db_path}")
+        debug_log(f" ❌ Файл messages_db.json не найден:\n 📂  {messages_db_path}")
         return []
 
     findings = []
