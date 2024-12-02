@@ -14,7 +14,7 @@
 # display_test_report()
 # display_summary_report()
 #
-# Версия: 1.1
+# Версия: 1.2
 # Обновлено: 2024-12-02
 
 from settings import SUMMARY_REPORT_PATH, TEST_REPORT_PATH
@@ -70,7 +70,7 @@ def display_summary_report():
         with open(SUMMARY_REPORT_PATH, "r", encoding="utf-8") as file:
             content = file.read()
 
-        #print("\n=== 📋 Обобщенный отчет о состоянии проекта ===\n")
+        print("\n=== 📋 Обобщенный отчет о состоянии проекта ===\n")
         print(content)
 
     except Exception as e:
