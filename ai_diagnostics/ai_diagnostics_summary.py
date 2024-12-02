@@ -19,14 +19,15 @@ from settings import PROJECT_DIR, SUMMARY_REPORT_PATH, TEST_REPORT_PATH, USER_DB
 
 # Настройка логирования
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.getLevelName(LOG_LEVEL),  # Используем значение из settings
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         logging.FileHandler("diagnostics_summary.log", encoding="utf-8"),
-        logging.StreamHandler()
+        logging.StreamHandler(),
     ],
 )
 logger = logging.getLogger(__name__)
+
 
 def run_command(command):
     """Выполняет команду в терминале и возвращает результат."""
