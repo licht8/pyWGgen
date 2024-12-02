@@ -100,7 +100,7 @@ def check_masquerade_rules():
     try:
         # Получаем подсеть из конфигурации WireGuard
         wireguard_subnet = get_wireguard_subnet()
-        ipv4_network = wireguard_subnet.split("/")[0].rsplit(".", 1)[0] + ".0/24"
+        ipv4_network = wireguard_subnet.split("/")[0].rsplit(".", 1)[0] + ".0/24"  # Преобразуем в "10.66.66.0/24"
         ipv6_rule = 'rule family="ipv6" source address="fd42:42:42::0/24" masquerade'
         required_rules = [
             f'rule family="ipv4" source address="{ipv4_network}" masquerade',
