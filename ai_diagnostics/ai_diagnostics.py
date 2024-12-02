@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 3.6
+# Версия: 3.7
 # Обновлено: 2024-11-29
-# Эта версия включает обновление путей к файлам, улучшенную обработку ошибок и отладочные сообщения.
+# Эта версия включает корректную подстановку путей и улучшенное форматирование сообщений.
 
 import json
 import time
@@ -20,7 +20,8 @@ sys.path.append(str(PROJECT_ROOT))  # Добавляем путь к корню 
 sys.path.append(str(MODULES_DIR))  # Добавляем путь к модулям
 
 # Импорт из настроек
-from settings import DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH
+from settings import DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH, PROJECT_DIR
+
 
 # Правильные пути для скриптов
 DEBUGGER_SCRIPT = MODULES_DIR / "debugger.py"
@@ -152,6 +153,7 @@ def main():
     paths = {
         "DEBUG_REPORT_PATH": DEBUG_REPORT_PATH,
         "TEST_REPORT_PATH": TEST_REPORT_PATH,
+        "PROJECT_DIR": PROJECT_DIR,
     }
     findings = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
