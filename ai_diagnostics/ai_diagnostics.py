@@ -219,16 +219,23 @@ def handle_findings(findings):
         message = finding["message"]
         commands = finding.get("commands", [])
 
-        #display_message_slowly(f"\n   {title}\n   {'=' * (len(title) + 2)}\n")
+        # Отображение сообщения
+        display_message_slowly(f"\n   {title}\n   {'=' * (len(title) + 2)}\n")
         display_message_slowly(message)
 
+        # Если есть команды для автоматического исправления
         if commands:
-            display_message_slowly("\n 🛠  Исправить автоматически? (y/n): ")
+            display_message_slowly(" 🛠  Исправить автоматически? (y/n): ", end="")  # Оставляем ввод на той же строке
             user_input = input().strip().lower()
-            if user_input == "y":
+            if user_input in ["y", "д"]:  # Поддержка английского "y" и русского "д"
                 display_message_slowly(" ⚙️  Исправляю...")
                 results = execute_commands(commands)
                 display_message_slowly(f"\n 📝  Результат выполнения команд:\n{results}")
+            elif user_input in ["n", "н"]:  # Поддержка английского "n" и русского "н"
+                display_message_slowly(" 🚫  Пропускаю исправление.")
+            else:
+                display_message_slowly(" ⚠️  Неверный ввод. Пропускаю исправление.")
+
 
 
 def main():
