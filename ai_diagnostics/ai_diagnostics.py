@@ -89,6 +89,32 @@ def execute_commands(commands):
     return "\n".join(results)
 
 
+def generate_debug_report():
+    """Запускает дебаггер для создания debug_report."""
+    print("")
+    animate_message(" 🤖  Генерация отчёта диагностики")
+    command = [sys.executable, str(DEBUGGER_SCRIPT)]
+    result = run_command(command)
+    logger.debug(f"Ожидаемый путь к debug_report: {DEBUG_REPORT_PATH}")
+    if not DEBUG_REPORT_PATH.exists():
+        logger.warning(f" ⚠️ Debug Report не был создан! Результат команды: {result}")
+    else:
+        logger.info(f" ✅ Debug Report успешно создан.")
+
+
+def generate_test_report():
+    """Запускает тестирование проекта для создания test_report."""
+    print("")
+    animate_message(" 🤖  Генерация тестового отчёта")
+    command = [sys.executable, str(TEST_REPORT_GENERATOR_SCRIPT)]
+    result = run_command(command)
+    logger.debug(f"Ожидаемый путь к test_report: {TEST_REPORT_PATH}")
+    if not TEST_REPORT_PATH.exists():
+        logger.warning(f" ⚠️ Test Report не был создан! Результат команды: {result}")
+    else:
+        logger.info(f" ✅ Test Report успешно создан.")
+
+
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
     """Парсер для анализа отчетов."""
     try:
@@ -149,6 +175,20 @@ def handle_findings(findings, paths):
                 return  # Завершаем текущую итерацию
 
 
+def format_message(message, paths):
+    """Форматирует сообщение, заменяя переменные путями."""
+    for key, path in paths.items():
+        message = message.replace(f"{{{key}}}", str(path))
+    return message
+
+
+def generate_summary_report():
+    """Вызов генерации обобщенного отчета."""
+    print(f"\n 🤖 Создание обобщенного отчета...")
+    command = [sys.executable, str(SUMMARY_SCRIPT)]
+    subprocess.run(command)
+
+
 def main():
     """Основной запуск программы."""
     logger.info("Начало выполнения диагностики.")
@@ -156,8 +196,8 @@ def main():
     generate_debug_report()
     generate_test_report()
 
-    animate_message(f" 🎉  Завершаю анализ, пожалуйста подождите 🤖")
-    display_message_slowly(f"\n 🎯  Вот что мы обнаружили:")
+    animate_message(" 🎉  Завершаю анализ, пожалуйста подождите 🤖")
+    display_message_slowly("\n 🎯  Вот что мы обнаружили:")
 
     paths = {
         "DEBUG_REPORT_PATH": DEBUG_REPORT_PATH,
@@ -168,7 +208,7 @@ def main():
     if findings:
         handle_findings(findings, paths)
     else:
-        display_message_slowly(f" ✅  Всё выглядит хорошо!\n 👍  Проблем не обнаружено.")
+        display_message_slowly(" ✅  Всё выглядит хорошо!\n 👍  Проблем не обнаружено.")
     print("\n")
 
     # Генерация обобщенного отчета
