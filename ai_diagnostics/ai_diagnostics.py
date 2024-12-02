@@ -184,7 +184,8 @@ def parse_reports(messages_db_path):
         if "message" in finding:
             finding["message"] = finding["message"].format(
                 USER_DB_PATH=USER_DB_PATH,
-                QR_CODE_DIR=QR_CODE_DIR
+                QR_CODE_DIR=QR_CODE_DIR,
+                PROJECT_DIR=PROJECT_DIR  # Добавил PROJECT_DIR
             )
 
     return findings, suggestions
