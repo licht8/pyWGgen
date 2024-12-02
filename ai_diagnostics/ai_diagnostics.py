@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 4.3
+# Версия: 4.4
 # Обновлено: 2024-12-02
-# Исправлена проверка портов с добавлением отладочных сообщений.
+# Исправлена обработка портов в выводе firewall-cmd.
 
 import json
 import time
@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 
 # Проверяемые порты
 WIREGUARD_PORT = 51820
-REQUIRED_PORTS = [WIREGUARD_PORT, GRADIO_PORT]
+REQUIRED_PORTS = [f"{WIREGUARD_PORT}/udp", f"{GRADIO_PORT}/tcp"]
 
 # Скрипты
 DEBUGGER_SCRIPT = MODULES_DIR / "debugger.py"
@@ -93,15 +93,13 @@ def check_ports():
     open_ports = []
     for line in result.splitlines():
         if "ports:" in line:
-            ports_line = line.strip().split(":")[1]
-            open_ports = [port.strip() for port in ports_line.split()]
+            ports_line = line.split("ports:")[1].strip()
+            open_ports = ports_line.split()
 
     logger.debug(f"Обнаруженные открытые порты: {open_ports}")
+    logger.debug(f"Требуемые порты для проверки: {REQUIRED_PORTS}")
 
-    missing_ports = [f"{port}/tcp" if port == GRADIO_PORT else f"{port}/udp" for port in REQUIRED_PORTS]
-    logger.debug(f"Требуемые порты для проверки: {missing_ports}")
-
-    closed_ports = [port for port in missing_ports if port not in open_ports]
+    closed_ports = [port for port in REQUIRED_PORTS if port not in open_ports]
     return closed_ports
 
 
@@ -138,20 +136,7 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
             )
         )
 
-    # Проверка Gradio
-    if not check_gradio_running():
-        suggestions.append(messages_db.get("gradio_not_running", {"title": "🌐 Gradio не запущен", "message": "Нет описания", "commands": []}))
-
     return findings, suggestions
-
-
-def check_gradio_running():
-    """Проверяет, запущен ли Gradio на указанном порту."""
-    command = ["ss", "-tuln"]
-    result = run_command(command)
-    logger.debug(f"Результат команды проверки Gradio:\n{result}")
-
-    return any(f":{GRADIO_PORT}" in line for line in result.splitlines())
 
 
 def handle_findings(findings, paths):
@@ -174,16 +159,6 @@ def handle_findings(findings, paths):
                 display_message_slowly(" 🔄  Перезапускаю диагностику...")
                 main()  # Повторный запуск диагностики
                 return  # Завершаем текущую итерацию
-
-
-def handle_suggestions(suggestions, paths):
-    """Отображает подсказки пользователю."""
-    for suggestion in suggestions:
-        title = suggestion["title"]
-        message = format_message(suggestion["message"], paths)
-
-        display_message_slowly(f"\n   {title}\n   {'=' * (len(title) + 2)}\n")
-        display_message_slowly(message)
 
 
 def format_message(message, paths):
@@ -211,15 +186,11 @@ def main():
         "TEST_REPORT_PATH": TEST_REPORT_PATH,
         "PROJECT_DIR": PROJECT_DIR,
     }
-    findings, suggestions = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
+    findings, _ = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
         handle_findings(findings, paths)
     else:
         display_message_slowly(" ✅  Всё выглядит хорошо!\n 👍  Проблем не обнаружено.")
-
-    if suggestions:
-        display_message_slowly("\n 📋 Дополнительные рекомендации:\n")
-        handle_suggestions(suggestions, paths)
 
     print("\n")
     generate_summary_report()
