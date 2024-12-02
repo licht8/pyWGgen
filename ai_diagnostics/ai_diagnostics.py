@@ -65,7 +65,7 @@ def animate_message(message):
         for dots in range(1, 4):
             print(f"\r   {message}{'.' * dots}{' ' * (3 - dots)}", end="", flush=True)
             time.sleep(ANIMATION_SPEED)
-    print(f"\r   {message} 🤖", flush=True)  # Завершающее сообщение с иконкой
+    print(f"\r   {message}  🔎", flush=True)  # Завершающее сообщение с иконкой
 
 
 def display_message_slowly(message):
