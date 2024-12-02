@@ -114,7 +114,7 @@ def generate_report():
     with open(TEST_REPORT_PATH, "w", encoding="utf-8") as report_file:
         report_file.write("\n".join(report_lines))
     
-    print(f" ✅  Отчёт сохранён в {TEST_REPORT_PATH}")
+    print(f"  ✅  Отчёт сохранён в:\n  📂 {TEST_REPORT_PATH}")
 
 
 if __name__ == "__main__":
