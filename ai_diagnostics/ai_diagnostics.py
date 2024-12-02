@@ -191,6 +191,33 @@ def parse_reports(messages_db_path):
     # Проверка маскарадинга
     missing_masquerade_rules = check_masquerade_rules()
     if missing_masquerade_rules:
+        # Преобразуем правила в читаемый список
+        formatted_rules = "\n".join(
+            f"{rule['type']}: {rule['rule']}" if isinstance(rule, dict) else str(rule)
+            for rule in missing_masquerade_rules
+        )
+        report = messages_db.get("masquerade_issue", {})
+        if report:
+            report["message"] = report["message"].format(
+                MISSING_RULES=formatted_rules
+            )
+            findings.append(report)
+
+    # Проверка состояния Gradio
+    if not check_gradio_status():
+        report = messages_db.get("gradio_not_running", {})
+        if report:
+            report["message"] = report["message"].format(
+                PROJECT_DIR=PROJECT_DIR,
+                GRADIO_PORT=GRADIO_PORT
+            )
+            suggestions.append(report)
+
+    return findings, suggestions
+
+    # Проверка маскарадинга
+    missing_masquerade_rules = check_masquerade_rules()
+    if missing_masquerade_rules:
         # Преобразуем элементы в строки, если это словари
         formatted_rules = [
             rule if isinstance(rule, str) else json.dumps(rule, ensure_ascii=False)
