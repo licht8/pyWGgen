@@ -35,7 +35,7 @@ def run_command(command):
 
 def debug_log(message):
     """Выводит сообщение для отладки."""
-    print(f"🛠️ [DEBUG] {message}")
+    print(f" 🛠️ [DEBUG] {message}")
 
 
 def animate_message(message):
