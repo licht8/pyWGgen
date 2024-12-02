@@ -92,16 +92,16 @@ def check_paths():
     }
     status = []
     for name, path in paths.items():
-        exists = "✅  Доступен" if path.exists() else "❌  Отсутствует"
+        exists = " ✅  Доступен" if path.exists() else " ❌  Отсутствует"
         status.append(f"{name}: {exists} ({path})")
     return "\n".join(status)
 
 
 if __name__ == "__main__":
-    print("\n=== 🛠️  Состояние проекта wg_qr_generator  ===\n")
+    print(f"\n === 🛠️  Состояние проекта wg_qr_generator  ===\n")
     print(f"  Корневая директория проекта: {BASE_DIR}")
     print(f"  Порт для запуска Gradio: {GRADIO_PORT}\n")
 
-    print("=== 📂  Проверка файлов и директорий  ===\n")
+    print(f" === 📂  Проверка файлов и директорий  ===\n")
     print(check_paths())
     print("\n")
