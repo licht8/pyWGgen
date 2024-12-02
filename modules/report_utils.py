@@ -64,7 +64,7 @@ def display_summary_report():
     """
     try:
         if not SUMMARY_REPORT_PATH.exists():
-            print(f" ❌ Файл обобщенного отчета не найден: {SUMMARY_REPORT_PATH}")
+            print(f" ❌ Файл обобщенного отчета не найден:\n 📂  {SUMMARY_REPORT_PATH}")
             return
 
         with open(SUMMARY_REPORT_PATH, "r", encoding="utf-8") as file:
