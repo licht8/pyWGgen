@@ -232,9 +232,9 @@ def handle_findings(findings):
                 results = execute_commands(commands)
                 display_message_slowly(f"\n 📝  Результат выполнения команд:\n{results}")
             elif user_input in ["n", "н"]:  # Поддержка английского "n" и русского "н"
-                display_message_slowly(" 🚫  Пропускаю исправление.")
+                display_message_slowly(" 🚫 Пропускаю исправление.")
             else:
-                display_message_slowly(" ⚠️  Неверный ввод. Пропускаю исправление.")
+                display_message_slowly(" ⚠️ Неверный ввод. Пропускаю исправление.")
 
 
 
