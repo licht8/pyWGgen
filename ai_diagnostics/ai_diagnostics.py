@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 5.1
-# Обновлено: 2024-12-02 20:23
+# Версия: 5.2
+# Обновлено: 2024-12-02 21:23
 
 import json
 import time
@@ -31,6 +31,8 @@ from settings import (
     PRINT_SPEED,
     LINE_DELAY,
     GRADIO_PORT,
+    USER_DB_PATH,
+    QR_CODE_DIR,
 )
 
 # Импорт функции для подсети WireGuard
@@ -176,6 +178,14 @@ def parse_reports(messages_db_path):
 
     if not check_gradio_status():
         suggestions.append(messages_db["gradio_not_running"])
+
+    # Подстановка переменных
+    for finding in findings + suggestions:
+        if "message" in finding:
+            finding["message"] = finding["message"].format(
+                USER_DB_PATH=USER_DB_PATH,
+                QR_CODE_DIR=QR_CODE_DIR
+            )
 
     return findings, suggestions
 
