@@ -98,15 +98,25 @@ def check_masquerade_rules():
     logger.debug(f"Результат команды проверки маскарадинга:\n{result}")
 
     try:
+        # Получаем подсеть из конфигурации WireGuard
         wireguard_subnet = get_wireguard_subnet()
-        ipv4_rule = f'rule family="ipv4" source address="{wireguard_subnet.split("/")[0]}/24" masquerade'
+        ipv4_network = wireguard_subnet.split("/")[0].rsplit(".", 1)[0] + ".0/24"
         ipv6_rule = 'rule family="ipv6" source address="fd42:42:42::0/24" masquerade'
-        required_rules = [ipv4_rule, ipv6_rule]
+        required_rules = [
+            f'rule family="ipv4" source address="{ipv4_network}" masquerade',
+            ipv6_rule
+        ]
     except Exception as e:
         logger.error(f"Ошибка при извлечении подсети WireGuard: {e}")
         return ["Ошибка: не удалось определить необходимые правила маскарадинга."]
 
-    missing_rules = [rule for rule in required_rules if rule not in result]
+    # Проверяем наличие правил
+    missing_rules = []
+    for rule in required_rules:
+        if rule not in result:
+            missing_rules.append(rule)
+
+    logger.debug(f"Отсутствующие правила маскарадинга: {missing_rules}")
     return missing_rules
 
 
