@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics_summary.py
 # Скрипт для создания обобщенного отчета о состоянии проекта wg_qr_generator.
-# Версия: 1.4
+# Версия: 1.5
 # Обновлено: 2024-12-02
 
 import json
 import subprocess
 from pathlib import Path
 import sys
+import logging
 
 # Добавляем корневую директорию проекта в sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -16,6 +17,16 @@ sys.path.append(str(PROJECT_ROOT))  # Добавляем корень проек
 # Импортируем настройки
 from settings import PROJECT_DIR, SUMMARY_REPORT_PATH, TEST_REPORT_PATH, USER_DB_PATH
 
+# Настройка логирования
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("diagnostics_summary.log", encoding="utf-8"),
+        logging.StreamHandler()
+    ],
+)
+logger = logging.getLogger(__name__)
 
 def run_command(command):
     """Выполняет команду в терминале и возвращает результат."""
@@ -23,6 +34,7 @@ def run_command(command):
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
+        logger.error(f"Ошибка при выполнении команды {command}: {e.stderr.strip()}")
         return f"Ошибка: {e.stderr.strip()}"
 
 
@@ -36,6 +48,7 @@ def check_ports():
             open_ports.append("51820 (WireGuard)")
         if ":7860" in line:
             open_ports.append("7860 (Gradio)")
+    logger.debug(f"Открытые порты: {open_ports}")
     return open_ports
 
 
@@ -45,18 +58,25 @@ def check_firewall():
     command_ports = ["firewall-cmd", "--list-ports"]
     status = run_command(command_status)
     if status != "running":
+        logger.warning(f"Фаервол неактивен: {status}")
         return f"Фаервол: {status}", []
     open_ports = run_command(command_ports).split()
+    logger.debug(f"Открытые порты фаервола: {open_ports}")
     return f"Фаервол: Активен", open_ports
 
 
 def check_wireguard_status():
     """Проверяет, активен ли сервис WireGuard."""
-    command = ["sudo", "systemctl", "is-active", "wg-quick@wg0"]
-    result = run_command(command)
-    logger.debug(f"Результат команды проверки статуса WireGuard: {result}")
-    return result == "active"
+    command_status = ["sudo", "systemctl", "is-active", "wg-quick@wg0"]
+    command_info = ["sudo", "wg", "show"]
+    status = run_command(command_status)
+    logger.debug(f"WireGuard статус: {status}")
 
+    if status == "active":
+        wg_info = run_command(command_info)
+        logger.debug(f"WireGuard информация:\n{wg_info}")
+        return status, wg_info
+    return status, "WireGuard неактивен"
 
 
 def count_users():
@@ -64,25 +84,30 @@ def count_users():
     if USER_DB_PATH.exists():
         with open(USER_DB_PATH, "r", encoding="utf-8") as file:
             user_data = json.load(file)
-            return len(user_data), "user_records.json"
+            user_count = len(user_data)
+            logger.debug(f"Обнаружено пользователей: {user_count}")
+            return user_count, "user_records.json"
+    logger.warning("Файл user_records.json отсутствует.")
     return 0, "Отсутствует файл user_records.json"
 
 
 def count_peers(wg_info):
     """Считает количество peer в выводе wg show."""
-    return sum(1 for line in wg_info.splitlines() if line.startswith("peer:"))
+    peer_count = sum(1 for line in wg_info.splitlines() if line.startswith("peer:"))
+    logger.debug(f"Количество peer: {peer_count}")
+    return peer_count
 
 
 def generate_summary():
     """Создает обобщенный отчет."""
-    #print(" 🤖 Создание обобщенного отчета...")
+    logger.info("Начало генерации обобщенного отчета.")
 
     # Получение данных о пользователях
     total_users, user_source = count_users()
 
     # Проверка WireGuard
     wg_status, wg_info = check_wireguard_status()
-    peers_count = count_peers(wg_info)
+    peers_count = count_peers(wg_info) if wg_status == "active" else 0
 
     # Проверка портов
     open_ports = check_ports()
@@ -117,6 +142,7 @@ def generate_summary():
     with open(SUMMARY_REPORT_PATH, "w", encoding="utf-8") as file:
         file.write("\n".join(summary))
 
+    logger.info(f"Обобщенный отчет сохранен: {SUMMARY_REPORT_PATH}")
     print(f" ✅ Обобщенный отчет сохранен:\n 📂 {SUMMARY_REPORT_PATH}")
 
 
