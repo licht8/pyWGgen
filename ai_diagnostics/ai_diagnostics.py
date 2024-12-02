@@ -54,6 +54,20 @@ REQUIRED_PORTS = [f"{WIREGUARD_PORT}/udp", f"{GRADIO_PORT}/tcp"]
 # Скрипты
 SUMMARY_SCRIPT = DIAGNOSTICS_DIR / "ai_diagnostics_summary.py"
 
+def execute_commands(commands):
+    """Выполняет список команд и возвращает результат."""
+    results = []
+    for command in commands:
+        logger.info(f"Выполняю команду: {command}")
+        try:
+            # Разбиваем команду на список аргументов для subprocess
+            result = subprocess.run(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+            results.append(f"{command}:\n{result.stdout.strip()}")
+        except subprocess.CalledProcessError as e:
+            results.append(f"{command}:\nОшибка: {e.stderr.strip()}")
+        time.sleep(1)  # Небольшая задержка между командами
+    return "\n".join(results)
+
 
 def run_command(command):
     """Запускает внешнюю команду и возвращает её результат."""
