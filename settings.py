@@ -5,7 +5,6 @@
 # ===========================================
 # Этот файл содержит основные настройки проекта, включая пути к файлам,
 # директориям, конфигурациям, а также глобальные параметры.
-# Он централизует все важные переменные для упрощения поддержки проекта.
 #
 # Пример использования:
 # ---------------------
@@ -23,6 +22,7 @@ from pathlib import Path
 
 # Определяем базовый путь к корню проекта
 BASE_DIR = Path(__file__).resolve().parent  # Путь к корневой директории wg_qr_generator
+PROJECT_DIR = BASE_DIR  # Для совместимости, PROJECT_DIR равен BASE_DIR
 
 # Пути к файлам и директориям
 WG_CONFIG_DIR = BASE_DIR / "user/data/wg_configs"
@@ -63,6 +63,7 @@ def check_paths():
     """Проверяет существование файлов и директорий."""
     paths = {
         "BASE_DIR": BASE_DIR,
+        "PROJECT_DIR": PROJECT_DIR,
         "WG_CONFIG_DIR": WG_CONFIG_DIR,
         "QR_CODE_DIR": QR_CODE_DIR,
         "USER_DB_PATH": USER_DB_PATH,
