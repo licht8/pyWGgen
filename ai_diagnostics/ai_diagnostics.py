@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 4.9
+# Версия: 5.0
 # Обновлено: 2024-12-02
 
 import json
@@ -32,6 +32,9 @@ from settings import (
     LINE_DELAY,
     GRADIO_PORT,
 )
+
+# Импорт функции для подсети WireGuard
+from utils import get_wireguard_subnet
 
 # Настраиваем logging
 logging.basicConfig(
@@ -105,8 +108,6 @@ def check_ports():
     return closed_ports
 
 
-from utils import get_wireguard_subnet  # Импорт функции для получения подсети
-
 def check_masquerade_rules():
     """Проверяет наличие правил маскарадинга для WireGuard."""
     command = ["sudo", "firewall-cmd", "--list-all"]
@@ -116,9 +117,7 @@ def check_masquerade_rules():
     try:
         wireguard_subnet = get_wireguard_subnet()
         ipv4_rule = f'rule family="ipv4" source address="{wireguard_subnet}" masquerade'
-        # Предполагаем, что IPv6 подсеть конструируется по известной логике
-        ipv6_subnet = "fd42:42:42::0/24"
-        ipv6_rule = f'rule family="ipv6" source address="{ipv6_subnet}" masquerade'
+        ipv6_rule = 'rule family="ipv6" source address="fd42:42:42::0/24" masquerade'
         required_rules = [ipv4_rule, ipv6_rule]
     except Exception as e:
         logger.error(f"Ошибка при извлечении подсети WireGuard: {e}")
@@ -127,7 +126,6 @@ def check_masquerade_rules():
     missing_rules = [rule for rule in required_rules if rule not in result]
     logger.debug(f"Отсутствующие правила маскарадинга: {missing_rules}")
     return missing_rules
-
 
 
 def check_gradio_status():
@@ -178,9 +176,6 @@ def parse_reports(messages_db_path):
             "message": f"Следующие правила маскарадинга отсутствуют:\n{', '.join(missing_masquerade_rules)}",
             "commands": ["sudo systemctl restart wg-quick@wg0"]
         })
-
-    if not check_wireguard_status():
-        findings.append(messages_db["wg_not_running"])
 
     if not check_gradio_status():
         suggestions.append(messages_db["gradio_not_running"])
