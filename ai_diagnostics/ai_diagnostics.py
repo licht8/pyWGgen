@@ -105,20 +105,29 @@ def check_ports():
     return closed_ports
 
 
+from utils import get_wireguard_subnet  # Импорт функции для получения подсети
+
 def check_masquerade_rules():
     """Проверяет наличие правил маскарадинга для WireGuard."""
     command = ["sudo", "firewall-cmd", "--list-all"]
     result = run_command(command)
     logger.debug(f"Результат команды проверки маскарадинга:\n{result}")
 
-    required_rules = [
-        'rule family="ipv4" source address="10.66.66.0/24" masquerade',
-        'rule family="ipv6" source address="fd42:42:42::0/24" masquerade',
-    ]
+    try:
+        wireguard_subnet = get_wireguard_subnet()
+        ipv4_rule = f'rule family="ipv4" source address="{wireguard_subnet}" masquerade'
+        # Предполагаем, что IPv6 подсеть конструируется по известной логике
+        ipv6_subnet = "fd42:42:42::0/24"
+        ipv6_rule = f'rule family="ipv6" source address="{ipv6_subnet}" masquerade'
+        required_rules = [ipv4_rule, ipv6_rule]
+    except Exception as e:
+        logger.error(f"Ошибка при извлечении подсети WireGuard: {e}")
+        return ["Ошибка: не удалось определить необходимые правила маскарадинга."]
 
     missing_rules = [rule for rule in required_rules if rule not in result]
     logger.debug(f"Отсутствующие правила маскарадинга: {missing_rules}")
     return missing_rules
+
 
 
 def check_gradio_status():
