@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 4.7
+# Версия: 4.8
 # Обновлено: 2024-12-02
-# Исправлено: все сообщения вынесены в messages_db.json, добавлена проверка Gradio.
 
 import json
 import time
@@ -111,7 +110,13 @@ def check_gradio_status():
     command = ["ss", "-tuln"]
     result = run_command(command)
     logger.debug(f"Результат команды проверки Gradio:\n{result}")
-    return f"{GRADIO_PORT}/tcp" in result
+
+    for line in result.splitlines():
+        if f":{GRADIO_PORT} " in line and "LISTEN" in line:
+            logger.debug("Gradio обнаружен как работающий.")
+            return True
+    logger.debug("Gradio не обнаружен как работающий.")
+    return False
 
 
 def execute_commands(commands):
@@ -141,8 +146,7 @@ def parse_reports(messages_db_path):
     if closed_ports:
         findings.append(messages_db["ports_closed"])
 
-    gradio_status = check_gradio_status()
-    if not gradio_status:
+    if not check_gradio_status():
         suggestions.append(messages_db["gradio_not_running"])
 
     return findings, suggestions
