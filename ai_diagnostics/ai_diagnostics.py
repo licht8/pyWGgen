@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 4.2
+# Версия: 4.3
 # Обновлено: 2024-12-02
-# Добавлена проверка Gradio админки и отображение подсказки.
+# Исправлена проверка портов с добавлением отладочных сообщений.
 
 import json
 import time
@@ -84,20 +84,25 @@ def display_message_slowly(message):
         time.sleep(LINE_DELAY)
 
 
-def check_gradio_running():
-    """Проверяет, запущен ли Gradio на указанном порту."""
-    command = ["ss", "-tuln"]
-    result = run_command(command)
-    return any(f":{GRADIO_PORT}" in line for line in result.splitlines())
-
-
 def check_ports():
-    """Проверяет состояние необходимых портов."""
-    command = ["ss", "-tuln"]
+    """Проверяет состояние необходимых портов с выводом отладки."""
+    command = ["sudo", "firewall-cmd", "--list-all"]
     result = run_command(command)
-    open_ports = {line.split(":")[-1].split()[0] for line in result.splitlines() if ":" in line}
-    missing_ports = [port for port in REQUIRED_PORTS if str(port) not in open_ports]
-    return missing_ports
+    logger.debug(f"Результат команды проверки фаервола:\n{result}")
+
+    open_ports = []
+    for line in result.splitlines():
+        if "ports:" in line:
+            ports_line = line.strip().split(":")[1]
+            open_ports = [port.strip() for port in ports_line.split()]
+
+    logger.debug(f"Обнаруженные открытые порты: {open_ports}")
+
+    missing_ports = [f"{port}/tcp" if port == GRADIO_PORT else f"{port}/udp" for port in REQUIRED_PORTS]
+    logger.debug(f"Требуемые порты для проверки: {missing_ports}")
+
+    closed_ports = [port for port in missing_ports if port not in open_ports]
+    return closed_ports
 
 
 def execute_commands(commands):
@@ -124,15 +129,29 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
     suggestions = []
 
     # Проверка портов
-    missing_ports = check_ports()
-    if missing_ports:
-        findings.append(messages_db.get("ports_closed", {"title": "🔒 Закрытые порты", "message": "Необходимые порты закрыты.", "commands": []}))
+    closed_ports = check_ports()
+    if closed_ports:
+        findings.append(
+            messages_db.get(
+                "ports_closed",
+                {"title": "🔒 Закрытые порты", "message": "Необходимые порты закрыты.", "commands": []},
+            )
+        )
 
     # Проверка Gradio
     if not check_gradio_running():
         suggestions.append(messages_db.get("gradio_not_running", {"title": "🌐 Gradio не запущен", "message": "Нет описания", "commands": []}))
 
     return findings, suggestions
+
+
+def check_gradio_running():
+    """Проверяет, запущен ли Gradio на указанном порту."""
+    command = ["ss", "-tuln"]
+    result = run_command(command)
+    logger.debug(f"Результат команды проверки Gradio:\n{result}")
+
+    return any(f":{GRADIO_PORT}" in line for line in result.splitlines())
 
 
 def handle_findings(findings, paths):
