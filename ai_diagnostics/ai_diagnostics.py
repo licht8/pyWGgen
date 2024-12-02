@@ -84,9 +84,9 @@ def generate_test_report():
     result = run_command(command)
     debug_log(f"Ожидаемый путь к test_report: {TEST_REPORT_PATH}")
     if not TEST_REPORT_PATH.exists():
-        debug_log(f" ⚠️ Test Report не был создан! Результат команды: {result}")
+        debug_log(f"⚠️ Test Report не был создан! Результат команды: {result}")
     else:
-        debug_log(" ✅ Test Report успешно создан.")
+        debug_log(f"✅ Test Report успешно создан.")
 
 
 def parse_reports(debug_report_path, test_report_path, messages_db_path):
@@ -155,7 +155,7 @@ def main():
     generate_debug_report()
     generate_test_report()
 
-    animate_message(" 🎉  Завершаю анализ, пожалуйста подождите 🤖")
+    animate_message(" 🎉  Завершаю анализ, пожалуйста подождите 🤖 ")
     display_message_slowly(" 🎯  Вот что мы обнаружили:")
 
     paths = {
