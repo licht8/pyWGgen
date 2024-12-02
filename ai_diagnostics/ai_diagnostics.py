@@ -82,7 +82,7 @@ def display_message_slowly(message):
 def generate_debug_report():
     """Запускает дебаггер для создания debug_report."""
     print("")
-    animate_message(" 🤖  Генерация отчёта диагностики")
+    animate_message(f" 🤖  Генерация отчёта диагностики")
     command = [sys.executable, str(DEBUGGER_SCRIPT)]
     result = run_command(command)
     logger.debug(f"Ожидаемый путь к debug_report: {DEBUG_REPORT_PATH}")
@@ -95,7 +95,7 @@ def generate_debug_report():
 def generate_test_report():
     """Запускает тестирование проекта для создания test_report."""
     print("")
-    animate_message(" 🤖  Генерация тестового отчёта")
+    animate_message(f" 🤖  Генерация тестового отчёта")
     command = [sys.executable, str(TEST_REPORT_GENERATOR_SCRIPT)]
     result = run_command(command)
     logger.debug(f"Ожидаемый путь к test_report: {TEST_REPORT_PATH}")
@@ -159,7 +159,7 @@ def display_analysis_result(title, message, paths):
 
 def generate_summary_report():
     """Вызов генерации обобщенного отчета."""
-    print("\n 🤖 Создание обобщенного отчета...")
+    print(f"\n 🤖 Создание обобщенного отчета...")
     command = [sys.executable, str(SUMMARY_SCRIPT)]
     subprocess.run(command)
 
@@ -171,7 +171,7 @@ def main():
     generate_debug_report()
     generate_test_report()
 
-    animate_message(" 🎉  Завершаю анализ, пожалуйста подождите 🤖")
+    animate_message(f" 🎉  Завершаю анализ, пожалуйста подождите 🤖")
     display_message_slowly(f"\n 🎯  Вот что мы обнаружили:")
 
     paths = {
@@ -184,7 +184,7 @@ def main():
         for finding in findings:
             display_analysis_result(finding["title"], finding["message"], paths)
     else:
-        display_message_slowly(" ✅  Всё выглядит хорошо!\n 👍  Проблем не обнаружено.")
+        display_message_slowly(f" ✅  Всё выглядит хорошо!\n 👍  Проблем не обнаружено.")
     print("\n")
 
     # Генерация обобщенного отчета
