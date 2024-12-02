@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 4.4
+# Версия: 4.5
 # Обновлено: 2024-12-02
 # Исправлена обработка портов в выводе firewall-cmd.
 
@@ -93,8 +93,9 @@ def check_ports():
     open_ports = []
     for line in result.splitlines():
         if "ports:" in line:
-            ports_line = line.split("ports:")[1].strip()
-            open_ports = ports_line.split()
+            logger.debug(f"Обрабатываем строку портов: {line.strip()}")
+            ports_line = line.split("ports:")[1].strip()  # Извлекаем содержимое после 'ports:'
+            open_ports = [port.strip() for port in ports_line.split()]  # Разделяем и очищаем список портов
 
     logger.debug(f"Обнаруженные открытые порты: {open_ports}")
     logger.debug(f"Требуемые порты для проверки: {REQUIRED_PORTS}")
