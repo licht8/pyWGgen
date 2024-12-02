@@ -3,7 +3,7 @@
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
 # Версия: 4.2
 # Обновлено: 2024-12-02
-# Добавлена отладочная информация и улучшена логика проверки портов.
+# Добавлена проверка Gradio админки и отображение подсказки.
 
 import json
 import time
@@ -32,7 +32,6 @@ from settings import (
     PRINT_SPEED,
     LINE_DELAY,
     GRADIO_PORT,
-    WIREGUARD_PORT,
 )
 
 # Настраиваем logging
@@ -46,7 +45,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Порты для проверки
+# Проверяемые порты
+WIREGUARD_PORT = 51820
 REQUIRED_PORTS = [WIREGUARD_PORT, GRADIO_PORT]
 
 # Скрипты
@@ -84,15 +84,19 @@ def display_message_slowly(message):
         time.sleep(LINE_DELAY)
 
 
+def check_gradio_running():
+    """Проверяет, запущен ли Gradio на указанном порту."""
+    command = ["ss", "-tuln"]
+    result = run_command(command)
+    return any(f":{GRADIO_PORT}" in line for line in result.splitlines())
+
+
 def check_ports():
     """Проверяет состояние необходимых портов."""
-    logger.debug(f"Проверяемые порты: {REQUIRED_PORTS}")
-    command = ["firewall-cmd", "--list-ports"]
+    command = ["ss", "-tuln"]
     result = run_command(command)
-    logger.debug(f"Открытые порты (firewall-cmd --list-ports): {result}")
-    open_ports = {int(port.split("/")[0]) for port in result.split()}
-    missing_ports = [port for port in REQUIRED_PORTS if port not in open_ports]
-    logger.debug(f"Отсутствующие порты: {missing_ports}")
+    open_ports = {line.split(":")[-1].split()[0] for line in result.splitlines() if ":" in line}
+    missing_ports = [port for port in REQUIRED_PORTS if str(port) not in open_ports]
     return missing_ports
 
 
@@ -114,16 +118,21 @@ def parse_reports(debug_report_path, test_report_path, messages_db_path):
             messages_db = json.load(db_file)
     except FileNotFoundError:
         logger.error(f" ❌ Файл messages_db.json не найден: {messages_db_path}")
-        return []
+        return [], []
 
     findings = []
+    suggestions = []
 
     # Проверка портов
     missing_ports = check_ports()
     if missing_ports:
         findings.append(messages_db.get("ports_closed", {"title": "🔒 Закрытые порты", "message": "Необходимые порты закрыты.", "commands": []}))
 
-    return findings
+    # Проверка Gradio
+    if not check_gradio_running():
+        suggestions.append(messages_db.get("gradio_not_running", {"title": "🌐 Gradio не запущен", "message": "Нет описания", "commands": []}))
+
+    return findings, suggestions
 
 
 def handle_findings(findings, paths):
@@ -146,6 +155,16 @@ def handle_findings(findings, paths):
                 display_message_slowly(" 🔄  Перезапускаю диагностику...")
                 main()  # Повторный запуск диагностики
                 return  # Завершаем текущую итерацию
+
+
+def handle_suggestions(suggestions, paths):
+    """Отображает подсказки пользователю."""
+    for suggestion in suggestions:
+        title = suggestion["title"]
+        message = format_message(suggestion["message"], paths)
+
+        display_message_slowly(f"\n   {title}\n   {'=' * (len(title) + 2)}\n")
+        display_message_slowly(message)
 
 
 def format_message(message, paths):
@@ -173,14 +192,17 @@ def main():
         "TEST_REPORT_PATH": TEST_REPORT_PATH,
         "PROJECT_DIR": PROJECT_DIR,
     }
-    findings = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
+    findings, suggestions = parse_reports(DEBUG_REPORT_PATH, TEST_REPORT_PATH, MESSAGES_DB_PATH)
     if findings:
         handle_findings(findings, paths)
     else:
         display_message_slowly(" ✅  Всё выглядит хорошо!\n 👍  Проблем не обнаружено.")
-    print("\n")
 
-    # Генерация обобщенного отчета
+    if suggestions:
+        display_message_slowly("\n 📋 Дополнительные рекомендации:\n")
+        handle_suggestions(suggestions, paths)
+
+    print("\n")
     generate_summary_report()
 
 
