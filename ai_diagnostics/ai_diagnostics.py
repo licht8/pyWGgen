@@ -220,7 +220,7 @@ def handle_findings(findings):
         commands = finding.get("commands", [])
 
         # Отображение сообщения
-        display_message_slowly(f"\n   {title}\n   {'=' * (len(title) + 2)}\n")
+        # display_message_slowly(f"\n   {title}\n   {'=' * (len(title) + 2)}\n")
         display_message_slowly(message)
 
         # Если есть команды для автоматического исправления
