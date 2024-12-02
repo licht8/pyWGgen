@@ -51,12 +51,12 @@ def check_firewall():
 
 
 def check_wireguard_status():
-    """Проверяет состояние WireGuard."""
-    command_status = ["systemctl", "is-active", "wg-quick@wg0.service"]
-    command_peers = ["wg", "show"]
-    status = run_command(command_status)
-    wg_info = run_command(command_peers) if status == "active" else "WireGuard не активен."
-    return status, wg_info
+    """Проверяет, активен ли сервис WireGuard."""
+    command = ["sudo", "systemctl", "is-active", "wg-quick@wg0"]
+    result = run_command(command)
+    logger.debug(f"Результат команды проверки статуса WireGuard: {result}")
+    return result == "active"
+
 
 
 def count_users():
