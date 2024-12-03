@@ -58,7 +58,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Проверяемые порты
-WIREGUARD_PORT = 51820
+WIREGUARD_PORT = WIREGUARD_PORT
 REQUIRED_PORTS = [f"{WIREGUARD_PORT}/udp", f"{GRADIO_PORT}/tcp"]
 
 # Скрипты
