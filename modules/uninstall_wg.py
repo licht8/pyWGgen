@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# wg_qr_generator/modules/uninstall.py
+# wg_qr_generator/modules/uninstall_wg.py
 # ===========================================
 # Скрипт для удаления WireGuard
 # ===========================================
