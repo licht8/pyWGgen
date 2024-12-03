@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_diagnostics.py
 # Скрипт для диагностики и анализа состояния проекта wg_qr_generator.
-# Версия: 5.2
-# Обновлено: 2024-12-02 21:23
+# Версия: 5.3
+# Обновлено: 2024-12-02 22:00
 
 import json
 import time
@@ -18,8 +18,7 @@ DIAGNOSTICS_DIR = PROJECT_ROOT / "ai_diagnostics"
 SETTINGS_PATH = PROJECT_ROOT / "settings.py"
 
 # Добавляем пути в sys.path
-sys.path.append(str(PROJECT_ROOT))  # Добавляем путь к корню проекта
-sys.path.append(str(MODULES_DIR))  # Добавляем путь к модулям
+sys.path.extend([str(PROJECT_ROOT), str(MODULES_DIR)])
 
 # Проверяем наличие файла settings.py
 if not SETTINGS_PATH.exists():
@@ -46,10 +45,10 @@ from utils import get_wireguard_subnet
 
 # Настраиваем logging
 LOG_DIR = Path(LOG_FILE_PATH).parent
-LOG_DIR.mkdir(parents=True, exist_ok=True)  # Убедимся, что директория для логов существует
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(
-    level=logging.getLevelName(LOG_LEVEL),  # Приводим LOG_LEVEL из settings в подходящий формат
+    level=logging.getLevelName(LOG_LEVEL),
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         logging.FileHandler(LOG_FILE_PATH, encoding="utf-8"),
@@ -72,12 +71,10 @@ def execute_commands(commands):
     for command in commands:
         logger.info(f"Выполняю команду: {command}")
         try:
-            # Разбиваем команду на список аргументов для subprocess
             result = subprocess.run(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
             results.append(f"{command}:\n{result.stdout.strip()}")
         except subprocess.CalledProcessError as e:
             results.append(f"{command}:\nОшибка: {e.stderr.strip()}")
-        time.sleep(1)  # Небольшая задержка между командами
     return "\n".join(results)
 
 
@@ -87,31 +84,24 @@ def run_command(command):
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        logger.error(f"Ошибка при выполнении команды '{' '.join(command)}': {e.stderr.strip()}")
+        logger.error(f"Ошибка при выполнении команды {' '.join(command)}: {e.stderr.strip()}")
         return None
 
 
 def check_ports():
-    """Проверяет состояние необходимых портов с выводом отладки."""
+    """Проверяет состояние необходимых портов."""
     command = ["sudo", "firewall-cmd", "--list-all"]
     result = run_command(command)
     if not result:
         return []
 
-    logger.debug(f"Результат команды проверки фаервола:\n{result}")
-
+    logger.debug(f"Результат проверки портов:\n{result}")
     open_ports = []
     for line in result.splitlines():
         if "ports:" in line:
-            try:
-                ports_line = line.split("ports:")[1].strip()
-                open_ports.extend(port.strip() for port in ports_line.split())
-            except IndexError:
-                logger.warning("Не удалось обработать строку портов.")
-                continue
-
-    closed_ports = [port for port in REQUIRED_PORTS if port not in open_ports]
-    return closed_ports
+            ports_line = line.split("ports:")[1].strip()
+            open_ports.extend(ports_line.split())
+    return [port for port in REQUIRED_PORTS if port not in open_ports]
 
 
 def check_masquerade_rules():
@@ -119,53 +109,30 @@ def check_masquerade_rules():
     command = ["sudo", "firewall-cmd", "--list-all"]
     result = run_command(command)
     if not result:
-        return ["Ошибка: не удалось выполнить команду для проверки маскарадинга."]
+        return [{"type": "Ошибка", "rule": "Не удалось проверить маскарадинг"}]
 
-    logger.debug(f"Результат команды проверки маскарадинга:\n{result}")
-
+    logger.debug(f"Результат проверки маскарадинга:\n{result}")
     try:
-        # Получаем подсеть из конфигурации WireGuard
         wireguard_subnet = get_wireguard_subnet()
-        ipv4_network = wireguard_subnet.split("/")[0].rsplit(".", 1)[0] + ".0/24"  # Преобразуем в "10.66.66.0/24"
-        ipv6_rule = 'rule family="ipv6" source address="fd42:42:42::0/24" masquerade'
         required_rules = [
-            {"type": "IPv4", "rule": ipv4_network},
+            {"type": "IPv4", "rule": f"{wireguard_subnet.split('/')[0].rsplit('.', 1)[0]}.0/24"},
             {"type": "IPv6", "rule": "fd42:42:42::0/24"}
         ]
     except Exception as e:
         logger.error(f"Ошибка при извлечении подсети WireGuard: {e}")
-        return ["Ошибка: не удалось определить необходимые правила маскарадинга."]
+        return [{"type": "Ошибка", "rule": "Не удалось определить правила"}]
 
-    # Проверяем наличие правил
     missing_rules = []
     for rule in required_rules:
         rule_str = f'rule family="{rule["type"].lower()}" source address="{rule["rule"]}" masquerade'
         if rule_str not in result:
             missing_rules.append(rule)
 
-    logger.debug(f"Отсутствующие правила маскарадинга: {missing_rules}")
     return missing_rules
 
 
-def check_gradio_status():
-    """Проверяет, запущен ли Gradio на порту."""
-    command = ["ss", "-tuln"]
-    result = run_command(command)
-    if not result:
-        return False
-
-    logger.debug(f"Результат команды проверки Gradio:\n{result}")
-
-    for line in result.splitlines():
-        if f":{GRADIO_PORT} " in line and "LISTEN" in line:
-            return True
-    return False
-
-
 def parse_reports(messages_db_path):
-    """
-    Парсер для анализа отчетов. Сообщения извлекаются из messages_db.json.
-    """
+    """Парсер для анализа отчетов."""
     try:
         with open(messages_db_path, "r", encoding="utf-8") as db_file:
             messages_db = json.load(db_file)
@@ -173,8 +140,7 @@ def parse_reports(messages_db_path):
         logger.error(f" ❌ Файл messages_db.json не найден: {messages_db_path}")
         return [], []
 
-    findings = []
-    suggestions = []
+    findings, suggestions = [], []
 
     # Проверка закрытых портов
     closed_ports = check_ports()
@@ -191,154 +157,20 @@ def parse_reports(messages_db_path):
     # Проверка маскарадинга
     missing_masquerade_rules = check_masquerade_rules()
     if missing_masquerade_rules:
-        # Форматируем список правил
-        max_key_length = max(len(rule['type']) for rule in missing_masquerade_rules if isinstance(rule, dict))
+        max_key_length = max(len(rule["type"]) for rule in missing_masquerade_rules if isinstance(rule, dict))
         formatted_rules = "\n".join(
-            f"        {rule['type']:<{max_key_length}}: {rule['rule']}" if isinstance(rule, dict) else f"        {rule}"
-            for rule in missing_masquerade_rules
+            f"        {rule['type']:<{max_key_length}}: {rule['rule']}" for rule in missing_masquerade_rules
         )
         report = messages_db.get("masquerade_issue", {})
         if report:
-            report["message"] = report["message"].format(
-                MISSING_RULES=formatted_rules
-            )
-            findings.append(report)
-
-    return findings, suggestions  # Отступ на 4 пробела
-
-    # Проверка маскарадинга
-    missing_masquerade_rules = check_masquerade_rules()
-    if missing_masquerade_rules:
-        # Форматируем список правил
-        max_key_length = max(len(rule['type']) for rule in missing_masquerade_rules if isinstance(rule, dict))
-        formatted_rules = "\n".join(
-            f"        {rule['type']:<{max_key_length}}: {rule['rule']}" if isinstance(rule, dict) else f"        {rule}"
-            for rule in missing_masquerade_rules
-        )
-        report = messages_db.get("masquerade_issue", {})
-        if report:
-            report["message"] = report["message"].format(
-                MISSING_RULES=formatted_rules
-            )
-            findings.append(report)
-
-    # Возврат результатов анализа
-    return findings, suggestions
-
-    # Проверка маскарадинга
-    missing_masquerade_rules = check_masquerade_rules()
-    if missing_masquerade_rules:
-        # Форматируем список правил
-        max_key_length = max(len(rule['type']) for rule in missing_masquerade_rules if isinstance(rule, dict))
-        formatted_rules = "\n".join(
-            f"        {rule['type']:<{max_key_length}}: {rule['rule']}" if isinstance(rule, dict) else f"        {rule}"
-            for rule in missing_masquerade_rules
-        )
-        report = messages_db.get("masquerade_issue", {})
-        if report:
-            report["message"] = report["message"].format(
-                MISSING_RULES=formatted_rules
-            )
+            report["message"] = report["message"].format(MISSING_RULES=formatted_rules)
             findings.append(report)
 
     return findings, suggestions
-
-    # Проверка маскарадинга
-missing_masquerade_rules = check_masquerade_rules()
-if missing_masquerade_rules:
-    # Преобразуем правила в читаемый список с выравниванием
-    max_key_length = max(len(rule['type']) for rule in missing_masquerade_rules if isinstance(rule, dict))
-    formatted_rules = "\n".join(
-        f"        {rule['type']:<{max_key_length}}: {rule['rule']}" if isinstance(rule, dict) else f"        {rule}"
-        for rule in missing_masquerade_rules
-    )
-    report = messages_db.get("masquerade_issue", {})
-    if report:
-        report["message"] = report["message"].format(
-            MISSING_RULES=formatted_rules
-        )
-        findings.append(report)
-
-
-    # Проверка состояния Gradio
-    if not check_gradio_status():
-        report = messages_db.get("gradio_not_running", {})
-        if report:
-            report["message"] = report["message"].format(
-                PROJECT_DIR=PROJECT_DIR,
-                GRADIO_PORT=GRADIO_PORT
-            )
-            suggestions.append(report)
-
-    return findings, suggestions
-
-    # Проверка маскарадинга
-    missing_masquerade_rules = check_masquerade_rules()
-    if missing_masquerade_rules:
-        # Преобразуем элементы в строки, если это словари
-        formatted_rules = [
-            rule if isinstance(rule, str) else json.dumps(rule, ensure_ascii=False)
-            for rule in missing_masquerade_rules
-        ]
-        report = messages_db.get("masquerade_issue", {})
-        if report:
-            report["message"] = report["message"].format(
-                MISSING_RULES="\n".join(formatted_rules)  # Используем перенос строки для наглядности
-            )
-            findings.append(report)
-
-    # Проверка состояния Gradio
-    if not check_gradio_status():
-        report = messages_db.get("gradio_not_running", {})
-        if report:
-            report["message"] = report["message"].format(
-                PROJECT_DIR=PROJECT_DIR,
-                GRADIO_PORT=GRADIO_PORT
-            )
-            suggestions.append(report)
-
-    return findings, suggestions
-
-    # Проверка маскарадинга
-    missing_masquerade_rules = check_masquerade_rules()
-    if missing_masquerade_rules:
-        report = messages_db.get("masquerade_issue", {})
-        if report:
-            report["message"] = report["message"].format(
-                PROJECT_DIR=PROJECT_DIR,
-                MISSING_RULES=", ".join(missing_masquerade_rules),
-                GRADIO_PORT=GRADIO_PORT
-            )
-            findings.append(report)
-
-    # Проверка состояния Gradio
-    if not check_gradio_status():
-        report = messages_db.get("gradio_not_running", {})
-        if report:
-            report["message"] = report["message"].format(
-                PROJECT_DIR=PROJECT_DIR,
-                GRADIO_PORT=GRADIO_PORT
-            )
-            suggestions.append(report)
-
-    return findings, suggestions
-
-
-    # Проверка статуса Gradio
-    if not check_gradio_status():
-        report = messages_db.get("gradio_not_running", {})
-        if report:
-            report["message"] = report["message"].format(
-                PROJECT_DIR=PROJECT_DIR
-            )
-            suggestions.append(report)
-
-    return findings, suggestions
-
 
 
 def display_message_slowly(message, end="\n"):
-    """Имитация печати ИИ с поддержкой параметра end."""
+    """Построчный вывод сообщения."""
     for line in message.split("\n"):
         print("   ", end="")
         for char in line:
@@ -351,32 +183,19 @@ def display_message_slowly(message, end="\n"):
 def handle_findings(findings):
     """Обрабатывает обнаруженные проблемы."""
     for finding in findings:
-        title = finding["title"]
-        message = finding["message"]
+        display_message_slowly(f"\n{finding['title']}\n{'=' * len(finding['title'])}\n{finding['message']}")
         commands = finding.get("commands", [])
-
-        # Отображение сообщения
-        # display_message_slowly(f"\n   {title}\n   {'=' * (len(title) + 2)}\n")
-        display_message_slowly(message)
-
-        # Если есть команды для автоматического исправления
         if commands:
-            display_message_slowly(" 🛠  Исправить автоматически? (y/n): ", end="")  # Оставляем ввод на той же строке
-            user_input = input().strip().lower()
-            if user_input in ["y", "д"]:  # Поддержка английского "y" и русского "д"
+            response = input(" 🛠  Исправить автоматически? (y/n): ").strip().lower()
+            if response in ["y", "д"]:
                 display_message_slowly(" ⚙️  Исправляю...")
-                results = execute_commands(commands)
-                display_message_slowly(f"\n 📝  Результат выполнения команд:\n     {results}")
-            elif user_input in ["n", "н"]:  # Поддержка английского "n" и русского "н"
-                display_message_slowly(" 🚫 Пропускаю исправление.")
-            else:
-                display_message_slowly(" ⚠️ Неверный ввод. Пропускаю исправление.")
-
+                result = execute_commands(commands)
+                display_message_slowly(f" 📝 Результат:\n{result}")
 
 
 def main():
     """Основной запуск программы."""
-    logger.info("Начало выполнения диагностики.")
+    logger.info("Начало диагностики")
     display_message_slowly("\n 🎯  Вот что мы обнаружили:")
 
     findings, suggestions = parse_reports(MESSAGES_DB_PATH)
@@ -389,9 +208,8 @@ def main():
             display_message_slowly(f"\n {suggestion['title']}\n {suggestion['message']}")
 
     if not findings and not suggestions:
-        display_message_slowly(" ✅  Всё выглядит хорошо!\n 👍  Проблем не обнаружено.")
+        display_message_slowly(" ✅  Всё хорошо!\n 👍  Проблем не обнаружено.")
 
-    print("\n")
     subprocess.run([sys.executable, str(SUMMARY_SCRIPT)])
 
 
