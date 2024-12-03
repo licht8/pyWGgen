@@ -10,6 +10,7 @@ import subprocess
 import platform
 import logging
 from pathlib import Path
+from settings import PRINT_SPEED, LINE_DELAY
 
 # Import project settings
 try:
