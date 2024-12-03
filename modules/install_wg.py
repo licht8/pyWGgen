@@ -11,7 +11,7 @@ import time
 from modules.firewall_utils import get_external_ip
 from ai_diagnostics.ai_diagnostics import display_message_slowly
 from settings import PRINT_SPEED, LINE_DELAY
-from modules.install_wg import install_wg # Импортируем функцию install_wg
+
 
 def display_message(message, print_speed=None):
     """Отображает сообщение с имитацией печати."""
