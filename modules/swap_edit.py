@@ -18,14 +18,12 @@ swap_edit.py - Создание и настройка swap с эффектами
 """
 
 import os
-import sys
+import time
 import subprocess
-import shutil
 import traceback
+from pathlib import Path
 import shutil  # Импортируем shutil
 import base64
-
-from pathlib import Path
 from settings import (
     PRINT_SPEED,
     WG_CONFIG_DIR,
@@ -35,7 +33,9 @@ from settings import (
     LOG_LEVEL,
     DEFAULT_TRIAL_DAYS,
 )
+from modules.firewall_utils import get_external_ip
 from ai_diagnostics.ai_diagnostics import display_message_slowly
+
 
 def run_command(command, check=True):
     """Выполнить команду в терминале и вернуть вывод."""
