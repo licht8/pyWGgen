@@ -189,7 +189,7 @@ def handle_findings(findings):
         # Проверяем наличие команд и предлагаем исправить
         commands = finding.get("commands", [])
         if commands:
-            response = input(" 🛠  Исправить автоматически? (y/n): ").strip().lower()
+            response = input(f"    🛠  Исправить автоматически? (y/n): ").strip().lower()
             if response in ["y", "д"]:
                 display_message_slowly(" ⚙️  Исправляю...")
                 result = execute_commands(commands)
