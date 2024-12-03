@@ -193,7 +193,7 @@ def handle_findings(findings):
             if response in ["y", "д"]:
                 display_message_slowly(f" ⚙️  Исправляю...")
                 result = execute_commands(commands)
-                display_message_slowly(f" 📝 Результат:\n       {result}")
+                display_message_slowly(f" 📝 Результат:\n    {result}")
             elif response in ["n", "н"]:
                 display_message_slowly(f" 🚫 Пропускаю исправление.\n")
             else:
