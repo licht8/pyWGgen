@@ -19,7 +19,7 @@
 # - Все действия логируются в файл, указанный в `LOG_FILE_PATH` из `settings.py`
 # ===========================================
 # Автор: [Ваше имя или название команды]
-# Версия: 1.2
+# Версия: 1.3
 # Дата: 2024-12-03
 # ===========================================
 
@@ -105,17 +105,18 @@ def remove_firewall_rules():
     """Remove firewall rules associated with WireGuard."""
     try:
         logger.info("Removing WireGuard firewall rules...")
-        subprocess.run(["firewall-cmd", "--zone=public", "--remove-interface=wg0"], check=True)
-        subprocess.run(["firewall-cmd", "--remove-port=51820/udp"], check=True)
-        print("✅ Firewall rules removed.")
-        logger.info("Firewall rules removed successfully.")
-    except subprocess.CalledProcessError as e:
-        if "UNKNOWN_INTERFACE" in str(e):
-            logger.warning("Firewall rules already removed or interface does not exist.")
-            print("⚠️ Firewall rules already removed or interface does not exist.")
+        if subprocess.run(["firewall-cmd", "--zone=public", "--remove-interface=wg0"], check=False).returncode != 0:
+            print("⚠️ Firewall interface 'wg0' not found or already removed.")
+            logger.warning("Firewall interface 'wg0' not found or already removed.")
+        if subprocess.run(["firewall-cmd", "--remove-port=51820/udp"], check=False).returncode != 0:
+            print("⚠️ Firewall port 51820/udp not found or already removed.")
+            logger.warning("Firewall port 51820/udp not found or already removed.")
         else:
-            logger.error("Failed to remove firewall rules: %s", e)
-            print("❌ Failed to remove firewall rules. Check logs for details.")
+            print("✅ Firewall rules removed.")
+            logger.info("Firewall rules removed successfully.")
+    except Exception as e:
+        logger.error("Failed to remove firewall rules: %s", e)
+        print("❌ Failed to remove firewall rules. Check logs for details.")
 
 def uninstall_wireguard():
     """Uninstall WireGuard."""
@@ -123,10 +124,10 @@ def uninstall_wireguard():
     try:
         logger.info(f"Uninstalling WireGuard using {package_manager}...")
         if package_manager == "apt":
-            subprocess.run(["apt", "remove", "-y", "wireguard"], check=True)
-            subprocess.run(["apt", "autoremove", "-y"], check=True)
+            subprocess.run(["apt", "remove", "-y", "wireguard"], check=False)
+            subprocess.run(["apt", "autoremove", "-y"], check=False)
         elif package_manager == "dnf":
-            subprocess.run(["dnf", "remove", "-y", "wireguard-tools"], check=True)
+            subprocess.run(["dnf", "remove", "-y", "wireguard-tools"], check=False)
         print("✅ WireGuard uninstalled successfully.")
         logger.info("WireGuard uninstalled successfully.")
     except subprocess.CalledProcessError as e:
