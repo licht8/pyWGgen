@@ -24,7 +24,7 @@ from modules.update_utils import update_project
 from modules.sync import sync_users_with_wireguard
 from modules.manage_users_menu import manage_users_menu
 from modules.debugger import run_diagnostics
-from nodules.ai_diagnostics import display_message_slowly
+from ai_diagnostics.ai_diagnostics import display_message_slowly
 
 
 # Проверяем и создаем директории и файлы
