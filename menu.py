@@ -22,6 +22,11 @@ from modules.install_wg import install_wireguard  # Импортируем фу�
 from modules.wireguard_utils import check_wireguard_installed
 from ai_diagnostics.ai_diagnostics import display_message_slowly
 
+from modules.swap_edit import swap_edit
+
+# Запуск настройки swap на 2048 MB
+#swap_edit(2048)
+
 
 # Установить путь к корню проекта
 project_root = os.path.dirname(os.path.abspath(__file__))
