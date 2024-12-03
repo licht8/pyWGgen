@@ -4,6 +4,11 @@
 # Установщик WireGuard с корректным конфигом, ключами и QR-кодами
 # ===========================================
 
+# Установить путь к корню проекта
+project_root = os.path.dirname(os.path.abspath(__file__))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 import os
 import time
 import subprocess
