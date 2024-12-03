@@ -4,11 +4,11 @@
 # Скрипт для удаления WireGuard
 # ===========================================
 # Назначение:
+# - Проверяет, установлен ли WireGuard
 # - Останавливает службу WireGuard
 # - Удаляет конфигурационные файлы и директории
 # - Удаляет правила фаервола, связанные с WireGuard
-# - Удаляет WireGuard из системы
-# - Сохраняет резервные копии конфигураций перед удалением (по запросу)
+# - Очищает остатки конфигураций, если WireGuard уже удалён
 #
 # Использование:
 # - Запустите скрипт из корня проекта wg_qr_generator:
@@ -19,13 +19,13 @@
 # - Все действия логируются в файл, указанный в `LOG_FILE_PATH` из `settings.py`
 # ===========================================
 # Автор: [Ваше имя или название команды]
-# Версия: 1.3
+# Версия: 1.4
 # Дата: 2024-12-03
 # ===========================================
 
 import os
-import subprocess
 import shutil
+import subprocess
 import platform
 import logging
 from pathlib import Path
@@ -51,6 +51,10 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+def is_wireguard_installed():
+    """Check if WireGuard is installed."""
+    return shutil.which("wg") is not None
 
 def detect_package_manager():
     """Detect the package manager based on the operating system."""
@@ -90,12 +94,18 @@ def remove_config_files():
         if SERVER_CONFIG_FILE.exists():
             SERVER_CONFIG_FILE.unlink()
             logger.info(f"Removed server config file: {SERVER_CONFIG_FILE}")
+        else:
+            print("⚠️ Server config file not found.")
         if PARAMS_FILE.exists():
             PARAMS_FILE.unlink()
             logger.info(f"Removed params file: {PARAMS_FILE}")
+        else:
+            print("⚠️ Params file not found.")
         if WG_CONFIG_DIR.exists():
             shutil.rmtree(WG_CONFIG_DIR)
             logger.info(f"Removed WireGuard user config directory: {WG_CONFIG_DIR}")
+        else:
+            print("⚠️ WireGuard config directory not found.")
         print("✅ Configuration files removed.")
     except Exception as e:
         logger.error("Failed to remove configuration files: %s", e)
@@ -134,35 +144,24 @@ def uninstall_wireguard():
         logger.error(f"Failed to uninstall WireGuard using {package_manager}: %s", e)
         print("❌ Failed to uninstall WireGuard. Check logs for details.")
 
-def confirm_action():
-    """Ask for user confirmation before proceeding."""
-    while True:
-        choice = input("Are you sure you want to uninstall WireGuard? (yes/no): ").strip().lower()
-        if choice in ["yes", "no"]:
-            return choice == "yes"
-        print("Please answer 'yes' or 'no'.")
-
-def save_backup():
-    """Save backup of configurations."""
-    backup_dir = Path("wireguard_backup")
-    if not backup_dir.exists():
-        backup_dir.mkdir()
-    try:
-        if SERVER_CONFIG_FILE.exists():
-            shutil.copy(SERVER_CONFIG_FILE, backup_dir / "wg0.conf")
-        if PARAMS_FILE.exists():
-            shutil.copy(PARAMS_FILE, backup_dir / "params")
-        if WG_CONFIG_DIR.exists():
-            shutil.copytree(WG_CONFIG_DIR, backup_dir / "wg_configs")
-        print(f"✅ Backup saved in {backup_dir}")
-        logger.info(f"Backup saved successfully in {backup_dir}")
-    except Exception as e:
-        logger.error("Failed to save backup: %s", e)
-        print("❌ Failed to save backup. Check logs for details.")
+def clean_leftovers():
+    """Clean up leftover files if WireGuard is not installed."""
+    print("🔍 Checking for leftover files...")
+    remove_config_files()
+    remove_firewall_rules()
+    print("🧹 Cleanup complete.")
 
 def main():
     """Main function to uninstall WireGuard."""
     print("=== 🗑️  Uninstall WireGuard ===")
+    if not is_wireguard_installed():
+        print("⚠️ WireGuard is not installed. Would you like to clean up leftover files? (yes/no): ", end="")
+        choice = input().strip().lower()
+        if choice == "yes":
+            clean_leftovers()
+        else:
+            print("❌ Cleanup cancelled.")
+        return
     if not confirm_action():
         print("❌ Uninstallation cancelled.")
         return
