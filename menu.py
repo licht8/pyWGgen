@@ -60,7 +60,7 @@ initialize_project()
 
 def show_main_menu():
     """Отображение основного меню."""
-    PRINT_SPEED = 0.01
+    PRINT_SPEED = 0.005
     while True:
         wireguard_installed = check_wireguard_installed()
         display_message_slowly(f"\n🛡️  ======  Menu wg_qr_generator  ======= 🛡️\n", indent=False)  # Без отступов
