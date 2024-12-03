@@ -1,58 +1,78 @@
 #!/usr/bin/env python3
 # gradio_admin/tabs/command_line_tab.py
-# Вкладка для работы с командной строкой
+# Вкладка для эмуляции командной строки и запуска проекта
 
 import gradio as gr
 import subprocess
 
-def command_line_tab():
+
+def run_command(command, current_history):
     """
-    Вкладка для эмуляции командной строки.
+    Выполняет команду в терминале и возвращает результат.
+    
+    :param command: Команда для выполнения.
+    :param current_history: История команд.
+    :return: Обновленная история команд.
     """
-    command_input = gr.Textbox(label="Введите команду", placeholder="Например: ls или dir")
+    try:
+        result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        output = result.stdout.strip() if result.returncode == 0 else result.stderr.strip()
+        return f"{current_history}\n$ {command}\n{output}"
+    except Exception as e:
+        return f"{current_history}\n$ {command}\nОшибка: {str(e)}"
+
+
+def run_project():
+    """
+    Запускает проект через gradio_cli.py.
+    """
+    try:
+        result = subprocess.run(
+            ["python3", "gradio_admin/gradio_cli.py"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
+        output = result.stdout.strip() or result.stderr.strip()
+        return f"$ python3 gradio_admin/gradio_cli.py\n{output}"
+    except Exception as e:
+        return f"Ошибка запуска проекта: {str(e)}"
+
+
+def create_command_line_tab():
+    """
+    Вкладка для эмуляции командной строки и запуска проекта.
+    """
+    with gr.Row():
+        gr.Markdown("### 💻 Эмуляция командной строки")
+    
+    # Поле для истории команд
+    console_output = gr.Textbox(label="Консоль", value="", lines=15, interactive=False)
+    
+    # Поле ввода команды
+    command_input = gr.Textbox(label="Введите команду", placeholder="Введите команду для выполнения...")
+    
+    # Кнопка для выполнения команды
     execute_button = gr.Button("Выполнить")
-    output_console = gr.Textbox(label="Вывод консоли", interactive=False, lines=20)
-    clear_button = gr.Button("Очистить консоль")
-    console_history = []  # Локальная переменная для хранения истории
-
-    def run_command(command):
+    
+    # Кнопка для запуска проекта
+    run_project_button = gr.Button("Запустить проект")
+    
+    # Логика обработки команды
+    def handle_command(command, history):
         """
-        Выполняет команду в терминале и возвращает результат.
+        Обрабатывает ввод команды и обновляет историю.
         """
-        nonlocal console_history  # Указываем, что работаем с локальной переменной
-        try:
-            result = subprocess.run(
-                command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-            )
-            stdout = result.stdout.strip()
-            stderr = result.stderr.strip()
-            if stdout:
-                console_history.append(f"$ {command}\n{stdout}")
-            if stderr:
-                console_history.append(f"$ {command}\nОшибка: {stderr}")
-        except Exception as e:
-            console_history.append(f"Ошибка выполнения команды: {e}")
-        return "\n".join(console_history)
-
-    def clear_console():
+        return run_command(command, history)
+    
+    # Логика запуска проекта
+    def handle_run_project(history):
         """
-        Очищает историю консоли.
+        Обрабатывает запуск проекта через gradio_cli.py.
         """
-        nonlocal console_history
-        console_history = []
-        return ""
+        return f"{history}\n{run_project()}"
+    
+    # Связь кнопок с действиями
+    execute_button.click(handle_command, inputs=[command_input, console_output], outputs=console_output)
+    run_project_button.click(handle_run_project, inputs=[console_output], outputs=console_output)
 
-    # Привязка функций к элементам интерфейса
-    execute_button.click(
-        run_command,
-        inputs=[command_input],
-        outputs=[output_console]
-    )
-
-    clear_button.click(
-        clear_console,
-        inputs=[],
-        outputs=[output_console]
-    )
-
-    return [command_input, execute_button, output_console, clear_button]
+    # Возвращаем элементы интерфейса
+    return [console_output, command_input, execute_button, run_project_button]
