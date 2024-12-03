@@ -19,13 +19,14 @@
 # - Все действия логируются в файл, указанный в `LOG_FILE_PATH` из `settings.py`
 # ===========================================
 # Автор: [Ваше имя или название команды]
-# Версия: 1.0
+# Версия: 1.1
 # Дата: 2024-12-03
 # ===========================================
 
 import os
 import subprocess
 import shutil
+import platform
 import logging
 from pathlib import Path
 
@@ -50,6 +51,20 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+def detect_package_manager():
+    """Detect the package manager based on the operating system."""
+    distro = platform.system()
+    if distro == "Linux":
+        with open("/etc/os-release", "r") as f:
+            os_release = f.read()
+            if "Ubuntu" in os_release:
+                return "apt"
+            elif "CentOS" in os_release or "Stream" in os_release:
+                return "dnf"
+    print("❌ Unsupported OS or distribution. Exiting.")
+    logger.error("Unsupported OS or distribution.")
+    exit(1)
 
 def stop_wireguard():
     """Stop WireGuard service."""
@@ -94,14 +109,18 @@ def remove_firewall_rules():
 
 def uninstall_wireguard():
     """Uninstall WireGuard."""
+    package_manager = detect_package_manager()
     try:
-        logger.info("Uninstalling WireGuard...")
-        subprocess.run(["apt", "remove", "-y", "wireguard"], check=True)
-        subprocess.run(["apt", "autoremove", "-y"], check=True)
+        logger.info(f"Uninstalling WireGuard using {package_manager}...")
+        if package_manager == "apt":
+            subprocess.run(["apt", "remove", "-y", "wireguard"], check=True)
+            subprocess.run(["apt", "autoremove", "-y"], check=True)
+        elif package_manager == "dnf":
+            subprocess.run(["dnf", "remove", "-y", "wireguard-tools"], check=True)
         print("✅ WireGuard uninstalled successfully.")
         logger.info("WireGuard uninstalled successfully.")
     except subprocess.CalledProcessError as e:
-        logger.error("Failed to uninstall WireGuard: %s", e)
+        logger.error(f"Failed to uninstall WireGuard using {package_manager}: %s", e)
         print("❌ Failed to uninstall WireGuard. Check logs for details.")
 
 def confirm_action():
