@@ -3,20 +3,6 @@
 # ===========================================
 # Скрипт для установки и настройки WireGuard
 # ===========================================
-# Назначение:
-# - Установка WireGuard
-# - Настройка сервера WireGuard
-# - Создание первого пользователя через main.py
-# - Настройка фаервола
-#
-# Использование:
-# - Запустите скрипт из корня проекта wg_qr_generator:
-#   $ python3 install.py
-#
-# Примечания:
-# - Скрипт использует настройки из `settings.py`.
-# - Все действия логируются в файл, указанный в `LOG_FILE_PATH`.
-# ===========================================
 
 import os
 import shutil
@@ -48,10 +34,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def display_message_with_spacing(message, print_speed=None):
+def display_message_with_spacing(message, print_speed=None, end="\n"):
     """Печатает сообщение с отступами от левой границы и между блоками."""
     print()  # Отступ перед блоком
-    display_message_slowly(message, print_speed)
+    display_message_slowly(message, print_speed, end=end)
     print()  # Отступ после блока
 
 def detect_package_manager():
