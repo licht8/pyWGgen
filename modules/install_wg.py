@@ -40,10 +40,24 @@ def display_message(message, print_speed=None):
 
 
 def generate_keypair():
-    """Генерирует приватный и публичный ключи."""
-    private_key = subprocess.check_output(["wg", "genkey"]).decode().strip()
-    public_key = subprocess.check_output(["wg", "pubkey"], input=private_key.encode()).decode().strip()
-    return private_key, public_key
+    """Генерирует приватный и публичный ключи, с проверкой наличия команды wg."""
+    wg_path = shutil.which("wg")  # Проверяем путь к команде wg
+    if not wg_path:
+        error_message = "Команда 'wg' не найдена. Убедитесь, что WireGuard установлен."
+        display_message(f"❌ {error_message}", print_speed=PRINT_SPEED)
+        log_message(error_message, level="ERROR")
+        raise FileNotFoundError("Команда 'wg' не найдена. Установите WireGuard и повторите.")
+    
+    try:
+        private_key = subprocess.check_output([wg_path, "genkey"]).decode().strip()
+        public_key = subprocess.check_output([wg_path, "pubkey"], input=private_key.encode()).decode().strip()
+        return private_key, public_key
+    except subprocess.SubprocessError as e:
+        error_message = f"Ошибка при генерации ключей с помощью 'wg': {e}"
+        display_message(f"❌ {error_message}", print_speed=PRINT_SPEED)
+        log_message(error_message, level="ERROR")
+        raise
+
 
 
 def create_directory(path: Path):
