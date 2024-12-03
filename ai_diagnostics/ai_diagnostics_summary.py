@@ -161,7 +161,7 @@ def generate_summary():
         with open(SUMMARY_REPORT_PATH, "w", encoding="utf-8") as file:
             file.write(formatted_summary)
         logger.info(f"Обобщенный отчет сохранен: {SUMMARY_REPORT_PATH}")
-        print(f" ✅ Обобщенный отчет сохранен:\n 📂 {SUMMARY_REPORT_PATH}\n")
+        print(f"\n ✅ Обобщенный отчет сохранен:\n 📂 {SUMMARY_REPORT_PATH}")
     except IOError as e:
         logger.error(f"Ошибка записи обобщенного отчета: {e}\n")
         print(f" ❌ Ошибка сохранения отчета: {e}\n")
