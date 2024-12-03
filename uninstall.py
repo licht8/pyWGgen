@@ -52,6 +52,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+def confirm_action(prompt="Are you sure? (yes/no): "):
+    """Запрашивает у пользователя подтверждение действия."""
+    while True:
+        choice = input(prompt).strip().lower()
+        if choice in {"yes", "no"}:
+            return choice == "yes"
+        print("⚠️  Некорректный ввод. Введите 'yes' или 'no'.")
+
 def is_wireguard_installed():
     """Check if WireGuard is installed."""
     return shutil.which("wg") is not None
