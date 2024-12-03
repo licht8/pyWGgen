@@ -195,9 +195,9 @@ def handle_findings(findings):
                 result = execute_commands(commands)
                 display_message_slowly(f" 📝 Результат:\n       {result}")
             elif response in ["n", "н"]:
-                display_message_slowly(" 🚫 Пропускаю исправление.")
+                display_message_slowly(f" 🚫 Пропускаю исправление.")
             else:
-                display_message_slowly(" ⚠️ Неверный ввод. Пропускаю исправление.")
+                display_message_slowly(f" ⚠️ Неверный ввод. Пропускаю исправление.")
 
 
 
