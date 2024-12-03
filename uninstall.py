@@ -19,7 +19,7 @@
 # - Все действия логируются в файл, указанный в `LOG_FILE_PATH` из `settings.py`
 # ===========================================
 # Автор: [Ваше имя или название команды]
-# Версия: 1.1
+# Версия: 1.2
 # Дата: 2024-12-03
 # ===========================================
 
@@ -70,8 +70,14 @@ def stop_wireguard():
     """Stop WireGuard service."""
     try:
         logger.info("Stopping WireGuard service...")
-        subprocess.run(["systemctl", "stop", "wg-quick@wg0"], check=True)
-        logger.info("WireGuard service stopped.")
+        result = subprocess.run(["systemctl", "is-active", "--quiet", "wg-quick@wg0"])
+        if result.returncode == 0:  # Service is active
+            subprocess.run(["systemctl", "stop", "wg-quick@wg0"], check=True)
+            logger.info("WireGuard service stopped.")
+            print("✅ WireGuard service stopped.")
+        else:
+            logger.info("WireGuard service is not active or already stopped.")
+            print("⚠️ WireGuard service is not active or already stopped.")
     except subprocess.CalledProcessError as e:
         logger.error("Failed to stop WireGuard service: %s", e)
         print("❌ Failed to stop WireGuard service. Check logs for details.")
@@ -104,8 +110,12 @@ def remove_firewall_rules():
         print("✅ Firewall rules removed.")
         logger.info("Firewall rules removed successfully.")
     except subprocess.CalledProcessError as e:
-        logger.error("Failed to remove firewall rules: %s", e)
-        print("❌ Failed to remove firewall rules. Check logs for details.")
+        if "UNKNOWN_INTERFACE" in str(e):
+            logger.warning("Firewall rules already removed or interface does not exist.")
+            print("⚠️ Firewall rules already removed or interface does not exist.")
+        else:
+            logger.error("Failed to remove firewall rules: %s", e)
+            print("❌ Failed to remove firewall rules. Check logs for details.")
 
 def uninstall_wireguard():
     """Uninstall WireGuard."""
