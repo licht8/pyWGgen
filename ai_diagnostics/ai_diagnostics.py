@@ -184,7 +184,7 @@ def handle_findings(findings):
     """Обрабатывает обнаруженные проблемы."""
     for finding in findings:
         # Отображаем заголовок и сообщение без полосок
-        display_message_slowly(f"\n{finding['title']}\n{finding['message']}")
+        display_message_slowly(f"\n {finding['title']}\n{finding['message']}")
         
         # Проверяем наличие команд и предлагаем исправить
         commands = finding.get("commands", [])
