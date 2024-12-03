@@ -44,7 +44,7 @@ def run_command(command):
 
 
 def run_project():
-    """Функция для запуска проекта."""
+    """Функция для запуска проекта с выводом в реальном времени."""
     global console_history
     try:
         project_dir = Path(__file__).resolve().parent.parent.parent.parent
@@ -57,7 +57,7 @@ def run_project():
             return "\n".join(console_history[-10:])
 
         logger.debug(f"Запуск скрипта: {run_script} из директории {project_dir}")
-        result = subprocess.run(
+        process = subprocess.Popen(
             f"bash {run_script}",
             shell=True,
             stdout=subprocess.PIPE,
@@ -66,9 +66,18 @@ def run_project():
             cwd=project_dir  # Устанавливаем правильный рабочий каталог
         )
 
-        output = result.stdout.strip() or result.stderr.strip()
-        console_history.append(f"$ bash run_project.sh\n{output}")
-        logger.info(f"Результат запуска проекта:\n{output}")
+        output_lines = []
+        for line in process.stdout:
+            output_lines.append(line.strip())
+            console_history.append(line.strip())
+            logger.debug(line.strip())
+
+        for line in process.stderr:
+            output_lines.append(line.strip())
+            console_history.append(line.strip())
+            logger.error(line.strip())
+
+        process.wait()  # Ждём завершения процесса
         return "\n".join(console_history[-10:])
 
     except Exception as e:
