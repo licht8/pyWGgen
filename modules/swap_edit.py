@@ -21,6 +21,7 @@ import os
 import sys
 import subprocess
 import shutil
+from pathlib import Path
 from settings import (
     PRINT_SPEED,
     WG_CONFIG_DIR,
