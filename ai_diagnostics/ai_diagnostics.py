@@ -197,15 +197,23 @@ def parse_reports(messages_db_path):
     return findings, suggestions
 
 
-def display_message_slowly(message, end="\n"):
-    """Построчный вывод сообщения."""
+def display_message_slowly(message, end="\n", indent=True):
+    """
+    Построчный вывод сообщения с поддержкой отключения отступов.
+
+    :param message: Сообщение для вывода.
+    :param end: Символ завершения строки (по умолчанию "\n").
+    :param indent: Если True, добавляет отступ в 3 пробела перед каждой строкой.
+    """
     for line in message.split("\n"):
-        print("   ", end="")
+        if indent:
+            print("   ", end="")  # Добавляем отступ только если indent=True
         for char in line:
             print(char, end="", flush=True)
             time.sleep(PRINT_SPEED)
         print(end, end="", flush=True)
         time.sleep(LINE_DELAY)
+
 
 
 def handle_findings(findings):
