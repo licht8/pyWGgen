@@ -47,7 +47,7 @@ def run_project():
     """Функция для запуска проекта."""
     global console_history
     try:
-        project_dir = Path(__file__).resolve().parent.parent.parent
+        project_dir = Path(__file__).resolve().parent.parent.parent.parent
         run_script = project_dir / "run_project.sh"
 
         if not run_script.exists():
@@ -63,7 +63,7 @@ def run_project():
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            cwd=project_dir
+            cwd=project_dir  # Устанавливаем правильный рабочий каталог
         )
 
         output = result.stdout.strip() or result.stderr.strip()
