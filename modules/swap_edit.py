@@ -21,6 +21,7 @@ import os
 import sys
 import subprocess
 import shutil
+import traceback
 from pathlib import Path
 from settings import (
     PRINT_SPEED,
