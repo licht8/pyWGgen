@@ -33,7 +33,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def uninstall_wireguard():
+def uninstall_wireguard():  # Переименуйте функцию для ясности
+    local_print_speed = PRINT_SPEED  # Локальная скорость для изменения
     """Функция для удаления WireGuard."""
     
     def confirm_action(prompt="Are you sure? (yes/no): "):
