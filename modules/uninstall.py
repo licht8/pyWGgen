@@ -3,22 +3,6 @@
 # ===========================================
 # Скрипт для удаления WireGuard
 # ===========================================
-# Назначение:
-# - Проверяет, установлен ли WireGuard
-# - Останавливает службу WireGuard
-# - Удаляет конфигурационные файлы и директории
-# - Удаляет правила фаервола, связанные с WireGuard
-# - Очищает остатки конфигураций, если WireGuard уже удалён
-#
-#
-# Примечания:
-# - Для работы скрипт требует настройки `settings.py`
-# - Все действия логируются в файл, указанный в `LOG_FILE_PATH` из `settings.py`
-# ===========================================
-# Автор: [Ваше имя или название команды]
-# Версия: 1.4
-# Дата: 2024-12-03
-# ===========================================
 
 import os
 import shutil
@@ -125,59 +109,4 @@ def remove_firewall_rules():
             logger.warning("Firewall interface 'wg0' not found or already removed.")
         if subprocess.run(["firewall-cmd", "--remove-port=51820/udp"], check=False).returncode != 0:
             print("⚠️ Firewall port 51820/udp not found or already removed.")
-            logger.warning("Firewall port 51820/udp not found or already removed.")
-        else:
-            print("✅ Firewall rules removed.")
-            logger.info("Firewall rules removed successfully.")
-    except Exception as e:
-        logger.error("Failed to remove firewall rules: %s", e)
-        print("❌ Failed to remove firewall rules. Check logs for details.")
-
-def uninstall_wireguard():
-    """Uninstall WireGuard."""
-    package_manager = detect_package_manager()
-    try:
-        logger.info(f"Uninstalling WireGuard using {package_manager}...")
-        if package_manager == "apt":
-            subprocess.run(["apt", "remove", "-y", "wireguard"], check=False)
-            subprocess.run(["apt", "autoremove", "-y"], check=False)
-        elif package_manager == "dnf":
-            subprocess.run(["dnf", "remove", "-y", "wireguard-tools"], check=False)
-        print("✅ WireGuard uninstalled successfully.")
-        logger.info("WireGuard uninstalled successfully.")
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Failed to uninstall WireGuard using {package_manager}: %s", e)
-        print("❌ Failed to uninstall WireGuard. Check logs for details.")
-
-def clean_leftovers():
-    """Clean up leftover files if WireGuard is not installed."""
-    print("🔍 Checking for leftover files...")
-    remove_config_files()
-    remove_firewall_rules()
-    print("🧹 Cleanup complete.")
-
-def main():
-    """Main function to uninstall WireGuard."""
-    print("=== 🗑️  Uninstall WireGuard ===")
-    if not is_wireguard_installed():
-        print("⚠️ WireGuard is not installed. Would you like to clean up leftover files? (yes/no): ", end="")
-        choice = input().strip().lower()
-        if choice == "yes":
-            clean_leftovers()
-        else:
-            print("❌ Cleanup cancelled.")
-        return
-    if not confirm_action():
-        print("❌ Uninstallation cancelled.")
-        return
-    save_choice = input("Do you want to save a backup of the configurations? (yes/no): ").strip().lower()
-    if save_choice == "yes":
-        save_backup()
-    if stop_wireguard():
-        remove_config_files()
-        remove_firewall_rules()
-        uninstall_wireguard()
-    print("🎉 WireGuard uninstallation complete!")
-
-if __name__ == "__main__":
-    main()
+           
