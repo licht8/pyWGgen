@@ -6,12 +6,23 @@ import subprocess
 import psutil
 from modules.port_manager import handle_port_conflict
 
+import socket
+import subprocess
+
 def get_external_ip():
-    """Получает внешний IP-адрес."""
+    """
+    Получает внешний IP-адрес через внутренние настройки или сетевые интерфейсы.
+
+    :return: Внешний IP-адрес (строка) или сообщение об ошибке.
+    """
     try:
-        return subprocess.check_output(["curl", "-s", "https://ipinfo.io/ip"], text=True).strip()
-    except subprocess.CalledProcessError:
-        return colored("N/A ❌", "red")
+        # Попробуем определить внешний IP через стандартные сетевые интерфейсы
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            # Подключаемся к публичному DNS-серверу Google для определения IP
+            s.connect(("8.8.8.8", 80))
+            return s.getsockname()[0]  # Получаем IP-адрес из сокета
+    except OSError as e:
+        return f"N/A ❌ (Ошибка: {e})"
 
 def open_firewalld_port(port):
     """Открывает порт в firewalld."""
