@@ -204,6 +204,25 @@ def parse_reports(messages_db_path):
             )
             findings.append(report)
 
+    # Возврат результатов анализа
+    return findings, suggestions
+
+    # Проверка маскарадинга
+    missing_masquerade_rules = check_masquerade_rules()
+    if missing_masquerade_rules:
+        # Форматируем список правил
+        max_key_length = max(len(rule['type']) for rule in missing_masquerade_rules if isinstance(rule, dict))
+        formatted_rules = "\n".join(
+            f"        {rule['type']:<{max_key_length}}: {rule['rule']}" if isinstance(rule, dict) else f"        {rule}"
+            for rule in missing_masquerade_rules
+        )
+        report = messages_db.get("masquerade_issue", {})
+        if report:
+            report["message"] = report["message"].format(
+                MISSING_RULES=formatted_rules
+            )
+            findings.append(report)
+
     return findings, suggestions
 
     # Проверка маскарадинга
