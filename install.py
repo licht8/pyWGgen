@@ -31,15 +31,13 @@ import logging
 logging.basicConfig(
     filename=LOG_FILE_PATH,
     level=getattr(logging, LOG_LEVEL, "INFO"),
-    format="%(asctime)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(levelname)-8s %(message)s",
 )
 logger = logging.getLogger(__name__)
 
-def display_message_with_spacing(message, print_speed=None, end="\n"):
-    """Печатает сообщение с отступами от левой границы и между блоками."""
-    print()  # Отступ перед блоком
-    display_message_slowly(message, print_speed, end=end)
-    print()  # Отступ после блока
+def display_message(message, print_speed=None, end="\n"):
+    """Печатает сообщение с единым форматированием."""
+    display_message_slowly(f"      {message}", print_speed, end=end)
 
 def detect_package_manager():
     """Определяет пакетный менеджер для текущей системы."""
@@ -51,7 +49,7 @@ def detect_package_manager():
                 return "apt"
             elif "CentOS" in os_release or "Stream" in os_release:
                 return "dnf"
-    display_message_with_spacing("❌ Unsupported OS or distribution. Exiting.", PRINT_SPEED)
+    display_message("❌ Unsupported OS or distribution. Exiting.", PRINT_SPEED)
     logger.error("Unsupported OS or distribution.")
     exit(1)
 
@@ -59,27 +57,27 @@ def install_wireguard():
     """Устанавливает WireGuard."""
     package_manager = detect_package_manager()
     try:
-        display_message_with_spacing("   🍀 Installing WireGuard...\n", PRINT_SPEED)
+        display_message("🍀 Installing WireGuard...\n", PRINT_SPEED)
         if package_manager == "apt":
             subprocess.run(["apt", "update"], check=True)
             subprocess.run(["apt", "install", "-y", "wireguard", "wireguard-tools"], check=True)
         elif package_manager == "dnf":
             subprocess.run(["dnf", "install", "-y", "epel-release"], check=True)
             subprocess.run(["dnf", "install", "-y", "wireguard-tools"], check=True)
-        display_message_with_spacing("   ✅ WireGuard installed successfully!\n", PRINT_SPEED)
+        display_message("✅ WireGuard installed successfully!\n", PRINT_SPEED)
         logger.info("WireGuard installed successfully.")
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to install WireGuard: {e}")
-        display_message_with_spacing("   ❌ Failed to install WireGuard. Check logs for details.\n", PRINT_SPEED)
+        display_message("❌ Failed to install WireGuard. Check logs for details.\n", PRINT_SPEED)
         exit(1)
 
 def collect_user_input():
     """Собирает ввод от пользователя с креативными подсказками."""
-    display_message_with_spacing("   === 🛠️  WireGuard Installation ===\n", PRINT_SPEED)
-    display_message_with_spacing("   Let's set up your WireGuard server!\n", PRINT_SPEED)
+    display_message("=== 🛠️  WireGuard Installation ===", PRINT_SPEED)
+    display_message("Let's set up your WireGuard server!\n", PRINT_SPEED)
 
     external_ip = get_external_ip()
-    display_message_with_spacing(f"   🌐 Detected external IP: {external_ip}\n", PRINT_SPEED)
+    display_message(f"- 🌐 Detected external IP: {external_ip}\n", PRINT_SPEED)
 
     server_ip = input(" 🌍 Enter server IP [auto-detect]: ").strip() or external_ip
     port = input(f" 🔒 Enter WireGuard port [{WIREGUARD_PORT}]: ").strip() or WIREGUARD_PORT
@@ -96,9 +94,9 @@ def collect_user_input():
 def configure_server(server_ip, port, subnet, dns):
     """Создаёт серверную конфигурацию."""
     try:
-        display_message_with_spacing("   🔧 Configuring WireGuard server...\n", PRINT_SPEED)
+        display_message("🔧 Configuring WireGuard server...\n", PRINT_SPEED)
         private_key = subprocess.check_output(["wg", "genkey"]).strip()
-        public_key = subprocess.check_output(["echo", private_key, "|", "wg", "pubkey"]).strip()
+        public_key = subprocess.check_output(["wg", "pubkey"], input=private_key).strip()
 
         with open(SERVER_CONFIG_FILE, "w") as config:
             config.write(f"""
@@ -126,41 +124,42 @@ SERVER_PRIV_KEY={private_key.decode()}
 SERVER_SUBNET={subnet}
 CLIENT_DNS={dns}
 """)
-        display_message_with_spacing("   ✅ Server configuration saved!\n", PRINT_SPEED)
+        display_message("✅ Server configuration saved!\n", PRINT_SPEED)
         logger.info("Server configuration saved.")
     except Exception as e:
         logger.error(f"Failed to configure server: {e}")
-        display_message_with_spacing("   ❌ Failed to configure server. Check logs for details.\n", PRINT_SPEED)
+        display_message("❌ Failed to configure server. Check logs for details.\n", PRINT_SPEED)
         exit(1)
 
 def create_initial_user():
     """Создаёт первого пользователя через main.py."""
     try:
-        display_message_with_spacing("   🌱 Creating the initial user (SetupUser)...\n", PRINT_SPEED)
+        display_message("🌱 Creating the initial user (SetupUser)...", PRINT_SPEED)
         subprocess.run(["python3", "main.py", "SetupUser"], check=True)
-        display_message_with_spacing("   ✅ Initial user created successfully!\n", PRINT_SPEED)
+        display_message("✅ Initial user created successfully!\n", PRINT_SPEED)
         logger.info("Initial user created successfully.")
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to create initial user: {e}")
-        display_message_with_spacing("   ❌ Failed to create initial user. Check logs for details.\n", PRINT_SPEED)
+        display_message("❌ Failed to create initial user. Check logs for details.\n", PRINT_SPEED)
 
 def start_wireguard():
     """Запускает WireGuard."""
     try:
-        display_message_with_spacing("   🚀 Starting WireGuard...\n", PRINT_SPEED)
+        display_message("🚀 Starting WireGuard...\n", PRINT_SPEED)
         subprocess.run(["systemctl", "start", "wg-quick@wg0"], check=True)
-        display_message_with_spacing("   ✅ WireGuard started successfully!\n", PRINT_SPEED)
+        display_message("✅ WireGuard started successfully!\n", PRINT_SPEED)
         logger.info("WireGuard started successfully.")
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to start WireGuard: {e}")
-        display_message_with_spacing("   ❌ Failed to start WireGuard. Check logs for details.\n", PRINT_SPEED)
+        display_message("❌ Failed to start WireGuard. Check logs for details.\n", PRINT_SPEED)
 
 def main():
     """Основная функция установки."""
     if shutil.which("wg"):
-        display_message_with_spacing("   ⚠️ WireGuard is already installed. Do you want to reinstall it? (yes/no): ", PRINT_SPEED, end="")
-        if input().strip().lower() != "yes":
-            display_message_with_spacing("   ❌ Installation cancelled.\n", PRINT_SPEED)
+        display_message("⚠️  WireGuard is already installed.\n", PRINT_SPEED)
+        reinstall = input("⚠️  Do you want to reinstall it? (yes/no): ").strip().lower()
+        if reinstall != "yes":
+            display_message("❌ Installation cancelled.\n", PRINT_SPEED)
             return
 
     # Установка WireGuard
@@ -178,7 +177,7 @@ def main():
     # Запуск WireGuard
     start_wireguard()
 
-    display_message_with_spacing("   🎉 WireGuard installation complete!\n", PRINT_SPEED)
+    display_message("🎉 WireGuard installation complete!\n", PRINT_SPEED)
 
 if __name__ == "__main__":
     main()
