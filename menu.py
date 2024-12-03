@@ -9,9 +9,14 @@
 # Обновлено: 2024-12-03
 # ===========================================
 
+#!/usr/bin/env python3
+# menu.py
+# Главное меню для управления проектом wg_qr_generator
+
 import os
 import sys
 import subprocess
+import readline  # Модуль для корректной работы стрелок на клавиатуре
 from modules.firewall_utils import get_external_ip
 from settings import LOG_DIR, LOG_FILE_PATH, DIAGNOSTICS_LOG
 
@@ -90,7 +95,11 @@ def show_main_menu():
         print(f"\n\t 0 или q. Выход")
         display_message_slowly(f" ==========================================\n", print_speed=local_print_speed, indent=False)
 
-        choice = input(" Выберите действие: ").strip().lower()
+        try:
+            choice = input(" Выберите действие: ").strip().lower()
+        except KeyboardInterrupt:
+            print("\n 👋  Выход. До свидания!")
+            break
 
         if choice == "i":
             from modules.project_status import show_project_status
@@ -149,3 +158,4 @@ def show_main_menu():
 
 if __name__ == "__main__":
     show_main_menu()
+
