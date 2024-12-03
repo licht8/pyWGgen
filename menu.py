@@ -13,10 +13,14 @@
 # menu.py
 # Главное меню для управления проектом wg_qr_generator
 
+#!/usr/bin/env python3
+# menu.py
+# Главное меню для управления проектом wg_qr_generator
+
 import os
 import sys
 import subprocess
-import readline  # Модуль для корректной работы стрелок на клавиатуре
+from modules.input_utils import input_with_history  # Импортируем нашу функцию
 from modules.firewall_utils import get_external_ip
 from settings import LOG_DIR, LOG_FILE_PATH, DIAGNOSTICS_LOG
 
@@ -41,26 +45,6 @@ def initialize_project():
 
 # Вызов функции инициализации
 initialize_project()
-
-
-def show_diagnostics_log():
-    """Отображает содержимое журнала диагностики."""
-    if os.path.exists(DIAGNOSTICS_LOG):
-        print("\n === 🛠️  Журнал диагностики  ===\n")
-        with open(DIAGNOSTICS_LOG, "r") as log_file:
-            print(log_file.read())
-    else:
-        print("\n ❌  Журнал диагностики отсутствует.\n")
-
-
-def install_wireguard():
-    """Вызывает скрипт установки WireGuard."""
-    os.system("python3 install.py")
-
-
-def remove_wireguard():
-    """Вызывает скрипт удаления WireGuard."""
-    os.system("python3 uninstall.py")
 
 
 def show_main_menu():
@@ -95,11 +79,13 @@ def show_main_menu():
         print(f"\n\t 0 или q. Выход")
         display_message_slowly(f" ==========================================\n", print_speed=local_print_speed, indent=False)
 
-        try:
-            choice = input(" Выберите действие: ").strip().lower()
-        except KeyboardInterrupt:
-            print("\n 👋  Выход. До свидания!")
+        choice = input_with_history(" Выберите действие: ").strip().lower()
+
+        if choice == "0" or choice == "q":
+            print("\n 👋  Выход. До свидания!\n")
             break
+        # Остальной код меню...
+
 
         if choice == "i":
             from modules.project_status import show_project_status
