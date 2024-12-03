@@ -62,7 +62,7 @@ def show_main_menu():
     """Отображение основного меню."""
     while True:
         wireguard_installed = check_wireguard_installed()
-        print(f"\n 🤖 === menu wg_qr_generator === 🤖\n")
+        print(f"\n 🤖 ===     Menu wg_qr_generator     === 🤖\n")
         print(f"  i. 🛠️   Информация о состоянии проекта")
         print(f"  t. 🧪  Запустить тесты")
         print(f" up. 🔄  Запустить обновление зависимостей")
