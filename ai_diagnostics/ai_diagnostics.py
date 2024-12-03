@@ -191,9 +191,9 @@ def handle_findings(findings):
         if commands:
             response = input(f"    🛠  Исправить автоматически? (y/n): ").strip().lower()
             if response in ["y", "д"]:
-                display_message_slowly(" ⚙️  Исправляю...")
+                display_message_slowly(f" ⚙️  Исправляю...")
                 result = execute_commands(commands)
-                display_message_slowly(f" 📝 Результат:\n{result}")
+                display_message_slowly(f" 📝 Результат:\n       {result}")
             elif response in ["n", "н"]:
                 display_message_slowly(" 🚫 Пропускаю исправление.")
             else:
