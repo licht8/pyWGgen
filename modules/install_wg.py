@@ -12,6 +12,8 @@ from modules.firewall_utils import get_external_ip
 from ai_diagnostics.ai_diagnostics import display_message_slowly
 from settings import PRINT_SPEED, LINE_DELAY
 
+def install_wireguard(
+
 def display_message(message, print_speed=None):
     """Отображает сообщение с имитацией печати."""
     display_message_slowly(f"{message}", print_speed=print_speed)
@@ -71,3 +73,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+)
