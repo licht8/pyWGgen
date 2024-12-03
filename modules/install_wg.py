@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-# modules/install.py
+# modules/install_wg.py
 # ===========================================
 # Установщик WireGuard с креативным интерфейсом
-# ===========================================
-# Этот скрипт автоматически устанавливает WireGuard,
-# настраивает сервер и создает начального пользователя.
 # ===========================================
 
 import time
@@ -12,12 +9,11 @@ from modules.firewall_utils import get_external_ip
 from ai_diagnostics.ai_diagnostics import display_message_slowly
 from settings import PRINT_SPEED, LINE_DELAY
 
-
 def display_message(message, print_speed=None):
     """Отображает сообщение с имитацией печати."""
     display_message_slowly(f"{message}", print_speed=print_speed)
 
-def main():
+def install_wireguard():  # Переименуйте функцию для ясности
     local_print_speed = PRINT_SPEED  # Локальная скорость для изменения
 
     display_message(f"    ------------------------------------------", print_speed=local_print_speed)
@@ -68,8 +64,4 @@ def main():
     display_message(f"    🚀 Starting WireGuard...", print_speed=local_print_speed)
     time.sleep(1)  # Эмуляция запуска
     display_message(f"    ✅ WireGuard started successfully!", print_speed=local_print_speed)
-    display_message(f"    🎉 WireGuard installation complete!", print_speed=local_print_speed)
-
-if __name__ == "__main__":
-    main()
-
+   
