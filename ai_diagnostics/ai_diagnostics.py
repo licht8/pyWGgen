@@ -64,6 +64,19 @@ REQUIRED_PORTS = [f"{WIREGUARD_PORT}/udp", f"{GRADIO_PORT}/tcp"]
 # Скрипты
 SUMMARY_SCRIPT = DIAGNOSTICS_DIR / "ai_diagnostics_summary.py"
 
+def check_gradio_status():
+    """Проверяет, запущен ли Gradio на порту."""
+    command = ["ss", "-tuln"]
+    result = run_command(command)
+    if not result:
+        return False
+
+    logger.debug(f"Результат команды проверки Gradio:\n{result}")
+
+    for line in result.splitlines():
+        if f":{GRADIO_PORT} " in line and "LISTEN" in line:
+            return True
+    return False
 
 def execute_commands(commands):
     """Выполняет список команд и возвращает результат."""
