@@ -19,5 +19,5 @@ with gr.Blocks() as admin_interface:
     with gr.Tab(label="🔍 Статистика"):
         statistics_tab()
     
-    with gr.Tab(label="🖥️ Командная строка"):
-        command_line_tab()
+    #with gr.Tab(label="🖥️ Командная строка"):
+        #command_line_tab()
