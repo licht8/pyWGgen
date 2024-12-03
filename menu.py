@@ -60,6 +60,7 @@ initialize_project()
 
 def show_main_menu():
     """Отображение основного меню."""
+    PRINT_SPEED = 0.01
     while True:
         wireguard_installed = check_wireguard_installed()
         display_message_slowly(f"\n🛡️  ======  Menu wg_qr_generator  ======= 🛡️\n", indent=False)  # Без отступов
@@ -87,7 +88,7 @@ def show_main_menu():
         print(f" aih. 🗨️  Помощь и диагностика")
         print(f" aid. 🤖 Диагностика проекта")
         print(f"\n\t 0 или q. Выход")
-        print(f" ==========================================\n")  # Нижняя граница
+        display_message_slowly(f" ==========================================\n", indent=False)  # Нижняя граница
 
         choice = input(" Выберите действие: ").strip().lower()
         # Обработка выбора...
