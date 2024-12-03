@@ -21,8 +21,16 @@ import os
 import sys
 import subprocess
 import shutil
+from settings import (
+    PRINT_SPEED,
+    WG_CONFIG_DIR,
+    QR_CODE_DIR,
+    SERVER_CONFIG_FILE,
+    LOG_FILE_PATH,
+    LOG_LEVEL,
+    DEFAULT_TRIAL_DAYS,
+)
 from ai_diagnostics.ai_diagnostics import display_message_slowly
-
 
 def run_command(command, check=True):
     """Выполнить команду в терминале и вернуть вывод."""
