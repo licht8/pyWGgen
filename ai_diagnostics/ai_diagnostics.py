@@ -183,7 +183,10 @@ def display_message_slowly(message, end="\n"):
 def handle_findings(findings):
     """Обрабатывает обнаруженные проблемы."""
     for finding in findings:
-        #display_message_slowly(f"\n{finding['title']}\n{'=' * len(finding['title'])}\n{finding['message']}")
+        # Отображаем заголовок и сообщение без полосок
+        display_message_slowly(f"\n{finding['title']}\n{finding['message']}")
+        
+        # Проверяем наличие команд и предлагаем исправить
         commands = finding.get("commands", [])
         if commands:
             response = input(" 🛠  Исправить автоматически? (y/n): ").strip().lower()
@@ -191,6 +194,11 @@ def handle_findings(findings):
                 display_message_slowly(" ⚙️  Исправляю...")
                 result = execute_commands(commands)
                 display_message_slowly(f" 📝 Результат:\n{result}")
+            elif response in ["n", "н"]:
+                display_message_slowly(" 🚫 Пропускаю исправление.")
+            else:
+                display_message_slowly(" ⚠️ Неверный ввод. Пропускаю исправление.")
+
 
 
 def main():
