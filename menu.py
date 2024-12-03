@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 # menu.py
 # Главное меню для управления проектом wg_qr_generator
+# ===========================================
+# Этот файл предоставляет удобный интерфейс
+# для управления различными функциями проекта,
+# включая установку, удаление WireGuard и многое другое.
+# Версия: 1.0
+# Обновлено: 2024-12-03
+# ===========================================
 
 import os
 import sys
@@ -17,6 +24,7 @@ if project_root not in sys.path:
 from modules.wireguard_utils import check_wireguard_installed
 from ai_diagnostics.ai_diagnostics import display_message_slowly
 
+
 # Проверяем и создаем директории и файлы
 def initialize_project():
     """Инициализация проекта: создание необходимых директорий и файлов."""
@@ -25,8 +33,10 @@ def initialize_project():
         LOG_FILE_PATH.touch()  # Создает пустой файл, если он отсутствует
         print(f"Создан пустой файл лога: {LOG_FILE_PATH}")
 
+
 # Вызов функции инициализации
 initialize_project()
+
 
 def show_diagnostics_log():
     """Отображает содержимое журнала диагностики."""
@@ -37,13 +47,16 @@ def show_diagnostics_log():
     else:
         print("\n ❌  Журнал диагностики отсутствует.\n")
 
+
 def install_wireguard():
     """Вызывает скрипт установки WireGuard."""
     os.system("python3 install.py")
 
+
 def remove_wireguard():
     """Вызывает скрипт удаления WireGuard."""
     os.system("python3 uninstall.py")
+
 
 def show_main_menu():
     """Отображение основного меню."""
