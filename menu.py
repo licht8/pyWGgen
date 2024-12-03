@@ -9,13 +9,6 @@
 # Обновлено: 2024-12-03
 # ===========================================
 
-#!/usr/bin/env python3
-# menu.py
-# Главное меню для управления проектом wg_qr_generator
-
-#!/usr/bin/env python3
-# menu.py
-# Главное меню для управления проектом wg_qr_generator
 
 import os
 import sys
@@ -23,6 +16,8 @@ import subprocess
 from modules.input_utils import input_with_history  # Импортируем нашу функцию
 from modules.firewall_utils import get_external_ip
 from settings import LOG_DIR, LOG_FILE_PATH, DIAGNOSTICS_LOG
+from modules.install install_wireguard
+
 
 # Установить путь к корню проекта
 project_root = os.path.dirname(os.path.abspath(__file__))
