@@ -101,7 +101,7 @@ def show_main_menu():
             from modules.manage_users_menu import manage_users_menu
             manage_users_menu()
         elif choice == "rw":
-            uninstall_wireguard()
+            install_wireguard()
         elif choice == "iw":
             install_wireguard()
         elif choice == "dw":
