@@ -22,7 +22,7 @@ def main():
     display_message(f"    ⚠️  WireGuard is already installed!", print_speed=local_print_speed)
     
     # Ожидание ответа пользователя
-    reinstall = input(f"    ⚠️  Do you want to reinstall it? (yes/no): ").strip().lower()
+    reinstall = input(f"    ⚠️   Reinstall WireGuard? (yes/no): ").strip().lower()
     if reinstall != "yes":
         display_message(f"    Installation aborted. Exiting...", print_speed=local_print_speed)
         return
