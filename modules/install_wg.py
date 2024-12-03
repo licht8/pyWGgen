@@ -9,6 +9,7 @@ import time
 import subprocess
 import traceback
 from pathlib import Path
+import shutil  # Импортируем shutil
 import base64
 from settings import (
     PRINT_SPEED,
