@@ -22,12 +22,6 @@ from modules.install_wg import install_wg # Импортируем функци�
 from modules.wireguard_utils import check_wireguard_installed
 from ai_diagnostics.ai_diagnostics import display_message_slowly
 
-# Установить путь к корню проекта
-project_root = os.path.dirname(os.path.abspath(__file__))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
-
 
 
 # Проверяем и создаем директории и файлы
