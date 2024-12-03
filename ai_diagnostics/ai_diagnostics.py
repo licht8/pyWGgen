@@ -197,22 +197,25 @@ def parse_reports(messages_db_path):
     return findings, suggestions
 
 
-def display_message_slowly(message, end="\n", indent=True):
+def display_message_slowly(message, print_speed=None, end="\n", indent=True):
     """
-    Построчный вывод сообщения с поддержкой отключения отступов.
+    Построчный вывод сообщения с поддержкой отключения отступов и кастомной скорости печати.
 
     :param message: Сообщение для вывода.
+    :param print_speed: Скорость вывода символов (в секундах). Если None, используется глобальная PRINT_SPEED.
     :param end: Символ завершения строки (по умолчанию "\n").
     :param indent: Если True, добавляет отступ в 3 пробела перед каждой строкой.
     """
+    effective_speed = print_speed if print_speed is not None else PRINT_SPEED
     for line in message.split("\n"):
         if indent:
             print("   ", end="")  # Добавляем отступ только если indent=True
         for char in line:
             print(char, end="", flush=True)
-            time.sleep(PRINT_SPEED)
+            time.sleep(effective_speed)
         print(end, end="", flush=True)
         time.sleep(LINE_DELAY)
+
 
 
 
