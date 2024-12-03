@@ -38,6 +38,7 @@ from settings import (
     GRADIO_PORT,
     USER_DB_PATH,
     QR_CODE_DIR,
+    WIREGUARD_PORT,
 )
 
 # Импорт функции для подсети WireGuard
