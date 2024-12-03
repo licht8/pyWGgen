@@ -128,8 +128,7 @@ CLIENT_DNS={dns}
         logger.info("Server configuration saved.")
     except Exception as e:
         logger.error(f"Failed to configure server: {e}")
-        display_message("❌ Failed to configure server. Check logs for details.\n", PRINT_SPEED)
-        exit(1)
+        display_message("❌ Failed to configure server. Please check the logs for details.\n", PRINT_SPEED)
 
 def create_initial_user():
     """Создаёт первого пользователя через main.py."""
