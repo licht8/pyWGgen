@@ -114,4 +114,23 @@ def uninstall_wireguard():
             print("✅ Firewall rules removed.")
         except Exception as e:
             logger.error("Failed to remove firewall rules: %s", e)
-            print("❌ Failed to remove firewall rules.
+        
+            print("❌ Failed to remove firewall rules. Check logs for details.")
+        
+            # Основная логика удаления WireGuard
+            if not is_wireguard_installed():
+                print("❌ WireGuard is not installed. Exiting.")
+                return
+        
+            if not confirm_action("Are you sure you want to uninstall WireGuard? (yes/no): "):
+                print("❌ Uninstallation canceled.")
+                return
+        
+            stop_wireguard()
+            remove_config_files()
+            remove_firewall_rules()
+            print("✅ WireGuard has been successfully uninstalled.")
+        
+        # Вызов функции, если скрипт запускается напрямую
+        if __name__ == "__main__":
+            uninstall_wireguard()
