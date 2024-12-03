@@ -4,6 +4,7 @@
 # Скрипт для удаления WireGuard
 # ===========================================
 
+
 import os
 import shutil
 import subprocess
@@ -107,6 +108,4 @@ def remove_firewall_rules():
         if subprocess.run(["firewall-cmd", "--zone=public", "--remove-interface=wg0"], check=False).returncode != 0:
             print("⚠️ Firewall interface 'wg0' not found or already removed.")
             logger.warning("Firewall interface 'wg0' not found or already removed.")
-        if subprocess.run(["firewall-cmd", "--remove-port=51820/udp"], check=False).returncode != 0:
-            print("⚠️ Firewall port 51820/udp not found or already removed.")
-           
+        if subprocess.run(["firewall-cmd
