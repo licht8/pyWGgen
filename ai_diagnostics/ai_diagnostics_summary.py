@@ -45,7 +45,7 @@ def check_ports():
     result = run_command(command)
     open_ports = []
     if not result:
-        logger.warning("Не удалось получить список открытых портов.")
+        logger.warning(f"Не удалось получить список открытых портов.")
         return open_ports
 
     for line in result.splitlines():
@@ -94,16 +94,16 @@ def count_users():
                 logger.debug(f"Обнаружено пользователей: {user_count}")
                 return user_count, "user_records.json"
         except json.JSONDecodeError:
-            logger.error("Ошибка чтения файла user_records.json.")
+            logger.error(f"Ошибка чтения файла user_records.json.")
             return 0, "Ошибка чтения user_records.json"
-    logger.warning("Файл user_records.json отсутствует.")
+    logger.warning(f"Файл user_records.json отсутствует.")
     return 0, "Отсутствует файл user_records.json"
 
 
 def count_peers(wg_info):
     """Считает количество peer в выводе wg show."""
     if not wg_info:
-        logger.warning("WireGuard информация недоступна.")
+        logger.warning(f"WireGuard информация недоступна.")
         return 0
     peer_count = sum(1 for line in wg_info.splitlines() if line.startswith("peer:"))
     logger.debug(f"Количество peer: {peer_count}")
@@ -112,7 +112,7 @@ def count_peers(wg_info):
 
 def generate_summary():
     """Создает обобщенный отчет."""
-    logger.info("Начало генерации обобщенного отчета.")
+    logger.info(f"Начало генерации обобщенного отчета.")
 
     # Получение данных о пользователях
     total_users, user_source = count_users()
@@ -161,10 +161,10 @@ def generate_summary():
         with open(SUMMARY_REPORT_PATH, "w", encoding="utf-8") as file:
             file.write(formatted_summary)
         logger.info(f"Обобщенный отчет сохранен: {SUMMARY_REPORT_PATH}")
-        print(f" ✅ Обобщенный отчет сохранен:\n 📂 {SUMMARY_REPORT_PATH}")
+        print(f" ✅ Обобщенный отчет сохранен:\n 📂 {SUMMARY_REPORT_PATH}\n")
     except IOError as e:
-        logger.error(f"Ошибка записи обобщенного отчета: {e}")
-        print(f" ❌ Ошибка сохранения отчета: {e}")
+        logger.error(f"Ошибка записи обобщенного отчета: {e}\n")
+        print(f" ❌ Ошибка сохранения отчета: {e}\n")
 
 
 if __name__ == "__main__":
