@@ -216,7 +216,7 @@ def main():
             display_message_slowly(f"\n {suggestion['title']}\n {suggestion['message']}")
 
     if not findings and not suggestions:
-        display_message_slowly(" ✅  Всё хорошо!\n 👍  Проблем не обнаружено.")
+        display_message_slowly(f" ✅  Всё хорошо!\n 👍  Проблем не обнаружено.\n")
 
     subprocess.run([sys.executable, str(SUMMARY_SCRIPT)])
 
