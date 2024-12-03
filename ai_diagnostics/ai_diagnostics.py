@@ -191,13 +191,13 @@ def handle_findings(findings):
         if commands:
             response = input(f"    🛠  Исправить автоматически? (y/n): ").strip().lower()
             if response in ["y", "д"]:
-                display_message_slowly(f" ⚙️  Исправляю...")
+                display_message_slowly(f" ⚙️  Исправляю...\n")
                 result = execute_commands(commands)
                 display_message_slowly(f" 📝 Результат:\n    {result}")
             elif response in ["n", "н"]:
                 display_message_slowly(f" 🚫 Пропускаю исправление.\n")
             else:
-                display_message_slowly(f" ⚠️ Неверный ввод. Пропускаю исправление.")
+                display_message_slowly(f" ⚠️ Неверный ввод. Пропускаю исправление.\n")
 
 
 
