@@ -16,11 +16,17 @@ import subprocess
 from modules.input_utils import input_with_history  # Импортируем нашу функцию
 from modules.firewall_utils import get_external_ip
 from settings import LOG_DIR, LOG_FILE_PATH, DIAGNOSTICS_LOG
-from modules.install_wg import install_wg # Импортируем функцию install_wg
-
+#from modules.install_wg import install_wg 
+from modules.install_wg import install_wireguard  # Импортируем функцию install_wireguard
 # Импорт модулей
 from modules.wireguard_utils import check_wireguard_installed
 from ai_diagnostics.ai_diagnostics import display_message_slowly
+
+
+# Установить путь к корню проекта
+project_root = os.path.dirname(os.path.abspath(__file__))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 
 
@@ -98,7 +104,7 @@ def show_main_menu():
             remove_wireguard()
             install_wireguard()
         elif choice == "iw":
-            install_wg()
+            install_wireguard()
         elif choice == "dw":
             remove_wireguard()
         elif choice == "du":
