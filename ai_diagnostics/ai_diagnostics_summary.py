@@ -162,6 +162,7 @@ def generate_summary():
             file.write(formatted_summary)
         logger.info(f"Общий отчет сохранен: {SUMMARY_REPORT_PATH}")
         print(f"\n ✅ Общий отчет сохранен:\n 📂 {SUMMARY_REPORT_PATH}")
+        time.sleep(1)
     except IOError as e:
         logger.error(f"Ошибка записи общего отчета: {e}\n")
         print(f" ❌ Ошибка сохранения отчета: {e}\n")
