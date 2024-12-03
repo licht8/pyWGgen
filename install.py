@@ -18,31 +18,33 @@ def display_message(message, print_speed=None):
 def main():
     local_print_speed = PRINT_SPEED  # Локальная скорость для изменения
 
-    display_message_slowly(f"    ------------------------------------------", print_speed=local_print_speed, indent=False)
-    display_message_slowly(f"    ⚠️  WireGuard is already installed!", print_speed=local_print_speed, indent=False)
-    display_message_slowly(f"    ⚠️  Do you want to reinstall it? (yes/no): yes", print_speed=local_print_speed, indent=False)
-    display_message_slowly(f"    ------------------------------------------", print_speed=local_print_speed, indent=False)
+    display_message(f"    ------------------------------------------", print_speed=local_print_speed)
+    display_message(f"    ⚠️  WireGuard is already installed!", print_speed=local_print_speed)
+    
+    # Ожидание ответа пользователя
+    reinstall = input(f"    ⚠️  Do you want to reinstall it? (yes/no): ").strip().lower()
+    if reinstall != "yes":
+        display_message(f"    Installation aborted. Exiting...", print_speed=local_print_speed)
+        return
+    
+    display_message(f"    ------------------------------------------", print_speed=local_print_speed)
     display_message(f"    🍀 Installing WireGuard...", print_speed=local_print_speed)
     time.sleep(1)  # Эмуляция установки
     display_message(f"    ✅ WireGuard installed successfully!", print_speed=local_print_speed)
-    display_message(f"    ------------------------------------------", print_speed=local_print_speed, indent=False)
+    
+    display_message(f"    ------------------------------------------", print_speed=local_print_speed)
     display_message(f"    === 🛠️  WireGuard Installation ===", print_speed=local_print_speed)
     display_message(f"    Let's set up your WireGuard server!", print_speed=local_print_speed)
-    display_message(f"    ------------------------------------------", print_speed=local_print_speed, indent=False)
+    display_message(f"    ------------------------------------------", print_speed=local_print_speed)
     
     external_ip = get_external_ip()
     display_message(f"    - 🌐 Detected external IP: {external_ip}", print_speed=local_print_speed)
     
-    # Эмуляция ввода данных
-    server_ip = "195.2.75.203"
-    server_port = "51820"
-    subnet = "10.66.66.0/24"
-    dns_servers = "8.8.8.8, 8.8.4.4"
-
-    display_message(f" 🌍 Enter server IP [auto-detect]: {server_ip}", print_speed=local_print_speed)
-    display_message(f" 🔒 Enter WireGuard port [{server_port}]: {server_port}", print_speed=local_print_speed)
-    display_message(f" 📡 Enter subnet for clients [{subnet}]: {subnet}", print_speed=local_print_speed)
-    display_message(f" 🧙‍♂️ Enter DNS servers [{dns_servers}]: {dns_servers}", print_speed=local_print_speed)
+    # Ожидание ввода данных от пользователя
+    server_ip = input(f" 🌍 Enter server IP [auto-detect]: ").strip() or external_ip
+    server_port = input(f" 🔒 Enter WireGuard port [51820]: ").strip() or "51820"
+    subnet = input(f" 📡 Enter subnet for clients [10.66.66.0/24]: ").strip() or "10.66.66.0/24"
+    dns_servers = input(f" 🧙‍♂️ Enter DNS servers [8.8.8.8, 8.8.4.4]: ").strip() or "8.8.8.8, 8.8.4.4"
 
     display_message(f"    🔧 Configuring WireGuard server...", print_speed=local_print_speed)
     time.sleep(1)  # Эмуляция настройки
