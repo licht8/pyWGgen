@@ -6,6 +6,7 @@
 # Этот скрипт автоматически устанавливает WireGuard,
 # настраивает сервер и создает начального пользователя.
 # ===========================================
+
 import time
 from modules.firewall_utils import get_external_ip
 from ai_diagnostics.ai_diagnostics import display_message_slowly
