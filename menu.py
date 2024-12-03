@@ -16,7 +16,7 @@ import subprocess
 from modules.input_utils import input_with_history  # Импортируем нашу функцию
 from modules.firewall_utils import get_external_ip
 from settings import LOG_DIR, LOG_FILE_PATH, DIAGNOSTICS_LOG
-from modules.install import install_wireguard
+from modules.install_wg import install_wireguard
 # Импорт модулей
 from modules.wireguard_utils import check_wireguard_installed
 from ai_diagnostics.ai_diagnostics import display_message_slowly
