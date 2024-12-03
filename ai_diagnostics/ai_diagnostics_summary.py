@@ -9,6 +9,7 @@ import subprocess
 from pathlib import Path
 import sys
 import logging
+import time
 
 # Добавляем корневую директорию проекта в sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
