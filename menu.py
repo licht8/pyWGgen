@@ -16,7 +16,7 @@ import subprocess
 from modules.input_utils import input_with_history  # Импортируем нашу функцию
 from modules.firewall_utils import get_external_ip
 from settings import LOG_DIR, LOG_FILE_PATH, DIAGNOSTICS_LOG
-#from modules.install_wg import install_wg 
+from modules.uninstall_wg import uninstall_wireguard
 from modules.install_wg import install_wireguard  # Импортируем функцию install_wireguard
 # Импорт модулей
 from modules.wireguard_utils import check_wireguard_installed
@@ -106,7 +106,7 @@ def show_main_menu():
         elif choice == "iw":
             install_wireguard()
         elif choice == "dw":
-            remove_wireguard()
+            uninstall_wireguard()
         elif choice == "du":
             from modules.user_data_cleaner import clean_user_data
             clean_user_data()
