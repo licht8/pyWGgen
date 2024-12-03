@@ -13,21 +13,26 @@ def command_line_tab():
     execute_button = gr.Button("Выполнить")
     output_console = gr.Textbox(label="Вывод консоли", interactive=False, lines=20)
     clear_button = gr.Button("Очистить консоль")
-    console_history = []
+    console_history = []  # Локальная переменная для хранения истории
 
-    def run_command(command, current_history):
+    def run_command(command):
         """
         Выполняет команду в терминале и возвращает результат.
         """
-        global console_history
+        nonlocal console_history  # Указываем, что работаем с локальной переменной
         try:
             result = subprocess.run(
                 command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
             )
-            console_history = current_history + [f"$ {command}", result.stdout.strip() or result.stderr.strip()]
+            stdout = result.stdout.strip()
+            stderr = result.stderr.strip()
+            if stdout:
+                console_history.append(f"$ {command}\n{stdout}")
+            if stderr:
+                console_history.append(f"$ {command}\nОшибка: {stderr}")
         except Exception as e:
-            console_history.append(f"Ошибка: {e}")
-        return "\n".join(console_history), console_history
+            console_history.append(f"Ошибка выполнения команды: {e}")
+        return "\n".join(console_history)
 
     def clear_console():
         """
@@ -35,11 +40,12 @@ def command_line_tab():
         """
         nonlocal console_history
         console_history = []
-        return "", console_history
+        return ""
 
+    # Привязка функций к элементам интерфейса
     execute_button.click(
         run_command,
-        inputs=[command_input, output_console],
+        inputs=[command_input],
         outputs=[output_console]
     )
 
