@@ -17,16 +17,16 @@ from modules.input_utils import input_with_history  # Импортируем н�
 from modules.firewall_utils import get_external_ip
 from settings import LOG_DIR, LOG_FILE_PATH, DIAGNOSTICS_LOG
 from modules.install install_wireguard
-
+# Импорт модулей
+from modules.wireguard_utils import check_wireguard_installed
+from ai_diagnostics.ai_diagnostics import display_message_slowly
 
 # Установить путь к корню проекта
 project_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-# Импорт модулей
-from modules.wireguard_utils import check_wireguard_installed
-from ai_diagnostics.ai_diagnostics import display_message_slowly
+
 
 
 # Проверяем и создаем директории и файлы
