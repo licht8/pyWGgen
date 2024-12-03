@@ -183,7 +183,7 @@ def display_message_slowly(message, end="\n"):
 def handle_findings(findings):
     """Обрабатывает обнаруженные проблемы."""
     for finding in findings:
-        display_message_slowly(f"\n{finding['title']}\n{'=' * len(finding['title'])}\n{finding['message']}")
+        #display_message_slowly(f"\n{finding['title']}\n{'=' * len(finding['title'])}\n{finding['message']}")
         commands = finding.get("commands", [])
         if commands:
             response = input(" 🛠  Исправить автоматически? (y/n): ").strip().lower()
