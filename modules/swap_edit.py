@@ -22,6 +22,9 @@ import sys
 import subprocess
 import shutil
 import traceback
+import shutil  # Импортируем shutil
+import base64
+
 from pathlib import Path
 from settings import (
     PRINT_SPEED,
