@@ -21,11 +21,13 @@ from modules.install_wg import install_wireguard  # Импортируем фу�
 # Импорт модулей
 from modules.wireguard_utils import check_wireguard_installed
 from ai_diagnostics.ai_diagnostics import display_message_slowly
-from modules.swap_edit import swap_edit
+from modules.swap_edit import check_swap_edit, swap_edit
 
-# Проверить и установить swap размером x MB
-# swap_edit(size_mb=1024, action="memory_required")
-swap_edit(action="micro", silent=True)
+from modules.swap_edit import check_swap_edit
+
+# Проверить и создать swap размером 64 MB, если необходимо
+check_swap_edit(size_mb=64, action="micro", silent=True)
+
 
 # Установить путь к корню проекта
 project_root = os.path.dirname(os.path.abspath(__file__))
