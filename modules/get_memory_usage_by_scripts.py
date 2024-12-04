@@ -1,5 +1,24 @@
+#!/usr/bin/env python3
+
+"""
+get_memory_usage_by_scripts.py
+Скрипт для сбора информации о потреблении памяти скриптами проекта wg_qr_generator.
+Может работать как самостоятельный файл, так и как вызываемая функция.
+"""
+
 import psutil
 import os
+import sys
+from pathlib import Path
+
+# Импортируем настройки
+try:
+    from settings import BASE_DIR
+except ImportError:
+    # Если settings.py не найден, выводим ошибку
+    print("❌ Не удалось найти settings.py. Убедитесь, что файл находится в корневой директории проекта.")
+    sys.exit(1)
+
 
 def get_memory_usage_by_scripts(project_dir):
     """
@@ -11,7 +30,6 @@ def get_memory_usage_by_scripts(project_dir):
     project_dir = os.path.abspath(project_dir)
     processes_info = []
 
-    print(f"\n🔍 Проверяем процессы Python, связанные с проектом: {project_dir}")
     for proc in psutil.process_iter(attrs=['pid', 'name', 'cmdline', 'memory_info']):
         try:
             # Извлекаем информацию о процессе
@@ -20,11 +38,7 @@ def get_memory_usage_by_scripts(project_dir):
             cmdline = proc.info['cmdline']
             memory_usage = proc.info['memory_info'].rss  # Используемая память в байтах
 
-            # Отладочный вывод для всех процессов Python
-            if 'python' in (name or '').lower():
-                print(f"  Процесс PID={pid}, name={name}, cmdline={cmdline}")
-
-            # Проверяем, относится ли процесс к нашему проекту
+            # Проверяем, относится ли процесс к проекту
             if cmdline and any(project_dir in arg for arg in cmdline):
                 processes_info.append({
                     'pid': pid,
@@ -60,7 +74,14 @@ def display_memory_usage(project_dir):
         print(f"{proc['pid']:<10}{proc['name']:<20}{proc['memory_usage'] / (1024 ** 2):<20.2f}{proc['cmdline']:<50}")
 
 
-# Пример использования
 if __name__ == "__main__":
-    project_directory = "/root/pyWGgen/wg_qr_generator"  # Замените на путь к вашему проекту
+    # Проверяем, запущен ли скрипт напрямую
+    try:
+        # Используем BASE_DIR из settings.py
+        project_directory = str(BASE_DIR)
+    except NameError:
+        # Если BASE_DIR не найден, используем текущую директорию
+        project_directory = str(Path(__file__).resolve().parent)
+
+    print(f"🔍 Сбор информации о памяти для проекта: {project_directory}")
     display_memory_usage(project_directory)
