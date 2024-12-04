@@ -155,29 +155,79 @@ def check_swap_edit(size_mb, action=None, silent=True, tolerance=2):
 
 
 
+def interactive_swap_edit():
+    """
+    Интерактивный режим управления swap.
+    """
+    check_root()
+
+    while True:
+        display_message_slowly("📊 Текущее состояние памяти:")
+        swap_info = get_swap_info()
+        if swap_info:
+            print(swap_info)
+
+        print("\nВыберите действие:")
+        print("1. Установить новый swap")
+        print("2. Удалить текущий swap")
+        print("0. Выйти")
+
+        choice = input("Ваш выбор: ").strip()
+        if choice == "1":
+            size_mb = input("Введите размер swap (в MB): ").strip()
+            if size_mb.isdigit():
+                size_mb = int(size_mb)
+                create_swap_file(size_mb, reason="interactive")
+            else:
+                print("❌ Некорректный ввод. Попробуйте снова.")
+        elif choice == "2":
+            disable_existing_swap()
+        elif choice == "0":
+            print("👋 Завершаем работу.")
+            break
+        else:
+            print("❌ Некорректный ввод. Попробуйте снова.")
+
+
 def swap_edit(size_mb=None, action=None, silent=False):
-    """Основная функция настройки swap."""
+    """
+    Основная функция настройки swap.
+    :param size_mb: Требуемый размер swap в MB.
+    :param action: Тип действия ("min", "eco", "erase", "memory_required").
+    :param silent: Если True, подавляет вывод сообщений.
+    """
     check_root()
 
     # Проверка текущего состояния swap
     current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
     current_swap = int(current_swap) if current_swap and current_swap.isdigit() else 0
 
-    # Установить значение по умолчанию для size_mb, если не передано
-    if size_mb is None:
-        if action == "micro":
-            size_mb = 64  # Размер swap для микрорежима
-            silent = True
-        elif action == "min":
-            size_mb = 64
-        elif action == "eco":
-            total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
-            size_mb = total_disk // 50  # 2% от объема диска
-        elif action == "memory_required":
-            total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
-            size_mb = min(size_mb, total_disk // 10) if size_mb else total_disk // 10
+    # Действие "удалить swap"
+    if action == "erase":
+        if current_swap > 0:
+            disable_existing_swap()
+            if not silent:
+                display_message_slowly("🗑️ Swap успешно удален.")
         else:
-            size_mb = 64  # Значение по умолчанию
+            if not silent:
+                display_message_slowly("🔍 Swap уже отсутствует.")
+        return
+
+    # Действия для установки swap
+    if action == "micro":
+        size_mb = 64
+        silent = True
+    elif action == "min":
+        size_mb = 64
+    elif action == "eco":
+        total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
+        size_mb = total_disk // 50  # 2% от объема диска
+    elif action == "memory_required" and size_mb is None:
+        total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
+        size_mb = min(1024, total_disk // 10)  # 10% от объема, но не более 1024 MB
+
+    if size_mb is None:
+        raise ValueError("Требуется указать размер swap или действие.")
 
     # Проверка: swap уже существует и соответствует требованиям
     if current_swap >= size_mb:
@@ -185,12 +235,8 @@ def swap_edit(size_mb=None, action=None, silent=False):
             display_message_slowly(f"✅ Текущий swap ({current_swap} MB) уже оптимален. Ничего не изменено.")
         return
 
-    # Если swap меньше требуемого, пересоздаем
-    if current_swap < size_mb:
-        if not silent:
-            display_message_slowly(f"🔍 Текущий swap ({current_swap} MB) меньше запрашиваемого ({size_mb} MB). Обновляю swap.")
-        disable_existing_swap()
-        create_swap_file(size_mb, reason=action)
+    # Создание нового swap
+    create_swap_file(size_mb, reason=action)
 
     # Итоговое состояние памяти (только если не silent)
     if not silent:
@@ -200,18 +246,15 @@ def swap_edit(size_mb=None, action=None, silent=False):
             print(final_swap_info)
 
 
-
-
 if __name__ == "__main__":
     parser = ArgumentParser(description="Утилита для управления swap-файлом.")
-    parser.add_argument("--memory_required", "--mr", type=int, help="Указать минимальный объем swap в MB (например, 1024).")
+    parser.add_argument("--memory_required", "--mr", type=int, help="Указать минимальный объем swap в MB.")
     parser.add_argument("--min_swap", "--ms", action="store_true", help="Создать минимальный swap (64 MB).")
-    parser.add_argument("--eco_swap", action="store_true", help="Создать swap размером 2%% от объема диска.")
+    parser.add_argument("--eco_swap", action="store_true", help="Создать eco swap (2% от объема диска).")
     parser.add_argument("--micro_swap", action="store_true", help="Создать swap размером 64 MB в тихом режиме.")
     parser.add_argument("--erase_swap", action="store_true", help="Удалить swap.")
-    
-    args = parser.parse_args()  # Убедитесь, что отступы соответствуют остальному коду
-    
+    args = parser.parse_args()
+
     if args.erase_swap:
         swap_edit(action="erase")
     elif args.eco_swap:
@@ -223,10 +266,4 @@ if __name__ == "__main__":
     elif args.memory_required:
         swap_edit(size_mb=args.memory_required, action="memory_required")
     else:
-        swap_edit()
-
-"""
-### Полное описание скрипта `swap_edit.py` можно найти в docs/
-
-
-"""
+        interactive_swap_edit()
