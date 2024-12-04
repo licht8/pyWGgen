@@ -161,17 +161,23 @@ def swap_edit(size_mb=None, action=None, silent=False):
 
     # Проверка текущего состояния swap
     current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
-    current_swap = int(current_swap) if current_swap else 0
+    current_swap = int(current_swap) if current_swap and current_swap.isdigit() else 0
 
-    # Определяем целевой размер swap для различных действий
-    if action == "micro":
-        size_mb = 64  # Размер swap для микрорежима
-        silent = True
-    elif action == "min":
-        size_mb = 64
-    elif action == "eco":
-        total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
-        size_mb = total_disk // 50  # 2% от объема диска
+    # Установить значение по умолчанию для size_mb, если не передано
+    if size_mb is None:
+        if action == "micro":
+            size_mb = 64  # Размер swap для микрорежима
+            silent = True
+        elif action == "min":
+            size_mb = 64
+        elif action == "eco":
+            total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
+            size_mb = total_disk // 50  # 2% от объема диска
+        elif action == "memory_required":
+            total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
+            size_mb = min(size_mb, total_disk // 10) if size_mb else total_disk // 10
+        else:
+            size_mb = 64  # Значение по умолчанию
 
     # Проверка: swap уже существует и соответствует требованиям
     if current_swap >= size_mb:
@@ -192,6 +198,7 @@ def swap_edit(size_mb=None, action=None, silent=False):
         final_swap_info = get_swap_info()
         if final_swap_info:
             print(final_swap_info)
+
 
 
 
