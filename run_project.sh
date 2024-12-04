@@ -61,7 +61,7 @@ if ! command -v node &>/dev/null; then
   echo " 🔄 Node.js не установлен. Устанавливаю..."
   curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - &>/dev/null || { echo -e "${RED} ❌ Ошибка при добавлении репозитория Node.js.${RESET}"; exit 1; }
   sudo dnf install -y nodejs &>/dev/null || { echo -e "${RED} ❌ Ошибка при установке Node.js.${RESET}"; exit 1; }
-  echo " ✅ Node.js успешно установлен."
+  echo -e "\n ✅ Node.js успешно установлен."
 else
   echo " ✅ Node.js уже установлен. Версия: $(node --version)"
 fi
@@ -143,7 +143,7 @@ fi
 
 # Полезная информация перед запуском меню
 echo -e "\n=== Полезная информация о системе ==="
-echo -e " 🖥️  ОС: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"')"
+echo -e "\n 🖥️  ОС: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"')"
 echo -e " 🧰 Ядро: $(uname -r)"
 EXTERNAL_IP=$(curl -s ifconfig.me)
 echo -e " 🌍 Внешний IP-адрес: ${EXTERNAL_IP}"
@@ -160,14 +160,15 @@ else
   echo -e " 🛡️  WireGuard статус: активен"
 fi
 
-echo -e " ⚙️ Файл конфигурации WireGuard: /etc/wireguard/wg0.conf"
+echo -e " ⚙️  Файл конфигурации WireGuard: /etc/wireguard/wg0.conf"
 echo -e " 🌐 Gradio админка: http://${EXTERNAL_IP}:${GRADIO_PORT}"
 echo -e " 📂 Репозиторий: https://github.com/licht8/wg_qr_generator"
 echo "=========================================="
 
 # Выводим сообщение об успешной установке
-echo " ✅ Установка завершена. Проект готов к работе."
+echo -e "\n ✅ Установка завершена. Проект готов к работе."
 
 # Запускаем меню
 echo -e " 🔄 Запуск меню...\n"
+sleep 1 && clear
 python3 menu.py || { echo -e "${RED} ❌ Ошибка при запуске меню.${RESET}"; exit 1; }
