@@ -123,6 +123,20 @@ def swap_edit(size_mb=None, action=None):
     current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
     current_swap = int(current_swap) if current_swap else 0
 
+    if current_swap == 0 and size_mb is None:
+        display_message_slowly("❌ Swap отсутствует. Рекомендуется создать swap.")
+        size_mb = recommended_swap
+        user_input = input(f"Введите размер swap (MB) или нажмите Enter для создания {size_mb} MB: ")
+        if user_input.strip():
+            try:
+                size_mb = int(user_input.strip())
+                if size_mb <= 0:
+                    display_message_slowly("⚠️ Размер должен быть больше 0. Операция отменена.")
+                    return
+            except ValueError:
+                display_message_slowly("⚠️ Введите корректное число. Операция отменена.")
+                return
+
     if action == "erase":
         disable_existing_swap()
         display_message_slowly("   ✅ Swap успешно удален.")
