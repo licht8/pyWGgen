@@ -100,4 +100,4 @@ if __name__ == "__main__":
     # Используем BASE_DIR из settings.py
     project_directory = str(BASE_DIR)
     print(f"🔍 Сбор информации о памяти для проекта: {project_directory}")
-    display_memory_usage(project_directory, interval=5)
+    display_memory_usage(project_directory, interval=1)
