@@ -74,7 +74,7 @@ def get_swap_info():
 def disable_existing_swap(swap_file="/swap"):
     """Отключить и удалить существующий файл подкачки, если он используется."""
     if os.path.exists(swap_file):
-        display_message_slowly(f"   🔍 Обнаружен существующий swap-файл: {swap_file}")
+        display_message_slowly(f"\n   🔍 Обнаружен существующий swap-файл: {swap_file}")
         run_command(f"swapoff {swap_file}", check=False)
         try:
             os.remove(swap_file)
@@ -98,7 +98,7 @@ def create_swap_file(size_mb, reason=None):
         display_message_slowly("   ⚡ Активирую файл подкачки...")
         run_command(f"swapon {swap_file}", check=True)
 
-        display_message_slowly(f"   ✅ Swap создан. Размер: {size_mb} MB")
+        display_message_slowly(f"\n   ✅ Swap создан. Размер: {size_mb} MB")
         if reason:
             display_message_slowly(f"   🔍 Запрошен {reason}")
 
@@ -124,17 +124,17 @@ def swap_edit(size_mb=None, action=None):
     current_swap = int(current_swap) if current_swap else 0
 
     if current_swap == 0 and size_mb is None:
-        display_message_slowly("❌ Swap отсутствует. Рекомендуется создать swap.")
+        display_message_slowly(" ❌ Swap отсутствует. Рекомендуется создать swap.")
         size_mb = recommended_swap
         user_input = input(f"Введите размер swap (MB) или нажмите Enter для создания {size_mb} MB: ")
         if user_input.strip():
             try:
                 size_mb = int(user_input.strip())
                 if size_mb <= 0:
-                    display_message_slowly("⚠️ Размер должен быть больше 0. Операция отменена.")
+                    display_message_slowly(" ⚠️ Размер должен быть больше 0. Операция отменена.")
                     return
             except ValueError:
-                display_message_slowly("⚠️ Введите корректное число. Операция отменена.")
+                display_message_slowly(" ⚠️ Введите корректное число. Операция отменена.")
                 return
 
     if action == "erase":
@@ -158,7 +158,7 @@ def swap_edit(size_mb=None, action=None):
     create_swap_file(size_mb, reason=action)
 
     # Показать итоговое состояние памяти
-    display_message_slowly("📊 Итоговое состояние памяти:")
+    display_message_slowly(f"\n 📊 Итоговое состояние памяти:")
     final_swap_info = get_swap_info()
     if final_swap_info:
         print(final_swap_info)
