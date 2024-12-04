@@ -1,65 +1,69 @@
 #!/usr/bin/env python3
 
-"""
-get_memory_usage_by_scripts.py
-Скрипт для отображения в реальном времени информации о потреблении памяти скриптами проекта wg_qr_generator.
-"""
-
 import os
 import sys
 import time
 import tracemalloc
-from settings import BASE_DIR
+from prettytable import PrettyTable
+
+# Определяем базовый путь к корню проекта и добавляем его в sys.path
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
+sys.path.append(PROJECT_ROOT)
+
+try:
+    from settings import BASE_DIR
+except ImportError:
+    print("❌ Не удалось найти settings.py. Убедитесь, что файл находится в корневой директории проекта.")
+    sys.exit(1)
 
 
-def get_detailed_memory_usage_by_functions():
+def get_process_memory_info():
     """
-    Возвращает подробное использование памяти с разбивкой по функциям.
+    Возвращает список процессов, связанных с проектом, и информацию об их потреблении памяти.
     """
-    tracemalloc.start()
+    project_path = str(BASE_DIR)
+    processes = []
+    try:
+        output = os.popen(f"ps aux --sort=-%mem").readlines()
+        for line in output[1:]:  # Пропускаем заголовок
+            parts = line.split()
+            if len(parts) < 11:
+                continue
+            pid = parts[1]
+            memory = float(parts[3])  # Процент использования памяти
+            command = " ".join(parts[10:])
+            if project_path in command:
+                processes.append((pid, memory, command))
+    except Exception as e:
+        print(f"❌ Ошибка при получении информации о процессах: {e}")
+    return processes
 
-    snapshot = tracemalloc.take_snapshot()
-    top_stats = snapshot.statistics('lineno')
 
-    detailed_memory = []
-    for stat in top_stats[:10]:  # Топ-10 потребителей памяти
-        detailed_memory.append({
-            "filename": stat.traceback[0].filename,
-            "lineno": stat.traceback[0].lineno,
-            "size": stat.size / 1024,  # В КБ
-            "count": stat.count
-        })
-
-    tracemalloc.stop()
-    return detailed_memory
-
-
-def display_detailed_memory_usage(interval=5):
+def display_memory_usage(interval=5):
     """
-    В режиме реального времени отображает подробную информацию о потреблении памяти с разбивкой по функциям.
-
-    :param interval: Интервал обновления в секундах.
+    Отображает использование памяти процессами проекта в реальном времени.
     """
     try:
         while True:
-            os.system('clear')
-            detailed_memory = get_detailed_memory_usage_by_functions()
+            os.system("clear")
+            processes = get_process_memory_info()
 
-            if not detailed_memory:
-                print("Нет данных о потреблении памяти.")
+            if not processes:
+                print(f"Нет процессов, связанных с проектом: {BASE_DIR}")
                 time.sleep(interval)
                 continue
 
-            print(f"{'Файл':<40}{'Строка':<10}{'Размер (KB)':<15}{'Кол-во вызовов':<15}")
-            print("-" * 80)
-            for item in detailed_memory:
-                print(f"{item['filename']:<40}{item['lineno']:<10}{item['size']:<15.2f}{item['count']:<15}")
+            # Выводим таблицу
+            table = PrettyTable(["PID", "Memory Usage (%)", "Command Line"])
+            total_memory = 0.0
+            for pid, memory, command in processes:
+                table.add_row([pid, memory, command])
+                total_memory += memory
 
-            total_memory = sum(item['size'] for item in detailed_memory)
-            print("-" * 80)
-            print(f"{'Итог':<40}{'':<10}{total_memory:<15.2f}{'KB':<15}")
-
-            print(f"\nОбновление каждые {interval} секунд...")
+            print(table)
+            print(f"\nИтоговое использование памяти: {total_memory:.2f}%")
+            print(f"Обновление каждые {interval} секунд...")
             time.sleep(interval)
 
     except KeyboardInterrupt:
@@ -67,6 +71,5 @@ def display_detailed_memory_usage(interval=5):
 
 
 if __name__ == "__main__":
-    print(f"🔍 Запущен анализ памяти для проекта: {BASE_DIR}")
-    display_detailed_memory_usage()
-
+    print(f"🔍 Сбор информации о памяти для проекта: {BASE_DIR}")
+    display_memory_usage()
