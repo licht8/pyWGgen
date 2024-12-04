@@ -106,6 +106,18 @@ def create_swap_file(size_mb, reason=None):
         display_message_slowly(f"   ❌ Произошла ошибка: {e}")
 
 
+import logging
+from settings import LOG_LEVEL, LOG_FILE_PATH
+
+# Настраиваем логирование
+logging.basicConfig(
+    filename=LOG_FILE_PATH,
+    level=getattr(logging, LOG_LEVEL.upper(), logging.DEBUG),
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+
+logger = logging.getLogger(__name__)
+
 def check_swap_edit(size_mb, action=None, silent=True):
     """
     Проверяет состояние swap и вызывает swap_edit только при необходимости.
@@ -114,23 +126,30 @@ def check_swap_edit(size_mb, action=None, silent=True):
     :param action: Действие (например, "micro", "min").
     :param silent: Если True, работает в тихом режиме.
     """
-    # Проверяем текущий swap
-    current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
-    
-    # Проверяем, что current_swap не пустой и является числом
-    current_swap = int(current_swap) if current_swap and current_swap.isdigit() else 0
+    try:
+        # Проверяем текущий swap
+        current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
+        current_swap = int(current_swap) if current_swap and current_swap.isdigit() else 0
 
-    # Логирование для отладки
-    print(f"Текущий swap: {current_swap} MB, Требуемый swap: {size_mb} MB")
+        # Логируем текущий swap и требуемый размер
+        logger.debug(f"Текущий swap: {current_swap} MB")
+        logger.debug(f"Требуемый swap: {size_mb} MB")
 
-    # Проверяем условие: swap уже соответствует требованиям
-    if current_swap >= size_mb:
+        # Проверяем условие: swap уже соответствует требованиям
+        if current_swap >= size_mb:
+            if not silent:
+                display_message_slowly(f"✅ Текущий swap ({current_swap} MB) уже оптимален. Ничего не изменено.")
+            logger.info(f"Swap ({current_swap} MB) уже оптимален. Никаких изменений не требуется.")
+            return
+
+        # Если swap меньше требуемого, вызываем swap_edit
+        logger.info(f"Swap ({current_swap} MB) меньше требуемого ({size_mb} MB). Вызываем swap_edit.")
+        swap_edit(size_mb=size_mb, action=action, silent=silent)
+    except Exception as e:
+        # Логируем любые исключения
+        logger.error(f"Ошибка при проверке или настройке swap: {e}")
         if not silent:
-            display_message_slowly(f"✅ Текущий swap ({current_swap} MB) уже оптимален. Ничего не изменено.")
-        return
-
-    # Если swap меньше требуемого, вызываем swap_edit
-    swap_edit(size_mb=size_mb, action=action, silent=silent)
+            display_message_slowly(f"❌ Ошибка: {e}")
 
 
 
