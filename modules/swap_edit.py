@@ -130,17 +130,20 @@ def swap_edit(size_mb=None, action=None, silent=False):
             display_message_slowly(f"✅ Текущий swap ({current_swap} MB) уже оптимален. Ничего не изменено.")
         return
 
-    # Создаем или обновляем swap только если текущий меньше требуемого
-    if not silent:
-        display_message_slowly(f"🔍 Текущий swap ({current_swap} MB) меньше запрашиваемого ({size_mb} MB). Обновляю swap.")
-    disable_existing_swap()
-    create_swap_file(size_mb, reason=action)
+    # Если swap меньше требуемого, пересоздаем
+    if current_swap < size_mb:
+        if not silent:
+            display_message_slowly(f"🔍 Текущий swap ({current_swap} MB) меньше запрашиваемого ({size_mb} MB). Обновляю swap.")
+        disable_existing_swap()
+        create_swap_file(size_mb, reason=action)
 
+    # Итоговое состояние памяти (только если не silent)
     if not silent:
         display_message_slowly("📊 Итоговое состояние памяти:")
         final_swap_info = get_swap_info()
         if final_swap_info:
             print(final_swap_info)
+
 
 
 if __name__ == "__main__":
