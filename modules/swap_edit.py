@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 """
-swap_edit.py - Создание и настройка swap с эффектами ИИ.
+swap_edit.py - Создание и настройка swap с улучшенным выводом и корректным управлением существующим swap.
 
 Особенности:
-1. Интерактивный режим с эффектами печати (ИИ-стиль).
-2. Консольный режим для автоматического выполнения.
-3. Защита от прерывания в критических секциях.
+1. Автоматическое отключение и удаление существующего файла подкачки.
+2. Красивый форматированный вывод для удобства.
+3. Поддержка интерактивного и консольного режимов.
 4. Табличное представление данных (до и после изменений).
-5. Возможность вызова как функции из другого скрипта.
+5. Возможность вызова как модуля из других скриптов.
 
 Использование:
 - Интерактивный: `sudo python3 swap_edit.py`
@@ -22,7 +22,7 @@ import subprocess
 import shutil
 import signal
 from pathlib import Path
-from prettytable import PrettyTable  # Установка: pip install prettytable
+from prettytable import PrettyTable
 
 # Добавляем корневую директорию проекта в sys.path
 CURRENT_DIR = Path(__file__).resolve().parent
@@ -42,7 +42,7 @@ def run_command(command, check=True):
         )
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        print(f"Ошибка: {e.stderr.strip()}")
+        print(f"   ❌ Ошибка: {e.stderr.strip()}")
         return None
 
 
@@ -64,36 +64,45 @@ def get_swap_info():
     return table
 
 
+def disable_existing_swap(swap_file="/swap"):
+    """Отключить и удалить существующий файл подкачки, если он используется."""
+    if os.path.exists(swap_file):
+        display_message_slowly(f"   🔍 Обнаружен существующий swap-файл: {swap_file}")
+        run_command(f"swapoff {swap_file}", check=False)
+        try:
+            os.remove(swap_file)
+            display_message_slowly(f"   🗑️ Удален существующий swap-файл: {swap_file}")
+        except Exception as e:
+            display_message_slowly(f"   ❌ Не удалось удалить файл: {e}")
+
+
 def create_swap_file(size_mb):
     """Создать и активировать файл подкачки."""
     try:
         swap_file = "/swap"
 
-        # Предупреждение о запрете прерывания
-        display_message_slowly("⏳ ВНИМАНИЕ: Не нажимайте Ctrl+C до завершения настройки!", indent=False)
-
-        # Отключить текущий swap
-        run_command("swapoff -a", check=False)
+        # Отключить и удалить существующий swap
+        disable_existing_swap(swap_file)
 
         # Создать файл подкачки
-        display_message_slowly(f"🛠️ Создаю файл подкачки размером {size_mb} MB...")
+        display_message_slowly(f"   🛠️ Создаю файл подкачки размером {size_mb} MB...")
         run_command(f"dd if=/dev/zero of={swap_file} bs=1M count={size_mb}", check=True)
 
         # Форматировать файл подкачки
-        display_message_slowly("🎨 Форматирую файл подкачки...")
+        display_message_slowly("   🎨 Форматирую файл подкачки...")
         run_command(f"mkswap {swap_file}", check=True)
 
         # Активировать файл подкачки
-        display_message_slowly("⚡ Активирую файл подкачки...")
+        display_message_slowly("   ⚡ Активирую файл подкачки...")
         run_command(f"swapon {swap_file}", check=True)
 
         # Установить права
-        display_message_slowly("🔒 Настраиваю права на файл подкачки...")
+        display_message_slowly("   🔒 Настраиваю права на файл подкачки...")
         run_command(f"chown root:root {swap_file}", check=True)
         run_command(f"chmod 0600 {swap_file}", check=True)
 
         # Обновить rc.local
-        display_message_slowly("📂 Обновляю /etc/rc.local для автозагрузки...")
+        display_message_slowly("   📂 Обновляю /etc/rc.local для автозагрузки...")
         rc_local_backup = "/tmp/rc.local.backup"
         if os.path.exists("/etc/rc.local"):
             shutil.copy("/etc/rc.local", rc_local_backup)
@@ -106,10 +115,10 @@ def create_swap_file(size_mb):
 
         os.chmod("/etc/rc.local", 0o755)
 
-        display_message_slowly(f"✅ Swap-файл создан! Размер: {size_mb} MB")
+        display_message_slowly(f"   ✅ Swap-файл создан и активирован. Размер: {size_mb} MB")
 
     except Exception as e:
-        display_message_slowly(f"❌ Произошла ошибка: {e}")
+        display_message_slowly(f"   ❌ Произошла ошибка: {e}")
 
 
 def safe_exit(signal_received, frame):
