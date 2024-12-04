@@ -8,32 +8,23 @@
 # - Улучшение обработки ввода при поиске внутри найденных совпадений.
 # - Сохранение корректного форматирования текста.
 
+import json
 import sys
 from pathlib import Path
-
-# Определение корневого пути и директорий
+from importlib.util import spec_from_file_location, module_from_spec
+from modules.input_utils import input_with_history  
+# Добавляем пути к корню проекта и модулям
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-MODULES_DIR = PROJECT_ROOT / "modules"
-AI_DIAGNOSTICS_DIR = PROJECT_ROOT / "ai_diagnostics"
+MODULES_DIR = PROJECT_ROOT / "ai_diagnostics" / "modules"
+HELP_DIR = PROJECT_ROOT / "ai_diagnostics" / "ai_help"
+SETTINGS_FILE = PROJECT_ROOT / "settings.py"
 
 sys.path.append(str(PROJECT_ROOT))
 sys.path.append(str(MODULES_DIR))
-sys.path.append(str(AI_DIAGNOSTICS_DIR))
 
-# Импорты с обработкой ошибок
-try:
-    from modules.input_utils import input_with_history
-except ImportError as e:
-    print(f"Ошибка импорта 'input_utils': {e}")
-    sys.exit(1)
-
-try:
-    from ai_diagnostics.pause_rules import apply_pause, get_pause_rules
-    from ai_diagnostics.ai_diagnostics import display_message_slowly
-except ImportError as e:
-    print(f"Ошибка импорта модулей диагностики: {e}")
-    sys.exit(1)
-
+# Импорты
+from pause_rules import apply_pause, get_pause_rules
+from ai_diagnostics.ai_diagnostics import display_message_slowly
 
 # Конфигурация для форматирования текста
 LINE_WIDTH = {
