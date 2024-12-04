@@ -2,7 +2,7 @@
 
 """
 get_memory_usage_by_scripts.py
-Скрипт для отображения в реальном времени информации о потреблении памяти скриптами проекта wg_qr_generator.
+Расширенный анализ потребления памяти скриптами проекта wg_qr_generator.
 """
 
 import psutil
@@ -10,7 +10,10 @@ import os
 import sys
 import time
 import tracemalloc
+import gc
 from pathlib import Path
+from collections import Counter
+import inspect
 
 # Добавляем путь к корневой директории проекта в sys.path
 CURRENT_DIR = Path(__file__).resolve().parent
@@ -62,9 +65,43 @@ def get_memory_usage_by_scripts(project_dir):
     return sorted_processes
 
 
-def display_memory_usage_with_functions(project_dir, interval=1):
+def get_loaded_modules_memory():
     """
-    В режиме реального времени отображает информацию о потреблении памяти скриптами проекта, включая функции.
+    Анализ памяти, используемой загруженными модулями.
+
+    :return: Список модулей и их размера в памяти.
+    """
+    module_sizes = Counter()
+    for module_name, module in sys.modules.items():
+        try:
+            size = sum(sys.getsizeof(obj) for obj in vars(module).values())
+            module_sizes[module_name] += size
+        except TypeError:
+            continue
+    return module_sizes.most_common(10)
+
+
+def get_object_memory_summary():
+    """
+    Выводит обобщенный список больших объектов в памяти.
+
+    :return: Список объектов и их размеров.
+    """
+    objects = gc.get_objects()
+    object_sizes = Counter()
+    for obj in objects:
+        try:
+            size = sys.getsizeof(obj)
+            object_type = type(obj).__name__
+            object_sizes[object_type] += size
+        except TypeError:
+            continue
+    return object_sizes.most_common(10)
+
+
+def display_memory_usage_with_details(project_dir, interval=1):
+    """
+    В режиме реального времени отображает информацию о потреблении памяти скриптами проекта, включая функции и объекты.
 
     :param project_dir: Путь к корневой директории проекта.
     :param interval: Интервал обновления в секундах.
@@ -108,6 +145,18 @@ def display_memory_usage_with_functions(project_dir, interval=1):
             else:
                 print("Нет данных для разбивки по функциям.")
 
+            # Разбивка по модулям
+            print("\n🔍 Загруженные модули:")
+            modules = get_loaded_modules_memory()
+            for module, size in modules:
+                print(f"{module:<50} {size / 1024:.2f} KB")
+
+            # Разбивка по объектам
+            print("\n🔍 Объекты в памяти:")
+            objects = get_object_memory_summary()
+            for obj_type, size in objects:
+                print(f"{obj_type:<30} {size / 1024:.2f} KB")
+
             print(f"\nОбновление каждые {interval} секунд...")
             time.sleep(interval)
     except KeyboardInterrupt:
@@ -120,4 +169,4 @@ if __name__ == "__main__":
     # Используем BASE_DIR из settings.py
     project_directory = str(BASE_DIR)
     print(f"🔍 Сбор информации о памяти для проекта: {project_directory}")
-    display_memory_usage_with_functions(project_directory, interval=1)
+    display_memory_usage_with_details(project_directory, interval=1)
