@@ -232,7 +232,7 @@ def swap_edit(size_mb=None, action=None, silent=False):
     # Проверка: swap уже существует и соответствует требованиям
     if current_swap >= size_mb:
         if not silent:
-            display_message_slowly(f"✅ Текущий swap ({current_swap} MB) уже оптимален. Ничего не изменено.")
+            display_message_slowly(f"\n✅ Текущий swap ({current_swap} MB) уже оптимален. Ничего не изменено.")
         return
 
     # Создание нового swap
@@ -240,7 +240,7 @@ def swap_edit(size_mb=None, action=None, silent=False):
 
     # Итоговое состояние памяти (только если не silent)
     if not silent:
-        display_message_slowly("📊 Итоговое состояние памяти:")
+        display_message_slowly(f"\n 📊 Итоговое состояние памяти:")
         final_swap_info = get_swap_info()
         if final_swap_info:
             print(final_swap_info)
