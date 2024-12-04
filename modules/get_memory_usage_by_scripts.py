@@ -2,13 +2,13 @@
 
 """
 get_memory_usage_by_scripts.py
-Скрипт для сбора информации о потреблении памяти скриптами проекта wg_qr_generator.
-Может работать как самостоятельный файл, так и как вызываемая функция.
+Скрипт для отображения в реальном времени информации о потреблении памяти скриптами проекта wg_qr_generator.
 """
 
 import psutil
 import os
 import sys
+import time
 from pathlib import Path
 
 # Добавляем путь к корневой директории проекта в sys.path
@@ -20,7 +20,6 @@ sys.path.append(str(PROJECT_DIR))
 try:
     from settings import BASE_DIR
 except ImportError:
-    # Если settings.py не найден, выводим ошибку
     print("❌ Не удалось найти settings.py. Убедитесь, что файл находится в корневой директории проекта.")
     sys.exit(1)
 
@@ -37,7 +36,6 @@ def get_memory_usage_by_scripts(project_dir):
 
     for proc in psutil.process_iter(attrs=['pid', 'name', 'cmdline', 'memory_info', 'cwd']):
         try:
-            # Извлекаем информацию о процессе
             pid = proc.info['pid']
             name = proc.info['name']
             cmdline = proc.info['cmdline']
@@ -56,41 +54,49 @@ def get_memory_usage_by_scripts(project_dir):
                     'memory_usage': memory_usage,
                 })
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            # Игнорируем процессы, к которым нет доступа или которые завершились
             continue
 
     # Сортируем процессы по объему используемой памяти
     sorted_processes = sorted(processes_info, key=lambda x: x['memory_usage'], reverse=True)
-
     return sorted_processes
 
 
-def display_memory_usage(project_dir):
+def display_memory_usage(project_dir, interval=5):
     """
-    Выводит информацию о потреблении памяти скриптами проекта.
+    В режиме реального времени отображает информацию о потреблении памяти скриптами проекта.
 
     :param project_dir: Путь к корневой директории проекта.
+    :param interval: Интервал обновления в секундах.
     """
-    processes = get_memory_usage_by_scripts(project_dir)
+    try:
+        while True:
+            processes = get_memory_usage_by_scripts(project_dir)
+            os.system('clear')
 
-    if not processes:
-        print(f"Нет процессов, связанных с проектом: {project_dir}")
-        return
+            if not processes:
+                print(f"Нет процессов, связанных с проектом: {project_dir}")
+                time.sleep(interval)
+                continue
 
-    print(f"{'PID':<10}{'Name':<20}{'Memory Usage (MB)':<20}{'Command Line':<50}")
-    print("-" * 100)
-    for proc in processes:
-        print(f"{proc['pid']:<10}{proc['name']:<20}{proc['memory_usage'] / (1024 ** 2):<20.2f}{proc['cmdline']:<50}")
+            total_memory = sum(proc['memory_usage'] for proc in processes)
+
+            print(f"{'PID':<10}{'Name':<20}{'Memory Usage (MB)':<20}{'Command Line':<50}")
+            print("-" * 100)
+            for proc in processes:
+                print(f"{proc['pid']:<10}{proc['name']:<20}{proc['memory_usage'] / (1024 ** 2):<20.2f}{proc['cmdline']:<50}")
+            
+            print("-" * 100)
+            print(f"{'Итог':<10}{'':<20}{total_memory / (1024 ** 2):<20.2f}{'MB':<50}")
+            print("\nОбновление каждые {interval} секунд...")
+
+            time.sleep(interval)
+
+    except KeyboardInterrupt:
+        print("\nПрограмма остановлена пользователем.")
 
 
 if __name__ == "__main__":
-    # Проверяем, запущен ли скрипт напрямую
-    try:
-        # Используем BASE_DIR из settings.py
-        project_directory = str(BASE_DIR)
-    except NameError:
-        # Если BASE_DIR не найден, используем текущую директорию
-        project_directory = str(Path(__file__).resolve().parent)
-
+    # Используем BASE_DIR из settings.py
+    project_directory = str(BASE_DIR)
     print(f"🔍 Сбор информации о памяти для проекта: {project_directory}")
-    display_memory_usage(project_directory)
+    display_memory_usage(project_directory, interval=5)
