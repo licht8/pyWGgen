@@ -11,6 +11,11 @@ import os
 import sys
 from pathlib import Path
 
+# Добавляем путь к корневой директории проекта в sys.path
+CURRENT_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = CURRENT_DIR.parent
+sys.path.append(str(PROJECT_DIR))
+
 # Импортируем настройки
 try:
     from settings import BASE_DIR
