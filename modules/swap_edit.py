@@ -124,6 +124,13 @@ def swap_edit(size_mb=None, action=None, silent=False):
         total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
         size_mb = total_disk // 50  # 2% от объема диска
 
+    # Действие "erase" не требует сравнения размера
+    if action == "erase":
+        disable_existing_swap()
+        if not silent:
+            display_message_slowly("   ✅ Swap успешно удален.")
+        return
+
     # Если silent=True, не выводим состояние
     if not silent:
         display_message_slowly("📊 Состояние памяти:")
@@ -132,7 +139,7 @@ def swap_edit(size_mb=None, action=None, silent=False):
             print(swap_info)
 
     # Условие для проверки необходимости создания swap
-    if current_swap >= size_mb:
+    if size_mb is not None and current_swap >= size_mb:
         if not silent:
             display_message_slowly(
                 f"✅ Текущий swap ({current_swap} MB) уже оптимален. Если хотите изменить, используйте --erase_swap."
@@ -140,7 +147,7 @@ def swap_edit(size_mb=None, action=None, silent=False):
         return
 
     # Создаем swap, только если текущий меньше целевого или отсутствует
-    if current_swap < size_mb:
+    if size_mb is not None and current_swap < size_mb:
         if not silent:
             display_message_slowly(f"🔍 Текущий swap ({current_swap} MB) меньше запрашиваемого ({size_mb} MB). Создаю swap.")
         create_swap_file(size_mb, reason=action)
