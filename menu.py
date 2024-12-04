@@ -8,9 +8,7 @@
 # Версия: 1.0
 # Обновлено: 2024-12-03
 # ===========================================
-#Отладка с помощью pdb
 import pdb; pdb.set_trace()
-
 import os
 import sys
 import subprocess
@@ -70,7 +68,7 @@ def show_main_menu():
         print(f"\n\t 0 или q. Выход")
         display_message_slowly(f" ==========================================\n", print_speed=local_print_speed, indent=False)
 
-        choice = input(" Выберите действие: ").strip().lower()
+        choice = input_with_history(" Выберите действие: ").strip().lower()
 
         if choice == "0" or choice == "q":
             print("\n 👋  Выход. До свидания!\n")
