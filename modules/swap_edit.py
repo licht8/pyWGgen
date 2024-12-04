@@ -155,7 +155,12 @@ def check_swap_edit(size_mb, action=None, silent=True, tolerance=2):
 
 
 def swap_edit(size_mb=None, action=None, silent=False):
-    """Основная функция настройки swap."""
+    """
+    Основная функция настройки swap.
+    :param size_mb: Требуемый размер swap в MB.
+    :param action: Тип действия ("min", "eco", "erase", "memory_required").
+    :param silent: Если True, подавляет вывод сообщений.
+    """
     check_root()
 
     if not silent:
@@ -164,37 +169,51 @@ def swap_edit(size_mb=None, action=None, silent=False):
         if swap_info:
             print(swap_info)
 
-    # Получение текущего размера swap
+    # Получаем текущий размер swap
     current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
     current_swap = int(current_swap) if current_swap and current_swap.isdigit() else 0
 
-    if action == "erase":
-        if current_swap > 0:
-            if not silent:
-                display_message_slowly(f"🔍 Обнаружен существующий swap: {current_swap} MB.")
-                display_message_slowly("🗑️ Удаляю текущий swap...")
-            run_command("swapoff -a", check=True)
-            swap_file_path = "/swap"
-            if Path(swap_file_path).exists():
-                Path(swap_file_path).unlink()
-            if not silent:
-                display_message_slowly("✅ Swap успешно удален.")
-        else:
-            if not silent:
-                display_message_slowly("❌ Swap отсутствует. Нечего удалять.")
-        return
+    # Расчет рекомендуемых размеров swap
+    total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024  # Конвертируем в MB
+    recommended_swap = min(total_disk // 10, 2048)  # Максимум 10% или 2048 MB
+    eco_swap = total_disk // 50  # 2% от общего объема диска
+    min_swap = 64  # Минимальный фиксированный swap
 
-    # Проверка на None для size_mb
-    if size_mb is None:
-        size_mb = 64  # Значение по умолчанию для минимального swap
+    # Определяем размер на основе действия
+    if action == "min":
+        size_mb = min_swap
+    elif action == "eco":
+        size_mb = eco_swap
+    elif action == "memory_required" and size_mb:
+        size_mb = min(size_mb, recommended_swap)
+    elif action == "erase":
+        size_mb = 0  # Удаление swap
+    elif action == "micro":
+        size_mb = min_swap
+        silent = True
 
+    # Если swap уже соответствует требованиям
     if current_swap >= size_mb:
         if not silent:
-            display_message_slowly(f"✅ Текущий swap ({current_swap} MB) уже оптимален. Ничего не изменено.")
+            display_message_slowly(f"✅ Текущий swap ({current_swap} MB) уже оптимален.")
         return
 
-    create_swap_file(size_mb, reason=action)
+    # Удаление текущего swap
+    if current_swap > 0:
+        if not silent:
+            display_message_slowly(f"🔍 Обнаружен существующий swap: {current_swap} MB.")
+        run_command("swapoff -a", check=True)
+        swap_file_path = "/swap"
+        if Path(swap_file_path).exists():
+            Path(swap_file_path).unlink()
+        if not silent:
+            display_message_slowly("🗑️ Swap удален успешно.")
 
+    # Создание нового swap
+    if size_mb > 0:
+        create_swap_file(size_mb, reason=action)
+
+    # Отображение итогового состояния памяти
     if not silent:
         display_message_slowly("📊 Итоговое состояние памяти:")
         final_swap_info = get_swap_info()
