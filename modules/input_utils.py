@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# input_utils.py
+# modules/input_utils.py
 # Модуль для ввода с поддержкой истории через readline.
 
 import readline
