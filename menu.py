@@ -8,7 +8,24 @@
 # Версия: 1.0
 # Обновлено: 2024-12-03
 # ===========================================
-import pdb; pdb.set_trace()
+#import pdb; pdb.set_trace()
+
+import tracemalloc
+
+def main():
+    tracemalloc.start()
+
+    initialize_project()
+    show_main_menu()
+
+    # Снимок памяти после завершения работы
+    snapshot = tracemalloc.take_snapshot()
+    top_stats = snapshot.statistics("lineno")
+
+    print("\n🔍 Топ 10 файлов по потреблению памяти:")
+    for stat in top_stats[:10]:
+        print(stat)
+
 import os
 import sys
 import subprocess
