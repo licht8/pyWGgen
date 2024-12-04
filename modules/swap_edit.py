@@ -110,25 +110,28 @@ def swap_edit(size_mb=None, action=None, silent=False):
     """Основная функция настройки swap."""
     check_root()
 
+    # Проверка текущего состояния swap
+    current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
+    current_swap = int(current_swap) if current_swap else 0
+
+    # Определяем целевой размер swap для различных действий
+    if action == "micro":
+        size_mb = 64  # Размер swap для микрорежима
+        silent = True
+    elif action == "min":
+        size_mb = 64
+    elif action == "eco":
+        total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
+        size_mb = total_disk // 50  # 2% от объема диска
+
+    # Если silent=True, не выводим состояние
     if not silent:
         display_message_slowly("📊 Состояние памяти:")
         swap_info = get_swap_info()
         if swap_info:
             print(swap_info)
 
-    total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
-    recommended_swap = min(total_disk // 10, 2048)  # 10% или максимум 2048 MB
-    eco_swap = total_disk // 50  # 2% от диска
-    min_swap = 64
-    micro_swap = 64  # Размер для тихого режима
-
-    current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
-    current_swap = int(current_swap) if current_swap else 0
-
-    if action == "micro":
-        size_mb = micro_swap
-        silent = True
-
+    # Условие для проверки необходимости создания swap
     if current_swap >= size_mb:
         if not silent:
             display_message_slowly(
@@ -136,13 +139,21 @@ def swap_edit(size_mb=None, action=None, silent=False):
             )
         return
 
-    create_swap_file(size_mb, reason=action)
+    # Создаем swap, только если текущий меньше целевого или отсутствует
+    if current_swap < size_mb:
+        if not silent:
+            display_message_slowly(f"🔍 Текущий swap ({current_swap} MB) меньше запрашиваемого ({size_mb} MB). Создаю swap.")
+        create_swap_file(size_mb, reason=action)
 
-    if not silent:
-        display_message_slowly("📊 Итоговое состояние памяти:")
-        final_swap_info = get_swap_info()
-        if final_swap_info:
-            print(final_swap_info)
+    # Если silent=True, завершить без дальнейших сообщений
+    if silent:
+        return
+
+    # Выводим итоговое состояние памяти
+    display_message_slowly("📊 Итоговое состояние памяти:")
+    final_swap_info = get_swap_info()
+    if final_swap_info:
+        print(final_swap_info)
 
 
 if __name__ == "__main__":
