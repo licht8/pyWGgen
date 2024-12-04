@@ -6,8 +6,10 @@
 # Новое:
 # - Поддержка истории ввода и движения по ней с использованием стрелок.
 
+
 import json
 import sys
+import logging
 from pathlib import Path
 from importlib.util import spec_from_file_location, module_from_spec
 
@@ -20,14 +22,24 @@ SETTINGS_FILE = PROJECT_ROOT / "settings.py"
 sys.path.append(str(PROJECT_ROOT))
 sys.path.append(str(MODULES_DIR))
 
+# Настройка логирования
+LOG_FILE = PROJECT_ROOT / "user/data/logs/app.log"
+LOG_LEVEL = logging.DEBUG  # Уровень логирования: DEBUG, INFO, WARNING, ERROR
+
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=LOG_LEVEL,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 # Импорты
 try:
     from pause_rules import apply_pause, get_pause_rules  # Исправленный путь к pause_rules
     from ai_diagnostics.ai_diagnostics import display_message_slowly
     from modules.input_utils import input_with_history  # Корректный импорт input_utils
 except ImportError as e:
+    logging.error(f"❌ Ошибка импорта модуля: {e}")
     print(f"❌ Ошибка импорта модуля: {e}")
-    print("Проверьте, что все необходимые модули присутствуют и пути настроены правильно.")
     sys.exit(1)
 
 # Конфигурация для форматирования текста
@@ -35,6 +47,7 @@ LINE_WIDTH = {
     "menu": 60,
     "details": 70
 }
+
 
 
 def wrap_text(text, width, indent=4):
