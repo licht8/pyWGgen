@@ -26,7 +26,7 @@ from modules.swap_edit import check_swap_edit, swap_edit
 from modules.swap_edit import check_swap_edit
 
 # Проверить и создать swap размером 64 MB, если необходимо
-check_swap_edit(size_mb=128, action="mini", silent=True)
+check_swap_edit(size_mb=64, action="micro", silent=True)
 
 
 # Установить путь к корню проекта
