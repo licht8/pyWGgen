@@ -10,17 +10,11 @@
 
 import json
 import sys
-import os
 from pathlib import Path
 from importlib.util import spec_from_file_location, module_from_spec
 
-
-# Убедимся, что рабочая директория совпадает с корнем проекта
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-os.chdir(PROJECT_ROOT)
-
 # Добавляем пути к корню проекта и модулям
-#PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 MODULES_DIR = PROJECT_ROOT / "ai_diagnostics" / "modules"
 HELP_DIR = PROJECT_ROOT / "ai_diagnostics" / "ai_help"
 SETTINGS_FILE = PROJECT_ROOT / "settings.py"
@@ -93,24 +87,17 @@ def replace_variables(text):
 def load_help_files():
     """Загружает все JSON файлы из HELP_DIR."""
     help_data = {}
-    print(f"🔍 Проверяем директорию справки: {HELP_DIR}")
-
-    if not HELP_DIR.exists():
-        print(f"❌ Директория {HELP_DIR} не существует.")
-        return {}
-
-    for json_file in HELP_DIR.glob("*.json"):  # Заменено rglob на glob
-        print(f"📄 Найден файл справки: {json_file}")
+    for json_file in HELP_DIR.rglob("*.json"):
         try:
             with open(json_file, "r", encoding="utf-8") as file:
                 data = json.load(file)
+                for key, section in data.items():
+                    if "title" not in section or ("short" not in section and "long" not in section):
+                        print(f"⚠️  Проблема в разделе '{key}': отсутствует один из ключей ('title', 'short', 'long').")
                 help_data.update(data)
-        except json.JSONDecodeError as e:
-            print(f"❌ Ошибка парсинга JSON-файла {json_file}: {e}")
         except Exception as e:
             print(f"⚠️  Ошибка загрузки файла {json_file}: {e}")
     return help_data
-
 
 
 def save_help_section(section):
@@ -208,7 +195,6 @@ def search_in_matches(matches):
         else:
             print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
             break
-
 
 def interactive_help():
     """Основной цикл взаимодействия со справочной системой."""
