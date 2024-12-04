@@ -80,19 +80,20 @@ def display_memory_usage(project_dir, interval=5):
 
             total_memory = sum(proc['memory_usage'] for proc in processes)
 
-            print(f"{'PID':<10}{'Name':<20}{'Memory Usage (MB)':<20}{'Command Line':<50}")
+            print(f"{'ID':<10}{'Name':<20}{'Memory Usage (MB)':<20}{'Command Line':<50}")
             print("-" * 100)
             for proc in processes:
                 print(f"{proc['pid']:<10}{proc['name']:<20}{proc['memory_usage'] / (1024 ** 2):<20.2f}{proc['cmdline']:<50}")
             
             print("-" * 100)
-            print(f"{'Итог':<10}{'':<20}{total_memory / (1024 ** 2):<20.2f}{'MB':<50}")
-            print("\nОбновление каждые {interval} секунд...")
+            print(f"{'Итог':<30}{total_memory / (1024 ** 2):<20.2f}{'MB':<50}")
+            print(f"\nОбновление каждые {interval} секунд...")
 
             time.sleep(interval)
 
     except KeyboardInterrupt:
         print("\nПрограмма остановлена пользователем.")
+
 
 
 if __name__ == "__main__":
