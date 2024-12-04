@@ -61,7 +61,7 @@ def get_memory_usage_by_scripts(project_dir):
     return sorted_processes
 
 
-def display_memory_usage(project_dir, interval=5):
+def display_memory_usage(project_dir, interval=1):
     """
     В режиме реального времени отображает информацию о потреблении памяти скриптами проекта.
 
