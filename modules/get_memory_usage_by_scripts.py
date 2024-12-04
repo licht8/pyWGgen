@@ -10,10 +10,9 @@ import os
 import sys
 import time
 import tracemalloc
-import gc
+from memory_profiler import memory_usage
 from pathlib import Path
 from collections import Counter
-import inspect
 
 # Добавляем путь к корневой директории проекта в sys.path
 CURRENT_DIR = Path(__file__).resolve().parent
@@ -65,6 +64,25 @@ def get_memory_usage_by_scripts(project_dir):
     return sorted_processes
 
 
+def analyze_memory_usage():
+    """
+    Анализирует текущую память, используемую функциями Python.
+    """
+    tracemalloc.start(25)
+    snapshot = tracemalloc.take_snapshot()
+    stats = snapshot.statistics('lineno')
+
+    details = []
+    for stat in stats[:10]:
+        memory_kb = stat.size / 1024
+        file_path = stat.traceback[0].filename
+        line_no = stat.traceback[0].lineno
+        details.append((memory_kb, file_path, line_no))
+
+    tracemalloc.stop()
+    return details
+
+
 def get_loaded_modules_memory():
     """
     Анализ памяти, используемой загруженными модулями.
@@ -81,24 +99,6 @@ def get_loaded_modules_memory():
     return module_sizes.most_common(10)
 
 
-def get_object_memory_summary():
-    """
-    Выводит обобщенный список больших объектов в памяти.
-
-    :return: Список объектов и их размеров.
-    """
-    objects = gc.get_objects()
-    object_sizes = Counter()
-    for obj in objects:
-        try:
-            size = sys.getsizeof(obj)
-            object_type = type(obj).__name__
-            object_sizes[object_type] += size
-        except TypeError:
-            continue
-    return object_sizes.most_common(10)
-
-
 def display_memory_usage_with_details(project_dir, interval=1):
     """
     В режиме реального времени отображает информацию о потреблении памяти скриптами проекта, включая функции и объекты.
@@ -106,7 +106,6 @@ def display_memory_usage_with_details(project_dir, interval=1):
     :param project_dir: Путь к корневой директории проекта.
     :param interval: Интервал обновления в секундах.
     """
-    tracemalloc.start(25)  # Увеличиваем глубину трассировки
     try:
         while True:
             os.system('clear')
@@ -129,18 +128,13 @@ def display_memory_usage_with_details(project_dir, interval=1):
 
             # Разбивка по функциям
             print("\n🔍 Разбивка по функциям:")
-            snapshot = tracemalloc.take_snapshot()
-            stats = snapshot.statistics('lineno')
-
-            if stats:
+            details = analyze_memory_usage()
+            if details:
                 print(f"{'Размер (KB)':<15}{'Файл':<50}{'Строка':<10}")
                 print("-" * 80)
-                for stat in stats[:10]:  # Топ-10 по памяти
-                    memory_kb = stat.size / 1024
-                    file_path = stat.traceback[0].filename
-                    line_no = stat.traceback[0].lineno
+                for memory_kb, file_path, line_no in details:
                     print(f"{memory_kb:<15.2f}{file_path:<50}{line_no:<10}")
-                total_function_memory = sum(stat.size for stat in stats) / 1024
+                total_function_memory = sum(d[0] for d in details)
                 print(f"\n{'Итог по функциям':<15}{total_function_memory:.2f} KB")
             else:
                 print("Нет данных для разбивки по функциям.")
@@ -151,18 +145,9 @@ def display_memory_usage_with_details(project_dir, interval=1):
             for module, size in modules:
                 print(f"{module:<50} {size / 1024:.2f} KB")
 
-            # Разбивка по объектам
-            print("\n🔍 Объекты в памяти:")
-            objects = get_object_memory_summary()
-            for obj_type, size in objects:
-                print(f"{obj_type:<30} {size / 1024:.2f} KB")
-
-            print(f"\nОбновление каждые {interval} секунд...")
             time.sleep(interval)
     except KeyboardInterrupt:
         print("\nПрограмма остановлена пользователем.")
-    finally:
-        tracemalloc.stop()
 
 
 if __name__ == "__main__":
