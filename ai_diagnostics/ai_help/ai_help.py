@@ -1,30 +1,49 @@
 #!/usr/bin/env python3
 # ai_diagnostics/ai_help/ai_help.py
 # Справочная система для проекта wg_qr_generator.
-# Версия: 2.5
-# Обновлено: 2024-11-29
-# Эта версия включает:
-# - Исправление поиска числовых ключевых слов в повторных попытках.
-# - Улучшение обработки ввода при поиске внутри найденных совпадений.
-# - Сохранение корректного форматирования текста.
+# Версия: 2.6
+# Обновлено: 2024-12-04
+# Новое:
+# - Поддержка истории ввода и движения по ней с использованием стрелок.
 
 import json
 import sys
+import logging
 from pathlib import Path
 from importlib.util import spec_from_file_location, module_from_spec
 
 # Добавляем пути к корню проекта и модулям
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-MODULES_DIR = PROJECT_ROOT / "ai_diagnostics" / "modules"
+MODULES_DIR = PROJECT_ROOT / "modules"
 HELP_DIR = PROJECT_ROOT / "ai_diagnostics" / "ai_help"
 SETTINGS_FILE = PROJECT_ROOT / "settings.py"
 
 sys.path.append(str(PROJECT_ROOT))
 sys.path.append(str(MODULES_DIR))
 
-# Импорты
-from pause_rules import apply_pause, get_pause_rules
-from ai_diagnostics.ai_diagnostics import display_message_slowly
+# Настраиваем логирование
+from settings import LOG_FILE_PATH, LOG_LEVEL
+logging.basicConfig(
+    filename=LOG_FILE_PATH,
+    level=getattr(logging, LOG_LEVEL, "DEBUG"),
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+# Импортируем необходимые модули
+try:
+    from modules.input_utils import input_with_history
+except ModuleNotFoundError as e:
+    logging.error(f"Ошибка импорта модуля: {e}")
+    print(f"❌ Ошибка импорта модуля: {e}")
+    sys.exit(1)
+
+try:
+    from pause_rules import apply_pause, get_pause_rules
+    from ai_diagnostics.ai_diagnostics import display_message_slowly
+except ImportError as e:
+    logging.error(f"Ошибка импорта модуля: {e}")
+    print(f"❌ Ошибка импорта модуля: {e}")
+    sys.exit(1)
 
 # Конфигурация для форматирования текста
 LINE_WIDTH = {
@@ -86,17 +105,19 @@ def replace_variables(text):
 
 def load_help_files():
     """Загружает все JSON файлы из HELP_DIR."""
+    logging.debug(f"Проверяем директорию справки: {HELP_DIR}")
     help_data = {}
     for json_file in HELP_DIR.rglob("*.json"):
         try:
+            logging.debug(f"Обрабатываем файл справки: {json_file}")
             with open(json_file, "r", encoding="utf-8") as file:
                 data = json.load(file)
                 for key, section in data.items():
                     if "title" not in section or ("short" not in section and "long" not in section):
-                        print(f"⚠️  Проблема в разделе '{key}': отсутствует один из ключей ('title', 'short', 'long').")
+                        logging.warning(f"⚠️ Проблема в разделе '{key}': отсутствует один из ключей ('title', 'short', 'long').")
                 help_data.update(data)
         except Exception as e:
-            print(f"⚠️  Ошибка загрузки файла {json_file}: {e}")
+            logging.error(f"⚠️ Ошибка загрузки файла {json_file}: {e}")
     return help_data
 
 
@@ -123,7 +144,8 @@ def display_help_menu(help_data):
 def display_detailed_help(section):
     """Выводит подробное описание выбранного раздела."""
     if 'long' not in section:
-        print(f"⚠️  Проблема в разделе '{section['title']}': отсутствует ключ 'long'.")
+        logging.warning(f"⚠️ Проблема в разделе '{section['title']}': отсутствует ключ 'long'.")
+        print(f"⚠️ Проблема в разделе '{section['title']}': отсутствует ключ 'long'.")
         return
 
     # Заголовок
@@ -139,62 +161,12 @@ def display_detailed_help(section):
 
     # Сохранение раздела
     print("\n   🔹 Хотите сохранить этот раздел? ( д/н ): ", end="")
-    user_input = input().strip().lower()
+    user_input = input_with_history("").strip().lower()
     if user_input in {"д", "y"}:
         save_help_section(section)
     elif user_input in {"0", "q"}:
         print("\n   📖  Возврат в главное меню.")
 
-def search_in_matches(matches):
-    """Обрабатывает повторный поиск в найденных совпадениях."""
-    while True:
-        print("\n   🔍  Найдено несколько совпадений:")
-        for idx, section in enumerate(matches, start=1):
-            print(f"   {idx}. {section['title']}")
-            print(wrap_text(section['short'], LINE_WIDTH["menu"], indent=6) + "\n")
-
-        user_input = input("\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
-
-        # Если ввод - число
-        if user_input.isdigit():
-            index = int(user_input)
-
-            # Проверка как номер из списка совпадений
-            if 1 <= index <= len(matches):
-                return matches[index - 1]
-
-            # Если номер не найден, интерпретируем как текст
-            print("\n   🔍  Повторный поиск по ключевому слову...")
-            filtered_matches = [
-                section for section in matches
-                if user_input in section['title'].lower() or
-                user_input in section['short'].lower() or
-                user_input in section.get('long', "").lower()
-            ]
-            if len(filtered_matches) == 1:
-                return filtered_matches[0]
-            elif len(filtered_matches) > 1:
-                matches = filtered_matches  # Обновляем список совпадений
-                continue
-            else:
-                print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
-                break
-
-        # Если ввод - текст
-        filtered_matches = [
-            section for section in matches
-            if user_input in section['title'].lower() or
-            user_input in section['short'].lower() or
-            user_input in section.get('long', "").lower()
-        ]
-        if len(filtered_matches) == 1:
-            return filtered_matches[0]
-        elif len(filtered_matches) > 1:
-            matches = filtered_matches  # Обновляем список совпадений
-            continue
-        else:
-            print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
-            break
 
 def interactive_help():
     """Основной цикл взаимодействия со справочной системой."""
@@ -205,7 +177,7 @@ def interactive_help():
 
     while True:
         display_help_menu(help_data)
-        user_input = input("   Выберите номер раздела или введите ключевое слово: ").strip().lower()
+        user_input = input_with_history("   Выберите номер раздела или введите ключевое слово: ").strip().lower()
 
         if user_input in {"0", "q", "exit"}:
             print("\n   📖  Выход из справочной системы.")
@@ -217,26 +189,20 @@ def interactive_help():
                 section = list(help_data.values())[index - 1]
                 display_detailed_help(section)
                 continue
-            else:
-                # Число как ключевое слово
-                matched_sections = [section for section in help_data.values()
-                                    if user_input in section['title'] or
-                                    user_input in section['short'] or
-                                    user_input in section.get('long', "")]
         else:  # Поиск по тексту
-            matched_sections = [section for section in help_data.values()
-                                if user_input in section['title'].lower() or
-                                user_input in section['short'].lower() or
-                                user_input in section.get('long', "").lower()]
+            matches = [
+                section for section in help_data.values()
+                if user_input in section['title'].lower() or
+                user_input in section['short'].lower() or
+                user_input in section.get('long', "").lower()
+            ]
 
-        if len(matched_sections) == 1:
-            display_detailed_help(matched_sections[0])
-        elif len(matched_sections) > 1:
-            matches = search_in_matches(matched_sections)
-            if matches:
-                display_detailed_help(matches)
-        else:
-            print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.\n")
+            if len(matches) == 1:
+                display_detailed_help(matches[0])
+            elif len(matches) > 1:
+                display_help_menu({"matches": matches})
+            else:
+                print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.\n")
 
 
 if __name__ == "__main__":
