@@ -9,7 +9,6 @@ import psutil
 import os
 import sys
 import time
-import tracemalloc
 from pathlib import Path
 
 # Добавляем путь к корневой директории проекта в sys.path
@@ -21,7 +20,7 @@ sys.path.append(str(PROJECT_DIR))
 try:
     from settings import BASE_DIR
 except ImportError:
-    print("Не удалось найти settings.py. Убедитесь, что файл находится в корневой директории проекта.")
+    print("❌ Не удалось найти settings.py. Убедитесь, что файл находится в корневой директории проекта.")
     sys.exit(1)
 
 
@@ -62,18 +61,17 @@ def get_memory_usage_by_scripts(project_dir):
     return sorted_processes
 
 
-def display_memory_usage_with_functions(project_dir, interval=1):
+def display_memory_usage(project_dir, interval=1):
     """
-    В режиме реального времени отображает информацию о потреблении памяти скриптами проекта, включая функции.
+    В режиме реального времени отображает информацию о потреблении памяти скриптами проекта.
 
     :param project_dir: Путь к корневой директории проекта.
     :param interval: Интервал обновления в секундах.
     """
-    tracemalloc.start(25)  # Увеличиваем глубину трассировки
     try:
         while True:
-            os.system('clear')
             processes = get_memory_usage_by_scripts(project_dir)
+            os.system('clear')
 
             if not processes:
                 print(f"Нет процессов, связанных с проектом: {project_dir}")
@@ -82,44 +80,24 @@ def display_memory_usage_with_functions(project_dir, interval=1):
 
             total_memory = sum(proc['memory_usage'] for proc in processes)
 
-            print(f"{'ID':<8}{'Name':<20}{'Memory Usage (MB)':<20}{'Command Line':<50}")
+            print(f"{'ID':<10}{'Name':<20}{'Memory Usage (MB)':<20}{'Command Line':<50}")
             print("-" * 100)
             for proc in processes:
-                print(f"{proc['pid']:<8}{proc['name']:<20}{proc['memory_usage'] / (1024 ** 2):<20.2f}{proc['cmdline']:<50}")
+                print(f"{proc['pid']:<10}{proc['name']:<20}{proc['memory_usage'] / (1024 ** 2):<20.2f}{proc['cmdline']:<50}")
+            
             print("-" * 100)
-            print(f"{'Итог':<28}{total_memory / (1024 ** 2):<20.2f}{'MB':<50}")
-
-            # Разбивка по функциям
-            print("\nРазбивка по функциям:")
-            snapshot = tracemalloc.take_snapshot()
-            stats = snapshot.filter_traces((
-                tracemalloc.Filter(True, str(BASE_DIR)),  # Фильтр по проекту
-            )).statistics('lineno')
-
-            if stats:
-                print(f"{'Файл':<50}{'Строка':<10}{'Размер (KB)':<10}")
-                print("-" * 80)
-                total_function_memory = 0
-                for stat in stats[:10]:  # Отображаем топ-10 потребления
-                    file_path = stat.traceback[0].filename
-                    line_no = stat.traceback[0].lineno
-                    memory_kb = stat.size / 1024
-                    print(f"{file_path:<50}{line_no:<10}{memory_kb:<10.2f}")
-                    total_function_memory += stat.size
-                print(f"\n{'Итог по функциям':<60}{total_function_memory / 1024:.2f} KB")
-            else:
-                print("Нет данных для разбивки по функциям.")
-
+            print(f"{'Итог':<30}{total_memory / (1024 ** 2):<20.2f}{'MB':<50}")
             print(f"\nОбновление каждые {interval} секунд...")
+
             time.sleep(interval)
+
     except KeyboardInterrupt:
         print("\nПрограмма остановлена пользователем.")
-    finally:
-        tracemalloc.stop()
+
 
 
 if __name__ == "__main__":
     # Используем BASE_DIR из settings.py
     project_directory = str(BASE_DIR)
-    print(f"Сбор информации о памяти для проекта: {project_directory}")
-    display_memory_usage_with_functions(project_directory, interval=1)
+    print(f"🔍 Сбор информации о памяти для проекта: {project_directory}")
+    display_memory_usage(project_directory, interval=1)
