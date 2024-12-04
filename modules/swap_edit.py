@@ -197,11 +197,16 @@ def swap_edit(size_mb=None, action=None, silent=False):
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Утилита для управления swap-файлом.")
-    parser.add_argument("--memory_required", "--mr", type=int, help="Указать минимальный объем swap в MB.")
-    parser.add_argument("--min_swap", "--ms", action="store_true", help="Создать минимальный swap (64 MB).")
-    parser.add_argument("--eco_swap", action="store_true", help="Создать eco swap (2% от объема диска).")
-    parser.add_argument("--micro_swap", action="store_true", help="Создать swap размером 64 MB в тихом режиме.")
-    parser.add_argument("--erase_swap", action="store_true", help="Удалить swap.")
+parser.add_argument("--memory_required", "--mr", type=int,
+                    help="Указать минимальный объем swap в MB (например, 1024).")
+parser.add_argument("--min_swap", "--ms", action="store_true",
+                    help="Создать минимальный swap (64 MB).")
+parser.add_argument("--eco_swap", action="store_true",
+                    help="Создать swap размером 2%% от объема диска.")
+parser.add_argument("--micro_swap", action="store_true",
+                    help="Создать swap размером 64 MB в тихом режиме.")
+parser.add_argument("--erase_swap", action="store_true",
+                    help="Удалить swap.")
     args = parser.parse_args()
 
     if args.erase_swap:
