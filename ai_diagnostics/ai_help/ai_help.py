@@ -10,11 +10,17 @@
 
 import json
 import sys
+import os
 from pathlib import Path
 from importlib.util import spec_from_file_location, module_from_spec
 
+
+# Убедимся, что рабочая директория совпадает с корнем проекта
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+os.chdir(PROJECT_ROOT)
+
 # Добавляем пути к корню проекта и модулям
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+#PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 MODULES_DIR = PROJECT_ROOT / "ai_diagnostics" / "modules"
 HELP_DIR = PROJECT_ROOT / "ai_diagnostics" / "ai_help"
 SETTINGS_FILE = PROJECT_ROOT / "settings.py"
@@ -202,6 +208,7 @@ def search_in_matches(matches):
         else:
             print("\n   ❌  Ничего не найдено. Попробуйте другой запрос.")
             break
+
 
 def interactive_help():
     """Основной цикл взаимодействия со справочной системой."""
