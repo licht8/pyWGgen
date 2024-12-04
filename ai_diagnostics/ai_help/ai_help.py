@@ -87,17 +87,24 @@ def replace_variables(text):
 def load_help_files():
     """Загружает все JSON файлы из HELP_DIR."""
     help_data = {}
-    for json_file in HELP_DIR.rglob("*.json"):
+    print(f"🔍 Проверяем директорию справки: {HELP_DIR}")
+
+    if not HELP_DIR.exists():
+        print(f"❌ Директория {HELP_DIR} не существует.")
+        return {}
+
+    for json_file in HELP_DIR.glob("*.json"):  # Заменено rglob на glob
+        print(f"📄 Найден файл справки: {json_file}")
         try:
             with open(json_file, "r", encoding="utf-8") as file:
                 data = json.load(file)
-                for key, section in data.items():
-                    if "title" not in section or ("short" not in section and "long" not in section):
-                        print(f"⚠️  Проблема в разделе '{key}': отсутствует один из ключей ('title', 'short', 'long').")
                 help_data.update(data)
+        except json.JSONDecodeError as e:
+            print(f"❌ Ошибка парсинга JSON-файла {json_file}: {e}")
         except Exception as e:
             print(f"⚠️  Ошибка загрузки файла {json_file}: {e}")
     return help_data
+
 
 
 def save_help_section(section):
