@@ -78,9 +78,9 @@ def disable_existing_swap(swap_file="/swap"):
         run_command(f"swapoff {swap_file}", check=False)
         try:
             os.remove(swap_file)
-            display_message_slowly(f"   🗑️ Удален существующий swap-файл: {swap_file}")
+            display_message_slowly(f"   🗑️  Удален существующий swap-файл: {swap_file}")
         except Exception as e:
-            display_message_slowly(f"   ❌ Не удалось удалить файл: {e}")
+            display_message_slowly(f"   ❌  Не удалось удалить файл: {e}")
 
 
 def create_swap_file(size_mb, reason=None):
@@ -89,7 +89,7 @@ def create_swap_file(size_mb, reason=None):
         swap_file = "/swap"
         disable_existing_swap(swap_file)
 
-        display_message_slowly(f"   🛠️ Создаю файл подкачки размером {size_mb} MB...")
+        display_message_slowly(f"   🛠️  Создаю файл подкачки размером {size_mb} MB...")
         run_command(f"dd if=/dev/zero of={swap_file} bs=1M count={size_mb}", check=True)
 
         display_message_slowly("   🎨 Форматирую файл подкачки...")
