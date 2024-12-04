@@ -12,7 +12,7 @@ import json
 import sys
 from pathlib import Path
 from importlib.util import spec_from_file_location, module_from_spec
-
+from modules.input_utils import input_with_history  
 # Добавляем пути к корню проекта и модулям
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 MODULES_DIR = PROJECT_ROOT / "ai_diagnostics" / "modules"
@@ -153,8 +153,8 @@ def search_in_matches(matches):
             print(f"   {idx}. {section['title']}")
             print(wrap_text(section['short'], LINE_WIDTH["menu"], indent=6) + "\n")
 
-        user_input = input("\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
-
+        user_input = input_with_history("\n   Введите номер варианта или уточняющее ключевое слово: ").strip().lower()
+         #choice = input_with_history(" Выберите действие: ").strip().lower()
         # Если ввод - число
         if user_input.isdigit():
             index = int(user_input)
