@@ -11,6 +11,7 @@ def get_memory_usage_by_scripts(project_dir):
     project_dir = os.path.abspath(project_dir)
     processes_info = []
 
+    print(f"\n🔍 Проверяем процессы Python, связанные с проектом: {project_dir}")
     for proc in psutil.process_iter(attrs=['pid', 'name', 'cmdline', 'memory_info']):
         try:
             # Извлекаем информацию о процессе
@@ -18,6 +19,10 @@ def get_memory_usage_by_scripts(project_dir):
             name = proc.info['name']
             cmdline = proc.info['cmdline']
             memory_usage = proc.info['memory_info'].rss  # Используемая память в байтах
+
+            # Отладочный вывод для всех процессов Python
+            if 'python' in (name or '').lower():
+                print(f"  Процесс PID={pid}, name={name}, cmdline={cmdline}")
 
             # Проверяем, относится ли процесс к нашему проекту
             if cmdline and any(project_dir in arg for arg in cmdline):
