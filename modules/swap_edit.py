@@ -104,6 +104,8 @@ def create_swap_file(size_mb, reason=None):
 
     except Exception as e:
         display_message_slowly(f"   ❌ Произошла ошибка: {e}")
+
+
 def check_swap_edit(size_mb, action=None, silent=True):
     """
     Проверяет состояние swap и вызывает swap_edit только при необходимости.
@@ -118,6 +120,9 @@ def check_swap_edit(size_mb, action=None, silent=True):
     # Проверяем, что current_swap не пустой и является числом
     current_swap = int(current_swap) if current_swap and current_swap.isdigit() else 0
 
+    # Логирование для отладки
+    print(f"Текущий swap: {current_swap} MB, Требуемый swap: {size_mb} MB")
+
     # Проверяем условие: swap уже соответствует требованиям
     if current_swap >= size_mb:
         if not silent:
@@ -126,6 +131,7 @@ def check_swap_edit(size_mb, action=None, silent=True):
 
     # Если swap меньше требуемого, вызываем swap_edit
     swap_edit(size_mb=size_mb, action=action, silent=silent)
+
 
 
 def swap_edit(size_mb=None, action=None, silent=False):
