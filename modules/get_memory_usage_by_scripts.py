@@ -2,7 +2,7 @@
 
 """
 get_memory_usage_by_scripts.py
-Скрипт для отображения в реальном времени информации о потреблении памяти скриптами проекта wg_qr_generator.
+Скрипт для анализа потребления памяти проектом wg_qr_generator с детальной разбивкой.
 """
 
 import psutil
@@ -10,7 +10,7 @@ import os
 import sys
 import time
 import gc
-import tracemalloc
+import objgraph
 from pathlib import Path
 from memory_profiler import memory_usage
 
@@ -30,9 +30,6 @@ except ImportError:
 def get_memory_usage_by_scripts(project_dir):
     """
     Собирает информацию о потреблении памяти скриптами проекта и сортирует по объему потребляемой памяти.
-
-    :param project_dir: Путь к корневой директории проекта.
-    :return: Список процессов с информацией об использовании памяти.
     """
     project_dir = os.path.abspath(project_dir)
     processes_info = []
@@ -64,15 +61,24 @@ def get_memory_usage_by_scripts(project_dir):
     return sorted_processes
 
 
-def display_memory_usage_with_functions(project_dir, interval=1):
+def analyze_memory_objects():
     """
-    В режиме реального времени отображает информацию о потреблении памяти скриптами проекта
-    с использованием tracemalloc и memory-profiler.
+    Анализирует объекты в памяти, отображает их рост и потребляемую память.
+    """
+    print("\n🔍 Анализ живых объектов:")
+    print("Тип объектов              Количество")
+    print("-" * 50)
+    for obj_type, count in objgraph.most_common_types(limit=10):
+        print(f"{obj_type:<25}{count}")
 
-    :param project_dir: Путь к корневой директории проекта.
-    :param interval: Интервал обновления в секундах.
+    print("\n🔍 Рост объектов:")
+    objgraph.show_growth(limit=10)
+
+
+def display_memory_usage(project_dir, interval=1):
     """
-    tracemalloc.start(25)  # Увеличиваем глубину трассировки
+    В режиме реального времени отображает информацию о потреблении памяти скриптами проекта.
+    """
     try:
         while True:
             os.system('clear')
@@ -92,47 +98,17 @@ def display_memory_usage_with_functions(project_dir, interval=1):
             print("-" * 100)
             print(f"{'Итог':<30}{total_memory / (1024 ** 2):<20.2f}{'MB':<50}")
 
-            # Разбивка по функциям
-            print("\n🔍 Разбивка по функциям:")
-            snapshot = tracemalloc.take_snapshot()
-            stats = snapshot.statistics('lineno')
-
-            if stats:
-                for stat in stats[:10]:
-                    size_kb = stat.size / 1024
-                    filename = stat.traceback[0].filename
-                    line_number = stat.traceback[0].lineno
-                    print(f"{size_kb:<15.2f}{filename:<50}{line_number}")
-            else:
-                print("Нет данных для разбивки по функциям.")
-
-            # Загруженные модули
-            print("\n🔍 Загруженные модули:")
-            modules = sys.modules
-            module_sizes = [(mod, sys.getsizeof(obj)) for mod, obj in modules.items() if hasattr(obj, '__file__')]
-            module_sizes = sorted(module_sizes, key=lambda x: x[1], reverse=True)[:10]
-            for mod, size in module_sizes:
-                print(f"{mod:<50}{size / 1024:.2f} KB")
-
-            # Используемая память
-            print("\n🔍 Объекты в памяти:")
-            object_types = {}
-            for obj in gc.get_objects():
-                obj_type = type(obj).__name__
-                object_types[obj_type] = object_types.get(obj_type, 0) + sys.getsizeof(obj)
-            sorted_objects = sorted(object_types.items(), key=lambda x: x[1], reverse=True)[:10]
-            for obj_type, size in sorted_objects:
-                print(f"{obj_type:<30}{size / 1024:.2f} KB")
+            analyze_memory_objects()
 
             print(f"\nОбновление каждые {interval} секунд...")
             time.sleep(interval)
+
     except KeyboardInterrupt:
         print("\nПрограмма остановлена пользователем.")
-    finally:
-        tracemalloc.stop()
 
 
 if __name__ == "__main__":
+    # Используем BASE_DIR из settings.py
     project_directory = str(BASE_DIR)
     print(f"🔍 Сбор информации о памяти для проекта: {project_directory}")
-    display_memory_usage_with_functions(project_directory, interval=1)
+    display_memory_usage(project_directory, interval=1)
