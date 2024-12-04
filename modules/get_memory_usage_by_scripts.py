@@ -69,14 +69,11 @@ def display_memory_usage_with_functions(project_dir, interval=1):
             # Разбивка по функциям
             print("\n🔍 Разбивка по функциям:")
             snapshot = tracemalloc.take_snapshot()
-            stats = snapshot.filter_traces((
-                tracemalloc.Filter(True, str(BASE_DIR)),
-                tracemalloc.Filter(True, str(BASE_DIR / "modules")),
-            )).statistics('lineno')
+            stats = snapshot.statistics('lineno')
 
             if stats:
                 for stat in stats[:10]:
-                    print(f"{stat.traceback.format()}: {stat.size / 1024:.2f} KB")
+                    print(f"Файл: {stat.traceback.format()}\nРазмер: {stat.size / 1024:.2f} KB")
             else:
                 print("Нет данных для разбивки по функциям.")
 
