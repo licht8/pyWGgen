@@ -114,7 +114,9 @@ def check_swap_edit(size_mb, action=None, silent=True):
     """
     # Проверяем текущий swap
     current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
-    current_swap = int(current_swap) if current_swap else 0
+    
+    # Проверяем, что current_swap не пустой и является числом
+    current_swap = int(current_swap) if current_swap and current_swap.isdigit() else 0
 
     # Проверяем условие: swap уже соответствует требованиям
     if current_swap >= size_mb:
