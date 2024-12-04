@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 
+"""
+get_memory_usage_by_scripts.py
+Скрипт для отображения в реальном времени информации о потреблении памяти скриптами проекта wg_qr_generator.
+"""
+
+import psutil
 import os
 import sys
 import time
-from prettytable import PrettyTable
+from pathlib import Path
 
-# Определяем базовый путь к корню проекта и добавляем его в sys.path
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
-sys.path.append(PROJECT_ROOT)
+# Добавляем путь к корневой директории проекта в sys.path
+CURRENT_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = CURRENT_DIR.parent
+sys.path.append(str(PROJECT_DIR))
 
+# Импортируем настройки
 try:
     from settings import BASE_DIR
 except ImportError:
@@ -17,53 +24,71 @@ except ImportError:
     sys.exit(1)
 
 
-def get_process_memory_info(project_path):
+def get_memory_usage_by_scripts(project_dir):
     """
-    Возвращает список процессов, связанных с проектом, и информацию об их потреблении памяти.
+    Собирает информацию о потреблении памяти скриптами проекта и сортирует по объему потребляемой памяти.
+
+    :param project_dir: Путь к корневой директории проекта.
+    :return: Список процессов с информацией об использовании памяти.
     """
-    processes = []
-    try:
-        output = os.popen(f"ps aux --sort=-%mem").readlines()
-        for line in output[1:]:  # Пропускаем заголовок
-            parts = line.split(maxsplit=10)
-            if len(parts) < 11:
-                continue
-            pid = parts[1]
-            memory_percent = float(parts[3])  # Процент использования памяти
-            command = parts[10]
-            if project_path in command:
-                processes.append((pid, memory_percent, command))
-    except Exception as e:
-        print(f"❌ Ошибка при получении информации о процессах: {e}")
-    return processes
+    project_dir = os.path.abspath(project_dir)
+    processes_info = []
+
+    for proc in psutil.process_iter(attrs=['pid', 'name', 'cmdline', 'memory_info', 'cwd']):
+        try:
+            pid = proc.info['pid']
+            name = proc.info['name']
+            cmdline = proc.info['cmdline']
+            cwd = proc.info.get('cwd')  # Рабочая директория процесса
+            memory_usage = proc.info['memory_info'].rss  # Используемая память в байтах
+
+            # Проверяем, относится ли процесс к проекту
+            if (
+                cmdline and any(project_dir in arg for arg in cmdline)
+                or (cwd and project_dir in cwd)
+            ):
+                processes_info.append({
+                    'pid': pid,
+                    'name': name,
+                    'cmdline': ' '.join(cmdline),
+                    'memory_usage': memory_usage,
+                })
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+
+    # Сортируем процессы по объему используемой памяти
+    sorted_processes = sorted(processes_info, key=lambda x: x['memory_usage'], reverse=True)
+    return sorted_processes
 
 
-def display_memory_usage(interval=5):
+def display_memory_usage(project_dir, interval=1):
     """
-    Отображает использование памяти процессами проекта в реальном времени.
+    В режиме реального времени отображает информацию о потреблении памяти скриптами проекта.
+
+    :param project_dir: Путь к корневой директории проекта.
+    :param interval: Интервал обновления в секундах.
     """
-    project_path = str(BASE_DIR)
     try:
         while True:
-            os.system("clear")
-            processes = get_process_memory_info(project_path)
+            processes = get_memory_usage_by_scripts(project_dir)
+            os.system('clear')
 
             if not processes:
-                print(f"Нет процессов, связанных с проектом: {project_path}")
+                print(f"Нет процессов, связанных с проектом: {project_dir}")
                 time.sleep(interval)
                 continue
 
-            # Выводим таблицу
-            table = PrettyTable(["PID", "Memory Usage (%)", "Command Line"])
-            total_memory_percent = 0.0
-            for pid, memory_percent, command in processes:
-                table.add_row([pid, f"{memory_percent:.2f}", command])
-                total_memory_percent += memory_percent
+            total_memory = sum(proc['memory_usage'] for proc in processes)
 
-            print(f"🔍 Процессы, связанные с проектом: {project_path}\n")
-            print(table)
-            print(f"\nИтоговое использование памяти: {total_memory_percent:.2f}%")
-            print(f"Обновление каждые {interval} секунд...")
+            print(f"{'ID':<10}{'Name':<20}{'Memory Usage (MB)':<20}{'Command Line':<50}")
+            print("-" * 100)
+            for proc in processes:
+                print(f"{proc['pid']:<10}{proc['name']:<20}{proc['memory_usage'] / (1024 ** 2):<20.2f}{proc['cmdline']:<50}")
+            
+            print("-" * 100)
+            print(f"{'Итог':<30}{total_memory / (1024 ** 2):<20.2f}{'MB':<50}")
+            print(f"\nОбновление каждые {interval} секунд...")
+
             time.sleep(interval)
 
     except KeyboardInterrupt:
@@ -71,5 +96,7 @@ def display_memory_usage(interval=5):
 
 
 if __name__ == "__main__":
-    print(f"🔍 Сбор информации о памяти для проекта: {BASE_DIR}")
-    display_memory_usage()
+    # Используем BASE_DIR из settings.py
+    project_directory = str(BASE_DIR)
+    print(f"🔍 Сбор информации о памяти для проекта: {project_directory}")
+    display_memory_usage(project_directory, interval=1)
