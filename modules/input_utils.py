@@ -6,6 +6,7 @@ import readline
 import os
 
 HISTORY_FILE = os.path.expanduser("~/.wg_input_history")
+readline.set_history_length(50)
 
 def setup_history():
     """
