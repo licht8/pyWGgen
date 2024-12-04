@@ -46,7 +46,7 @@ def get_memory_usage_by_scripts(project_dir):
 
 
 def display_memory_usage_with_functions(project_dir, interval=1):
-    tracemalloc.start()
+    tracemalloc.start(25)  # Увеличиваем глубину трассировки
     try:
         while True:
             os.system('clear')
@@ -71,6 +71,7 @@ def display_memory_usage_with_functions(project_dir, interval=1):
             snapshot = tracemalloc.take_snapshot()
             stats = snapshot.filter_traces((
                 tracemalloc.Filter(True, str(BASE_DIR)),
+                tracemalloc.Filter(True, str(BASE_DIR / "modules")),
             )).statistics('lineno')
 
             if stats:
