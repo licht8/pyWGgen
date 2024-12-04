@@ -125,7 +125,7 @@ fi
 # Полезная информация перед запуском меню
 echo -e "\n=== Полезная информация о системе ==="
 echo -e " 🖥️ ОС: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"')"
-echo -e " 🧰 Ядро: $(uname -r)"
+echo -e " 🧰  Ядро: $(uname -r)"
 EXTERNAL_IP=$(curl -s ifconfig.me)
 echo -e " 🌍 Внешний IP-адрес: ${EXTERNAL_IP}"
 FIREWALL_PORTS=$(sudo firewall-cmd --list-ports)
@@ -136,13 +136,13 @@ else
 fi
 
 if ! systemctl is-active --quiet wg-quick@wg0; then
-  echo -e " 🛡️ WireGuard статус: не активен. Установите и настройте WireGuard для корректной работы."
+  echo -e " 🛡️  WireGuard статус: не активен. Установите и настройте WireGuard для корректной работы."
 else
-  echo -e " 🛡️ WireGuard статус: активен"
+  echo -e " 🛡️  WireGuard статус: активен"
 fi
 
 echo -e " ⚙️ Файл конфигурации WireGuard: /etc/wireguard/wg0.conf"
-echo -e " 🌐 Gradio админка: http://${EXTERNAL_IP}:7860"
+echo -e " 🌐 Gradio админка: http://${EXTERNAL_IP}:${port}"
 echo -e " 📂 Репозиторий: https://github.com/licht8/wg_qr_generator"
 echo "=========================================="
 
