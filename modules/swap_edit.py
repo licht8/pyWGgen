@@ -184,6 +184,8 @@ if __name__ == "__main__":
         swap_edit(size_mb=args.memory_required, caller="скриптом")
     else:
         swap_edit()
+
+
 """
 ### Полное описание скрипта `swap_edit.py`
 
