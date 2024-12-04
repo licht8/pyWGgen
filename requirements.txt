@@ -35,3 +35,6 @@ prettytable>=3.7.0
 
 # Библиотека для для визуализации данных.
 matplotlib
+
+# memory-profiler
+memory-profiler
