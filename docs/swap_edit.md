@@ -62,6 +62,137 @@
      # Проверить и установить swap размером 2048 MB
      swap_edit(size_mb=2048, action="memory_required")
      ```
+Обновим скрипт, добавив поддержку параметра `--micro_swap`. Этот параметр активирует "тихий режим", в котором создается swap размером 64 MB без дополнительных сообщений.
+
+---
+
+### Обновленный скрипт с поддержкой `--micro_swap`
+
+```python
+def swap_edit(size_mb=None, action=None, silent=False):
+    """Основная функция настройки swap."""
+    check_root()
+
+    if not silent:
+        display_message_slowly("📊 Состояние памяти:")
+        swap_info = get_swap_info()
+        if swap_info:
+            print(swap_info)
+
+    total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
+    recommended_swap = min(total_disk // 10, 2048)  # 10% или максимум 2048 MB
+    eco_swap = total_disk // 50  # 2% от диска
+    min_swap = 64
+    micro_swap = 64  # Размер для тихого режима
+
+    current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
+    current_swap = int(current_swap) if current_swap else 0
+
+    if action == "micro":
+        size_mb = micro_swap
+        silent = True
+
+    if current_swap >= size_mb:
+        if not silent:
+            display_message_slowly(
+                f"✅ Текущий swap ({current_swap} MB) уже оптимален. Если хотите изменить, используйте --erase_swap."
+            )
+        return
+
+    create_swap_file(size_mb, reason=action)
+
+    if not silent:
+        display_message_slowly("📊 Итоговое состояние памяти:")
+        final_swap_info = get_swap_info()
+        if final_swap_info:
+            print(final_swap_info)
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser(description="Утилита для управления swap-файлом.")
+    parser.add_argument("--memory_required", "--mr", type=int, help="Указать минимальный объем swap в MB.")
+    parser.add_argument("--min_swap", "--ms", action="store_true", help="Создать минимальный swap (64 MB).")
+    parser.add_argument("--eco_swap", action="store_true", help="Создать eco swap (2% от объема диска).")
+    parser.add_argument("--micro_swap", action="store_true", help="Создать swap размером 64 MB в тихом режиме.")
+    parser.add_argument("--erase_swap", action="store_true", help="Удалить swap.")
+    args = parser.parse_args()
+
+    if args.erase_swap:
+        swap_edit(action="erase")
+    elif args.eco_swap:
+        swap_edit(action="eco")
+    elif args.min_swap:
+        swap_edit(action="min")
+    elif args.micro_swap:
+        swap_edit(action="micro", silent=True)
+    elif args.memory_required:
+        swap_edit(size_mb=args.memory_required, action="memory_required")
+    else:
+        swap_edit()
+```
+
+---
+
+### Что делает параметр `--micro_swap`:
+
+- **Назначение:**
+  Включает "тихий режим" создания swap размером 64 MB.
+  
+- **Как работает:**
+  - Без вывода дополнительных сообщений.
+  - Пропускает проверку текущего состояния памяти.
+  - Автоматически создает swap размером 64 MB.
+
+---
+
+### Пример вызова:
+
+1. **Запуск из командной строки:**
+   ```bash
+   sudo python3 swap_edit.py --micro_swap
+   ```
+   - Результат: создается swap размером 64 MB без дополнительных сообщений.
+
+2. **Вызов из другого скрипта:**
+   ```python
+   from modules.swap_edit import swap_edit
+
+   # Создать swap в тихом режиме
+   swap_edit(action="micro", silent=True)
+   ```
+
+---
+
+### Расширенный хелп:
+
+Добавьте в документацию следующие примеры:
+
+```plaintext
+#### Параметр `--micro_swap`
+
+- Описание: Создает swap размером 64 MB в "тихом режиме". Подходит для систем, где требуется минимальный swap для корректной работы приложений.
+- Особенности: Без вывода сообщений и проверки текущего состояния памяти.
+
+**Примеры использования:**
+
+1. Запуск из командной строки:
+   ```bash
+   sudo python3 swap_edit.py --micro_swap
+   ```
+
+2. Использование в другом скрипте:
+   ```python
+   from modules.swap_edit import swap_edit
+
+   # Создать минимальный swap в тихом режиме
+   swap_edit(action="micro", silent=True)
+   ```
+
+**Результат:**
+- Создается swap размером 64 MB, если текущий swap отсутствует или его объем меньше 64 MB.
+``` 
+
+Теперь параметр `--micro_swap` позволяет быстро и без лишних сообщений создать минимальный swap размером 64 MB.
 
 ---
 
