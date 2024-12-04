@@ -142,6 +142,12 @@ def show_main_menu():
         else:
             print(f"\n  ⚠️  Некорректный выбор. Попробуйте снова.")
 
+def main():
+    initialize_project()
+    show_main_menu()
 
 if __name__ == "__main__":
-    show_main_menu()
+    main()
+
+#if __name__ == "__main__":
+#    show_main_menu()
