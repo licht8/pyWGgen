@@ -143,8 +143,8 @@ fi
 
 # Полезная информация перед запуском меню
 echo -e "\n=== Полезная информация о системе ==="
-echo -e " 🖥️ ОС: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"')"
-echo -e " 🧰  Ядро: $(uname -r)"
+echo -e " 🖥️  ОС: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '\"')"
+echo -e " 🧰 Ядро: $(uname -r)"
 EXTERNAL_IP=$(curl -s ifconfig.me)
 echo -e " 🌍 Внешний IP-адрес: ${EXTERNAL_IP}"
 FIREWALL_PORTS=$(sudo firewall-cmd --list-ports)
