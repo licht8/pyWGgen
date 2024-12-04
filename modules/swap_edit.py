@@ -110,7 +110,7 @@ def swap_edit(size_mb=None, action=None):
     """Основная функция настройки swap."""
     check_root()
 
-    display_message_slowly("📊 Состояние памяти:")
+    display_message_slowly(f"\n 📊 Состояние памяти:")
     swap_info = get_swap_info()
     if swap_info:
         print(swap_info)
