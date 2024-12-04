@@ -158,34 +158,43 @@ def swap_edit(size_mb=None, action=None, silent=False):
     """Основная функция настройки swap."""
     check_root()
 
-    # Проверка текущего состояния swap
+    if not silent:
+        display_message_slowly("📊 Состояние памяти:")
+        swap_info = get_swap_info()
+        if swap_info:
+            print(swap_info)
+
+    # Получение текущего размера swap
     current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
-    current_swap = int(current_swap) if current_swap else 0
+    current_swap = int(current_swap) if current_swap and current_swap.isdigit() else 0
 
-    # Определяем целевой размер swap для различных действий
-    if action == "micro":
-        size_mb = 64  # Размер swap для микрорежима
-        silent = True
-    elif action == "min":
-        size_mb = 64
-    elif action == "eco":
-        total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
-        size_mb = total_disk // 50  # 2% от объема диска
+    if action == "erase":
+        if current_swap > 0:
+            if not silent:
+                display_message_slowly(f"🔍 Обнаружен существующий swap: {current_swap} MB.")
+                display_message_slowly("🗑️ Удаляю текущий swap...")
+            run_command("swapoff -a", check=True)
+            swap_file_path = "/swap"
+            if Path(swap_file_path).exists():
+                Path(swap_file_path).unlink()
+            if not silent:
+                display_message_slowly("✅ Swap успешно удален.")
+        else:
+            if not silent:
+                display_message_slowly("❌ Swap отсутствует. Нечего удалять.")
+        return
 
-    # Проверка: swap уже существует и соответствует требованиям
+    # Проверка на None для size_mb
+    if size_mb is None:
+        size_mb = 64  # Значение по умолчанию для минимального swap
+
     if current_swap >= size_mb:
         if not silent:
             display_message_slowly(f"✅ Текущий swap ({current_swap} MB) уже оптимален. Ничего не изменено.")
         return
 
-    # Если swap меньше требуемого, пересоздаем
-    if current_swap < size_mb:
-        if not silent:
-            display_message_slowly(f"🔍 Текущий swap ({current_swap} MB) меньше запрашиваемого ({size_mb} MB). Обновляю swap.")
-        disable_existing_swap()
-        create_swap_file(size_mb, reason=action)
+    create_swap_file(size_mb, reason=action)
 
-    # Итоговое состояние памяти (только если не silent)
     if not silent:
         display_message_slowly("📊 Итоговое состояние памяти:")
         final_swap_info = get_swap_info()
