@@ -12,19 +12,32 @@ import json
 import sys
 from pathlib import Path
 from importlib.util import spec_from_file_location, module_from_spec
-from modules.input_utils import input_with_history  
+
 # Добавляем пути к корню проекта и модулям
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-MODULES_DIR = PROJECT_ROOT / "ai_diagnostics" / "modules"
+MODULES_DIR = PROJECT_ROOT / "modules"  # Исправлено: путь к модулям
 HELP_DIR = PROJECT_ROOT / "ai_diagnostics" / "ai_help"
 SETTINGS_FILE = PROJECT_ROOT / "settings.py"
 
 sys.path.append(str(PROJECT_ROOT))
-sys.path.append(str(MODULES_DIR))
+sys.path.append(str(MODULES_DIR))  # Убедитесь, что путь правильный
 
-# Импорты
-from pause_rules import apply_pause, get_pause_rules
-from ai_diagnostics.ai_diagnostics import display_message_slowly
+# Попытка импорта input_utils
+try:
+    from modules.input_utils import input_with_history
+except ModuleNotFoundError as e:
+    print(f"Ошибка импорта модуля: {e}")
+    print("Убедитесь, что файл input_utils.py находится в папке modules.")
+    sys.exit(1)
+
+# Импорты других модулей
+try:
+    from pause_rules import apply_pause, get_pause_rules
+    from ai_diagnostics.ai_diagnostics import display_message_slowly
+except ImportError as e:
+    print(f"Ошибка импорта модуля: {e}")
+    print("Убедитесь, что все модули находятся на своих местах.")
+    sys.exit(1)
 
 # Конфигурация для форматирования текста
 LINE_WIDTH = {
