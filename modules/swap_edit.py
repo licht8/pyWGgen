@@ -159,7 +159,15 @@ def swap_edit(size_mb=None, memory_required=None, caller=None):
 
     # Показать состояние памяти
     display_message_slowly("📊 Состояние памяти:")
-    print(get_swap_info())
+    swap_info = get_swap_info()
+    if not swap_info:
+        # Если не удалось получить информацию о памяти, предложить создать минимальный swap
+        display_message_slowly("   ⚠️ Не удалось получить данные о памяти. Рекомендуется увеличить swap для стабильной работы.")
+        recommended_size = memory_required or 1024
+        create_swap_file(size_mb=recommended_size, reason="из-за недостатка ресурсов")
+        return
+
+    print(swap_info)
 
     # Получить общий объем файловой системы
     total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
