@@ -1,37 +1,23 @@
-#!/usr/bin/env python3
-
-"""
-get_memory_usage_by_scripts_with_functions.py
-Скрипт для отображения в реальном времени информации о потреблении памяти скриптами проекта wg_qr_generator, включая разбивку по функциям.
-"""
-
-import psutil
+import tracemalloc
 import os
 import sys
 import time
-import tracemalloc
+import psutil
 from pathlib import Path
 
-# Добавляем путь к корневой директории проекта в sys.path
+# Настройка путей
 CURRENT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = CURRENT_DIR.parent
 sys.path.append(str(PROJECT_DIR))
 
-# Импортируем настройки
+# Импорт настроек
 try:
     from settings import BASE_DIR
 except ImportError:
     print("❌ Не удалось найти settings.py. Убедитесь, что файл находится в корневой директории проекта.")
     sys.exit(1)
 
-
 def get_memory_usage_by_scripts(project_dir):
-    """
-    Собирает информацию о потреблении памяти скриптами проекта и сортирует по объему потребляемой памяти.
-
-    :param project_dir: Путь к корневой директории проекта.
-    :return: Список процессов с информацией об использовании памяти.
-    """
     project_dir = os.path.abspath(project_dir)
     processes_info = []
 
@@ -43,7 +29,6 @@ def get_memory_usage_by_scripts(project_dir):
             cwd = proc.info.get('cwd')  # Рабочая директория процесса
             memory_usage = proc.info['memory_info'].rss  # Используемая память в байтах
 
-            # Проверяем, относится ли процесс к проекту
             if (
                 cmdline and any(project_dir in arg for arg in cmdline)
                 or (cwd and project_dir in cwd)
@@ -57,22 +42,15 @@ def get_memory_usage_by_scripts(project_dir):
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
 
-    # Сортируем процессы по объему используемой памяти
-    sorted_processes = sorted(processes_info, key=lambda x: x['memory_usage'], reverse=True)
-    return sorted_processes
+    return sorted(processes_info, key=lambda x: x['memory_usage'], reverse=True)
 
 
 def display_memory_usage_with_functions(project_dir, interval=1):
-    """
-    В режиме реального времени отображает информацию о потреблении памяти скриптами проекта, включая функции.
-
-    :param project_dir: Путь к корневой директории проекта.
-    :param interval: Интервал обновления в секундах.
-    """
+    tracemalloc.start()
     try:
         while True:
-            processes = get_memory_usage_by_scripts(project_dir)
             os.system('clear')
+            processes = get_memory_usage_by_scripts(project_dir)
 
             if not processes:
                 print(f"Нет процессов, связанных с проектом: {project_dir}")
@@ -85,30 +63,31 @@ def display_memory_usage_with_functions(project_dir, interval=1):
             print("-" * 100)
             for proc in processes:
                 print(f"{proc['pid']:<10}{proc['name']:<20}{proc['memory_usage'] / (1024 ** 2):<20.2f}{proc['cmdline']:<50}")
-            
             print("-" * 100)
             print(f"{'Итог':<30}{total_memory / (1024 ** 2):<20.2f}{'MB':<50}")
-            
+
             # Разбивка по функциям
             print("\n🔍 Разбивка по функциям:")
-            tracemalloc.start()
             snapshot = tracemalloc.take_snapshot()
-            top_stats = snapshot.statistics('lineno')
+            stats = snapshot.filter_traces((
+                tracemalloc.Filter(True, str(BASE_DIR)),
+            )).statistics('lineno')
 
-            for stat in top_stats[:10]:
-                print(f"{stat.traceback.format()}: {stat.size / 1024:.2f} KB")
+            if stats:
+                for stat in stats[:10]:
+                    print(f"{stat.traceback.format()}: {stat.size / 1024:.2f} KB")
+            else:
+                print("Нет данных для разбивки по функциям.")
 
             print(f"\nОбновление каждые {interval} секунд...")
-
             time.sleep(interval)
-            tracemalloc.stop()
-
     except KeyboardInterrupt:
         print("\nПрограмма остановлена пользователем.")
+    finally:
+        tracemalloc.stop()
 
 
 if __name__ == "__main__":
-    # Используем BASE_DIR из settings.py
     project_directory = str(BASE_DIR)
     print(f"🔍 Сбор информации о памяти для проекта: {project_directory}")
     display_memory_usage_with_functions(project_directory, interval=1)
