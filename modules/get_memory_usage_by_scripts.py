@@ -96,15 +96,15 @@ def display_memory_usage_with_functions(project_dir, interval=1):
             stats = snapshot.statistics('lineno')
 
             if stats:
-                print(f"{'Файл':<50}{'Строка':<10}{'Размер (KB)':<10}")
+                print(f"{'Размер (KB)':<15}{'Файл':<50}{'Строка':<10}")
                 print("-" * 80)
                 for stat in stats[:10]:  # Топ-10 по памяти
+                    memory_kb = stat.size / 1024
                     file_path = stat.traceback[0].filename
                     line_no = stat.traceback[0].lineno
-                    memory_kb = stat.size / 1024
-                    print(f"{file_path:<50}{line_no:<10}{memory_kb:<10.2f}")
+                    print(f"{memory_kb:<15.2f}{file_path:<50}{line_no:<10}")
                 total_function_memory = sum(stat.size for stat in stats) / 1024
-                print(f"\n{'Итог по функциям':<60}{total_function_memory:.2f} KB")
+                print(f"\n{'Итог по функциям':<15}{total_function_memory:.2f} KB")
             else:
                 print("Нет данных для разбивки по функциям.")
 
