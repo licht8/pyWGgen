@@ -23,9 +23,9 @@ from modules.wireguard_utils import check_wireguard_installed
 from ai_diagnostics.ai_diagnostics import display_message_slowly
 from modules.swap_edit import swap_edit
 
-# Проверить и установить swap размером 1024 MB
-swap_edit(size_mb=1024, action="memory_required")
-
+# Проверить и установить swap размером x MB
+# swap_edit(size_mb=1024, action="memory_required")
+swap_edit(action="micro", silent=True)
 
 # Установить путь к корню проекта
 project_root = os.path.dirname(os.path.abspath(__file__))
