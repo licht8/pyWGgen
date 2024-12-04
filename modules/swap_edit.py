@@ -104,6 +104,26 @@ def create_swap_file(size_mb, reason=None):
 
     except Exception as e:
         display_message_slowly(f"   ❌ Произошла ошибка: {e}")
+def check_swap_edit(size_mb, action=None, silent=True):
+    """
+    Проверяет состояние swap и вызывает swap_edit только при необходимости.
+
+    :param size_mb: Требуемый размер swap (в MB).
+    :param action: Действие (например, "micro", "min").
+    :param silent: Если True, работает в тихом режиме.
+    """
+    # Проверяем текущий swap
+    current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
+    current_swap = int(current_swap) if current_swap else 0
+
+    # Проверяем условие: swap уже соответствует требованиям
+    if current_swap >= size_mb:
+        if not silent:
+            display_message_slowly(f"✅ Текущий swap ({current_swap} MB) уже оптимален. Ничего не изменено.")
+        return
+
+    # Если swap меньше требуемого, вызываем swap_edit
+    swap_edit(size_mb=size_mb, action=action, silent=silent)
 
 
 def swap_edit(size_mb=None, action=None, silent=False):
