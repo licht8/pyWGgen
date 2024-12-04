@@ -18,18 +18,17 @@ swap_edit.py - Создание и настройка swap с улучшенны
 import os
 import sys
 import time
-import subprocess
 import shutil
+import subprocess
 import signal
 from pathlib import Path
+from argparse import ArgumentParser
 from prettytable import PrettyTable
 
-# Добавляем корневую директорию проекта в sys.path
 CURRENT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = CURRENT_DIR.parent
 sys.path.append(str(PROJECT_DIR))
 
-# Импорт модулей проекта
 from settings import PRINT_SPEED, LINE_DELAY
 from ai_diagnostics.ai_diagnostics import display_message_slowly
 
@@ -53,15 +52,20 @@ def check_root():
         exit(1)
 
 
+def display_table(data, headers):
+    """Показать таблицу с данными."""
+    table = PrettyTable(headers)
+    for row in data:
+        table.add_row(row)
+    return table
+
+
 def get_swap_info():
     """Получить информацию о swap и памяти."""
     output = run_command("free -h | grep -E 'Swap|Mem'")
-    table = PrettyTable(["Тип", "Общий", "Использовано", "Свободно"])
-    for line in output.split("\n"):
-        if line:
-            parts = line.split()
-            table.add_row([parts[0], parts[1], parts[2], parts[3]])
-    return table
+    rows = [line.split() for line in output.split("\n") if line]
+    headers = ["Тип", "Общий", "Использовано", "Свободно"]
+    return display_table(rows, headers)
 
 
 def disable_existing_swap(swap_file="/swap"):
@@ -76,7 +80,7 @@ def disable_existing_swap(swap_file="/swap"):
             display_message_slowly(f"   ❌ Не удалось удалить файл: {e}")
 
 
-def create_swap_file(size_mb):
+def create_swap_file(size_mb, reason=None):
     """Создать и активировать файл подкачки."""
     try:
         swap_file = "/swap"
@@ -116,56 +120,50 @@ def create_swap_file(size_mb):
         os.chmod("/etc/rc.local", 0o755)
 
         display_message_slowly(f"   ✅ Swap-файл создан и активирован. Размер: {size_mb} MB")
+        if reason:
+            display_message_slowly(f"   🔍 Этот размер был запрошен {reason}")
 
     except Exception as e:
         display_message_slowly(f"   ❌ Произошла ошибка: {e}")
 
 
-def safe_exit(signal_received, frame):
-    """Корректное завершение работы."""
-    display_message_slowly("\n⚠️ Завершение работы. Если вы настраивали swap, проверьте состояние вручную.")
-    sys.exit(0)
-
-
-def swap_edit(size_mb=None):
+def swap_edit(size_mb=None, memory_required=None, caller=None):
     """Основная функция настройки swap."""
-    # Установить обработчик Ctrl+C
-    signal.signal(signal.SIGINT, safe_exit)
-
-    # Проверить привилегии root
     check_root()
 
-    # Показать информацию перед изменениями
-    display_message_slowly("📊 Состояние памяти перед изменениями:")
+    # Показать состояние памяти
+    display_message_slowly("📊 Состояние памяти:")
     print(get_swap_info())
 
-    if size_mb:
-        # Автоматический режим
-        create_swap_file(size_mb)
-    else:
-        # Интерактивный режим
-        try:
-            size_mb = int(input("💬 Введите размер нового swap-файла (в MB): "))
-            if size_mb > 0:
-                create_swap_file(size_mb)
+    # Получить общий объем файловой системы
+    total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
+    recommended_swap = max(total_disk // 20, 1)  # 5% от объема файловой системы
+
+    # Если swap существует
+    current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
+    if current_swap and int(current_swap) > 0:
+        current_swap = int(current_swap)
+        if current_swap >= recommended_swap and not memory_required:
+            if caller:
+                return  # Выход, если вызывается из другого скрипта и swap подходит
             else:
-                display_message_slowly("⚠️ Указан некорректный размер. Операция отменена.")
-        except ValueError:
-            display_message_slowly("⚠️ Введите корректное число.")
-            return
+                display_message_slowly(f"✅ Текущий swap ({current_swap} MB) уже оптимален.")
+                return
 
-    # Показать информацию после изменений
-    display_message_slowly("📊 Состояние памяти после изменений:")
-    print(get_swap_info())
+        # Предложить увеличить swap
+        new_size = memory_required or recommended_swap
+        display_message_slowly(f"   🔍 Текущий swap: {current_swap} MB. Рекомендуемый: {new_size} MB.")
+        size_mb = size_mb or new_size
+
+    create_swap_file(size_mb, reason=caller or "в интерактивном режиме")
 
 
 if __name__ == "__main__":
-    # Определяем, запущен ли скрипт напрямую или вызван как модуль
-    if len(sys.argv) > 1:
-        try:
-            size_mb = int(sys.argv[1])
-            swap_edit(size_mb)
-        except ValueError:
-            display_message_slowly("⚠️ Передайте корректное число в качестве аргумента.")
+    parser = ArgumentParser(description="Утилита для управления swap-файлом.")
+    parser.add_argument("--memory_required", "--mr", type=int, help="Требуемый объем swap в MB.")
+    args = parser.parse_args()
+
+    if args.memory_required:
+        swap_edit(size_mb=args.memory_required, caller="скриптом")
     else:
         swap_edit()
