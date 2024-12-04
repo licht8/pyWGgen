@@ -9,6 +9,7 @@ import psutil
 import os
 import sys
 import time
+import gc
 import tracemalloc
 from pathlib import Path
 from memory_profiler import memory_usage
