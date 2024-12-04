@@ -136,16 +136,17 @@ def check_swap_edit(size_mb, action=None, silent=True, tolerance=2):
         logger.debug(f"Текущий swap: {current_swap} MB")
         logger.debug(f"Требуемый swap: {size_mb} MB")
 
-        # Условие для проверки с учетом допуска
-        if abs(current_swap - size_mb) <= tolerance:
+        # Проверяем условие с учетом допуска
+        if current_swap >= size_mb - tolerance:
             if not silent:
-                display_message_slowly(f"✅ Текущий swap ({current_swap} MB) уже оптимален. Ничего не изменено.")
-            logger.info(f"Swap ({current_swap} MB) уже оптимален (допуск {tolerance} MB). Никаких изменений не требуется.")
+                display_message_slowly(f"✅ Текущий swap ({current_swap} MB) уже оптимален. Никаких изменений не требуется.")
+            logger.info(f"Swap ({current_swap} MB) уже оптимален или соответствует допустимому пределу ({tolerance} MB).")
             return
 
-        # Если swap меньше требуемого, вызываем swap_edit
-        logger.info(f"Swap ({current_swap} MB) меньше требуемого ({size_mb} MB). Вызываем swap_edit.")
+        # Если swap меньше требуемого с учетом допуска
+        logger.info(f"Swap ({current_swap} MB) меньше требуемого ({size_mb} MB). Вызываем настройку swap.")
         swap_edit(size_mb=size_mb, action=action, silent=silent)
+
     except Exception as e:
         # Логирование ошибок
         logger.error(f"Ошибка при проверке или настройке swap: {e}")
