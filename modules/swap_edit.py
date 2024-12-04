@@ -124,43 +124,23 @@ def swap_edit(size_mb=None, action=None, silent=False):
         total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
         size_mb = total_disk // 50  # 2% от объема диска
 
-    # Действие "erase" не требует сравнения размера
-    if action == "erase":
-        disable_existing_swap()
+    # Проверка: swap уже существует и соответствует требованиям
+    if current_swap >= size_mb:
         if not silent:
-            display_message_slowly("   ✅ Swap успешно удален.")
+            display_message_slowly(f"✅ Текущий swap ({current_swap} MB) уже оптимален. Ничего не изменено.")
         return
 
-    # Если silent=True, не выводим состояние
+    # Создаем или обновляем swap только если текущий меньше требуемого
     if not silent:
-        display_message_slowly("📊 Состояние памяти:")
-        swap_info = get_swap_info()
-        if swap_info:
-            print(swap_info)
+        display_message_slowly(f"🔍 Текущий swap ({current_swap} MB) меньше запрашиваемого ({size_mb} MB). Обновляю swap.")
+    disable_existing_swap()
+    create_swap_file(size_mb, reason=action)
 
-    # Условие для проверки необходимости создания swap
-    if size_mb is not None and current_swap >= size_mb:
-        if not silent:
-            display_message_slowly(
-                f"✅ Текущий swap ({current_swap} MB) уже оптимален. Если хотите изменить, используйте --erase_swap."
-            )
-        return
-
-    # Создаем swap, только если текущий меньше целевого или отсутствует
-    if size_mb is not None and current_swap < size_mb:
-        if not silent:
-            display_message_slowly(f"🔍 Текущий swap ({current_swap} MB) меньше запрашиваемого ({size_mb} MB). Создаю swap.")
-        create_swap_file(size_mb, reason=action)
-
-    # Если silent=True, завершить без дальнейших сообщений
-    if silent:
-        return
-
-    # Выводим итоговое состояние памяти
-    display_message_slowly("📊 Итоговое состояние памяти:")
-    final_swap_info = get_swap_info()
-    if final_swap_info:
-        print(final_swap_info)
+    if not silent:
+        display_message_slowly("📊 Итоговое состояние памяти:")
+        final_swap_info = get_swap_info()
+        if final_swap_info:
+            print(final_swap_info)
 
 
 if __name__ == "__main__":
