@@ -259,7 +259,7 @@ if __name__ == "__main__":
     if args.erase_swap:
         swap_edit(action="erase")
     elif args.eco_swap:
-        swap_edit(action="eco")
+        swap_edit(action="eco", silent=True)
     elif args.min_swap:
         swap_edit(action="min")
     elif args.micro_swap:
