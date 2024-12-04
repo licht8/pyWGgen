@@ -162,7 +162,7 @@ def interactive_swap_edit():
     check_root()
 
     while True:
-        display_message_slowly("📊 Текущее состояние памяти:")
+        display_message_slowly(f"\n📊 Текущее состояние памяти:")
         swap_info = get_swap_info()
         if swap_info:
             print(swap_info)
