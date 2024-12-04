@@ -38,3 +38,6 @@ matplotlib
 
 # memory-profiler
 memory-profiler
+
+# objgraph
+objgraph
