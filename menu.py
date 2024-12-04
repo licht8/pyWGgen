@@ -95,7 +95,7 @@ import tracemalloc
 
 def main():
     # Запускаем мониторинг памяти
-    tracemalloc.start()
+    tracemalloc.start(10)
 
     # Основной код программы
     initialize_project()
@@ -108,7 +108,8 @@ def main():
     # Печать топ 10 строк кода по потреблению памяти
     print("\n🔍 Топ 10 строк кода по потреблению памяти:")
     for stat in top_stats[:10]:
-        print(f"{stat.traceback.format()}: size={stat.size / 1024:.2f} KB, count={stat.count}, average={stat.size / stat.count if stat.count > 0 else 0:.2f} B")
+        #print(f"{stat.traceback.format()}: size={stat.size / 1024:.2f} KB, count={stat.count}, average={stat.size / stat.count if stat.count > 0 else 0:.2f} B")
+        print(stat)
 
     # Сохранение отчета в файл (опционально)
     with open("memory_report.txt", "w") as f:
