@@ -12,19 +12,6 @@
 
 import tracemalloc
 
-def main():
-    tracemalloc.start()
-
-    initialize_project()
-    show_main_menu()
-
-    # Снимок памяти после завершения работы
-    snapshot = tracemalloc.take_snapshot()
-    top_stats = snapshot.statistics("lineno")
-
-    print("\n🔍 Топ 10 файлов по потреблению памяти:")
-    for stat in top_stats[:10]:
-        print(stat)
 
 import os
 import sys
@@ -103,9 +90,31 @@ def show_main_menu():
         else:
             print(f"\n  ⚠️  Некорректный выбор. Попробуйте снова.")
 
+import tracemalloc
+
 def main():
+    # Запускаем мониторинг памяти
+    tracemalloc.start()
+
+    # Основной код программы
     initialize_project()
     show_main_menu()
+
+    # Снимок памяти после завершения работы
+    snapshot = tracemalloc.take_snapshot()
+    top_stats = snapshot.statistics("lineno")
+
+    # Печать топ 10 строк кода по потреблению памяти
+    print("\n🔍 Топ 10 строк кода по потреблению памяти:")
+    for stat in top_stats[:10]:
+        print(f"{stat.traceback.format()}: size={stat.size / 1024:.2f} KB, count={stat.count}, average={stat.size / stat.count if stat.count > 0 else 0:.2f} B")
+
+    # Сохранение отчета в файл (опционально)
+    with open("memory_report.txt", "w") as f:
+        f.write("\n🔍 Топ 10 строк кода по потреблению памяти:\n")
+        for stat in top_stats[:10]:
+            f.write(f"{stat.traceback.format()}: size={stat.size / 1024:.2f} KB, count={stat.count}, average={stat.size / stat.count if stat.count > 0 else 0:.2f} B\n")
+
 
 if __name__ == "__main__":
     main()
