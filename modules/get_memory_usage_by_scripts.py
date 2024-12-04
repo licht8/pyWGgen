@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
 """
-get_memory_usage_by_scripts.py
-Скрипт для отображения в реальном времени информации о потреблении памяти скриптами проекта wg_qr_generator.
+get_memory_usage_by_scripts_with_functions.py
+Скрипт для отображения в реальном времени информации о потреблении памяти скриптами проекта wg_qr_generator, включая разбивку по функциям.
 """
 
 import psutil
 import os
 import sys
 import time
+import tracemalloc
 from pathlib import Path
 
 # Добавляем путь к корневой директории проекта в sys.path
@@ -61,9 +62,9 @@ def get_memory_usage_by_scripts(project_dir):
     return sorted_processes
 
 
-def display_memory_usage(project_dir, interval=1):
+def display_memory_usage_with_functions(project_dir, interval=1):
     """
-    В режиме реального времени отображает информацию о потреблении памяти скриптами проекта.
+    В режиме реального времени отображает информацию о потреблении памяти скриптами проекта, включая функции.
 
     :param project_dir: Путь к корневой директории проекта.
     :param interval: Интервал обновления в секундах.
@@ -87,9 +88,20 @@ def display_memory_usage(project_dir, interval=1):
             
             print("-" * 100)
             print(f"{'Итог':<30}{total_memory / (1024 ** 2):<20.2f}{'MB':<50}")
+            
+            # Разбивка по функциям
+            print("\n🔍 Разбивка по функциям:")
+            tracemalloc.start()
+            snapshot = tracemalloc.take_snapshot()
+            top_stats = snapshot.statistics('lineno')
+
+            for stat in top_stats[:10]:
+                print(f"{stat.traceback.format()}: {stat.size / 1024:.2f} KB")
+
             print(f"\nОбновление каждые {interval} секунд...")
 
             time.sleep(interval)
+            tracemalloc.stop()
 
     except KeyboardInterrupt:
         print("\nПрограмма остановлена пользователем.")
@@ -99,4 +111,4 @@ if __name__ == "__main__":
     # Используем BASE_DIR из settings.py
     project_directory = str(BASE_DIR)
     print(f"🔍 Сбор информации о памяти для проекта: {project_directory}")
-    display_memory_usage(project_directory, interval=1)
+    display_memory_usage_with_functions(project_directory, interval=1)
