@@ -70,7 +70,7 @@ def show_main_menu():
         print(f"\n\t 0 или q. Выход")
         display_message_slowly(f" ==========================================\n", print_speed=local_print_speed, indent=False)
 
-        choice = input_with_history(" Выберите действие: ").strip().lower()
+        choice = input(" Выберите действие: ").strip().lower()
 
         if choice == "0" or choice == "q":
             print("\n 👋  Выход. До свидания!\n")
