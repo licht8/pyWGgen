@@ -97,12 +97,16 @@ def display_memory_usage_with_functions(project_dir, interval=1):
             )).statistics('lineno')
 
             if stats:
+                print(f"{'Файл':<60}{'Строка':<10}{'Размер (KB)':<20}")
+                print("-" * 90)
+                total_function_memory = 0
                 for stat in stats[:10]:  # Отображаем топ-10 потребления
                     file_path = stat.traceback[0].filename
                     line_no = stat.traceback[0].lineno
-                    print(f"Файл: {file_path} (строка {line_no})\nРазмер: {stat.size / 1024:.2f} KB")
-                total_function_memory = sum(stat.size for stat in stats)
-                print(f"\n{'Итог по функциям':<30}{total_function_memory / 1024:.2f} KB")
+                    memory_kb = stat.size / 1024
+                    print(f"{file_path:<60}{line_no:<10}{memory_kb:<20.2f}")
+                    total_function_memory += stat.size
+                print(f"\n{'Итог по функциям':<70}{total_function_memory / 1024:.2f} KB")
             else:
                 print("Нет данных для разбивки по функциям.")
 
