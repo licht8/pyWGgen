@@ -215,7 +215,7 @@ def swap_edit(size_mb=None, action=None, silent=False):
 
     # Действия для установки swap
     if action == "micro":
-        size_mb = 64
+        size_mb = 512
         silent = True
     elif action == "min":
         size_mb = 64
