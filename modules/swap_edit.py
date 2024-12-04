@@ -254,6 +254,7 @@ if __name__ == "__main__":
     parser.add_argument("--micro_swap", action="store_true", help="Создать swap размером 64 MB в тихом режиме.")
     parser.add_argument("--erase_swap", action="store_true", help="Удалить текущий swap.")
 
+    args = parser.parse_args()  # Парсим аргументы командной строки
 
     if args.erase_swap:
         swap_edit(action="erase")
