@@ -11,6 +11,7 @@ import sys
 import logging
 from pathlib import Path
 from importlib.util import spec_from_file_location, module_from_spec
+from pause_rules import apply_pause, get_pause_rules
 
 # Добавляем пути к корню проекта и модулям
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
