@@ -8,42 +8,26 @@
 
 import json
 import sys
-import logging
 from pathlib import Path
 from importlib.util import spec_from_file_location, module_from_spec
-from pause_rules import apply_pause, get_pause_rules
 
-# Добавляем пути к корню проекта и модулям
+# Устанавливаем пути для проекта
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-MODULES_DIR = PROJECT_ROOT / "modules"
+MODULES_DIR = PROJECT_ROOT / "ai_diagnostics" / "modules"
 HELP_DIR = PROJECT_ROOT / "ai_diagnostics" / "ai_help"
 SETTINGS_FILE = PROJECT_ROOT / "settings.py"
 
 sys.path.append(str(PROJECT_ROOT))
 sys.path.append(str(MODULES_DIR))
 
-# Настраиваем логирование
-from settings import LOG_FILE_PATH, LOG_LEVEL
-logging.basicConfig(
-    filename=LOG_FILE_PATH,
-    level=getattr(logging, LOG_LEVEL, "DEBUG"),
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-# Импортируем необходимые модули
+# Импорты
 try:
-    from modules.input_utils import input_with_history
-except ModuleNotFoundError as e:
-    logging.error(f"Ошибка импорта модуля: {e}")
-    print(f"❌ Ошибка импорта модуля: {e}")
-    sys.exit(1)
-
-try:
-    from pause_rules import apply_pause, get_pause_rules
+    from pause_rules import apply_pause, get_pause_rules  # Исправленный путь к pause_rules
     from ai_diagnostics.ai_diagnostics import display_message_slowly
+    from modules.input_utils import input_with_history  # Корректный импорт input_utils
 except ImportError as e:
-    logging.error(f"Ошибка импорта модуля: {e}")
     print(f"❌ Ошибка импорта модуля: {e}")
+    print("Проверьте, что все необходимые модули присутствуют и пути настроены правильно.")
     sys.exit(1)
 
 # Конфигурация для форматирования текста
