@@ -14,13 +14,13 @@ def calculate_pi(iterations):
 def test_loader_with_calculation():
     """Тестирует работу лоадера с реальным вычислением."""
     try:
-        print("Запуск теста работы лоадера с вычислением числа π.")
-        print("Подготовка к вычислениям...")
+        print(f" Запуск теста работы лоадера с вычислением числа π.")
+        print(f" Подготовка к вычислениям...")
 
         # Количество итераций для вычисления числа π
         iterations = 10_000_000  # Выбираем разумное количество итераций
 
-        print(f"Будет выполнено {iterations:,} итераций. Запускаем лоадер.")
+        print(f" Будет выполнено {iterations:,} итераций. Запускаем лоадер.")
         # Запуск лоадера в отдельном потоке
         loader_thread = threading.Thread(target=start_loader, args=("Calculating π",))
         loader_thread.start()
@@ -37,7 +37,7 @@ def test_loader_with_calculation():
         loader_thread.join()
 
         # Вывод результата
-        print(f"\nРасчёты завершены успешно!")
+        print(f"\n Расчёты завершены успешно!")
         print(f" Рассчитанное значение π: {pi_value}")
         print(f" Время выполнения: {end_time - start_time:.2f} секунд")
 
@@ -68,7 +68,7 @@ def display_loader_instructions():
     print(f"   # Например, длительное вычисление")
     print(f"   result = some_long_computation()")
     print(f"   ```\n")
-    print(f"4. Остановите лоадер после завершения операции:")
+    print(f" 4. Остановите лоадер после завершения операции:")
     print(f"   ```python")
     print(f"   stop_loader()")
     print(f"   loader_thread.join()")
