@@ -28,7 +28,7 @@ from modules.install_wg import install_wireguard  # Импортируем фу�
 from modules.wireguard_utils import check_wireguard_installed
 from ai_diagnostics.ai_diagnostics import display_message_slowly
 from modules.swap_edit import check_swap_edit, swap_edit
-
+from modules.report_utils import create_summary_report
 from modules.swap_edit import check_swap_edit
 
 # Проверить и создать swap размером 64 MB, если необходимо
@@ -62,6 +62,7 @@ def initialize_project():
 
 # Вызов функции инициализации
 initialize_project()
+create_summary_report()
 
 
 def show_main_menu():
