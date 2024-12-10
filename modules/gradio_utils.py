@@ -5,7 +5,8 @@ import os
 import subprocess
 from gradio_admin.main_interface import admin_interface
 #from modules.project_status import get_external_ip
-from modules.report_utils import get_external_ip
+#from modules.report_utils import get_external_ip
+from modules.firewall_utils import get_external_ip
 
 from modules.firewall_utils import open_firewalld_port, close_firewalld_port, handle_port_conflict
 
