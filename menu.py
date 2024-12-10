@@ -16,6 +16,7 @@ import tracemalloc
 tracemalloc.start(10)
 
 import os
+import time
 import sys
 import subprocess
 from modules.input_utils import input_with_history  # Импортируем нашу функцию
@@ -135,9 +136,11 @@ def show_main_menu():
         elif choice == "sr":
             from modules.report_utils import display_summary_report
             display_summary_report()
+            time.sleep(2)
         elif choice == "fr":
             from modules.report_utils import display_test_report
             display_test_report()
+            time.sleep(2)
         elif choice == "sy":
             from modules.sync import sync_users_with_wireguard
             sync_users_with_wireguard()
@@ -146,6 +149,7 @@ def show_main_menu():
             run_diagnostics()
         elif choice == "sd":
             show_diagnostics_log()
+            time.sleep(2)
         elif choice == "aih":
             os.system("python3 ai_diagnostics/ai_help/ai_help.py")
         elif choice == "aid":
