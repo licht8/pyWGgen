@@ -41,6 +41,18 @@ def display_message(message, print_speed=None):
     log_message(message)
 
 
+def create_directory(path: Path):
+    """Создает директорию, если она не существует."""
+    try:
+        if not path.exists():
+            path.mkdir(parents=True, exist_ok=True)
+            log_message(f"Создана директория: {path}", level="DEBUG")
+    except Exception as e:
+        error_message = f"Ошибка создания директории {path}: {e}"
+        log_message(error_message, level="ERROR")
+        raise RuntimeError(error_message)
+
+
 def install_wireguard_package():
     """Устанавливает WireGuard через пакетный менеджер."""
     try:
@@ -120,6 +132,23 @@ def verify_masquerade():
         display_message(f"❌ Ошибка настройки маскарадинга: {e}")
 
 
+def generate_keypair():
+    """Генерирует приватный и публичный ключи."""
+    wg_path = shutil.which("wg")
+    if not wg_path:
+        display_message("❌ Команда 'wg' не найдена. Пытаюсь установить WireGuard...", print_speed=PRINT_SPEED)
+        install_wireguard_package()
+        wg_path = shutil.which("wg")
+        if not wg_path:
+            raise FileNotFoundError("Не удалось установить WireGuard. Проверьте пакеты вручную.")
+    try:
+        private_key = subprocess.check_output([wg_path, "genkey"]).decode().strip()
+        public_key = subprocess.check_output([wg_path, "pubkey"], input=private_key.encode()).decode().strip()
+        return private_key, public_key
+    except subprocess.SubprocessError as e:
+        raise RuntimeError(f"Ошибка при генерации ключей: {e}")
+
+
 def install_wireguard():
     """Устанавливает WireGuard с расширенной проверкой и отладкой."""
     try:
@@ -139,14 +168,78 @@ def install_wireguard():
                 log_message(f"Перезапись конфигурационного файла: {SERVER_CONFIG_FILE}")
 
         # Установка WireGuard
+        display_message("🍀 Установка WireGuard...", print_speed=PRINT_SPEED)
         install_wireguard_package()
         verify_wireguard_installation()
         verify_firewalld()
         verify_masquerade()
 
         # Продолжение настройки (генерация ключей, конфигурация сервера и клиента)
-        # (Содержимое вашего оригинального метода install_wireguard продолжает использоваться здесь)
+        server_private_key, server_public_key = generate_keypair()
+        client_private_key, client_public_key = generate_keypair()
+        preshared_key = base64.b64encode(os.urandom(32)).decode()
 
+        # Получаем внешний IP
+        external_ip = get_external_ip()
+        display_message(f"🌐 Обнаружен внешний IP: {external_ip}", print_speed=PRINT_SPEED)
+
+        # Ввод данных
+        server_ip = input(f" 🌍 Введите IP сервера [{external_ip}]: ").strip() or external_ip
+        server_port = input(" 🔒 Введите порт WireGuard [51820]: ").strip() or "51820"
+        subnet = input(" 📡 Введите подсеть для клиентов [10.66.66.0/24]: ").strip() or "10.66.66.0/24"
+        ipv6_subnet = "fd42:42:42::/64"
+        dns_servers = input(" 🧙‍♂️ Введите DNS сервера [8.8.8.8, 8.8.4.4]: ").strip() or "8.8.8.8, 8.8.4.4"
+
+        # Создаем конфигурацию сервера
+        server_config = f"""
+[Interface]
+Address = {subnet.split('/')[0]}/24,{ipv6_subnet.split('/')[0]}1/64
+ListenPort = {server_port}
+PrivateKey = {server_private_key}
+PostUp = firewall-cmd --add-port {server_port}/udp && firewall-cmd --add-rich-rule='rule family=ipv4 source address={subnet} masquerade' && firewall-cmd --add-rich-rule='rule family=ipv6 source address={ipv6_subnet} masquerade'
+PostDown = firewall-cmd --remove-port {server_port}/udp && firewall-cmd --remove-rich-rule='rule family=ipv4 source address={subnet} masquerade' && firewall-cmd --remove-rich-rule='rule family=ipv6 source address={ipv6_subnet} masquerade'
+
+[Peer]
+PublicKey = {client_public_key}
+PresharedKey = {preshared_key}
+AllowedIPs = {subnet.split('/')[0]}2/32,{ipv6_subnet.split('/')[0]}2/128
+        """
+
+        # Сохраняем конфигурацию сервера
+        with open(SERVER_CONFIG_FILE, "w") as config_file:
+            config_file.write(server_config)
+        log_message(f"Конфигурационный файл сохранен: {SERVER_CONFIG_FILE}")
+
+        # Создаем конфигурацию клиента
+        client_config = f"""
+[Interface]
+PrivateKey = {client_private_key}
+Address = {subnet.split('/')[0]}2/32,{ipv6_subnet.split('/')[0]}2/128
+DNS = {dns_servers}
+
+[Peer]
+PublicKey = {server_public_key}
+PresharedKey = {preshared_key}
+Endpoint = {server_ip}:{server_port}
+AllowedIPs = 0.0.0.0/0,::/0
+        """
+
+        # Генерация QR-кода
+        qr_code_path = QR_CODE_DIR / "SetupUser_HphD.png"
+        generate_qr_code(client_config, qr_code_path)
+
+        # Отчет об установке
+        report = f"""
+=== Отчет об установке WireGuard ===
+📄 Конфигурационный файл сервера: {SERVER_CONFIG_FILE}
+🔒 Порт сервера: {server_port}
+📡 Подсеть для клиентов: {subnet}
+🌍 Внешний IP: {server_ip}
+🌐 Конфигурация клиента сохранена в QR-коде: {qr_code_path}
+🗂️  Логи установки: {LOG_FILE_PATH}
+        """
+        display_message(report, print_speed=PRINT_SPEED)
+        log_message("Установка WireGuard завершена успешно.")
     except Exception as e:
         error_message = f"❌ Установка WireGuard завершилась с ошибкой: {e}"
         display_message(error_message, print_speed=PRINT_SPEED)
