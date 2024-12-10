@@ -39,6 +39,15 @@ project_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
+def show_diagnostics_log():
+    """Отображает содержимое журнала диагностики."""
+    if os.path.exists(DIAGNOSTICS_LOG):
+        print("\n === 🛠️  Журнал диагностики  ===\n")
+        with open(DIAGNOSTICS_LOG, "r") as log_file:
+            print(log_file.read())
+    else:
+        print("\n ❌  Журнал диагностики отсутствует.\n")
+
 
 
 # Проверяем и создаем директории и файлы
