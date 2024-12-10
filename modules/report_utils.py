@@ -92,40 +92,20 @@ def show_project_status():
     """Отображает состояние проекта."""
     print("\n=== Информация о состоянии проекта ===\n")
 
+def show_project_status():
+    """Отображает состояние проекта."""
+    print("\n=== Информация о состоянии проекта ===\n")
+
     # Информация о системе
     print(f" 🖥️  ОС: {platform.system()} {platform.release()}")
     print(f" 🧰  Ядро: {platform.uname().release}")
     print(f" 🌍  Внешний IP-адрес: {get_external_ip()}")
 
-    # Состояние фаервола и порты
-    firewall_status = get_open_ports()
-    print(f" 🔓  Открытые порты: {firewall_status}")
-
     # Состояние WireGuard
-    wg_status = get_wireguard_status()
-    wg_config_path = "/etc/wireguard/wg0.conf"
-    wg_config_status = wg_config_path if os.path.exists(wg_config_path) else colored("отсутствует ❌", "red")
-    wg_peers = get_wireguard_peers()
-    print(f" 🛡️  WireGuard статус: {wg_status}")
-    print(f" ⚙️  Файл конфигурации: {wg_config_status}")
-    print(f" 🌐 Активные peers: {wg_peers}")
-
-    # Пользователи WireGuard
-    users = get_users_data()
-    if isinstance(users, dict):
-        print("\n 👤  Пользователи WireGuard:")
-        for user, details in users.items():
-            status = details.get("status", "N/A")
-            status_colored = colored(status, "green") if status == "active" else colored(status, "red")
-            print(f"    - {user}: {details.get('allowed_ips', 'N/A')} | Статус: {status_colored}")
-    else:
-        print(f" 👤  Пользователи: {users}")
-
-    # Gradio
-    gradio_status = get_gradio_status()
-    gradio_port_status = get_gradio_port_status()
-    print(f"\n 🌐  Gradio интерфейс: {gradio_status}")
-    print(f" 🔌  Порт Gradio: {gradio_port_status}")
+    print(f" 🛡️  WireGuard статус: {get_wireguard_status()}")
+    config_path = "/etc/wireguard/wg0.conf"
+    print(f" ⚙️  Файл конфигурации: {config_path if os.path.exists(config_path) else colored('отсутствует ❌', 'red')}")
+    print(f" 🌐 Активные peers: {get_wireguard_peers()}")
 
     # Последний отчёт
     report_path = os.path.join("wg_qr_generator", "test_report.txt")
@@ -135,6 +115,7 @@ def show_project_status():
         print(colored(" 📋  Последний отчет: отсутствует ❌", "red"))
 
     print("\n===========================================\n")
+
 
 
 def generate_project_report():
