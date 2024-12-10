@@ -283,3 +283,6 @@ AllowedIPs = 0.0.0.0/0,::/0
         display_message(error_message, print_speed=PRINT_SPEED)
         log_message(error_message, level="ERROR")
         log_message(traceback.format_exc(), level="ERROR")
+
+if __name__ == "__main__":
+    install_wireguard()
