@@ -14,8 +14,8 @@
 # display_test_report()
 # display_summary_report()
 #
-# Версия: 1.2
-# Обновлено: 2024-12-02
+# Версия: 1.3
+# Обновлено: 2024-12-10
 
 from settings import SUMMARY_REPORT_PATH, TEST_REPORT_PATH
 from modules.test_report_generator import generate_report
@@ -24,7 +24,10 @@ from modules.test_report_generator import generate_report
 def generate_project_report():
     """Генерация полного отчета."""
     print("\n  📋  Запуск генерации полного отчета...")
-    generate_report()
+    try:
+        generate_report()
+    except Exception as e:
+        print(f" ❌ Ошибка при генерации полного отчета: {e}")
 
 
 def display_test_report():
@@ -70,11 +73,11 @@ def display_summary_report():
         with open(SUMMARY_REPORT_PATH, "r", encoding="utf-8") as file:
             content = file.read()
 
-        #print("\n=== 📋 Отчет о состоянии проекта wg_qr_generator ===\n")
+        print("\n=== 📋 Отчет о состоянии проекта wg_qr_generator ===\n")
         print(content)
 
     except Exception as e:
-        print(f" ❌ Ошибка при чтении отчета о состоянии проекта wg_qr_generator": {e}")
+        print(f" ❌ Ошибка при чтении отчета о состоянии проекта wg_qr_generator: {e}")
 
 
 # Пример использования
