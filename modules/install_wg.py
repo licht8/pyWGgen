@@ -2,6 +2,7 @@
 # modules/install_wg.py
 # ===========================================
 # Установщик WireGuard с корректным конфигом, ключами и QR-кодами
+# Версия 1.0
 # ===========================================
 
 import os
@@ -40,15 +41,36 @@ def display_message(message, print_speed=None):
     log_message(message)
 
 
+def install_wireguard_package():
+    """Устанавливает WireGuard через пакетный менеджер."""
+    try:
+        display_message("📦 Установка пакетов WireGuard...", print_speed=PRINT_SPEED)
+        if shutil.which("apt"):
+            subprocess.run(["sudo", "apt", "update"], check=True)
+            subprocess.run(["sudo", "apt", "install", "-y", "wireguard"], check=True)
+        elif shutil.which("yum"):
+            subprocess.run(["sudo", "yum", "install", "-y", "epel-release"], check=True)
+            subprocess.run(["sudo", "yum", "install", "-y", "wireguard-tools"], check=True)
+        else:
+            raise EnvironmentError("Не удалось определить пакетный менеджер для установки WireGuard.")
+        log_message("WireGuard установлен успешно.", level="INFO")
+    except subprocess.CalledProcessError as e:
+        error_message = f"Ошибка при установке WireGuard: {e}"
+        display_message(f"❌ {error_message}", print_speed=PRINT_SPEED)
+        log_message(error_message, level="ERROR")
+        raise
+
+
 def generate_keypair():
     """Генерирует приватный и публичный ключи, с проверкой наличия команды wg."""
     wg_path = shutil.which("wg")  # Проверяем путь к команде wg
     if not wg_path:
-        error_message = "Команда 'wg' не найдена. Убедитесь, что WireGuard установлен."
-        display_message(f"❌ {error_message}", print_speed=PRINT_SPEED)
-        log_message(error_message, level="ERROR")
-        raise FileNotFoundError("Команда 'wg' не найдена. Установите WireGuard и повторите.")
-    
+        display_message("❌ Команда 'wg' не найдена. Пытаемся установить WireGuard...", print_speed=PRINT_SPEED)
+        install_wireguard_package()
+        wg_path = shutil.which("wg")  # Проверяем снова после установки
+        if not wg_path:
+            raise FileNotFoundError("Не удалось установить WireGuard. Проверьте пакеты вручную.")
+
     try:
         private_key = subprocess.check_output([wg_path, "genkey"]).decode().strip()
         public_key = subprocess.check_output([wg_path, "pubkey"], input=private_key.encode()).decode().strip()
