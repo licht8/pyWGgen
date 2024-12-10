@@ -26,10 +26,25 @@ from modules.test_report_generator import generate_report
 SUMMARY_SCRIPT = Path(__file__).resolve().parent.parent / "ai_diagnostics" / "ai_diagnostics_summary.py"
 
 
+from datetime import datetime, timedelta
+
 def create_summary_report():
-    """Вызывает скрипт для создания summary_report.txt."""
+    """Проверяет свежесть отчета и вызывает скрипт для создания summary_report.txt при необходимости."""
     try:
-        print(f" ⏳ Файл {SUMMARY_REPORT_PATH} отсутствует. Создаю...")
+        # Проверка существования файла
+        if SUMMARY_REPORT_PATH.exists():
+            # Получаем время последнего изменения файла
+            last_modified = datetime.fromtimestamp(SUMMARY_REPORT_PATH.stat().st_mtime)
+            age = datetime.now() - last_modified
+
+            if age < timedelta(minutes=1):
+                print(f" ✅ Файл {SUMMARY_REPORT_PATH} актуален. Пересоздание не требуется.")
+                return
+            else:
+                print(f" ⏳ Файл {SUMMARY_REPORT_PATH} устарел ({age.seconds // 60} минут). Пересоздаю...")
+
+        else:
+            print(f" ⏳ Файл {SUMMARY_REPORT_PATH} отсутствует. Создаю...")
 
         # Явный вызов через Python
         subprocess.run(["python3", str(SUMMARY_SCRIPT)], check=True)
@@ -39,7 +54,6 @@ def create_summary_report():
         print(f" ❌ Ошибка выполнения скрипта {SUMMARY_SCRIPT}: {e}")
     except Exception as e:
         print(f" ❌ Непредвиденная ошибка при создании файла {SUMMARY_REPORT_PATH}: {e}")
-
 
 
 def get_open_ports():
