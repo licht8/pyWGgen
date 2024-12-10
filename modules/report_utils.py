@@ -6,7 +6,7 @@
 # Этот модуль предоставляет функции для генерации и отображения отчетов,
 # включая полный отчет, краткий отчет, обобщённый отчет и информацию о состоянии проекта.
 #
-# Версия: 2.0
+# Версия: 2.1
 # Обновлено: 2024-12-10
 
 import os
@@ -17,9 +17,23 @@ import psutil
 import time
 from datetime import datetime
 from termcolor import colored
+from pathlib import Path
 from modules.firewall_utils import get_external_ip
 from settings import SUMMARY_REPORT_PATH, TEST_REPORT_PATH
 from modules.test_report_generator import generate_report
+
+# Путь к скрипту создания summary_report
+SUMMARY_SCRIPT = Path(__file__).resolve().parent.parent / "ai_diagnostics" / "ai_diagnostics_summary.py"
+
+
+def create_summary_report():
+    """Вызывает скрипт для создания summary_report.txt."""
+    try:
+        print(f" ⏳ Файл {SUMMARY_REPORT_PATH} отсутствует. Создаю...")
+        subprocess.run([str(SUMMARY_SCRIPT)], check=True)
+        print(f" ✅ Файл {SUMMARY_REPORT_PATH} успешно создан.")
+    except Exception as e:
+        print(f" ❌ Ошибка при создании файла {SUMMARY_REPORT_PATH}: {e}")
 
 
 def get_open_ports():
@@ -92,10 +106,6 @@ def show_project_status():
     """Отображает состояние проекта."""
     print("\n=== Информация о состоянии проекта ===\n")
 
-def show_project_status():
-    """Отображает состояние проекта."""
-    print("\n=== Информация о состоянии проекта ===\n")
-
     # Информация о системе
     print(f" 🖥️  ОС: {platform.system()} {platform.release()}")
     print(f" 🧰  Ядро: {platform.uname().release}")
@@ -115,7 +125,6 @@ def show_project_status():
         print(colored(" 📋  Последний отчет: отсутствует ❌", "red"))
 
     print("\n===========================================\n")
-
 
 
 def generate_project_report():
@@ -161,11 +170,11 @@ def display_summary_report():
     """
     Читает и выводит содержимое отчета о состоянии проекта wg_qr_generator.
     Использует путь к файлу из settings.py.
+    Если файл отсутствует, инициирует его создание.
     """
     try:
         if not SUMMARY_REPORT_PATH.exists():
-            print(f" ❌ Файл Отчета о состоянии проекта wg_qr_generator не найден:\n 📂  {SUMMARY_REPORT_PATH}")
-            return
+            create_summary_report()
 
         with open(SUMMARY_REPORT_PATH, "r", encoding="utf-8") as file:
             content = file.read()
