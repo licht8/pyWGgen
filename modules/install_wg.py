@@ -4,13 +4,12 @@
 # Установщик WireGuard с корректным конфигом, ключами и QR-кодами
 # ===========================================
 
-
 import os
 import time
 import subprocess
 import traceback
 from pathlib import Path
-import shutil  # Импортируем shutil
+import shutil
 import base64
 from settings import (
     PRINT_SPEED,
@@ -59,7 +58,6 @@ def generate_keypair():
         display_message(f"❌ {error_message}", print_speed=PRINT_SPEED)
         log_message(error_message, level="ERROR")
         raise
-
 
 
 def create_directory(path: Path):
