@@ -113,15 +113,15 @@ def show_project_status():
     print("\n=== Информация о состоянии проекта ===\n")
 
     # Информация о системе
-    print(f" 🖥️  ОС: {platform.system()} {platform.release()}")
+    print(f" 🖥️   ОС: {platform.system()} {platform.release()}")
     print(f" 🧰  Ядро: {platform.uname().release}")
     print(f" 🌍  Внешний IP-адрес: {get_external_ip()}")
 
     # Состояние WireGuard
-    print(f" 🛡️  WireGuard статус: {get_wireguard_status()}")
+    print(f" 🛡️   WireGuard статус: {get_wireguard_status()}")
     config_path = "/etc/wireguard/wg0.conf"
-    print(f" ⚙️  Файл конфигурации: {config_path if os.path.exists(config_path) else colored('отсутствует ❌', 'red')}")
-    print(f" 🌐 Активные peers: {get_wireguard_peers()}")
+    print(f" ⚙️   Файл конфигурации: {config_path if os.path.exists(config_path) else colored('отсутствует ❌', 'red')}")
+    print(f" 🌐  Активные peers: {get_wireguard_peers()}")
 
     # Последний отчёт
     report_path = os.path.join("wg_qr_generator", "test_report.txt")
