@@ -2,7 +2,7 @@
 # modules/install_wg.py
 # ===========================================
 # Установщик WireGuard с расширенной отладкой и проверками
-# Версия 1.2
+# Версия 1.3
 # ===========================================
 
 import os
@@ -49,6 +49,21 @@ def create_directory(path: Path):
             log_message(f"Создана директория: {path}", level="DEBUG")
     except Exception as e:
         error_message = f"Ошибка создания директории {path}: {e}"
+        log_message(error_message, level="ERROR")
+        raise RuntimeError(error_message)
+
+
+def generate_qr_code(config: str, file_path: Path):
+    """Генерирует QR-код для конфигурации."""
+    try:
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+        qr.add_data(config)
+        qr.make(fit=True)
+        img = qr.make_image(fill="black", back_color="white")
+        img.save(file_path)
+        log_message(f"QR-код сохранен: {file_path}", level="INFO")
+    except Exception as e:
+        error_message = f"Ошибка генерации QR-кода: {e}"
         log_message(error_message, level="ERROR")
         raise RuntimeError(error_message)
 
