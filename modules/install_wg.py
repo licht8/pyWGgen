@@ -89,25 +89,28 @@ def install_wireguard_package():
         raise
 
 
-def verify_wireguard_installation():
-    """Проверяет, установлен ли WireGuard корректно."""
-    wg_path = shutil.which("wg")
-    if not wg_path:
-        raise FileNotFoundError("Команда 'wg' не найдена после установки.")
+def verify_wireguard_service():
+    """Проверяет и запускает сервис WireGuard."""
     try:
-        version_output = subprocess.check_output([wg_path, "--version"], stderr=subprocess.STDOUT).decode().strip()
-        wg_show_output = subprocess.run(
-            [wg_path, "show"],
+        # Проверяем статус сервиса wg-quick@wg0
+        service_status = subprocess.run(
+            ["sudo", "systemctl", "is-active", "wg-quick@wg0"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
         )
-        log_message(f"WireGuard версия: {version_output}", level="INFO")
-        if wg_show_output.returncode != 0:
-            log_message(f"Ошибка команды 'wg show': {wg_show_output.stderr.strip()}", level="WARNING")
-        display_message(f"✅ WireGuard успешно установлен: {version_output}")
+        if service_status.returncode != 0:
+            display_message("⚠️  Сервис WireGuard не активен. Попытка запуска...", print_speed=PRINT_SPEED)
+            subprocess.run(["sudo", "systemctl", "start", "wg-quick@wg0"], check=True)
+            subprocess.run(["sudo", "systemctl", "enable", "wg-quick@wg0"], check=True)
+            log_message("Сервис WireGuard запущен и добавлен в автозапуск.", level="INFO")
+        else:
+            log_message("Сервис WireGuard уже активен.", level="INFO")
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"WireGuard установлен, но команда 'wg show' вернула ошибку: {e}")
+        error_message = f"Ошибка при запуске сервиса WireGuard: {e}"
+        log_message(error_message, level="ERROR")
+        display_message(f"❌ {error_message}", print_speed=PRINT_SPEED)
+        raise RuntimeError(error_message)
 
 
 def verify_firewalld():
