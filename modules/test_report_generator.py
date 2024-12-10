@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # modules/test_report_generator.py
 # Скрипт для генерации полного отчета о состоянии проекта wg_qr_generator
-# Версия: 2.0
-# Обновлено: 2024-11-28
+# Версия: 2.1
+# Обновлено: 2024-12-10
 # Назначение: Генерация подробного отчета для диагностики состояния проекта.
 
 import os
@@ -36,6 +36,8 @@ def run_command(command):
     """Выполняет команду и возвращает вывод."""
     try:
         return subprocess.check_output(command, text=True).strip()
+    except FileNotFoundError:
+        return f" ❌  Команда '{command[0]}' не найдена."
     except subprocess.CalledProcessError as e:
         return f" ❌  Ошибка выполнения команды {' '.join(command)}: {e}"
 
