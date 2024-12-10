@@ -2,7 +2,7 @@
 # modules/install_wg.py
 # ===========================================
 # Установщик WireGuard с корректным конфигом, ключами и QR-кодами
-# Версия 1.0
+# Версия 1.1
 # ===========================================
 
 import os
@@ -53,12 +53,33 @@ def install_wireguard_package():
             subprocess.run(["sudo", "yum", "install", "-y", "wireguard-tools"], check=True)
         else:
             raise EnvironmentError("Не удалось определить пакетный менеджер для установки WireGuard.")
+        verify_wireguard_installation()
         log_message("WireGuard установлен успешно.", level="INFO")
     except subprocess.CalledProcessError as e:
         error_message = f"Ошибка при установке WireGuard: {e}"
         display_message(f"❌ {error_message}", print_speed=PRINT_SPEED)
         log_message(error_message, level="ERROR")
         raise
+
+
+def verify_wireguard_installation():
+    """Проверяет, установлен ли WireGuard корректно."""
+    wg_path = shutil.which("wg")
+    if not wg_path:
+        raise FileNotFoundError("Команда 'wg' не найдена после установки.")
+    try:
+        version_output = subprocess.check_output([wg_path, "--version"], stderr=subprocess.STDOUT).decode().strip()
+        wg_show_output = subprocess.run(
+            [wg_path, "show"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        log_message(f"WireGuard версия: {version_output}", level="INFO")
+        log_message(f"'wg show' вывод:\n{wg_show_output.stdout or wg_show_output.stderr}", level="DEBUG")
+        display_message(f"✅ WireGuard успешно установлен: {version_output}")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"WireGuard установлен, но команда 'wg show' вернула ошибку: {e}")
 
 
 def generate_keypair():
@@ -184,7 +205,7 @@ AllowedIPs = 0.0.0.0/0,::/0
 📡 Подсеть для клиентов: {subnet}
 🌍 Внешний IP: {server_ip}
 🌐 Конфигурация клиента сохранена в QR-коде: {qr_code_path}
-🗂️ Логи установки: {LOG_FILE_PATH}
+🗂️  Логи установки: {LOG_FILE_PATH}
         """
         display_message(report, print_speed=PRINT_SPEED)
         log_message("Установка WireGuard завершена успешно.")
