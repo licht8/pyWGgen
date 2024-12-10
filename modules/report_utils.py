@@ -30,10 +30,16 @@ def create_summary_report():
     """Вызывает скрипт для создания summary_report.txt."""
     try:
         print(f" ⏳ Файл {SUMMARY_REPORT_PATH} отсутствует. Создаю...")
-        subprocess.run([str(SUMMARY_SCRIPT)], check=True)
+
+        # Явный вызов через Python
+        subprocess.run(["python3", str(SUMMARY_SCRIPT)], check=True)
+        
         print(f" ✅ Файл {SUMMARY_REPORT_PATH} успешно создан.")
+    except subprocess.CalledProcessError as e:
+        print(f" ❌ Ошибка выполнения скрипта {SUMMARY_SCRIPT}: {e}")
     except Exception as e:
-        print(f" ❌ Ошибка при создании файла {SUMMARY_REPORT_PATH}: {e}")
+        print(f" ❌ Непредвиденная ошибка при создании файла {SUMMARY_REPORT_PATH}: {e}")
+
 
 
 def get_open_ports():
