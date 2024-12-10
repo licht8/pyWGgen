@@ -106,10 +106,7 @@ def show_main_menu():
         if choice == "i":
             from modules.report_utils import display_summary_report, show_project_status
             display_summary_report()
-            #time.sleep(2)
             show_project_status()
-            #from modules.project_status import show_project_status
-            #show_project_status()
         elif choice == "t":
             print(f" 🔍  Запуск тестов...")
             subprocess.run(["pytest"])
