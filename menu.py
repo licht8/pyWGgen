@@ -70,9 +70,6 @@ def show_main_menu():
     while True:
         wireguard_installed = check_wireguard_installed()
         display_message_slowly(f"\n🛡️  ======  Menu wg_qr_generator  ======= 🛡️\n", print_speed=local_print_speed, indent=False)
-        print(f"  i. 🛠️   Информация о состоянии проекта")
-        print(f"  t. 🧪  Запустить тесты")
-        print(f" up. 🔄  Запустить обновление зависимостей")
         display_message_slowly(f" ------------------------------------------", print_speed=local_print_speed, indent=False)
         print(f"  g. 🌐  Открыть Gradio админку")
         print(f"  u. 👤  Управление пользователями")
@@ -84,11 +81,15 @@ def show_main_menu():
             print(f" dw. 🗑️   Удалить WireGuard")
         else:
             print(f" iw. ⚙️   Установить WireGuard")
+        print(f" up. 🔄  Запустить обновление зависимостей")
         display_message_slowly(f" ------------------------------------------", print_speed=local_print_speed, indent=False)
+        print(f"  i. 🛠️   Информация о состоянии проекта")
         print(f" rg. 📋  Генерация отчета о состоянии проекта")
         print(f" fr. 📄  Показать отчет о состоянии проекта")
         print(f" dg. 🛠️   Запустить диагностику проекта")
         print(f" sd. 📋  Показать журнал диагностики")
+        print(f"  t. 🧪  Запустить тесты")
+
         display_message_slowly(f"\n🧩 === Раздел помощи и диагностики ==== 🧩\n", print_speed=local_print_speed, indent=False)
         print(f" aih. 🗨️  Помощь и диагностика")
         print(f" aid. 🤖 Диагностика проекта")
