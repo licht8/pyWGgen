@@ -96,31 +96,38 @@ def show_project_status():
     print(f" 🖥️  ОС: {platform.system()} {platform.release()}")
     print(f" 🧰  Ядро: {platform.uname().release}")
     print(f" 🌍  Внешний IP-адрес: {get_external_ip()}")
-    print(f" 🔓  Открытые порты: {get_open_ports()}\n")
+
+    # Состояние фаервола и порты
+    firewall_status = get_open_ports()
+    print(f" 🔓  Открытые порты: {firewall_status}")
 
     # Состояние WireGuard
-    print(f" 🛡️  WireGuard статус: {get_wireguard_status()}")
-    config_path = "/etc/wireguard/wg0.conf"
-    config_status = config_path if os.path.exists(config_path) else colored("отсутствует ❌", "red")
-    print(f" ⚙️  Файл конфигурации: {config_status}")
-    print(f" 🌐 Активные peers: {get_wireguard_peers()}\n")
+    wg_status = get_wireguard_status()
+    wg_config_path = "/etc/wireguard/wg0.conf"
+    wg_config_status = wg_config_path if os.path.exists(wg_config_path) else colored("отсутствует ❌", "red")
+    wg_peers = get_wireguard_peers()
+    print(f" 🛡️  WireGuard статус: {wg_status}")
+    print(f" ⚙️  Файл конфигурации: {wg_config_status}")
+    print(f" 🌐 Активные peers: {wg_peers}")
 
-    # Пользователи
+    # Пользователи WireGuard
     users = get_users_data()
     if isinstance(users, dict):
-        print(" 👤  Пользователи WireGuard:")
+        print("\n 👤  Пользователи WireGuard:")
         for user, details in users.items():
             status = details.get("status", "N/A")
             status_colored = colored(status, "green") if status == "active" else colored(status, "red")
             print(f"    - {user}: {details.get('allowed_ips', 'N/A')} | Статус: {status_colored}")
     else:
-        print(f" 👤  Пользователи: {users}\n")
+        print(f" 👤  Пользователи: {users}")
 
     # Gradio
-    print(f" 🌐  Gradio интерфейс: {get_gradio_status()}")
-    print(f" 🔌  Порт Gradio: {get_gradio_port_status()}\n")
+    gradio_status = get_gradio_status()
+    gradio_port_status = get_gradio_port_status()
+    print(f"\n 🌐  Gradio интерфейс: {gradio_status}")
+    print(f" 🔌  Порт Gradio: {gradio_port_status}")
 
-    # Последний отчет
+    # Последний отчёт
     report_path = os.path.join("wg_qr_generator", "test_report.txt")
     if os.path.exists(report_path):
         print(f" 📋  Последний отчет: {report_path}")
