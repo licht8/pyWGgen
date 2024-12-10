@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # modules/project_status.py
 # Модуль для отображения состояния проекта wg_qr_generator
-# Версия: 1.1
-# Обновлено: 2024-11-25
+# Версия: 1.2
+# Обновлено: 2024-12-10
 # Автор: Ваше Имя
 
 import os
@@ -23,6 +23,7 @@ def get_open_ports():
     except subprocess.CalledProcessError:
         return colored("Ошибка получения данных ❌", "red")
 
+
 def get_wireguard_status():
     """Возвращает статус WireGuard."""
     try:
@@ -33,6 +34,7 @@ def get_wireguard_status():
     except subprocess.CalledProcessError:
         return colored("не установлен ❌", "red")
 
+
 def get_wireguard_peers():
     """Получает список активных пиров WireGuard."""
     try:
@@ -41,8 +43,11 @@ def get_wireguard_peers():
         if peers:
             return f"{len(peers)} активных пиров ✅"
         return colored("Нет активных пиров ❌", "red")
+    except FileNotFoundError:
+        return colored("Команда 'wg' не найдена ❌", "red")
     except subprocess.CalledProcessError:
         return colored("Ошибка получения данных ❌", "red")
+
 
 def get_users_data():
     """Получает информацию о пользователях из user_records.json."""
@@ -55,6 +60,7 @@ def get_users_data():
     except json.JSONDecodeError:
         return colored("Файл user_records.json поврежден ❌", "red")
 
+
 def get_gradio_status(port=7860):
     """Проверяет статус Gradio."""
     try:
@@ -66,12 +72,14 @@ def get_gradio_status(port=7860):
     except Exception as e:
         return colored(f"Ошибка проверки Gradio: {e} ❌", "red")
 
+
 def get_gradio_port_status(port=7860):
     """Проверяет, открыт ли порт Gradio."""
     open_ports = get_open_ports()
     if f"{port}/tcp" in open_ports:
         return colored("открыт ✅", "green")
     return colored("закрыт ❌", "red")
+
 
 def show_project_status():
     """Отображает состояние проекта."""
