@@ -85,11 +85,10 @@ def show_main_menu():
         else:
             print(f" iw. ⚙️   Установить WireGuard")
         display_message_slowly(f" ------------------------------------------", print_speed=local_print_speed, indent=False)
-        print(f" rg. 📋  Генерация отчета")
-        print(f" sr. 🗂️   Показать отчет")
+        print(f" rg. 📋  Генерация отчета о состоянии проекта")
+        print(f" fr. 📄  Показать отчет о состоянии проекта")
         print(f" dg. 🛠️   Запустить диагностику проекта")
         print(f" sd. 📋  Показать журнал диагностики")
-        print(f" fr. 📄  Показать полный отчет")
         display_message_slowly(f"\n🧩 === Раздел помощи и диагностики ==== 🧩\n", print_speed=local_print_speed, indent=False)
         print(f" aih. 🗨️  Помощь и диагностика")
         print(f" aid. 🤖 Диагностика проекта")
@@ -105,6 +104,9 @@ def show_main_menu():
 
 
         if choice == "i":
+            from modules.report_utils import display_summary_report
+            display_summary_report()
+            time.sleep(2)
             from modules.project_status import show_project_status
             show_project_status()
         elif choice == "t":
@@ -133,10 +135,6 @@ def show_main_menu():
         elif choice == "rg":
             from modules.report_utils import generate_project_report
             generate_project_report()
-        elif choice == "sr":
-            from modules.report_utils import display_summary_report
-            display_summary_report()
-            time.sleep(2)
         elif choice == "fr":
             from modules.report_utils import display_test_report
             display_test_report()
