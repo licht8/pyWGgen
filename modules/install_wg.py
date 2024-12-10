@@ -2,7 +2,7 @@
 # modules/install_wg.py
 # ===========================================
 # Установщик WireGuard с расширенной отладкой и проверками
-# Версия 1.3
+# Версия 1.4
 # ===========================================
 
 import os
@@ -89,10 +89,30 @@ def install_wireguard_package():
         raise
 
 
+def verify_wireguard_installation():
+    """Проверяет, установлен ли WireGuard корректно."""
+    wg_path = shutil.which("wg")
+    if not wg_path:
+        raise FileNotFoundError("Команда 'wg' не найдена после установки.")
+    try:
+        version_output = subprocess.check_output([wg_path, "--version"], stderr=subprocess.STDOUT).decode().strip()
+        wg_show_output = subprocess.run(
+            [wg_path, "show"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        log_message(f"WireGuard версия: {version_output}", level="INFO")
+        if wg_show_output.returncode != 0:
+            log_message(f"Ошибка команды 'wg show': {wg_show_output.stderr.strip()}", level="WARNING")
+        display_message(f"✅ WireGuard успешно установлен: {version_output}")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"WireGuard установлен, но команда 'wg show' вернула ошибку: {e}")
+
+
 def verify_wireguard_service():
     """Проверяет и запускает сервис WireGuard."""
     try:
-        # Проверяем статус сервиса wg-quick@wg0
         service_status = subprocess.run(
             ["sudo", "systemctl", "is-active", "wg-quick@wg0"],
             stdout=subprocess.PIPE,
