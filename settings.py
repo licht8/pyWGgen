@@ -45,7 +45,9 @@ PARAMS_FILE = Path("/etc/wireguard/params")             # Путь к файлу
 
 # Параметры WireGuard
 DEFAULT_TRIAL_DAYS = 30  # Базовый срок действия аккаунта в днях
-WIREGUARD_PORT = 51820   # Порт для сервера WireGuard (по умолчанию) range [1-65535]:
+WIREGUARD_PORT = 51820   # Порт для сервера WireGuard (по умолчанию) range [1-65535]
+DEFAULT_SUBNET = 10.66.66.0/24
+USER_SET_SUBNET = DEFAULT_SUBNET
 
 # Настройки для логирования
 LOG_DIR = BASE_DIR / "user/data/logs"  # Директория для хранения логов
