@@ -73,10 +73,12 @@ PostDown = firewall-cmd --remove-port {port}/udp && firewall-cmd --remove-rich-r
 
 def configure_firewalld(port, subnet):
     """Настраивает firewalld."""
+    base_subnet = subnet.split("/")[0]  # Корректно извлекаем базовый адрес подсети
     subprocess.run(["firewall-cmd", "--add-port", f"{port}/udp", "--permanent"], check=True)
-    subprocess.run(["firewall-cmd", "--add-rich-rule", f"rule family=ipv4 source address={subnet[:-3]}0/24 masquerade", "--permanent"], check=True)
+    subprocess.run(["firewall-cmd", "--add-rich-rule", f"rule family=ipv4 source address={base_subnet}/24 masquerade", "--permanent"], check=True)
     subprocess.run(["firewall-cmd", "--add-rich-rule", "rule family=ipv6 source address=fd42:42:42::0/64 masquerade", "--permanent"], check=True)
     subprocess.run(["firewall-cmd", "--reload"], check=True)
+
 
 def enable_and_start_service(port):
     """Активирует и запускает WireGuard."""
