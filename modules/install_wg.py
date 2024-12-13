@@ -14,11 +14,12 @@ def is_root():
         raise PermissionError("Скрипт должен быть запущен от имени root.")
 
 def check_os():
-    """Проверяет ОС CentOS 8."""
+    """Проверяет, что ОС является CentOS 8 или CentOS Stream 8."""
     with open("/etc/os-release") as f:
         os_info = f.read()
-    if "CentOS" not in os_info or "8" not in os_info:
-        raise EnvironmentError("Требуется CentOS Linux 8.")
+    if not (("CentOS" in os_info and "8" in os_info) or "CentOS Stream 8" in os_info):
+        raise EnvironmentError("Требуется CentOS Linux 8 или CentOS Stream 8.")
+
 
 def update_settings_file(key, value):
     """Обновляет параметр в settings.py."""
