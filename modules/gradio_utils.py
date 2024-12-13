@@ -8,7 +8,7 @@ from modules.firewall_utils import open_firewalld_port, close_firewalld_port, ha
 
 def run_gradio_admin_interface(port):
     """Запускает интерфейс Gradio на указанном порту."""
-    handle_port_conflict(port)
+    #handle_port_conflict(port)
     
     open_firewalld_port(port)
     #print(f"\n  🌐  Launching Gradio:  http://{get_external_ip()}:{port}")
