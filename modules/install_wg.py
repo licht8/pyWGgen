@@ -2,6 +2,7 @@ import os
 import subprocess
 import shutil
 from pathlib import Path
+import ipaddress
 from settings import DEFAULT_SUBNET, USER_SET_SUBNET, WIREGUARD_PORT, SERVER_CONFIG_FILE
 
 def log_message(message: str, level: str = "INFO"):
@@ -20,7 +21,6 @@ def check_os():
     if not (("CentOS" in os_info and "8" in os_info) or "CentOS Stream 8" in os_info):
         raise EnvironmentError("Требуется CentOS Linux 8 или CentOS Stream 8.")
 
-
 def update_settings_file(key, value):
     """Обновляет параметр в settings.py."""
     settings_path = Path("settings.py")
@@ -36,15 +36,26 @@ def update_settings_file(key, value):
             updated_lines.append(line)
     settings_path.write_text("\n".join(updated_lines) + "\n")
 
+def validate_subnet(subnet):
+    """Проверяет корректность подсети."""
+    try:
+        ipaddress.ip_network(subnet, strict=True)
+        return subnet
+    except ValueError:
+        raise ValueError(f"Некорректная подсеть: {subnet}")
+
 def prompt_parameters():
     """Запрашивает параметры WireGuard у пользователя."""
     subnet = input(f"Введите подсеть WireGuard [{DEFAULT_SUBNET}]: ") or DEFAULT_SUBNET
+    subnet = validate_subnet(subnet)
+
     port = input(f"Введите порт WireGuard [{WIREGUARD_PORT}]: ") or WIREGUARD_PORT
+    port = int(port)
 
     update_settings_file("USER_SET_SUBNET", subnet)
-    update_settings_file("WIREGUARD_PORT", int(port))
+    update_settings_file("WIREGUARD_PORT", port)
 
-    return subnet, int(port)
+    return subnet, port
 
 def generate_keypair():
     """Генерирует приватный и публичный ключи."""
@@ -57,20 +68,28 @@ def generate_keypair():
 
 def generate_wg_config(subnet, port):
     """Генерирует конфигурацию WireGuard."""
-    base_subnet = subnet.split("/")[0]  # Извлечение базового адреса
+    base_subnet = subnet.split("/")[0]  # Корректное извлечение базового адреса подсети
     server_private_key, server_public_key = generate_keypair()
 
     server_config = f"""
-
+[Interface]
+Address = {subnet},fd42:42:42::1/64
+ListenPort = {port}
+PrivateKey = {server_private_key}
+PostUp = firewall-cmd --add-port {port}/udp && firewall-cmd --add-rich-rule='rule family=ipv4 source address={base_subnet}/24 masquerade' && firewall-cmd --add-rich-rule='rule family=ipv6 source address=fd42:42:42::0/64 masquerade'
+PostDown = firewall-cmd --remove-port {port}/udp && firewall-cmd --remove-rich-rule='rule family=ipv4 source address={base_subnet}/24 masquerade' && firewall-cmd --remove-rich-rule='rule family=ipv6 source address=fd42:42:42::0/64 masquerade'
+    """
+    with open(SERVER_CONFIG_FILE, "w") as config_file:
+        config_file.write(server_config)
+    return server_private_key, server_public_key
 
 def configure_firewalld(port, subnet):
     """Настраивает firewalld."""
-    base_subnet = subnet.split("/")[0]  # Корректно извлекаем базовый адрес подсети
+    base_subnet = subnet.split("/")[0]  # Корректное извлечение базового адреса подсети
     subprocess.run(["firewall-cmd", "--add-port", f"{port}/udp", "--permanent"], check=True)
     subprocess.run(["firewall-cmd", "--add-rich-rule", f"rule family=ipv4 source address={base_subnet}/24 masquerade", "--permanent"], check=True)
     subprocess.run(["firewall-cmd", "--add-rich-rule", "rule family=ipv6 source address=fd42:42:42::0/64 masquerade", "--permanent"], check=True)
     subprocess.run(["firewall-cmd", "--reload"], check=True)
-
 
 def enable_and_start_service(port):
     """Активирует и запускает WireGuard."""
