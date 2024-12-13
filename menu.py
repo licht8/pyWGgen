@@ -11,9 +11,9 @@
 
     #import pdb; pdb.set_trace()
 
-import tracemalloc
+#import tracemalloc
 # Запускаем мониторинг памяти с глубиной стека 10 уровней
-tracemalloc.start(10)
+#tracemalloc.start(10)
 
 import os
 import time
