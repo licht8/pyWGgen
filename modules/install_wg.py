@@ -130,8 +130,8 @@ def install_wireguard():
 Address = {subnet},{ipv6_subnet}
 ListenPort = {server_port}
 PrivateKey = {server_private_key}
-PostUp = firewall-cmd --add-port {server_port}/udp && firewall-cmd --add-rich-rule='rule family=ipv4 source address=10.66.66.0/24 masquerade' && firewall-cmd --add-rich-rule='rule family=ipv6 source address=fd42:42:42::0/24 masquerade'
-PostDown = firewall-cmd --remove-port {server_port}/udp && firewall-cmd --remove-rich-rule='rule family=ipv4 source address=10.66.66.0/24 masquerade' && firewall-cmd --remove-rich-rule='rule family=ipv6 source address=fd42:42:42::0/24 masquerade'
+PostUp = firewall-cmd --permanent --add-port {server_port}/udp && firewall-cmd --add-rich-rule='rule family=ipv4 source address=10.66.66.0/24 masquerade' && firewall-cmd --add-rich-rule='rule family=ipv6 source address=fd42:42:42::0/24 masquerade'
+PostDown = firewall-cmd --permanent --remove-port {server_port}/udp && firewall-cmd --remove-rich-rule='rule family=ipv4 source address=10.66.66.0/24 masquerade' && firewall-cmd --remove-rich-rule='rule family=ipv6 source address=fd42:42:42::0/24 masquerade'
 
 ### Client SetupUser
 [Peer]
