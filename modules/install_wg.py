@@ -57,19 +57,11 @@ def generate_keypair():
 
 def generate_wg_config(subnet, port):
     """Генерирует конфигурацию WireGuard."""
+    base_subnet = subnet.split("/")[0]  # Извлечение базового адреса
     server_private_key, server_public_key = generate_keypair()
 
     server_config = f"""
-[Interface]
-Address = {subnet},fd42:42:42::1/64
-ListenPort = {port}
-PrivateKey = {server_private_key}
-PostUp = firewall-cmd --add-port {port}/udp && firewall-cmd --add-rich-rule='rule family=ipv4 source address={subnet[:-3]}0/24 masquerade' && firewall-cmd --add-rich-rule='rule family=ipv6 source address=fd42:42:42::0/64 masquerade'
-PostDown = firewall-cmd --remove-port {port}/udp && firewall-cmd --remove-rich-rule='rule family=ipv4 source address={subnet[:-3]}0/24 masquerade' && firewall-cmd --remove-rich-rule='rule family=ipv6 source address=fd42:42:42::0/64 masquerade'
-    """
-    with open(SERVER_CONFIG_FILE, "w") as config_file:
-        config_file.write(server_config)
-    return server_private_key, server_public_key
+
 
 def configure_firewalld(port, subnet):
     """Настраивает firewalld."""
