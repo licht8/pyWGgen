@@ -2,16 +2,15 @@
 # modules/install_wg.py
 # ===========================================
 # Установщик WireGuard с расширенной отладкой и проверками
-# Версия 1.5
+# Версия 1.6
 # ===========================================
 
 import os
-import time
 import subprocess
 import traceback
+import base64
 from pathlib import Path
 import shutil
-import base64
 from settings import (
     PRINT_SPEED,
     WG_CONFIG_DIR,
@@ -19,7 +18,6 @@ from settings import (
     SERVER_CONFIG_FILE,
     LOG_FILE_PATH,
     LOG_LEVEL,
-    DEFAULT_TRIAL_DAYS,
 )
 from modules.firewall_utils import get_external_ip
 from ai_diagnostics.ai_diagnostics import display_message_slowly
@@ -43,35 +41,25 @@ def display_message(message, print_speed=None):
 
 def create_directory(path: Path):
     """Создает директорию, если она не существует."""
-    try:
-        if not path.exists():
-            path.mkdir(parents=True, exist_ok=True)
-            log_message(f"Создана директория: {path}", level="DEBUG")
-    except Exception as e:
-        error_message = f"Ошибка создания директории {path}: {e}"
-        log_message(error_message, level="ERROR")
-        raise RuntimeError(error_message)
+    if not path.exists():
+        path.mkdir(parents=True, exist_ok=True)
+        log_message(f"Создана директория: {path}", level="INFO")
 
 
 def generate_qr_code(config: str, file_path: Path):
     """Генерирует QR-код для конфигурации."""
-    try:
-        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
-        qr.add_data(config)
-        qr.make(fit=True)
-        img = qr.make_image(fill="black", back_color="white")
-        img.save(file_path)
-        log_message(f"QR-код сохранен: {file_path}", level="INFO")
-    except Exception as e:
-        error_message = f"Ошибка генерации QR-кода: {e}"
-        log_message(error_message, level="ERROR")
-        raise RuntimeError(error_message)
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+    qr.add_data(config)
+    qr.make(fit=True)
+    img = qr.make_image(fill="black", back_color="white")
+    img.save(file_path)
+    log_message(f"QR-код сохранен: {file_path}")
 
 
 def install_wireguard_package():
     """Устанавливает WireGuard через пакетный менеджер."""
     try:
-        display_message(f" 📦 Установка пакетов WireGuard...", print_speed=PRINT_SPEED)
+        display_message("📦 Установка пакетов WireGuard...", print_speed=PRINT_SPEED)
         if shutil.which("apt"):
             subprocess.run(["sudo", "apt", "update"], check=True)
             subprocess.run(["sudo", "apt", "install", "-y", "wireguard"], check=True)
@@ -85,54 +73,16 @@ def install_wireguard_package():
         raise RuntimeError(f"Ошибка установки WireGuard: {e}")
 
 
-def verify_wireguard_installation():
-    """Проверяет, установлен ли WireGuard корректно."""
-    wg_path = shutil.which("wg")
-    if not wg_path:
-        raise FileNotFoundError("Команда 'wg' не найдена после установки.")
+def enable_and_start_service():
+    """Активирует и запускает сервис WireGuard."""
     try:
-        version_output = subprocess.check_output([wg_path, "--version"], stderr=subprocess.STDOUT).decode().strip()
-        log_message(f"WireGuard версия: {version_output}", level="INFO")
-        display_message(f" ✅ WireGuard успешно установлен: {version_output}")
+        display_message("🔧 Настройка сервиса WireGuard...", print_speed=PRINT_SPEED)
+        subprocess.run(["sudo", "systemctl", "enable", "wg-quick@wg0"], check=True)
+        subprocess.run(["sudo", "systemctl", "start", "wg-quick@wg0"], check=True)
+        log_message("Сервис WireGuard успешно активирован и запущен.", level="INFO")
+        display_message("✅ WireGuard успешно запущен!")
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"WireGuard установлен, но команда 'wg show' вернула ошибку: {e}")
-
-
-def verify_firewalld():
-    """Проверяет и включает firewalld."""
-    try:
-        firewall_state = subprocess.run(
-            ["firewall-cmd", "--state"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        if "running" not in firewall_state.stdout:
-            display_message(" ⚠️  Firewalld не запущен. Попытка запуска...", print_speed=PRINT_SPEED)
-            subprocess.run(["sudo", "systemctl", "start", "firewalld"], check=True)
-            log_message("Firewalld успешно запущен.", level="INFO")
-    except subprocess.CalledProcessError as e:
-        log_message(f"Ошибка запуска firewalld: {e}", level="ERROR")
-        display_message(f" ❌ Ошибка запуска firewalld: {e}")
-
-
-def verify_masquerade():
-    """Проверяет и настраивает правила маскарадинга."""
-    try:
-        masquerade_check = subprocess.run(
-            ["firewall-cmd", "--query-masquerade"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        if "yes" not in masquerade_check.stdout:
-            display_message(f" 🔧 Включение маскарадинга...", print_speed=PRINT_SPEED)
-            subprocess.run(["sudo", "firewall-cmd", "--add-masquerade"], check=True)
-            subprocess.run(["sudo", "firewall-cmd", "--runtime-to-permanent"], check=True)
-            log_message( f"Маскарадинг включен.", level="INFO")
-    except subprocess.CalledProcessError as e:
-        log_message(f"Ошибка настройки маскарадинга: {e}", level="ERROR")
-        display_message(f" ❌ Ошибка настройки маскарадинга: {e}")
+        raise RuntimeError(f"Ошибка активации/запуска сервиса WireGuard: {e}")
 
 
 def generate_keypair():
@@ -146,7 +96,6 @@ def generate_keypair():
         return private_key, public_key
     except subprocess.SubprocessError as e:
         raise RuntimeError(f"Ошибка при генерации ключей: {e}")
-        log_message( f"Ошибка при генерации ключей: {e}")
 
 
 def install_wireguard():
@@ -156,16 +105,13 @@ def install_wireguard():
         create_directory(QR_CODE_DIR)
 
         if SERVER_CONFIG_FILE.exists():
-            display_message(" ⚠️  Найден существующий конфигурационный файл WireGuard.")
-            overwrite = input(" ⚠️   Перезаписать файл? (yes/no): ").strip().lower()
+            display_message("⚠️  Найден существующий конфигурационный файл WireGuard.")
+            overwrite = input("⚠️   Перезаписать файл? (yes/no): ").strip().lower()
             if overwrite != "yes":
-                display_message(" ⛔ Установка прервана. Выход.", print_speed=PRINT_SPEED)
+                display_message("⛔ Установка прервана. Выход.", print_speed=PRINT_SPEED)
                 return
 
         install_wireguard_package()
-        verify_wireguard_installation()
-        verify_firewalld()
-        verify_masquerade()
 
         server_private_key, server_public_key = generate_keypair()
         client_private_key, client_public_key = generate_keypair()
@@ -175,16 +121,16 @@ def install_wireguard():
         server_ip = external_ip
         server_port = "51820"
         subnet = "10.66.66.1/24"
-        ipv6_subnet = "fd42:42:42::1/24"
-        dns_servers = "8.8.8.8, 8.8.4.4. 1.1.1.1"
+        ipv6_subnet = "fd42:42:42::1/64"
+        dns_servers = "8.8.8.8, 8.8.4.4"
 
         server_config = f"""
 [Interface]
 Address = {subnet},{ipv6_subnet}
 ListenPort = {server_port}
 PrivateKey = {server_private_key}
-PostUp = firewall-cmd --add-port {server_port}/udp && firewall-cmd --add-rich-rule='rule family=ipv4 source address=10.66.66.0/24 masquerade' && firewall-cmd --add-rich-rule='rule family=ipv6 source address=fd42:42:42::/24 masquerade'
-PostDown = firewall-cmd --remove-port {server_port}/udp && firewall-cmd --remove-rich-rule='rule family=ipv4 source address=10.66.66.0/24 masquerade' && firewall-cmd --remove-rich-rule='rule family=ipv6 source address=fd42:42:42::/24 masquerade'
+PostUp = firewall-cmd --add-port {server_port}/udp && firewall-cmd --add-rich-rule='rule family=ipv4 source address=10.66.66.0/24 masquerade' && firewall-cmd --add-rich-rule='rule family=ipv6 source address=fd42:42:42::/64 masquerade'
+PostDown = firewall-cmd --remove-port {server_port}/udp && firewall-cmd --remove-rich-rule='rule family=ipv4 source address=10.66.66.0/24 masquerade' && firewall-cmd --remove-rich-rule='rule family=ipv6 source address=fd42:42:42::/64 masquerade'
 
 ### Client SetupUser
 [Peer]
@@ -212,7 +158,8 @@ AllowedIPs = 0.0.0.0/0,::/0
         qr_code_path = QR_CODE_DIR / "SetupUser.png"
         generate_qr_code(client_config, qr_code_path)
 
-        display_message(f" ✅ Установка завершена. QR-код сохранен: {qr_code_path}")
+        enable_and_start_service()
+        display_message(f"✅ Установка завершена. QR-код сохранен: {qr_code_path}")
     except Exception as e:
         log_message(f"Ошибка: {e}", level="ERROR")
 
