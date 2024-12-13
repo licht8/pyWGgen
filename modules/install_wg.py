@@ -98,6 +98,19 @@ def enable_and_start_service(port):
     subprocess.run(["systemctl", "start", service_name], check=True)
     log_message(f"WireGuard успешно запущен на порту {port}.")
 
+def install_wireguard_packages():
+    """Устанавливает все необходимые пакеты для WireGuard."""
+    log_message("Установка пакетов для WireGuard...")
+    try:
+        # Установка базовых репозиториев
+        subprocess.run(["dnf", "install", "-y", "epel-release", "elrepo-release"], check=True)
+        # Установка WireGuard, qrencode и iptables
+        subprocess.run(["dnf", "install", "-y", "wireguard-tools", "kmod-wireguard", "qrencode", "iptables"], check=True)
+        log_message("Все пакеты успешно установлены.")
+    except subprocess.CalledProcessError as e:
+        log_message(f"Ошибка при установке пакетов: {e}", level="ERROR")
+        raise
+
 def install_wireguard():
     """Устанавливает WireGuard с настройками."""
     try:
@@ -106,10 +119,7 @@ def install_wireguard():
 
         subnet, port = prompt_parameters()
 
-        log_message("Установка WireGuard...")
-        subprocess.run(["dnf", "install", "-y", "epel-release", "elrepo-release"], check=True)
-        subprocess.run(["dnf", "install", "-y", "wireguard-tools", "kmod-wireguard"], check=True)
-        log_message("WireGuard установлен.")
+        install_wireguard_packages()  # Установка всех пакетов
 
         generate_wg_config(subnet, port)
         configure_firewalld(port, subnet)
