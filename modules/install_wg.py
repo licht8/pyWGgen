@@ -79,7 +79,7 @@ def enable_and_start_service():
     try:
         display_message("🔧 Настройка сервиса WireGuard...", print_speed=PRINT_SPEED)
         subprocess.run(["sudo", "systemctl", "enable", "wg-quick@wg0"], check=True)
-        subprocess.run(["sudo", "systemctl", "start", "wg-quick@wg0"], check=True)
+        subprocess.run(["sudo", "systemctl", "restart", "wg-quick@wg0"], check=True)
         log_message("Сервис WireGuard успешно активирован и запущен.", level="INFO")
         display_message("✅ WireGuard успешно запущен!")
     except subprocess.CalledProcessError as e:
