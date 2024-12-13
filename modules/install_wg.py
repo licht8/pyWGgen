@@ -17,7 +17,7 @@ def check_os():
     """Проверяет ОС CentOS 8."""
     with open("/etc/os-release") as f:
         os_info = f.read()
-    if "CentOS Linux 8" not in os_info:
+    if "CentOS" not in os_info or "8" not in os_info:
         raise EnvironmentError("Требуется CentOS Linux 8.")
 
 def update_settings_file(key, value):
