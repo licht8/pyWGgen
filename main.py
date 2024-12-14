@@ -67,6 +67,29 @@ def calculate_subnet(server_wg_ipv4, default_subnet="10.66.66.0/24"):
         logger.warning(f"Ошибка при расчете подсети: {e}. Используется значение по умолчанию: {default_subnet}")
         return default_subnet
 
+def generate_next_ip(config_file, subnet="10.66.66.0/24"):
+    """
+    Генерирует следующий доступный IP-адрес в подсети.
+    """
+    logger.debug(f"Ищем свободный IP-адрес в подсети {subnet}.")
+    existing_ips = []
+    if os.path.exists(config_file):
+        logger.debug(f"Чтение существующих IP-адресов из файла {config_file}.")
+        with open(config_file, "r") as f:
+            for line in f:
+                if line.strip().startswith("AllowedIPs"):
+                    ip = line.split("=")[1].strip().split("/")[0]
+                    existing_ips.append(ip)
+    network = ipaddress.ip_network(subnet)
+    for ip in network.hosts():
+        ip_str = str(ip)
+        if ip_str not in existing_ips and not ip_str.endswith(".0") and not ip_str.endswith(".1") and not ip_str.endswith(".255"):
+            logger.debug(f"Свободный IP-адрес найден: {ip_str}")
+            return ip_str
+    logger.error("Нет доступных IP-адресов в указанной подсети.")
+    raise ValueError("Нет доступных IP-адресов в указанной подсети.")
+
+
 def load_existing_users():
     """
     Загружает список существующих пользователей из базы данных.
