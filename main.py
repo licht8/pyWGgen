@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # main.py
+## Версия: 1.0
 ## Основной скрипт для создания пользователей WireGuard
+##
+## Этот скрипт автоматически генерирует конфигурации для новых пользователей,
+## включая уникальные ключи, IP-адрес, и QR-код. Скрипт рассчитывает подсеть
+## на основе IP-адреса сервера (SERVER_WG_IPV4) и перезапускает интерфейс WireGuard.
 
 import sys
 import os
@@ -45,6 +50,22 @@ class EmojiLoggerAdapter(logging.LoggerAdapter):
         return msg, kwargs
 
 logger = EmojiLoggerAdapter(logging.getLogger(__name__), {})
+
+def calculate_subnet(server_wg_ipv4, default_subnet="10.66.66.0/24"):
+    """
+    Рассчитывает подсеть на основе IP-адреса сервера WireGuard.
+    :param server_wg_ipv4: IP-адрес сервера WireGuard.
+    :param default_subnet: Подсеть по умолчанию.
+    :return: Подсеть в формате CIDR (например, '10.66.66.0/24').
+    """
+    try:
+        ip = ipaddress.ip_interface(f"{server_wg_ipv4}/24")
+        subnet = str(ip.network)
+        logger.debug(f"Подсеть рассчитана на основе SERVER_WG_IPV4: {subnet}")
+        return subnet
+    except ValueError as e:
+        logger.warning(f"Ошибка при расчете подсети: {e}. Используется значение по умолчанию: {default_subnet}")
+        return default_subnet
 
 def load_existing_users():
     """
@@ -103,41 +124,6 @@ def restart_wireguard(interface="wg0"):
     except subprocess.CalledProcessError as e:
         logger.error(f"Ошибка перезапуска WireGuard: {e}")
 
-def validate_params(params, required_keys):
-    """
-    Проверяет наличие всех обязательных ключей в параметрах.
-    """
-    logger.debug("Проверка наличия всех необходимых ключей в параметрах.")
-    missing_keys = [key for key in required_keys if key not in params]
-    if missing_keys:
-        logger.error(f"Отсутствуют ключи: {missing_keys}")
-        raise KeyError(
-            f"Отсутствуют обязательные параметры: {missing_keys}. "
-            f"Проверьте файл конфигурации."
-        )
-
-def generate_next_ip(config_file, subnet="10.66.66.0/24"):
-    """
-    Генерирует следующий доступный IP-адрес в подсети.
-    """
-    logger.debug(f"Ищем свободный IP-адрес в подсети {subnet}.")
-    existing_ips = []
-    if os.path.exists(config_file):
-        logger.debug(f"Чтение существующих IP-адресов из файла {config_file}.")
-        with open(config_file, "r") as f:
-            for line in f:
-                if line.strip().startswith("AllowedIPs"):
-                    ip = line.split("=")[1].strip().split("/")[0]
-                    existing_ips.append(ip)
-    network = ipaddress.ip_network(subnet)
-    for ip in network.hosts():
-        ip_str = str(ip)
-        if ip_str not in existing_ips and not ip_str.endswith(".0") and not ip_str.endswith(".1") and not ip_str.endswith(".255"):
-            logger.debug(f"Свободный IP-адрес найден: {ip_str}")
-            return ip_str
-    logger.error("Нет доступных IP-адресов в указанной подсети.")
-    raise ValueError("Нет доступных IP-адресов в указанной подсети.")
-
 def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A"):
     """
     Генерация конфигурации пользователя и QR-кода.
@@ -156,8 +142,12 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
         preshared_key = generate_preshared_key()
         logger.debug("Пресекретный ключ успешно сгенерирован.")
 
+        # Вычисление подсети
+        subnet = calculate_subnet(params.get('SERVER_WG_IPV4', '10.66.66.1'))
+        logger.debug(f"Используемая подсеть: {subnet}")
+
         # Генерация IP-адреса
-        new_ipv4 = generate_next_ip(config_file, params.get('SERVER_SUBNET', '10.66.66.0/24'))
+        new_ipv4 = generate_next_ip(config_file, subnet)
         logger.info(f"Новый IP-адрес пользователя: {new_ipv4}")
 
         # Генерация конфигурации клиента
@@ -210,13 +200,6 @@ if __name__ == "__main__":
 
         logger.info(f"Загрузка параметров из файла: {params_file}")
         params = load_params(params_file)
-
-        # Валидация ключей
-        required_keys = [
-            'SERVER_PUB_KEY', 'SERVER_PUB_IP', 'SERVER_PORT',
-            'CLIENT_DNS_1', 'CLIENT_DNS_2', 'SERVER_SUBNET', 'SERVER_WG_NIC'
-        ]
-        validate_params(params, required_keys)
 
         logger.info("Проверка существующего пользователя.")
         existing_users = load_existing_users()
