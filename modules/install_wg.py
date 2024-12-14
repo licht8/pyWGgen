@@ -1,9 +1,26 @@
+#!/usr/bin/env python3
+# modules/install_wg.py
+# ===========================================
+# Установщик WireGuard с полной поддержкой параметров
+# Версия 2.0
+# ===========================================
+# Назначение:
+# - Установка и настройка WireGuard на CentOS 8 / CentOS Stream 8.
+# - Генерация конфигурационного файла wg0.conf.
+# - Создание параметров в файле /etc/wireguard/params.
+# - Настройка firewalld для работы с WireGuard.
+#
+# Особенности:
+# - Поддержка интерактивного ввода подсети и порта.
+# - Полная совместимость с bash-скриптом по функционалу.
+# ===========================================
+
 import os
 import subprocess
 import shutil
 from pathlib import Path
 import ipaddress
-from settings import DEFAULT_SUBNET, USER_SET_SUBNET, WIREGUARD_PORT, SERVER_CONFIG_FILE
+from settings import DEFAULT_SUBNET, USER_SET_SUBNET, WIREGUARD_PORT, SERVER_CONFIG_FILE, PARAMS_FILE
 
 def log_message(message: str, level: str = "INFO"):
     """Логирует сообщение."""
@@ -21,20 +38,33 @@ def check_os():
     if not (("CentOS" in os_info and "8" in os_info) or "CentOS Stream 8" in os_info):
         raise EnvironmentError("Требуется CentOS Linux 8 или CentOS Stream 8.")
 
-def update_settings_file(key, value):
-    """Обновляет параметр в settings.py."""
-    settings_path = Path("settings.py")
-    if not settings_path.exists():
-        raise FileNotFoundError("Файл settings.py не найден.")
-    
-    lines = settings_path.read_text().splitlines()
-    updated_lines = []
-    for line in lines:
-        if line.startswith(f"{key} ="):
-            updated_lines.append(f"{key} = {repr(value)}")
-        else:
-            updated_lines.append(line)
-    settings_path.write_text("\n".join(updated_lines) + "\n")
+def create_wireguard_directory():
+    """Создает директорию /etc/wireguard, если она отсутствует."""
+    wg_dir = Path("/etc/wireguard")
+    if not wg_dir.exists():
+        wg_dir.mkdir(mode=0o700, parents=True)
+        log_message("Создана директория /etc/wireguard")
+
+def write_params_file(subnet, port, private_key, public_key):
+    """Создает файл /etc/wireguard/params с параметрами сервера."""
+    params_content = f"""
+[server]
+SERVER_PUB_IP=<DETECTED_IP>
+SERVER_PUB_NIC=<DETECTED_NIC>
+SERVER_WG_NIC=wg0
+SERVER_WG_IPV4={subnet.split('/')[0]}
+SERVER_WG_IPV6=fd42:42:42::1
+SERVER_PORT={port}
+SERVER_PRIV_KEY={private_key}
+SERVER_PUB_KEY={public_key}
+CLIENT_DNS_1=1.1.1.1
+CLIENT_DNS_2=1.0.0.1
+ALLOWED_IPS=0.0.0.0/0,::/0
+"""
+    with open(PARAMS_FILE, "w") as params_file:
+        params_file.write(params_content.strip())
+    os.chmod(PARAMS_FILE, 0o600)
+    log_message(f"Файл параметров создан: {PARAMS_FILE}")
 
 def validate_subnet(subnet):
     """Проверяет корректность подсети."""
@@ -51,9 +81,6 @@ def prompt_parameters():
 
     port = input(f"Введите порт WireGuard [{WIREGUARD_PORT}]: ") or WIREGUARD_PORT
     port = int(port)
-
-    update_settings_file("USER_SET_SUBNET", subnet)
-    update_settings_file("WIREGUARD_PORT", port)
 
     return subnet, port
 
@@ -81,6 +108,8 @@ PostDown = firewall-cmd --remove-port {port}/udp && firewall-cmd --remove-rich-r
     """
     with open(SERVER_CONFIG_FILE, "w") as config_file:
         config_file.write(server_config)
+
+    write_params_file(subnet, port, server_private_key, server_public_key)
     return server_private_key, server_public_key
 
 def configure_firewalld(port, subnet):
@@ -116,6 +145,7 @@ def install_wireguard():
     try:
         is_root()
         check_os()
+        create_wireguard_directory()
 
         subnet, port = prompt_parameters()
 
