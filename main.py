@@ -70,6 +70,9 @@ def calculate_subnet(server_wg_ipv4, default_subnet="10.66.66.0/24"):
 def generate_next_ip(config_file, subnet="10.66.66.0/24"):
     """
     Генерирует следующий доступный IP-адрес в подсети.
+    :param config_file: Путь к файлу конфигурации WireGuard.
+    :param subnet: Подсеть для поиска доступного IP.
+    :return: Следующий доступный IP-адрес.
     """
     logger.debug(f"Ищем свободный IP-адрес в подсети {subnet}.")
     existing_ips = []
