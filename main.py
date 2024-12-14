@@ -179,7 +179,12 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
     logger.info("+--------- Процесс 🌱 создания пользователя активирован ---------+")
     try:
         logger.info(f"Начало генерации конфигурации для пользователя: {nickname}")
+        
+        # Проверка наличия SERVER_PUB_IP
         server_public_key = params['SERVER_PUB_KEY']
+        if not params.get('SERVER_PUB_IP'):
+            raise ValueError("Параметр SERVER_PUB_IP отсутствует. Проверьте файл конфигурации.")
+        
         endpoint = f"{params['SERVER_PUB_IP']}:{params['SERVER_PORT']}"
         dns_servers = f"{params['CLIENT_DNS_1']},{params['CLIENT_DNS_2']}"
 
