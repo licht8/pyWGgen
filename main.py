@@ -103,6 +103,19 @@ def restart_wireguard(interface="wg0"):
     except subprocess.CalledProcessError as e:
         logger.error(f"Ошибка перезапуска WireGuard: {e}")
 
+def validate_params(params, required_keys):
+    """
+    Проверяет наличие всех обязательных ключей в параметрах.
+    """
+    logger.debug("Проверка наличия всех необходимых ключей в параметрах.")
+    missing_keys = [key for key in required_keys if key not in params]
+    if missing_keys:
+        logger.error(f"Отсутствуют ключи: {missing_keys}")
+        raise KeyError(
+            f"Отсутствуют обязательные параметры: {missing_keys}. "
+            f"Проверьте файл конфигурации."
+        )
+
 def generate_next_ip(config_file, subnet="10.66.66.0/24"):
     """
     Генерирует следующий доступный IP-адрес в подсети.
@@ -175,44 +188,9 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
         add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), new_ipv4)
         logger.info("Пользователь успешно добавлен в конфигурацию сервера.")
 
-        # Добавление записи пользователя
-        user_record = create_user_record(
-            username=nickname,
-            address=new_ipv4,
-            public_key=public_key.decode('utf-8'),
-            preshared_key=preshared_key.decode('utf-8'),
-            qr_code_path=qr_path,
-            email=email,
-            telegram_id=telegram_id
-        )
-
-        # Сохраняем в базе данных
-        user_records_path = os.path.join("user", "data", "user_records.json")
-        if os.path.exists(user_records_path):
-            logger.debug(f"Чтение существующей базы данных пользователей: {user_records_path}")
-            with open(user_records_path, "r", encoding="utf-8") as file:
-                try:
-                    user_data = json.load(file)
-                except json.JSONDecodeError as e:
-                    logger.warning(f"Ошибка чтения JSON: {e}. Создаём новую базу.")
-                    user_data = {}
-        else:
-            user_data = {}
-
-        user_data[nickname] = user_record
-        os.makedirs(os.path.dirname(user_records_path), exist_ok=True)
-        with open(user_records_path, "w", encoding="utf-8") as file:
-            json.dump(user_data, file, indent=4)
-        logger.info(f"Данные пользователя {nickname} успешно добавлены в базу: {user_records_path}")
-
-        # Перезапуск WireGuard
-        restart_wireguard(params['SERVER_WG_NIC'])
-
-        logger.info("+--------- Процесс 🌱 создания пользователя завершен --------------+\n")
         return config_path, qr_path
     except Exception as e:
         logger.error(f"Ошибка выполнения: {e}")
-        logger.info("+--------- Процесс 🌱 создания пользователя завершен --------------+\n")
         raise
 
 if __name__ == "__main__":
@@ -230,8 +208,15 @@ if __name__ == "__main__":
         logger.info("Инициализация директорий.")
         setup_directories()
 
-        logger.info("Загрузка параметров сервера.")
+        logger.info(f"Загрузка параметров из файла: {params_file}")
         params = load_params(params_file)
+
+        # Валидация ключей
+        required_keys = [
+            'SERVER_PUB_KEY', 'SERVER_PUB_IP', 'SERVER_PORT',
+            'CLIENT_DNS_1', 'CLIENT_DNS_2', 'SERVER_SUBNET', 'SERVER_WG_NIC'
+        ]
+        validate_params(params, required_keys)
 
         logger.info("Проверка существующего пользователя.")
         existing_users = load_existing_users()
@@ -249,5 +234,11 @@ if __name__ == "__main__":
 
         logger.info(f"✅ Конфигурация пользователя сохранена в {config_path}")
         logger.info(f"✅ QR-код пользователя сохранён в {qr_path}")
+    except FileNotFoundError as e:
+        logger.error(f"Файл не найден: {e}")
+    except KeyError as e:
+        logger.error(f"Отсутствует ключ в параметрах: {e}")
+    except ValueError as e:
+        logger.error(f"Ошибка в значении параметров: {e}")
     except Exception as e:
-        logger.error(f"Критическая ошибка: {e}")
+        logger.error(f"Непредвиденная ошибка: {e}")
