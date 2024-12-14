@@ -2,7 +2,7 @@
 # modules/install_wg.py
 # ===========================================
 # Установщик WireGuard с полной поддержкой параметров
-# Версия 2.2
+# Версия 2.3
 # ===========================================
 # Назначение:
 # - Установка и настройка WireGuard на CentOS 8 / CentOS Stream 8.
@@ -109,9 +109,14 @@ def generate_keypair():
 
 def generate_wg_config(subnet, port):
     """Генерирует конфигурацию WireGuard."""
-    base_subnet = subnet.split("/")[0]  # Корректное извлечение базового адреса подсети
+    base_subnet = subnet.split("/")[0]
     server_private_key, server_public_key = generate_keypair()
+    preshared_key = subprocess.check_output(["wg", "genpsk"]).decode().strip()
 
+    # Получаем данные сервера
+    server_pub_ip, server_pub_nic = detect_server_ip_and_nic()
+
+    # Генерация конфигурации сервера
     server_config = f"""
 [Interface]
 Address = {subnet},fd42:42:42::1/64
@@ -128,7 +133,7 @@ PostDown = firewall-cmd --remove-port {port}/udp && firewall-cmd --remove-rich-r
 
 def configure_firewalld(port, subnet):
     """Настраивает firewalld."""
-    base_subnet = subnet.split("/")[0]  # Корректное извлечение базового адреса подсети
+    base_subnet = subnet.split("/")[0]
     subprocess.run(["firewall-cmd", "--add-port", f"{port}/udp", "--permanent"], check=True)
     subprocess.run(["firewall-cmd", "--add-rich-rule", f"rule family=ipv4 source address={base_subnet}/24 masquerade", "--permanent"], check=True)
     subprocess.run(["firewall-cmd", "--add-rich-rule", "rule family=ipv6 source address=fd42:42:42::0/64 masquerade", "--permanent"], check=True)
@@ -145,9 +150,7 @@ def install_wireguard_packages():
     """Устанавливает все необходимые пакеты для WireGuard."""
     log_message("Установка пакетов для WireGuard...")
     try:
-        # Установка базовых репозиториев
         subprocess.run(["dnf", "install", "-y", "epel-release", "elrepo-release"], check=True)
-        # Установка WireGuard, qrencode и iptables
         subprocess.run(["dnf", "install", "-y", "wireguard-tools", "kmod-wireguard", "qrencode", "iptables"], check=True)
         log_message("Все пакеты успешно установлены.")
     except subprocess.CalledProcessError as e:
@@ -163,7 +166,7 @@ def install_wireguard():
 
         subnet, port = prompt_parameters()
 
-        install_wireguard_packages()  # Установка всех пакетов
+        install_wireguard_packages()
 
         generate_wg_config(subnet, port)
         configure_firewalld(port, subnet)
