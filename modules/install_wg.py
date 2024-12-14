@@ -2,7 +2,7 @@
 # modules/install_wg.py
 # ===========================================
 # Установщик WireGuard с полной поддержкой параметров
-# Версия 2.0
+# Версия 2.2
 # ===========================================
 # Назначение:
 # - Установка и настройка WireGuard на CentOS 8 / CentOS Stream 8.
@@ -45,12 +45,27 @@ def create_wireguard_directory():
         wg_dir.mkdir(mode=0o700, parents=True)
         log_message("Создана директория /etc/wireguard")
 
+def detect_server_ip_and_nic():
+    """Определяет публичный IP-адрес и сетевой интерфейс сервера."""
+    try:
+        server_pub_ip = subprocess.check_output(
+            ["ip", "-4", "addr", "show", "scope", "global"], text=True
+        ).splitlines()[0].split()[1].split('/')[0]
+        server_pub_nic = subprocess.check_output(
+            ["ip", "route", "show", "default"], text=True
+        ).split()[4]
+        return server_pub_ip, server_pub_nic
+    except (IndexError, subprocess.CalledProcessError) as e:
+        raise RuntimeError(f"Ошибка определения IP-адреса или сетевого интерфейса: {e}")
+
 def write_params_file(subnet, port, private_key, public_key):
     """Создает файл /etc/wireguard/params с параметрами сервера."""
+    server_pub_ip, server_pub_nic = detect_server_ip_and_nic()
+
     params_content = f"""
 [server]
-SERVER_PUB_IP=<DETECTED_IP>
-SERVER_PUB_NIC=<DETECTED_NIC>
+SERVER_PUB_IP={server_pub_ip}
+SERVER_PUB_NIC={server_pub_nic}
 SERVER_WG_NIC=wg0
 SERVER_WG_IPV4={subnet.split('/')[0]}
 SERVER_WG_IPV6=fd42:42:42::1
@@ -59,10 +74,9 @@ SERVER_PRIV_KEY={private_key}
 SERVER_PUB_KEY={public_key}
 CLIENT_DNS_1=1.1.1.1
 CLIENT_DNS_2=1.0.0.1
-ALLOWED_IPS=0.0.0.0/0,::/0
 """
     with open(PARAMS_FILE, "w") as params_file:
-        params_file.write(params_content.strip())
+        params_file.write(params_content.strip() + "\n")  # Гарантируем переход на новую строку
     os.chmod(PARAMS_FILE, 0o600)
     log_message(f"Файл параметров создан: {PARAMS_FILE}")
 
