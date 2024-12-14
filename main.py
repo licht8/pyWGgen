@@ -16,12 +16,12 @@ import settings
 from modules.config import load_params
 from modules.keygen import generate_private_key, generate_public_key, generate_preshared_key
 from modules.config_writer import add_user_to_server_config
-from modules.qr_generator import generate_qr_code
 from modules.directory_setup import setup_directories
 from modules.client_config import create_client_config
 from modules.main_registration_fields import create_user_record  # Импорт новой функции
 import subprocess
 import logging
+import qrcode  # Для генерации QR-кодов
 
 # Настройка логгера
 logging.basicConfig(
@@ -92,6 +92,28 @@ def generate_next_ip(config_file, subnet="10.66.66.0/24"):
     logger.error("Нет доступных IP-адресов в указанной подсети.")
     raise ValueError("Нет доступных IP-адресов в указанной подсети.")
 
+def generate_qr_code(data, output_path):
+    """
+    Генерирует QR-код на основе данных конфигурации.
+    :param data: Текстовая конфигурация WireGuard.
+    :param output_path: Путь для сохранения изображения QR-кода.
+    """
+    logger.debug(f"Генерация QR-кода для данных длиной {len(data)} символов.")
+    try:
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(data)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        img.save(output_path)
+        logger.info(f"QR-код успешно сохранён в {output_path}")
+    except Exception as e:
+        logger.error(f"Ошибка при генерации QR-кода: {e}")
+        raise
 
 def load_existing_users():
     """
