@@ -48,7 +48,7 @@ DEFAULT_TRIAL_DAYS = 30  # Базовый срок действия аккаун
 WIREGUARD_PORT = 51820   # Порт для сервера WireGuard (по умолчанию) range [1-65535]
 DEFAULT_SUBNET = "10.66.66.0/24"
 USER_SET_SUBNET = DEFAULT_SUBNET
-DNS_WireGuard: "1.1.1.1, 1.0.0.1, 8.8.8.8" 
+DNS_WIREGUAED = "1.1.1.1, 1.0.0.1, 8.8.8.8" 
 
 # Настройки для логирования
 LOG_DIR = BASE_DIR / "user/data/logs"  # Директория для хранения логов
