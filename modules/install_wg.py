@@ -2,12 +2,13 @@
 # modules/install_wg.py
 # ===========================================
 # Установщик WireGuard с полной поддержкой параметров
-# Версия 2.3
+# Версия 2.4
 # ===========================================
 # Назначение:
 # - Установка и настройка WireGuard на CentOS 8 / CentOS Stream 8.
 # - Генерация конфигурационного файла wg0.conf.
 # - Создание параметров в файле /etc/wireguard/params.
+# - Запись пользовательских параметров в .env.
 # - Настройка firewalld для работы с WireGuard.
 #
 # Особенности:
@@ -20,7 +21,9 @@ import subprocess
 import shutil
 from pathlib import Path
 import ipaddress
-from settings import DEFAULT_SUBNET, USER_SET_SUBNET, WIREGUARD_PORT, SERVER_CONFIG_FILE, PARAMS_FILE
+from settings import DEFAULT_SUBNET, WIREGUARD_PORT, SERVER_CONFIG_FILE, PARAMS_FILE
+
+ENV_FILE = Path(".env")
 
 def log_message(message: str, level: str = "INFO"):
     """Логирует сообщение."""
@@ -57,6 +60,20 @@ def detect_server_ip_and_nic():
         return server_pub_ip, server_pub_nic
     except (IndexError, subprocess.CalledProcessError) as e:
         raise RuntimeError(f"Ошибка определения IP-адреса или сетевого интерфейса: {e}")
+
+def write_env_file(subnet, port):
+    """Создает файл .env с пользовательскими параметрами."""
+    dns = "1.1.1.1, 1.0.0.1, 8.8.8.8"
+    env_content = f"""
+# Параметры WireGuard (установленное пользователем)
+WIREGUARD_PORT={port}
+DEFAULT_SUBNET="{DEFAULT_SUBNET}"
+USER_SET_SUBNET="{subnet}"
+DNS_WIREGUARD="{dns}"
+"""
+    with open(ENV_FILE, "w") as env_file:
+        env_file.write(env_content.strip() + "\n")  # Гарантируем переход на новую строку
+    log_message(f"Файл .env создан: {ENV_FILE}")
 
 def write_params_file(subnet, port, private_key, public_key):
     """Создает файл /etc/wireguard/params с параметрами сервера."""
@@ -113,10 +130,8 @@ def generate_wg_config(subnet, port):
     server_private_key, server_public_key = generate_keypair()
     preshared_key = subprocess.check_output(["wg", "genpsk"]).decode().strip()
 
-    # Получаем данные сервера
     server_pub_ip, server_pub_nic = detect_server_ip_and_nic()
 
-    # Генерация конфигурации сервера
     server_config = f"""
 [Interface]
 Address = {subnet},fd42:42:42::1/64
@@ -129,6 +144,7 @@ PostDown = firewall-cmd --remove-port {port}/udp && firewall-cmd --remove-rich-r
         config_file.write(server_config)
 
     write_params_file(subnet, port, server_private_key, server_public_key)
+    write_env_file(subnet, port)
     return server_private_key, server_public_key
 
 def configure_firewalld(port, subnet):
