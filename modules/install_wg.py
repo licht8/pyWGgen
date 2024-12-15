@@ -2,7 +2,7 @@
 # modules/install_wg.py
 # ===========================================
 # Установщик WireGuard с полной поддержкой параметров
-# Версия 2.5
+# Версия 2.6
 # ===========================================
 # Назначение:
 # - Установка и настройка WireGuard на CentOS 8 / CentOS Stream 8.
@@ -56,11 +56,17 @@ def detect_server_ip_and_nic():
             ["ip", "route", "show", "default"], text=True
         ).split()[4]
 
-        # Определение публичного IP-адреса
-        server_pub_ip = subprocess.check_output(
+        # Попытка определения публичного IP-адреса через интерфейс
+        ip_output = subprocess.check_output(
             ["ip", "-4", "addr", "show", "dev", server_pub_nic, "scope", "global"], text=True
-        ).splitlines()[0].split()[1].split('/')[0]
+        )
+        for line in ip_output.splitlines():
+            if "inet" in line:
+                server_pub_ip = line.split()[1].split('/')[0]
+                return server_pub_ip, server_pub_nic
 
+        # Если не получилось, попытка через внешний сервис
+        server_pub_ip = subprocess.check_output(["curl", "-s", "ifconfig.me"], text=True).strip()
         return server_pub_ip, server_pub_nic
     except (IndexError, subprocess.CalledProcessError) as e:
         raise RuntimeError(f"Ошибка определения IP-адреса или сетевого интерфейса: {e}")
@@ -135,7 +141,6 @@ def generate_wg_config(subnet, port):
     """Генерирует конфигурацию WireGuard."""
     base_subnet = subnet.split("/")[0]
     server_private_key, server_public_key = generate_keypair()
-    preshared_key = subprocess.check_output(["wg", "genpsk"]).decode().strip()
 
     server_pub_ip, server_pub_nic = detect_server_ip_and_nic()
 
