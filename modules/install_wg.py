@@ -2,7 +2,7 @@
 # modules/install_wg.py
 # ===========================================
 # Установщик WireGuard с полной поддержкой параметров
-# Версия 2.7
+# Версия 2.8
 # ===========================================
 # Назначение:
 # - Установка и настройка WireGuard на CentOS 8 / CentOS Stream 8.
@@ -52,12 +52,10 @@ def create_wireguard_directory():
 def detect_server_ip_and_nic():
     """Определяет публичный IP-адрес и сетевой интерфейс сервера."""
     try:
-        # Определение сетевого интерфейса (NIC)
         server_pub_nic = subprocess.check_output(
             ["ip", "route", "show", "default"], text=True
         ).split()[4]
 
-        # Получение публичного IP-адреса через get_external_ip
         server_pub_ip = get_external_ip()
 
         if not server_pub_ip or server_pub_ip.startswith("N/A"):
@@ -88,6 +86,7 @@ def write_params_file(subnet, port, private_key, public_key):
     server_wg_ipv4 = str(ipaddress.ip_network(subnet, strict=False).network_address + 1)
 
     params_content = f"""
+[server]
 SERVER_PUB_IP={server_pub_ip}
 SERVER_PUB_NIC={server_pub_nic}
 SERVER_WG_NIC=wg0
