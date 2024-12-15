@@ -2,7 +2,7 @@
 # modules/install_wg.py
 # ===========================================
 # Установщик WireGuard с полной поддержкой параметров
-# Версия 2.6
+# Версия 2.7
 # ===========================================
 # Назначение:
 # - Установка и настройка WireGuard на CentOS 8 / CentOS Stream 8.
@@ -21,6 +21,7 @@ import subprocess
 import shutil
 from pathlib import Path
 import ipaddress
+from modules.firewall_utils import get_external_ip
 from settings import DEFAULT_SUBNET, WIREGUARD_PORT, SERVER_CONFIG_FILE, PARAMS_FILE
 
 ENV_FILE = Path(".env")
@@ -56,17 +57,11 @@ def detect_server_ip_and_nic():
             ["ip", "route", "show", "default"], text=True
         ).split()[4]
 
-        # Попытка определения публичного IP-адреса через интерфейс
-        ip_output = subprocess.check_output(
-            ["ip", "-4", "addr", "show", "dev", server_pub_nic, "scope", "global"], text=True
-        )
-        for line in ip_output.splitlines():
-            if "inet" in line:
-                server_pub_ip = line.split()[1].split('/')[0]
-                return server_pub_ip, server_pub_nic
+        # Получение публичного IP-адреса через get_external_ip
+        server_pub_ip = get_external_ip()
 
-        # Если не получилось, попытка через внешний сервис
-        server_pub_ip = subprocess.check_output(["curl", "-s", "ifconfig.me"], text=True).strip()
+        if not server_pub_ip or server_pub_ip.startswith("N/A"):
+            raise RuntimeError("Не удалось определить внешний IP-адрес.")
         return server_pub_ip, server_pub_nic
     except (IndexError, subprocess.CalledProcessError) as e:
         raise RuntimeError(f"Ошибка определения IP-адреса или сетевого интерфейса: {e}")
@@ -93,7 +88,6 @@ def write_params_file(subnet, port, private_key, public_key):
     server_wg_ipv4 = str(ipaddress.ip_network(subnet, strict=False).network_address + 1)
 
     params_content = f"""
-[server]
 SERVER_PUB_IP={server_pub_ip}
 SERVER_PUB_NIC={server_pub_nic}
 SERVER_WG_NIC=wg0
