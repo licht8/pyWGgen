@@ -2,7 +2,7 @@
 # modules/install_wg.py
 # ===========================================
 # Установщик WireGuard с полной поддержкой параметров
-# Версия 2.4
+# Версия 2.5
 # ===========================================
 # Назначение:
 # - Установка и настройка WireGuard на CentOS 8 / CentOS Stream 8.
@@ -51,12 +51,16 @@ def create_wireguard_directory():
 def detect_server_ip_and_nic():
     """Определяет публичный IP-адрес и сетевой интерфейс сервера."""
     try:
-        server_pub_ip = subprocess.check_output(
-            ["ip", "-4", "addr", "show", "scope", "global"], text=True
-        ).splitlines()[0].split()[1].split('/')[0]
+        # Определение сетевого интерфейса (NIC)
         server_pub_nic = subprocess.check_output(
             ["ip", "route", "show", "default"], text=True
         ).split()[4]
+
+        # Определение публичного IP-адреса
+        server_pub_ip = subprocess.check_output(
+            ["ip", "-4", "addr", "show", "dev", server_pub_nic, "scope", "global"], text=True
+        ).splitlines()[0].split()[1].split('/')[0]
+
         return server_pub_ip, server_pub_nic
     except (IndexError, subprocess.CalledProcessError) as e:
         raise RuntimeError(f"Ошибка определения IP-адреса или сетевого интерфейса: {e}")
@@ -79,12 +83,15 @@ def write_params_file(subnet, port, private_key, public_key):
     """Создает файл /etc/wireguard/params с параметрами сервера."""
     server_pub_ip, server_pub_nic = detect_server_ip_and_nic()
 
+    # Убедимся, что SERVER_WG_IPV4 корректно использует первый IP из подсети
+    server_wg_ipv4 = str(ipaddress.ip_network(subnet, strict=False).network_address + 1)
+
     params_content = f"""
 [server]
 SERVER_PUB_IP={server_pub_ip}
 SERVER_PUB_NIC={server_pub_nic}
 SERVER_WG_NIC=wg0
-SERVER_WG_IPV4={subnet.split('/')[0]}
+SERVER_WG_IPV4={server_wg_ipv4}
 SERVER_WG_IPV6=fd42:42:42::1
 SERVER_PORT={port}
 SERVER_PRIV_KEY={private_key}
