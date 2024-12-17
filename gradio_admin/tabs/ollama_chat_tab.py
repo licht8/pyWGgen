@@ -119,13 +119,13 @@ def ollama_chat_tab():
         # Поле ввода сообщения
         msg = gr.Textbox(
             label="Введите сообщение",
-            placeholder="Напишите что-нибудь... (Shift+Enter для отправки)",
+            placeholder="Напишите что-нибудь... (Shift + Enter для отправки в чат)",
             lines=3
         )
         
         # Кнопки
         with gr.Row():
-            submit = gr.Button("Отправить")
+            submit = gr.Button("Отправить Shift + Enter")
             clear = gr.Button("Очистить историю")
         
         # Обработчики событий
