@@ -5,21 +5,34 @@ import logging
 import sys
 from datetime import datetime
 
-# Настройка логирования
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler(f'ollama_chat_{datetime.now().strftime("%Y%m%d")}.log')
-    ]
-)
+# Настройка логирования с принудительным выводом в консоль
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Создаем форматтер для логов
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+# Хендлер для консоли
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(formatter)
+
+# Хендлер для файла
+file_handler = logging.FileHandler(f'ollama_chat_{datetime.now().strftime("%Y%m%d")}.log')
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(formatter)
+
+# Добавляем хендлеры к логгеру
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
+
+# Отключаем распространение логов выше
+logger.propagate = False
 
 def chat_with_ollama(message, history, model="llama2"):
     """Функция для общения с Ollama API"""
     # Логируем входящий запрос
-    logger.info("=" * 50)
+    logger.info("\n" + "=" * 50)
     logger.info(f"Новый запрос к модели {model}")
     logger.info(f"Пользователь: {message}")
     logger.info("-" * 50)
@@ -32,7 +45,7 @@ def chat_with_ollama(message, history, model="llama2"):
     
     try:
         # Отправка запроса
-        logger.debug(f"Отправка запроса к {api_url}")
+        logger.info(f"Отправка запроса к {api_url}")
         response = requests.post(api_url, json={
             "model": model,
             "prompt": message,
@@ -65,12 +78,12 @@ def chat_with_ollama(message, history, model="llama2"):
 
 def list_models():
     """Получение списка доступных моделей"""
-    logger.debug("Запрос списка моделей...")
+    logger.info("Запрос списка моделей...")
     try:
         response = requests.get("http://10.67.67.2:11434/api/tags", timeout=5)
         response.raise_for_status()
         models = response.json()
-        logger.debug(f"Получен список моделей: {json.dumps(models, ensure_ascii=False)}")
+        logger.info(f"Получен список моделей: {json.dumps(models, ensure_ascii=False)}")
         return [model["name"] for model in models["models"]]
     except Exception as e:
         logger.error(f"Ошибка при получении списка моделей: {str(e)}")
@@ -89,7 +102,7 @@ def ollama_chat_tab():
         
         # Выпадающий список для выбора модели
         available_models = list_models()
-        logger.debug(f"Доступные модели: {available_models}")
+        logger.info(f"Доступные модели: {available_models}")
         
         model_dropdown = gr.Dropdown(
             choices=available_models,
@@ -100,15 +113,14 @@ def ollama_chat_tab():
         # Компонент чата
         chatbot = gr.Chatbot(
             label="Диалог с Ollama",
-            type="messages"  # Используем новый формат сообщений
+            type="messages"
         )
         
         # Поле ввода сообщения
         msg = gr.Textbox(
             label="Введите сообщение",
             placeholder="Напишите что-нибудь... (Shift+Enter для отправки)",
-            lines=2
-            #lines=1.01  # Это хак, который меняет поведение клавиш
+            lines=3
         )
         
         # Кнопки
@@ -119,12 +131,12 @@ def ollama_chat_tab():
         # Обработчики событий
         def update_status():
             try:
-                logger.debug("Проверка подключения к Ollama API...")
+                logger.info("Проверка подключения к Ollama API...")
                 response = requests.get("http://10.67.67.2:11434/api/version", timeout=5)
-                logger.debug(f"Получен ответ: {response.text}")
+                logger.info(f"Получен ответ: {response.text}")
                 version = response.json().get("version", "неизвестно")
                 status_msg = f"✅ Подключено к Ollama API (версия {version})"
-                logger.debug(status_msg)
+                logger.info(status_msg)
                 return status_msg
             except Exception as e:
                 error_msg = f"❌ Нет подключения к Ollama API: {str(e)}"
