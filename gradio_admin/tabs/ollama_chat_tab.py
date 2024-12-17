@@ -107,7 +107,8 @@ def ollama_chat_tab():
         msg = gr.Textbox(
             label="Введите сообщение",
             placeholder="Напишите что-нибудь... (Ctrl+Enter для отправки)",
-            lines=3
+            #lines=3
+            lines=1.01  # Это хак, который меняет поведение клавиш
         )
         
         # Кнопки
