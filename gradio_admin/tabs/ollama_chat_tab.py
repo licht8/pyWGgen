@@ -73,7 +73,7 @@ def chat_with_ollama(message, history, model="llama2"):
     except Exception as e:
         error_msg = f"Ошибка: {str(e)}"
         logger.error(f"Произошла ошибка: {error_msg}")
-        logger.info("=" * 50)
+        logger.info("-=" * 25)
         return error_msg, history
 
 def list_models():
