@@ -103,8 +103,6 @@ def ollama_chat_tab():
         
         # Компонент чата
         chatbot = gr.Chatbot(
-            height=400,
-            show_copy_button=True,
             label="Диалог с Ollama"
         )
         
@@ -144,11 +142,6 @@ def ollama_chat_tab():
             outputs=[msg, chatbot]
         )
         
-        clear.click(lambda: None, None, chatbot, queue=False)
+        clear.click(lambda: [], None, chatbot, queue=False)
 
     logger.info("Интерфейс чата инициализирован")
-
-# Необходимые зависимости (добавьте в requirements.txt):
-# gradio>=3.50.2
-# requests>=2.31.0
-# python-json-logger>=2.0.7
