@@ -107,7 +107,7 @@ def ollama_chat_tab():
         msg = gr.Textbox(
             label="Введите сообщение",
             placeholder="Напишите что-нибудь...",
-            lines=3
+            lines=3,
             submit_method="ctrl-enter"
         )
         
