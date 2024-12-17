@@ -32,7 +32,7 @@ logger.propagate = False
 def chat_with_ollama(message, history, model="llama2"):
     """Функция для общения с Ollama API"""
     # Логируем входящий запрос
-    logger.info("\n" + "=" * 50)
+    logger.info(" " + "-" * 25)
     logger.info(f"Новый запрос к модели {model}")
     logger.info(f"Пользователь: {message}")
     logger.info("-" * 50)
