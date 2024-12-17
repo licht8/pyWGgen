@@ -108,6 +108,7 @@ def ollama_chat_tab():
             label="Введите сообщение",
             placeholder="Напишите что-нибудь...",
             lines=3
+            submit_method="ctrl-enter"
         )
         
         # Кнопки
