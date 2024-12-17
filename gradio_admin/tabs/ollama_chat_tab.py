@@ -28,27 +28,29 @@ def chat_with_ollama(message, history, model="llama2"):
     api_url = "http://10.67.67.2:11434/api/generate"
     logger.debug(f"API URL: {api_url}")
     
-    # Собираем контекст из истории
-    context = "\n".join([f"Human: {h[0]}\nAssistant: {h[1]}" for h in history])
-    
-    payload = {
-        "model": model,
-        "prompt": message,
-        "context": context,
-        "stream": False
-    }
-    logger.debug(f"Отправляемый payload: {json.dumps(payload, ensure_ascii=False)}")
-    
     try:
         logger.debug("Отправка запроса к API...")
-        response = requests.post(api_url, json=payload, timeout=30)
+        response = requests.post(api_url, json={
+            "model": model,
+            "prompt": message,
+            "stream": False
+        })
         logger.debug(f"Получен ответ со статусом: {response.status_code}")
         response.raise_for_status()
         
         result = response.json()
         logger.debug(f"Получен JSON ответ: {json.dumps(result, ensure_ascii=False)}")
         
-        return result.get("response", "Ошибка: нет ответа"), history + [[message, result.get("response", "")]]
+        # Формируем сообщения в новом формате
+        new_message = {
+            "role": "assistant",
+            "content": result.get("response", "Ошибка: нет ответа")
+        }
+        
+        return "", history + [
+            {"role": "user", "content": message},
+            new_message
+        ]
     
     except requests.exceptions.Timeout:
         error_msg = "Превышено время ожидания ответа от API"
@@ -103,7 +105,8 @@ def ollama_chat_tab():
         
         # Компонент чата
         chatbot = gr.Chatbot(
-            label="Диалог с Ollama"
+            label="Диалог с Ollama",
+            type="messages"  # Используем новый формат сообщений
         )
         
         # Поле ввода сообщения
