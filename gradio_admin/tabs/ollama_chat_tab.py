@@ -3,48 +3,53 @@ import requests
 import json
 import logging
 import sys
+from datetime import datetime
 
 # Настройка логирования
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler('ollama_chat.log')
+        logging.FileHandler(f'ollama_chat_{datetime.now().strftime("%Y%m%d")}.log')
     ]
 )
 logger = logging.getLogger(__name__)
 
 def chat_with_ollama(message, history, model="llama2"):
     """Функция для общения с Ollama API"""
-    logger.debug(f"Получено сообщение: {message}")
-    logger.debug(f"Текущая история: {history}")
-    logger.debug(f"Выбранная модель: {model}")
+    # Логируем входящий запрос
+    logger.info("=" * 50)
+    logger.info(f"Новый запрос к модели {model}")
+    logger.info(f"Пользователь: {message}")
+    logger.info("-" * 50)
     
     if not message:
         logger.warning("Получено пустое сообщение")
         return "", history
     
     api_url = "http://10.67.67.2:11434/api/generate"
-    logger.debug(f"API URL: {api_url}")
     
     try:
-        logger.debug("Отправка запроса к API...")
+        # Отправка запроса
+        logger.debug(f"Отправка запроса к {api_url}")
         response = requests.post(api_url, json={
             "model": model,
             "prompt": message,
             "stream": False
         })
-        logger.debug(f"Получен ответ со статусом: {response.status_code}")
         response.raise_for_status()
         
         result = response.json()
-        logger.debug(f"Получен JSON ответ: {json.dumps(result, ensure_ascii=False)}")
+        assistant_response = result.get("response", "Ошибка: нет ответа")
         
-        # Формируем сообщения в новом формате
+        # Логируем ответ ассистента
+        logger.info(f"Ассистент: {assistant_response}")
+        logger.info("=" * 50)
+        
         new_message = {
             "role": "assistant",
-            "content": result.get("response", "Ошибка: нет ответа")
+            "content": assistant_response
         }
         
         return "", history + [
@@ -52,21 +57,10 @@ def chat_with_ollama(message, history, model="llama2"):
             new_message
         ]
     
-    except requests.exceptions.Timeout:
-        error_msg = "Превышено время ожидания ответа от API"
-        logger.error(error_msg)
-        return error_msg, history
-    except requests.exceptions.RequestException as e:
-        error_msg = f"Ошибка при обращении к API: {str(e)}"
-        logger.error(error_msg)
-        return error_msg, history
-    except json.JSONDecodeError as e:
-        error_msg = f"Ошибка декодирования JSON: {str(e)}"
-        logger.error(error_msg)
-        return error_msg, history
     except Exception as e:
-        error_msg = f"Неожиданная ошибка: {str(e)}"
-        logger.error(error_msg)
+        error_msg = f"Ошибка: {str(e)}"
+        logger.error(f"Произошла ошибка: {error_msg}")
+        logger.info("=" * 50)
         return error_msg, history
 
 def list_models():
@@ -124,11 +118,17 @@ def ollama_chat_tab():
         # Обработчики событий
         def update_status():
             try:
+                logger.debug("Проверка подключения к Ollama API...")
                 response = requests.get("http://10.67.67.2:11434/api/version", timeout=5)
+                logger.debug(f"Получен ответ: {response.text}")
                 version = response.json().get("version", "неизвестно")
-                return f"✅ Подключено к Ollama API (версия {version})"
-            except:
-                return "❌ Нет подключения к Ollama API"
+                status_msg = f"✅ Подключено к Ollama API (версия {version})"
+                logger.debug(status_msg)
+                return status_msg
+            except Exception as e:
+                error_msg = f"❌ Нет подключения к Ollama API: {str(e)}"
+                logger.error(error_msg)
+                return error_msg
         
         # Обновление статуса при загрузке
         status.value = update_status()
