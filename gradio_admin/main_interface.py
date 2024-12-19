@@ -9,16 +9,16 @@ from gradio_admin.tabs.ollama_chat_tab import ollama_chat_tab  # Новый им
 
 # Создание интерфейса
 with gr.Blocks() as admin_interface:
-    with gr.Tab(label="🌱 Создать пользователя"):
+    with gr.Tab(label="🌱 Создать"):
         create_user_tab()
     
-    with gr.Tab(label="🔥 Удалить пользователя"):
+    with gr.Tab(label="🔥 Удалить"):
         delete_user_tab()
     
     with gr.Tab(label="🔍 Статистика"):
         statistics_tab()
     
-    with gr.Tab(label="🤖 Чат с Ollama"):
+    with gr.Tab(label="🤖 Чат с Ai"):
         ollama_chat_tab()
 
     
