@@ -2,7 +2,7 @@
 # ai_assistant/scripts/wg_data_analyzer.py
 # ==================================================
 # Скрипт для сбора и анализа данных WireGuard.
-# Версия: 2.3 (2024-12-21)
+# Версия: 2.4 (2024-12-21)
 # ==================================================
 # Описание:
 # Этот скрипт собирает данные из трёх источников:
@@ -23,6 +23,7 @@ import sys
 import requests
 from pathlib import Path
 import logging
+import uuid
 
 # Убедимся, что путь к settings.py доступен
 try:
@@ -51,6 +52,11 @@ console_handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
+
+file_handler = logging.FileHandler(BASE_DIR / "ai_assistant/logs/llm_interaction.log")
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 def get_wg_status():
     """Получает состояние WireGuard через команду `wg show`."""
@@ -178,8 +184,10 @@ def query_llm(prompt, api_url=LLM_API_URL, model="llama3:latest", max_tokens=500
 
 def generate_prompt(system_prompt, wg_data):
     """Создает финальный промпт для анализа данных без дублирования."""
+    report_id = str(uuid.uuid4())
     formatted_prompt = (
         f"{system_prompt}\n\n"
+        f"Уникальный идентификатор отчета: {report_id}\n\n"
         f"**Состояние WireGuard:**\n"
         f"🔓 Пиры:\n"
     )
@@ -207,6 +215,11 @@ def generate_prompt(system_prompt, wg_data):
         f"- 🔧 Проверьте статус пиров: `wg show`\n"
         f"- 🔧 Перезапустите WireGuard: `sudo systemctl restart wg-quick@wg0`\n"
         f"- 🔧 Проверьте доступность порта: `sudo ss -tuln | grep 51820`\n"
+    )
+
+    formatted_prompt += (
+        f"\n**Инструкция модели:**\n"
+        f"Убедитесь, что уникальный идентификатор отчета `{report_id}` используется только один раз в тексте ответа."
     )
 
     return formatted_prompt
