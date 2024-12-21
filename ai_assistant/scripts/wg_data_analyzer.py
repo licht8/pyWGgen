@@ -82,7 +82,7 @@ def read_config_file(filepath):
 def parse_wg_show(output):
     """Парсит вывод команды `wg show` и извлекает данные о пирах."""
     def convert_to_human_readable(size_str):
-        """Конвертирует размер из строки в человекочитаемый формат (МБ или ГБ)."""
+        """Конвертирует размер из строки в формат (МБ или ГБ), упрощенный для восприятия."""
         try:
             size, unit = size_str.split()
             size = float(size)
@@ -92,12 +92,12 @@ def parse_wg_show(output):
             elif unit.lower().startswith("mib"):
                 return f"{size:.2f} МБ"
             elif unit.lower().startswith("gib"):
-                size_gb = size
-                return f"{size_gb:.2f} ГБ"
+                return f"{size:.2f} ГБ"
             else:
-                return size_str
+                return f"{size} {unit}"
         except Exception:
             return "Нет данных"
+
 
     peers = []
     current_peer = None
