@@ -124,13 +124,15 @@ def parse_wg_show(output):
                 "LatestHandshake": "No data"
             }
         elif "latest handshake:" in line and current_peer:
-            current_peer["LatestHandshake"] = line.split("latest handshake:")[1].strip()
+            handshake_data = line.split("latest handshake:")[1].strip()
+            current_peer["LatestHandshake"] = handshake_data if handshake_data else "No data"
         elif "transfer:" in line and current_peer:
             transfer_data = line.split("transfer:")[1].split(",")
-            current_peer["Transfer"] = {
-                "Received": convert_to_simple_format(transfer_data[0].strip()),
-                "Sent": convert_to_simple_format(transfer_data[1].strip())
-            }
+            if len(transfer_data) == 2:
+                current_peer["Transfer"] = {
+                    "Received": convert_to_simple_format(transfer_data[0].strip()),
+                    "Sent": convert_to_simple_format(transfer_data[1].strip())
+                }
 
     if current_peer:
         peers.append(current_peer)
