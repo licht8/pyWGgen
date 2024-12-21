@@ -2,7 +2,7 @@
 # ai_assistant/scripts/wg_data_analyzer.py
 # ==================================================
 # Скрипт для сбора и анализа данных WireGuard.
-# Версия: 2.1 (2024-12-21)
+# Версия: 2.2 (2024-12-21)
 # ==================================================
 # Описание:
 # Этот скрипт собирает данные из трёх источников:
@@ -176,8 +176,39 @@ def query_llm(prompt, api_url=LLM_API_URL, model="llama3:latest", max_tokens=500
         return f"Error: {e}"
 
 def generate_prompt(system_prompt, wg_data):
-    """Создает финальный промпт для анализа данных."""
-    return f"{system_prompt}\n\nWG Show Status:\n{json.dumps(wg_data['wg_status'], indent=4)}\n\nWG0 Config with Logins:\n{json.dumps(wg_data['wg0_config'], indent=4)}\n\nParams Config:\n{json.dumps(wg_data['params_config'], indent=4)}"
+    """Создает финальный промпт для анализа данных без дублирования."""
+    formatted_prompt = (
+        f"{system_prompt}\n\n"
+        f"**Состояние WireGuard:**\n"
+        f"🔓 Пиры:\n"
+    )
+
+    for peer in wg_data['wg0_config']:
+        formatted_prompt += (
+            f"- Логин: {peer['login']}, PublicKey: {peer['peer'].get('PublicKey', 'Не найден')}\n"
+        )
+
+    formatted_prompt += (
+        f"\n**Конфигурация:**\n"
+        f"📊 Адрес: {wg_data['params_config'].get('SERVER_WG_IPV4', 'Не указан')}\n"
+        f"📊 Порт: {wg_data['params_config'].get('SERVER_PORT', 'Не указан')}\n"
+        f"📊 PublicKey: {wg_data['params_config'].get('SERVER_PUB_KEY', 'Не указан')}\n"
+    )
+
+    formatted_prompt += (
+        f"\n**Параметры:**\n"
+        f"📊 IP сервера: {wg_data['params_config'].get('SERVER_PUB_IP', 'Не указан')}\n"
+        f"📊 DNS: {', '.join([wg_data['params_config'].get(f'CLIENT_DNS_{i}', '') for i in range(1, 5)])}\n"
+    )
+
+    formatted_prompt += (
+        f"\n**Рекомендации:**\n"
+        f"- 🔧 Проверьте статус пиров: `wg show`\n"
+        f"- 🔧 Перезапустите WireGuard: `sudo systemctl restart wg-quick@wg0`\n"
+        f"- 🔧 Проверьте доступность порта: `sudo ss -tuln | grep 51820`\n"
+    )
+
+    return formatted_prompt
 
 if __name__ == "__main__":
     output_path = BASE_DIR / "ai_assistant/inputs/wg_analysis.json"
