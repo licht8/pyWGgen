@@ -2,7 +2,7 @@
 # ai_assistant/scripts/wg_data_analyzer.py
 # ==================================================
 # Скрипт для сбора и анализа данных WireGuard.
-# Версия: 2.4 (2024-12-21)
+# Версия: 2.5 (2024-12-21)
 # ==================================================
 # Описание:
 # Этот скрипт собирает данные из трёх источников:
@@ -161,22 +161,17 @@ def load_system_prompt(prompt_file):
 def query_llm(prompt, api_url=LLM_API_URL, model="llama3:latest", max_tokens=500):
     """Отправляет запрос в LLM и возвращает ответ."""
     try:
-        logger.info(f"Отправка запроса к LLM: {api_url}")
         payload = {
             "model": model,
             "prompt": prompt,
             "stream": False
         }
-        logger.debug(f"Payload: {json.dumps(payload, indent=4)}")
         response = requests.post(api_url, json=payload)
         response.raise_for_status()
-        logger.debug(f"Full response: {response.json()}")
         result = response.json()
-        assistant_response = result.get("response", "Ошибка: нет ответа")
-        logger.info(f"Ответ от LLM: {assistant_response}")
-        return assistant_response
+        return result.get("response", "Ошибка: нет ответа")
     except requests.HTTPError as http_err:
-        logger.error(f"HTTP ошибка при обращении к LLM: {http_err} - {response.text}")
+        logger.error(f"HTTP ошибка при обращении к LLM: {http_err}")
         return f"HTTP Error: {http_err}"
     except Exception as e:
         logger.error(f"Ошибка при обращении к LLM: {e}")
@@ -217,11 +212,6 @@ def generate_prompt(system_prompt, wg_data):
         f"- 🔧 Проверьте доступность порта: `sudo ss -tuln | grep 51820`\n"
     )
 
-    formatted_prompt += (
-        f"\n**Инструкция модели:**\n"
-        f"Убедитесь, что уникальный идентификатор отчета `{report_id}` используется только один раз в тексте ответа."
-    )
-
     return formatted_prompt
 
 if __name__ == "__main__":
@@ -238,5 +228,6 @@ if __name__ == "__main__":
     # Запрос к LLM
     llm_response = query_llm(prompt)
 
-    print("LLM Analysis Output:")
+    # Вывод результата
+    print("\nLLM Analysis Output:")
     print(llm_response)
