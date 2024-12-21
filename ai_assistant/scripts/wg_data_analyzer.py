@@ -2,7 +2,7 @@
 # ai_assistant/scripts/wg_data_analyzer.py
 # ==================================================
 # Скрипт для сбора и анализа данных WireGuard.
-# Версия: 1.7 (2024-12-21)
+# Версия: 1.8 (2024-12-21)
 # ==================================================
 # Описание:
 # Этот скрипт собирает данные из трёх источников:
@@ -115,18 +115,24 @@ def save_to_json(data, output_file):
     except Exception as e:
         logger.error(f"Ошибка при сохранении данных в JSON: {e}")
 
-def query_llm(prompt, api_url=LLM_API_URL, max_tokens=500):
+def query_llm(prompt, api_url=LLM_API_URL, model="llama3:latest", max_tokens=500):
     """Отправляет запрос в LLM и возвращает ответ."""
     try:
         logger.info(f"Отправка запроса к LLM: {api_url}")
-        response = requests.post(api_url, json={"prompt": prompt, "max_tokens": max_tokens})
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "stream": False
+        }
+        logger.debug(f"Payload: {json.dumps(payload, indent=4)}")
+        response = requests.post(api_url, json=payload)
         response.raise_for_status()
         result = response.json()
         assistant_response = result.get("response", "Ошибка: нет ответа")
         logger.info(f"Ответ от LLM: {assistant_response}")
         return assistant_response
     except requests.HTTPError as http_err:
-        logger.error(f"HTTP ошибка при обращении к LLM: {http_err}")
+        logger.error(f"HTTP ошибка при обращении к LLM: {http_err} - {response.text}")
         return f"HTTP Error: {http_err}"
     except Exception as e:
         logger.error(f"Ошибка при обращении к LLM: {e}")
