@@ -2,7 +2,7 @@
 # ai_assistant/scripts/wg_data_analyzer.py
 # ==================================================
 # Скрипт для сбора и анализа данных WireGuard.
-# Версия: 1.8 (2024-12-21)
+# Версия: 1.9 (2024-12-21)
 # ==================================================
 # Описание:
 # Этот скрипт собирает данные из трёх источников:
@@ -115,6 +115,16 @@ def save_to_json(data, output_file):
     except Exception as e:
         logger.error(f"Ошибка при сохранении данных в JSON: {e}")
 
+def load_system_prompt(prompt_file):
+    """Загружает системный промпт из файла."""
+    try:
+        with open(prompt_file, 'r') as file:
+            prompt_data = json.load(file)
+        return prompt_data.get("system_prompt", "")
+    except Exception as e:
+        logger.error(f"Ошибка загрузки системного промпта: {e}")
+        return ""
+
 def query_llm(prompt, api_url=LLM_API_URL, model="llama3:latest", max_tokens=500):
     """Отправляет запрос в LLM и возвращает ответ."""
     try:
@@ -138,30 +148,22 @@ def query_llm(prompt, api_url=LLM_API_URL, model="llama3:latest", max_tokens=500
         logger.error(f"Ошибка при обращении к LLM: {e}")
         return f"Error: {e}"
 
-def generate_prompt(wg_data):
-    """Создает системный промпт для анализа данных."""
-    return f"""
-    Вы профессиональный администратор WireGuard. Вот данные о текущем состоянии сервера:
-
-    WG Show Status:
-    {json.dumps(wg_data['wg_status'], indent=4)}
-
-    WG0 Config:
-    {json.dumps(wg_data['wg0_config'], indent=4)}
-
-    Params Config:
-    {json.dumps(wg_data['params_config'], indent=4)}
-
-    Проведите анализ данных, выявите возможные проблемы и дайте полезные рекомендации. Включите команды для их решения.
-    """
+def generate_prompt(system_prompt, wg_data):
+    """Создает финальный промпт для анализа данных."""
+    return f"{system_prompt}\n\nWG Show Status:\n{json.dumps(wg_data['wg_status'], indent=4)}\n\nWG0 Config:\n{json.dumps(wg_data['wg0_config'], indent=4)}\n\nParams Config:\n{json.dumps(wg_data['params_config'], indent=4)}"
 
 if __name__ == "__main__":
     output_path = BASE_DIR / "ai_assistant/inputs/wg_analysis.json"
+    prompt_file = BASE_DIR / "ai_assistant/prompts/system_prompt.json"
+
     data = collect_and_analyze_wg_data()
     save_to_json(data, output_path)
 
-    # Генерация промпта и запрос к LLM
-    prompt = generate_prompt(data)
+    # Загрузка системного промпта
+    system_prompt = load_system_prompt(prompt_file)
+    prompt = generate_prompt(system_prompt, data)
+
+    # Запрос к LLM
     llm_response = query_llm(prompt)
 
     print("LLM Analysis Output:")
