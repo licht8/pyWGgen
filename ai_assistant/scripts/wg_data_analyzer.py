@@ -2,7 +2,7 @@
 # ai_assistant/scripts/wg_data_analyzer.py
 # ==================================================
 # Скрипт для сбора и анализа данных WireGuard.
-# Версия: 1.0 (2024-12-21)
+# Версия: 1.1 (2024-12-21)
 # ==================================================
 # Описание:
 # Этот скрипт собирает данные из трёх источников:
@@ -20,7 +20,12 @@ import subprocess
 import json
 import os
 from pathlib import Path
-from settings import BASE_DIR, SERVER_CONFIG_FILE, PARAMS_FILE
+
+# Попытка импортировать настройки проекта
+try:
+    from settings import BASE_DIR, SERVER_CONFIG_FILE, PARAMS_FILE
+except ModuleNotFoundError as e:
+    raise ImportError("Не удалось найти модуль settings. Убедитесь, что файл settings.py находится в корне проекта.") from e
 
 def get_wg_status():
     """Получает состояние WireGuard через команду `wg show`."""
