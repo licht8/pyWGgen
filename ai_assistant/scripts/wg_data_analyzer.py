@@ -108,7 +108,7 @@ def parse_wg_show(output):
             else:
                 return size_str
         except Exception:
-            return None  # None вместо "No data" для проверки
+            return None  # Указать None для проверки
 
     peers = []
     current_peer = None
@@ -124,8 +124,8 @@ def parse_wg_show(output):
                 "LatestHandshake": None
             }
         elif "latest handshake:" in line and current_peer:
-            handshake = line.split("latest handshake:")[1].strip()
-            current_peer["LatestHandshake"] = handshake if handshake else "No data"
+            handshake_data = line.split("latest handshake:")[1].strip()
+            current_peer["LatestHandshake"] = handshake_data if handshake_data else "No data"
         elif "transfer:" in line and current_peer:
             transfer_data = line.split("transfer:")[1].split(",")
             if len(transfer_data) == 2:
@@ -136,6 +136,15 @@ def parse_wg_show(output):
 
     if current_peer:
         peers.append(current_peer)
+
+    # Проверка на отсутствие логинов
+    for peer in peers:
+        if not peer.get("Transfer")["Received"]:
+            peer["Transfer"]["Received"] = "No data"
+        if not peer.get("Transfer")["Sent"]:
+            peer["Transfer"]["Sent"] = "No data"
+        if not peer.get("LatestHandshake"):
+            peer["LatestHandshake"] = "No data"
 
     return {"peers": peers}
 
