@@ -58,6 +58,18 @@ file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
+def get_last_restart():
+    """Получает время последнего перезапуска WireGuard."""
+    try:
+        output = subprocess.check_output(["systemctl", "show", "wg-quick@wg0", "--property=ActiveEnterTimestamp"], text=True)
+        if "ActiveEnterTimestamp=" in output:
+            return output.split("ActiveEnterTimestamp=")[1].strip()
+        else:
+            return "No data"
+    except Exception as e:
+        logger.error(f"Error retrieving WireGuard restart time: {e}")
+        return "No data"
+
 def get_wg_status():
     """Получает состояние WireGuard через команду `wg show`."""
     try:
@@ -174,6 +186,7 @@ def collect_and_analyze_wg_data():
     data["wg_status"] = parse_wg_show(wg_status) if "Error" not in wg_status else wg_status
     data["wg0_config"] = parse_config_with_logins(wg0_config) if "Error" not in wg0_config else wg0_config
     data["params_config"] = parse_config_file(params_config) if "Error" not in params_config else params_config
+    data["last_restart"] = get_last_restart()
 
     return data
 
