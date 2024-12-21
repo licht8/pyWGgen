@@ -81,6 +81,24 @@ def read_config_file(filepath):
 
 def parse_wg_show(output):
     """Парсит вывод команды `wg show` и извлекает данные о пирах."""
+    def convert_to_human_readable(size_str):
+        """Конвертирует размер из строки в человекочитаемый формат (МБ или ГБ)."""
+        try:
+            size, unit = size_str.split()
+            size = float(size)
+            if unit.lower().startswith("kib"):
+                size_mb = size / 1024
+                return f"{size_mb:.2f} МБ"
+            elif unit.lower().startswith("mib"):
+                return f"{size:.2f} МБ"
+            elif unit.lower().startswith("gib"):
+                size_gb = size
+                return f"{size_gb:.2f} ГБ"
+            else:
+                return size_str
+        except Exception:
+            return "Нет данных"
+
     peers = []
     current_peer = None
 
@@ -99,14 +117,12 @@ def parse_wg_show(output):
         elif "transfer:" in line and current_peer:
             transfer_data = line.split("transfer:")[1].split(",")
             current_peer["Transfer"] = {
-                "Received": transfer_data[0].strip(),
-                "Sent": transfer_data[1].strip()
+                "Received": convert_to_human_readable(transfer_data[0].strip()),
+                "Sent": convert_to_human_readable(transfer_data[1].strip())
             }
 
     if current_peer:
         peers.append(current_peer)
-
-    return {"peers": peers}
 
     return {"peers": peers}
 
