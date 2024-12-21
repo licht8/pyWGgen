@@ -3,7 +3,7 @@
 # ==================================================
 # Скрипт для создания структурированного отчета
 # на основе данных из wg_raw_data.txt.
-# Версия: 1.0 (2024-12-21)
+# Версия: 1.1 (2024-12-21)
 # ==================================================
 
 import re
@@ -23,7 +23,7 @@ def parse_server_config(raw_data):
     for line in raw_data:
         if "[WireGuard Configuration File]" in line:
             capture = True
-        elif "[WireGuard Status" in line:
+        elif "### Client" in line:
             capture = False
         if capture and line.strip():
             server_config.append(line.strip())
@@ -47,6 +47,7 @@ def analyze_clients(raw_data):
     inactive_clients = []
 
     peer_to_login = {}
+    peer_to_ip = {}
     capture_clients = False
     capture_status = False
     current_peer = None
@@ -67,6 +68,8 @@ def analyze_clients(raw_data):
             if key == "PublicKey":
                 peer_to_login[value] = current_login
                 logins.append(current_login)
+            elif key == "AllowedIPs":
+                peer_to_ip[current_login] = value
 
         if "peer:" in line:
             if current_peer:
@@ -80,6 +83,7 @@ def analyze_clients(raw_data):
             current_peer = {
                 "public_key": peer_key,
                 "login": peer_to_login.get(peer_key, "Unknown"),
+                "ip_address": peer_to_ip.get(peer_to_login.get(peer_key, ""), "Unknown"),
                 "traffic": {"received": "0 MiB", "sent": "0 MiB"}
             }
 
@@ -111,7 +115,7 @@ def generate_final_report(server_config, wg_params, logins, active_clients, inac
     if active_clients:
         for client in active_clients:
             report.append(
-                f"- {client['login']}: Incoming: {client['traffic']['received']}, Outgoing: {client['traffic']['sent']}"
+                f"- {client['ip_address']} - {client['login']}: Incoming: {client['traffic']['received']}, Outgoing: {client['traffic']['sent']}"
             )
     else:
         report.append("- No active users.")
@@ -119,7 +123,9 @@ def generate_final_report(server_config, wg_params, logins, active_clients, inac
     report.append("\nInactive Users:")
     if inactive_clients:
         for client in inactive_clients:
-            report.append(f"- {client['login']}")
+            report.append(
+                f"- {client['ip_address']} - {client['login']}"
+            )
     else:
         report.append("- No inactive users.")
 
