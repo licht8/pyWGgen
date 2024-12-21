@@ -2,7 +2,7 @@
 # ai_assistant/scripts/wg_data_analyzer.py
 # ==================================================
 # Скрипт для сбора и анализа данных WireGuard.
-# Версия: 2.0 (2024-12-21)
+# Версия: 2.1 (2024-12-21)
 # ==================================================
 # Описание:
 # Этот скрипт собирает данные из трёх источников:
@@ -107,6 +107,15 @@ def parse_config_with_logins(content):
         peer_data.append(current_peer)
 
     return peer_data
+
+def parse_config_file(content):
+    """Парсит содержимое конфигурационного файла и возвращает словарь."""
+    config = {}
+    for line in content.splitlines():
+        if "=" in line:
+            key, value = map(str.strip, line.split("=", 1))
+            config[key] = value
+    return config
 
 def collect_and_analyze_wg_data():
     """Собирает данные из источников и возвращает их в виде словаря."""
