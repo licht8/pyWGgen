@@ -2,7 +2,7 @@
 # ai_assistant/scripts/wg_data_analyzer.py
 # ==================================================
 # Скрипт для сбора и анализа данных WireGuard.
-# Версия: 2.2 (2024-12-21)
+# Версия: 2.3 (2024-12-21)
 # ==================================================
 # Описание:
 # Этот скрипт собирает данные из трёх источников:
@@ -164,6 +164,7 @@ def query_llm(prompt, api_url=LLM_API_URL, model="llama3:latest", max_tokens=500
         logger.debug(f"Payload: {json.dumps(payload, indent=4)}")
         response = requests.post(api_url, json=payload)
         response.raise_for_status()
+        logger.debug(f"Full response: {response.json()}")
         result = response.json()
         assistant_response = result.get("response", "Ошибка: нет ответа")
         logger.info(f"Ответ от LLM: {assistant_response}")
