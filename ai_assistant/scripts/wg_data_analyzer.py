@@ -2,7 +2,7 @@
 # ai_assistant/scripts/wg_data_analyzer.py
 # ==================================================
 # Скрипт для сбора и анализа данных WireGuard.
-# Версия: 1.2 (2024-12-21)
+# Версия: 1.3 (2024-12-21)
 # ==================================================
 # Описание:
 # Этот скрипт собирает данные из трёх источников:
@@ -20,6 +20,7 @@ import subprocess
 import json
 import os
 import sys
+import requests
 from pathlib import Path
 
 # Убедимся, что путь к settings.py доступен
@@ -93,8 +94,40 @@ def save_to_json(data, output_file):
     except Exception as e:
         print(f"Error saving to JSON: {e}")
 
+def query_llm(prompt, api_url="http://10.67.67.2:11434/api/generate", max_tokens=500):
+    """Отправляет запрос в LLM и возвращает ответ."""
+    try:
+        response = requests.post(api_url, json={"prompt": prompt, "max_tokens": max_tokens})
+        response.raise_for_status()
+        return response.json().get("generated_text", "No response")
+    except requests.RequestException as e:
+        return f"Error querying LLM: {e}"
+
+def generate_prompt(wg_data):
+    """Создает системный промпт для анализа данных."""
+    return f"""
+    Вы профессиональный администратор WireGuard. Вот данные о текущем состоянии сервера:
+
+    WG Show Status:
+    {json.dumps(wg_data['wg_status'], indent=4)}
+
+    WG0 Config:
+    {json.dumps(wg_data['wg0_config'], indent=4)}
+
+    Params Config:
+    {json.dumps(wg_data['params_config'], indent=4)}
+
+    Проведите анализ данных, выявите возможные проблемы и дайте полезные рекомендации. Включите команды для их решения.
+    """
+
 if __name__ == "__main__":
     output_path = BASE_DIR / "ai_assistant/inputs/wg_analysis.json"
     data = collect_and_analyze_wg_data()
     save_to_json(data, output_path)
-    print("WireGuard data analysis completed.")
+
+    # Генерация промпта и запрос к LLM
+    prompt = generate_prompt(data)
+    llm_response = query_llm(prompt)
+
+    print("LLM Analysis Output:")
+    print(llm_response)
