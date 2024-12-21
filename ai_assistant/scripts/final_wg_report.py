@@ -56,22 +56,50 @@ def analyze_clients(clients, wg_status):
     active_clients = []
     inactive_clients = []
 
+    # Сопоставление ключей пользователей с их логинами
+    peer_to_login = {}
     for client in clients:
         if client.startswith("### Client"):
-            login = client.split("### Client")[1].strip()
-            logins.append(login)
-            continue
+            current_login = client.split("### Client")[1].strip()
+        elif "PublicKey =" in client:
+            public_key = client.split("PublicKey =")[1].strip()
+            peer_to_login[public_key] = current_login
 
-        if "peer:" in client:
-            match = re.search(r"peer:\s*(\S+)", client)
-            if match:
-                public_key = match.group(1)
-                traffic_match = re.search(r"transfer:\s*(\S+\s\S+),\s*(\S+\s\S+)", client)
-                if traffic_match:
-                    incoming, outgoing = traffic_match.groups()
-                    active_clients.append(f"{login}: Incoming: {incoming}, Outgoing: {outgoing}")
+    # Анализ активности пиров
+    current_peer = None
+    for line in wg_status:
+        line = line.strip()
+        if line.startswith("peer:"):
+            if current_peer:
+                # Проверяем активность предыдущего пира
+                traffic = current_peer.get("traffic")
+                if traffic and any(float(t.split()[0]) > 0 for t in traffic.values()):
+                    active_clients.append(current_peer)
                 else:
-                    inactive_clients.append(login)
+                    inactive_clients.append(current_peer)
+
+            # Начинаем обработку нового пира
+            peer_key = line.split("peer:")[1].strip()
+            current_peer = {
+                "public_key": peer_key,
+                "login": peer_to_login.get(peer_key, "Unknown"),
+                "traffic": {"received": "0 MiB", "sent": "0 MiB"}
+            }
+
+        elif "transfer:" in line and current_peer:
+            transfer_data = line.split("transfer:")[1].strip().split(",")
+            current_peer["traffic"] = {
+                "received": transfer_data[0].strip(),
+                "sent": transfer_data[1].strip()
+            }
+
+    # Проверяем последний обработанный пир
+    if current_peer:
+        traffic = current_peer.get("traffic")
+        if traffic and any(float(t.split()[0]) > 0 for t in traffic.values()):
+            active_clients.append(current_peer)
+        else:
+            inactive_clients.append(current_peer)
 
     return logins, active_clients, inactive_clients
 
