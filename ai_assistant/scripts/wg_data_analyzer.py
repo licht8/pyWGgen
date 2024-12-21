@@ -108,7 +108,7 @@ def parse_wg_show(output):
             else:
                 return size_str
         except Exception:
-            return "No data"
+            return None  # Если данные некорректны
 
     peers = []
     current_peer = None
@@ -120,8 +120,8 @@ def parse_wg_show(output):
                 peers.append(current_peer)
             current_peer = {
                 "PublicKey": line.split("peer:")[1].strip(),
-                "Transfer": {"Received": "No data", "Sent": "No data"},
-                "LatestHandshake": "No data"
+                "Transfer": {"Received": None, "Sent": None},
+                "LatestHandshake": None
             }
         elif "latest handshake:" in line and current_peer:
             handshake_data = line.split("latest handshake:")[1].strip()
@@ -130,12 +130,18 @@ def parse_wg_show(output):
             transfer_data = line.split("transfer:")[1].split(",")
             if len(transfer_data) == 2:
                 current_peer["Transfer"] = {
-                    "Received": convert_to_simple_format(transfer_data[0].strip()),
-                    "Sent": convert_to_simple_format(transfer_data[1].strip())
+                    "Received": convert_to_simple_format(transfer_data[0].strip()) or "No data",
+                    "Sent": convert_to_simple_format(transfer_data[1].strip()) or "No data"
                 }
 
     if current_peer:
         peers.append(current_peer)
+
+    # Проверка на отсутствие данных и установка значений по умолчанию
+    for peer in peers:
+        peer["Transfer"]["Received"] = peer["Transfer"]["Received"] or "No data"
+        peer["Transfer"]["Sent"] = peer["Transfer"]["Sent"] or "No data"
+        peer["LatestHandshake"] = peer["LatestHandshake"] or "No data"
 
     return {"peers": peers}
 
