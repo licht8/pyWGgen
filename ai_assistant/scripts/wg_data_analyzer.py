@@ -80,11 +80,29 @@ def read_config_file(filepath):
         return f"Error reading file {filepath}: {e}"
 
 def parse_wg_show(output):
-    """Парсит вывод команды `wg show` и извлекает данные о пирах."""
+    """Парсит вывод команды `wg show` и извлекает данные о пирах, трафике и статусе."""
     peers = []
+    current_peer = None
+
     for line in output.splitlines():
         if line.startswith("peer:"):
-            peers.append(line.split(":")[1].strip())
+            if current_peer:
+                peers.append(current_peer)
+            current_peer = {
+                "PublicKey": line.split("peer:")[1].strip(),
+                "Transfer": {"Received": "Нет данных", "Sent": "Нет данных"},
+                "LatestHandshake": "Нет данных"
+            }
+        elif line.startswith("transfer:") and current_peer:
+            parts = line.split(",")
+            current_peer["Transfer"]["Received"] = parts[0].split("transfer:")[1].strip()
+            current_peer["Transfer"]["Sent"] = parts[1].strip()
+        elif line.startswith("latest handshake:") and current_peer:
+            current_peer["LatestHandshake"] = line.split("latest handshake:")[1].strip()
+
+    if current_peer:
+        peers.append(current_peer)
+
     return {"peers": peers}
 
 def parse_config_with_logins(content):
