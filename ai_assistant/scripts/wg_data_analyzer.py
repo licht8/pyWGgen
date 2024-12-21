@@ -237,7 +237,6 @@ def generate_prompt(system_prompt, wg_data):
         f"{system_prompt}\n\n"
         f"Уникальный идентификатор отчета: {report_id}\n\n"
         f"**Состояние WireGuard:**\n"
-        f"🔓 Пиры:\n"
     )
 
     for peer in wg_data['wg0_config']:
@@ -256,6 +255,11 @@ def generate_prompt(system_prompt, wg_data):
         f"\n**Параметры:**\n"
         f"📊 IP сервера: {wg_data['params_config'].get('SERVER_PUB_IP', 'Не указан')}\n"
         f"📊 DNS: {', '.join([wg_data['params_config'].get(f'CLIENT_DNS_{i}', '') for i in range(1, 5)])}\n"
+    )
+
+    formatted_prompt += (
+        f"\n**Последний перезапуск:**\n"
+        f"🕒 {wg_data.get('last_restart', 'Не указано')}\n"
     )
 
     formatted_prompt += (
