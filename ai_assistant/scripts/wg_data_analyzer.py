@@ -81,23 +81,22 @@ def read_config_file(filepath):
 
 def parse_wg_show(output):
     """Парсит вывод команды `wg show` и извлекает данные о пирах."""
-    def convert_to_human_readable(size_str):
-        """Конвертирует размер из строки в формат (МБ или ГБ), упрощенный для восприятия."""
+    def convert_to_simple_format(size_str):
+        """Конвертирует размер из строки в простой формат (MB или GB)."""
         try:
             size, unit = size_str.split()
             size = float(size)
             if unit.lower().startswith("kib"):
                 size_mb = size / 1024
-                return f"{size_mb:.2f} МБ"
+                return f"{size_mb:.2f} MB"
             elif unit.lower().startswith("mib"):
-                return f"{size:.2f} МБ"
+                return f"{size:.2f} MB"
             elif unit.lower().startswith("gib"):
-                return f"{size:.2f} ГБ"
+                return f"{size:.2f} GB"
             else:
-                return f"{size} {unit}"
+                return size_str
         except Exception:
-            return "Нет данных"
-
+            return "No data"
 
     peers = []
     current_peer = None
@@ -109,16 +108,16 @@ def parse_wg_show(output):
                 peers.append(current_peer)
             current_peer = {
                 "PublicKey": line.split("peer:")[1].strip(),
-                "Transfer": {"Received": "Нет данных", "Sent": "Нет данных"},
-                "LatestHandshake": "Нет данных"
+                "Transfer": {"Received": "No data", "Sent": "No data"},
+                "LatestHandshake": "No data"
             }
         elif "latest handshake:" in line and current_peer:
             current_peer["LatestHandshake"] = line.split("latest handshake:")[1].strip()
         elif "transfer:" in line and current_peer:
             transfer_data = line.split("transfer:")[1].split(",")
             current_peer["Transfer"] = {
-                "Received": convert_to_human_readable(transfer_data[0].strip()),
-                "Sent": convert_to_human_readable(transfer_data[1].strip())
+                "Received": convert_to_simple_format(transfer_data[0].strip()),
+                "Sent": convert_to_simple_format(transfer_data[1].strip())
             }
 
     if current_peer:
