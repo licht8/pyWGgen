@@ -3,7 +3,7 @@
 # ==================================================
 # Скрипт для создания структурированного отчета
 # на основе данных из wg_raw_data.txt.
-# Версия: 1.1 (2024-12-21)
+# Версия: 1.2 (2024-12-21)
 # ==================================================
 
 import re
@@ -17,7 +17,7 @@ def load_raw_data(filepath):
         return file.readlines()
 
 def parse_server_config(raw_data):
-    """Извлекает конфигурацию сервера."""
+    """Извлекает конфигурацию сервера, исключая приватные ключи."""
     server_config = []
     capture = False
     for line in raw_data:
@@ -25,18 +25,18 @@ def parse_server_config(raw_data):
             capture = True
         elif "### Client" in line:
             capture = False
-        if capture and line.strip():
+        if capture and line.strip() and "PrivateKey" not in line:
             server_config.append(line.strip())
     return server_config
 
 def parse_wireguard_params(raw_data):
-    """Извлекает параметры WireGuard."""
+    """Извлекает параметры WireGuard, исключая приватные ключи."""
     params = []
     capture = False
     for line in raw_data:
         if "[WireGuard Parameters File]" in line:
             capture = True
-        elif capture and line.strip():
+        elif capture and line.strip() and "SERVER_PRIV_KEY" not in line:
             params.append(line.strip())
     return params
 
@@ -49,7 +49,6 @@ def analyze_clients(raw_data):
     peer_to_login = {}
     peer_to_ip = {}
     capture_clients = False
-    capture_status = False
     current_peer = None
 
     for line in raw_data:
