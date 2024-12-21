@@ -8,77 +8,74 @@
 
 import re
 
-INPUT_FILE = "wg_raw_data.txt"
-OUTPUT_FILE = "wg_final_report.txt"
+RAW_DATA_FILE = "wg_raw_data.txt"
+FINAL_REPORT_FILE = "wg_final_report.txt"
 
-def parse_wg_raw_data(input_file):
-    """Парсит сырые данные из wg_raw_data.txt."""
+def load_raw_data(filepath):
+    """Загружает данные из файла wg_raw_data.txt."""
+    with open(filepath, "r") as file:
+        return file.readlines()
+
+def parse_server_config(raw_data):
+    """Извлекает конфигурацию сервера."""
     server_config = []
-    clients = []
-    wg_status = []
-    parameters = []
+    capture = False
+    for line in raw_data:
+        if "[WireGuard Configuration File]" in line:
+            capture = True
+        elif "[WireGuard Status" in line:
+            capture = False
+        if capture and line.strip():
+            server_config.append(line.strip())
+    return server_config
 
-    with open(input_file, 'r') as file:
-        section = None
-        for line in file:
-            line = line.strip()
+def parse_wireguard_params(raw_data):
+    """Извлекает параметры WireGuard."""
+    params = []
+    capture = False
+    for line in raw_data:
+        if "[WireGuard Parameters File]" in line:
+            capture = True
+        elif capture and line.strip():
+            params.append(line.strip())
+    return params
 
-            # Определяем текущую секцию
-            if line.startswith("[WireGuard Configuration File]"):
-                section = "server_config"
-            elif line.startswith("[WireGuard Status (`wg show`)]"):
-                section = "wg_status"
-            elif line.startswith("[WireGuard Parameters File]"):
-                section = "parameters"
-            elif line.startswith("### Client"):
-                section = "clients"
-
-            # Заполняем данные
-            if section == "server_config" and not line.startswith("["):
-                server_config.append(line)
-            elif section == "clients" and not line.startswith("["):
-                clients.append(line)
-            elif section == "wg_status" and not line.startswith("["):
-                wg_status.append(line)
-            elif section == "parameters" and not line.startswith("["):
-                parameters.append(line)
-
-    return {
-        "server_config": server_config,
-        "clients": clients,
-        "wg_status": wg_status,
-        "parameters": parameters,
-    }
-
-def analyze_clients(clients, wg_status):
-    """Анализирует список клиентов и их активность."""
+def analyze_clients(raw_data):
+    """Анализирует клиентов и их активность."""
     logins = []
     active_clients = []
     inactive_clients = []
 
-    # Сопоставление ключей пользователей с их логинами
     peer_to_login = {}
-    for client in clients:
-        if client.startswith("### Client"):
-            current_login = client.split("### Client")[1].strip()
-        elif "PublicKey =" in client:
-            public_key = client.split("PublicKey =")[1].strip()
-            peer_to_login[public_key] = current_login
-
-    # Анализ активности пиров
+    capture_clients = False
+    capture_status = False
     current_peer = None
-    for line in wg_status:
+
+    for line in raw_data:
         line = line.strip()
-        if line.startswith("peer:"):
+
+        if line.startswith("### Client"):
+            capture_clients = True
+            current_login = line.split("### Client")[1].strip()
+
+        elif line.startswith("[Peer]"):
+            capture_clients = True
+            continue
+
+        elif capture_clients and "=" in line:
+            key, value = map(str.strip, line.split("=", 1))
+            if key == "PublicKey":
+                peer_to_login[value] = current_login
+                logins.append(current_login)
+
+        if "peer:" in line:
             if current_peer:
-                # Проверяем активность предыдущего пира
                 traffic = current_peer.get("traffic")
                 if traffic and any(float(t.split()[0]) > 0 for t in traffic.values()):
                     active_clients.append(current_peer)
                 else:
                     inactive_clients.append(current_peer)
 
-            # Начинаем обработку нового пира
             peer_key = line.split("peer:")[1].strip()
             current_peer = {
                 "public_key": peer_key,
@@ -93,7 +90,6 @@ def analyze_clients(clients, wg_status):
                 "sent": transfer_data[1].strip()
             }
 
-    # Проверяем последний обработанный пир
     if current_peer:
         traffic = current_peer.get("traffic")
         if traffic and any(float(t.split()[0]) > 0 for t in traffic.values()):
@@ -103,50 +99,50 @@ def analyze_clients(clients, wg_status):
 
     return logins, active_clients, inactive_clients
 
-def generate_report(parsed_data):
+def generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients):
     """Генерирует финальный отчет."""
-    logins, active_clients, inactive_clients = analyze_clients(parsed_data["clients"], parsed_data["wg_status"])
+    report = []
 
-    with open(OUTPUT_FILE, 'w') as file:
-        # Summary
-        file.write("=== Summary ===\n")
-        file.write(f"- Total Users: {len(logins)}\n")
-        file.write(f"- User Logins: {', '.join(logins)}\n\n")
+    # Summary
+    report.append("=== Summary ===")
+    report.append(f"- Total Users: {len(logins)}")
+    report.append(f"- User Logins: {', '.join(logins)}")
+    report.append("\nActive Users:")
+    if active_clients:
+        for client in active_clients:
+            report.append(
+                f"- {client['login']}: Incoming: {client['traffic']['received']}, Outgoing: {client['traffic']['sent']}"
+            )
+    else:
+        report.append("- No active users.")
 
-        file.write("Active Users:\n")
-        if active_clients:
-            for client in active_clients:
-                file.write(f"- {client}\n")
-        else:
-            file.write("- No active users.\n")
+    report.append("\nInactive Users:")
+    if inactive_clients:
+        for client in inactive_clients:
+            report.append(f"- {client['login']}")
+    else:
+        report.append("- No inactive users.")
 
-        file.write("\nInactive Users:\n")
-        if inactive_clients:
-            for client in inactive_clients:
-                file.write(f"- {client}\n")
-        else:
-            file.write("- All users are active.\n")
+    # Server Configuration
+    report.append("\n=== Server Configuration ===")
+    report.extend(server_config)
 
-        # Server Configuration
-        file.write("\n=== Server Configuration ===\n")
-        for line in parsed_data["server_config"]:
-            file.write(f"{line}\n")
+    # WireGuard Parameters
+    report.append("\n=== WireGuard Parameters ===")
+    report.extend(wg_params)
 
-        # WireGuard Status
-        file.write("\n=== WireGuard Status ===\n")
-        for line in parsed_data["wg_status"]:
-            file.write(f"{line}\n")
+    return "\n".join(report)
 
-        # WireGuard Parameters
-        file.write("\n=== WireGuard Parameters ===\n")
-        for line in parsed_data["parameters"]:
-            file.write(f"{line}\n")
+def main():
+    raw_data = load_raw_data(RAW_DATA_FILE)
+    server_config = parse_server_config(raw_data)
+    wg_params = parse_wireguard_params(raw_data)
+    logins, active_clients, inactive_clients = analyze_clients(raw_data)
+    final_report = generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients)
 
-    print(f"Final report has been saved to {OUTPUT_FILE}")
+    with open(FINAL_REPORT_FILE, "w") as file:
+        file.write(final_report)
+    print(f"Final report has been saved to {FINAL_REPORT_FILE}")
 
 if __name__ == "__main__":
-    # Parse the raw data
-    parsed_data = parse_wg_raw_data(INPUT_FILE)
-
-    # Generate the final report
-    generate_report(parsed_data)
+    main()
