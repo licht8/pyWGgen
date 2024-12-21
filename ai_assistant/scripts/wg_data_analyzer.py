@@ -2,7 +2,7 @@
 # ai_assistant/scripts/wg_data_analyzer.py
 # ==================================================
 # Скрипт для сбора и анализа данных WireGuard.
-# Версия: 1.3 (2024-12-21)
+# Версия: 1.7 (2024-12-21)
 # ==================================================
 # Описание:
 # Этот скрипт собирает данные из трёх источников:
@@ -22,17 +22,35 @@ import os
 import sys
 import requests
 from pathlib import Path
+import logging
 
 # Убедимся, что путь к settings.py доступен
-SCRIPT_DIR = Path(__file__).resolve().parent
+try:
+    SCRIPT_DIR = Path(__file__).resolve().parent
+except NameError:
+    SCRIPT_DIR = Path.cwd()
+
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 # Попытка импортировать настройки проекта
 try:
-    from settings import BASE_DIR, SERVER_CONFIG_FILE, PARAMS_FILE
+    from settings import BASE_DIR, SERVER_CONFIG_FILE, PARAMS_FILE, LLM_API_URL
 except ModuleNotFoundError as e:
-    raise ImportError("Не удалось найти модуль settings. Убедитесь, что файл settings.py находится в корне проекта.") from e
+    logger = logging.getLogger(__name__)
+    logger.error("Не удалось найти модуль settings. Убедитесь, что файл settings.py находится в корне проекта.")
+    print("Не удалось найти модуль settings. Убедитесь, что файл settings.py находится в корне проекта.")
+    sys.exit(1)
+
+# Настройка логирования
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 def get_wg_status():
     """Получает состояние WireGuard через команду `wg show`."""
@@ -40,16 +58,19 @@ def get_wg_status():
         output = subprocess.check_output(["sudo", "wg", "show"], text=True)
         return output
     except subprocess.CalledProcessError as e:
+        logger.error(f"Ошибка выполнения команды wg show: {e}")
         return f"Error executing wg show: {e}"
 
 def read_config_file(filepath):
     """Читает содержимое конфигурационного файла."""
     if not os.path.exists(filepath):
+        logger.warning(f"Файл не найден: {filepath}")
         return f"File not found: {filepath}"
     try:
         with open(filepath, 'r') as file:
             return file.read()
     except Exception as e:
+        logger.error(f"Ошибка чтения файла {filepath}: {e}")
         return f"Error reading file {filepath}: {e}"
 
 def parse_wg_show(output):
@@ -90,18 +111,26 @@ def save_to_json(data, output_file):
     try:
         with open(output_file, 'w') as json_file:
             json.dump(data, json_file, indent=4)
-        print(f"Data saved to {output_file}")
+        logger.info(f"Данные сохранены в {output_file}")
     except Exception as e:
-        print(f"Error saving to JSON: {e}")
+        logger.error(f"Ошибка при сохранении данных в JSON: {e}")
 
-def query_llm(prompt, api_url="http://10.67.67.2:11434/api/generate", max_tokens=500):
+def query_llm(prompt, api_url=LLM_API_URL, max_tokens=500):
     """Отправляет запрос в LLM и возвращает ответ."""
     try:
+        logger.info(f"Отправка запроса к LLM: {api_url}")
         response = requests.post(api_url, json={"prompt": prompt, "max_tokens": max_tokens})
         response.raise_for_status()
-        return response.json().get("generated_text", "No response")
-    except requests.RequestException as e:
-        return f"Error querying LLM: {e}"
+        result = response.json()
+        assistant_response = result.get("response", "Ошибка: нет ответа")
+        logger.info(f"Ответ от LLM: {assistant_response}")
+        return assistant_response
+    except requests.HTTPError as http_err:
+        logger.error(f"HTTP ошибка при обращении к LLM: {http_err}")
+        return f"HTTP Error: {http_err}"
+    except Exception as e:
+        logger.error(f"Ошибка при обращении к LLM: {e}")
+        return f"Error: {e}"
 
 def generate_prompt(wg_data):
     """Создает системный промпт для анализа данных."""
