@@ -81,7 +81,7 @@ def read_config_file(filepath):
 
 def parse_wg_show(output):
     """Парсит вывод команды `wg show` и извлекает данные о пирах."""
-        def convert_to_human_readable(size_str):
+    def convert_to_human_readable(size_str):
         """Конвертирует размер из строки в формат (МБ или ГБ), упрощенный для восприятия."""
         try:
             size, unit = size_str.split()
@@ -97,7 +97,6 @@ def parse_wg_show(output):
                 return f"{size} {unit}"
         except Exception:
             return "Нет данных"
-
 
 
     peers = []
