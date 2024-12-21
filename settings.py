@@ -72,6 +72,10 @@ AI_DIAGNOSTICS_DIR = BASE_DIR / "ai_diagnostics"  # Директория с фа
 # Порт для Gradio
 GRADIO_PORT = 7860  # Порт для запуска Gradio интерфейса
 
+# LLM_API_URL
+LLM_API_URL = "http://10.67.67.2:11434/api/generate"
+
+
 # Настройки скорости для анимации и имитации печати
 ANIMATION_SPEED = 0.2  # Задержка между итерациями анимации (в секундах)
 # Примеры значений:
