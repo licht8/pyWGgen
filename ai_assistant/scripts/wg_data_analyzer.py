@@ -2,7 +2,7 @@
 # ai_assistant/scripts/wg_data_analyzer.py
 # ==================================================
 # Скрипт для сбора и анализа данных WireGuard.
-# Версия: 1.1 (2024-12-21)
+# Версия: 1.2 (2024-12-21)
 # ==================================================
 # Описание:
 # Этот скрипт собирает данные из трёх источников:
@@ -19,7 +19,13 @@
 import subprocess
 import json
 import os
+import sys
 from pathlib import Path
+
+# Убедимся, что путь к settings.py доступен
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent.parent
+sys.path.append(str(PROJECT_ROOT))
 
 # Попытка импортировать настройки проекта
 try:
