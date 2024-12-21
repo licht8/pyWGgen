@@ -2,7 +2,7 @@
 # ai_assistant/scripts/wg_data_analyzer.py
 # ==================================================
 # Скрипт для сбора и анализа данных WireGuard.
-# Версия: 1.9 (2024-12-21)
+# Версия: 2.0 (2024-12-21)
 # ==================================================
 # Описание:
 # Этот скрипт собирает данные из трёх источников:
@@ -81,14 +81,32 @@ def parse_wg_show(output):
             peers.append(line.split(":")[1].strip())
     return {"peers": peers}
 
-def parse_config_file(content):
-    """Парсит содержимое конфигурационного файла."""
-    config = {}
+def parse_config_with_logins(content):
+    """Парсит конфигурационный файл WireGuard и сопоставляет пиров с логинами."""
+    peer_data = []
+    current_login = None
+    current_peer = {}
+
     for line in content.splitlines():
-        if "=" in line:
-            key, value = line.split("=", 1)
-            config[key.strip()] = value.strip()
-    return config
+        line = line.strip()
+        if line.startswith("### Client"):
+            if current_peer:
+                peer_data.append(current_peer)
+            current_login = line.split("Client")[-1].strip()
+            current_peer = {"login": current_login, "peer": {}}
+        elif line.startswith("[Peer]"):
+            if current_peer:
+                peer_data.append(current_peer)
+            current_peer = {"login": current_login, "peer": {}}
+        elif "=" in line:
+            key, value = map(str.strip, line.split("=", 1))
+            if current_peer:
+                current_peer["peer"][key] = value
+
+    if current_peer:
+        peer_data.append(current_peer)
+
+    return peer_data
 
 def collect_and_analyze_wg_data():
     """Собирает данные из источников и возвращает их в виде словаря."""
@@ -101,7 +119,7 @@ def collect_and_analyze_wg_data():
 
     # Анализ данных
     data["wg_status"] = parse_wg_show(wg_status) if "Error" not in wg_status else wg_status
-    data["wg0_config"] = parse_config_file(wg0_config) if "Error" not in wg0_config else wg0_config
+    data["wg0_config"] = parse_config_with_logins(wg0_config) if "Error" not in wg0_config else wg0_config
     data["params_config"] = parse_config_file(params_config) if "Error" not in params_config else params_config
 
     return data
@@ -150,7 +168,7 @@ def query_llm(prompt, api_url=LLM_API_URL, model="llama3:latest", max_tokens=500
 
 def generate_prompt(system_prompt, wg_data):
     """Создает финальный промпт для анализа данных."""
-    return f"{system_prompt}\n\nWG Show Status:\n{json.dumps(wg_data['wg_status'], indent=4)}\n\nWG0 Config:\n{json.dumps(wg_data['wg0_config'], indent=4)}\n\nParams Config:\n{json.dumps(wg_data['params_config'], indent=4)}"
+    return f"{system_prompt}\n\nWG Show Status:\n{json.dumps(wg_data['wg_status'], indent=4)}\n\nWG0 Config with Logins:\n{json.dumps(wg_data['wg0_config'], indent=4)}\n\nParams Config:\n{json.dumps(wg_data['params_config'], indent=4)}"
 
 if __name__ == "__main__":
     output_path = BASE_DIR / "ai_assistant/inputs/wg_analysis.json"
