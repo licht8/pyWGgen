@@ -2,10 +2,8 @@
 # ai_assistant/scripts/generate_user_report.py
 # ==================================================
 # Скрипт для создания отчета о пользователях и конфигурации WireGuard.
-# Версия: 1.0
+# Версия: 1.1
 # ==================================================
-
-import subprocess
 
 RAW_DATA_FILE = "wg_raw_data.txt"
 USER_REPORT_FILE = "user_report.txt"
@@ -42,7 +40,7 @@ def parse_wireguard_params(raw_data):
 def analyze_clients(raw_data):
     """Анализирует клиентов и их активность."""
     logins, active_clients, inactive_clients = [], [], []
-    peer_to_ip, peer_to_login = {}, {}
+    peer_to_login, peer_to_ip = {}, {}
     current_peer = None
 
     for line in raw_data:
@@ -60,7 +58,15 @@ def analyze_clients(raw_data):
         elif "transfer:" in line and current_peer:
             received, sent = line.split("transfer:")[1].split(",")
             current_peer["traffic"] = {"received": received.strip(), "sent": sent.strip()}
-            active_clients.append(current_peer) if float(received.split()[0]) > 0 else inactive_clients.append(current_peer)
+            if float(received.split()[0]) > 0 or float(sent.split()[0]) > 0:
+                active_clients.append(current_peer)
+            else:
+                inactive_clients.append(current_peer)
+
+    # Ensure all clients are accounted for
+    for login in peer_to_login.values():
+        if login not in [client["login"] for client in active_clients + inactive_clients]:
+            inactive_clients.append({"login": login, "ip": peer_to_ip.get(login, "Unknown"), "traffic": {"received": "0 MiB", "sent": "0 MiB"}})
 
     logins = list(peer_to_login.values())
     return logins, active_clients, inactive_clients
