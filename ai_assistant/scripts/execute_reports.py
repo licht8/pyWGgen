@@ -3,16 +3,18 @@
 # ==================================================
 # Скрипт для выполнения последовательной генерации
 # отчетов и запроса к LLM-модели.
-# Версия: 1.2
+# Версия: 1.3
 # ==================================================
 
 import subprocess
 import sys
-from settings import BASE_DIR, LLM_API_URL
 from pathlib import Path
 
 # Добавляем корневую директорию в PYTHONPATH
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+
+# Импортируем настройки после добавления пути
+from settings import BASE_DIR, LLM_API_URL
 
 # Пути к отчетам и промптам
 USER_PROMPT_FILE = BASE_DIR / "ai_assistant/prompts/generate_user_report.txt"
