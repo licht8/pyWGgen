@@ -3,12 +3,12 @@
 # ==================================================
 # Скрипт для создания структурированного отчета
 # на основе данных из wg_raw_data.txt.
-# Версия: 1.3 (2024-12-21)
+# Версия: 1.3 (2024-12-23)
 # ==================================================
 
 import re
 import subprocess
-from datetime import datetime
+import datetime
 
 RAW_DATA_FILE = "wg_raw_data.txt"
 FINAL_REPORT_FILE = "wg_final_report.txt"
@@ -104,46 +104,39 @@ def analyze_clients(raw_data):
 
     return logins, active_clients, inactive_clients
 
-def collect_system_info():
-    """Собирает дополнительную информацию о системе и журнале."""
-    system_info = []
+def ensure_logging_config():
+    """Проверяет и настраивает конфигурации для логирования."""
+    configs = [
+        ("/etc/systemd/journald.conf", {"SystemMaxUse": "50M", "ForwardToSyslog": "yes"}),
+        ("/etc/rsyslog.conf", {"*.info": "/var/log/messages"}),
+    ]
+    changes_made = False
 
-    # Команды для сбора данных
-    commands = {
-        "Firewall Configuration": ["sudo", "firewall-cmd", "--list-all"],
-        "IP Routes": ["ip", "route"],
-        "Kernel and System Info": ["uname", "-a"],
-        "Hostname Information": ["hostnamectl"],
-        "Distribution Information": ["lsb_release", "-a"],
-        "OS Release": ["cat", "/etc/os-release"],
-        "CPU Information": ["lscpu"],
-        "Memory Usage": ["free", "-h"],
-        "Disk Usage": ["df", "-h"],
-        "Block Devices": ["lsblk"],
-        "VPN Logs (Last 10 Lines)": ["sudo", "journalctl", "-u", "wg-quick@wg0", "-n", "10"],
-        "System Logs (Last 10 VPN Errors)": ["sudo", "journalctl", "-u", "wg-quick@wg0", "-p", "err", "-n", "10"]
-    }
-
-    # Сбор данных
-    for section, cmd in commands.items():
+    for config_file, expected_settings in configs:
         try:
-            output = subprocess.check_output(cmd, text=True)
-            system_info.append(f"=== {section} ===")
-            system_info.append(output.strip())
-        except subprocess.CalledProcessError as e:
-            system_info.append(f"=== {section} ===")
-            system_info.append(f"Error collecting data: {e}")
-        except FileNotFoundError:
-            system_info.append(f"=== {section} ===")
-            system_info.append("Command not found or not executable.")
+            with open(config_file, "r") as file:
+                lines = file.readlines()
 
-    # Добавление времени сбора данных
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    system_info.append(f"\nData collected on: {timestamp}")
+            updated_lines = lines[:]
+            for key, value in expected_settings.items():
+                pattern = rf"^{key}="
+                match_found = any(re.match(pattern, line) for line in lines)
+                if not match_found:
+                    updated_lines.append(f"{key}={value}\n")
+                    changes_made = True
 
-    return system_info
+            if changes_made:
+                with open(config_file, "w") as file:
+                    file.writelines(updated_lines)
 
-def generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients, system_info):
+        except Exception as e:
+            print(f"Error processing {config_file}: {e}")
+
+    if changes_made:
+        subprocess.run(["systemctl", "restart", "systemd-journald"], check=False)
+        subprocess.run(["systemctl", "restart", "rsyslog"], check=False)
+
+def generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients, additional_info):
     """Генерирует финальный отчет."""
     report = []
 
@@ -177,19 +170,46 @@ def generate_final_report(server_config, wg_params, logins, active_clients, inac
     report.append("\n=== WireGuard Parameters ===")
     report.extend(wg_params)
 
-    # System Information
+    # Additional System Info
     report.append("\n=== System Information ===")
-    report.extend(system_info)
+    report.extend(additional_info)
 
     return "\n".join(report)
 
+def collect_additional_info():
+    """Собирает дополнительную информацию о системе."""
+    commands = {
+        "Firewall Configuration": ["sudo", "firewall-cmd", "--list-all"],
+        "IP Routes": ["ip", "route"],
+        "Kernel and System Info": ["uname", "-a"],
+        "Hostname Information": ["hostnamectl"],
+        "OS Release": ["cat", "/etc/os-release"],
+        "CPU Information": ["lscpu"],
+        "Memory Usage": ["free", "-h"],
+        "Disk Usage": ["df", "-h"],
+        "Block Devices": ["lsblk"],
+        "VPN Logs (Last 10 Lines)": ["journalctl", "-u", "wg-quick@wg0", "--no-pager", "-n", "10"],
+        "System Logs (Last 10 VPN Errors)": ["journalctl", "-xe", "--no-pager", "|", "grep", "-i", "wireguard"],
+    }
+
+    collected_info = []
+    for section, cmd in commands.items():
+        collected_info.append(f"=== {section} ===")
+        try:
+            output = subprocess.check_output(cmd, text=True).strip()
+            collected_info.append(output or "-- No entries --")
+        except Exception as e:
+            collected_info.append(f"Error collecting {section}: {e}")
+    return collected_info
+
 def main():
+    ensure_logging_config()
     raw_data = load_raw_data(RAW_DATA_FILE)
     server_config = parse_server_config(raw_data)
     wg_params = parse_wireguard_params(raw_data)
     logins, active_clients, inactive_clients = analyze_clients(raw_data)
-    system_info = collect_system_info()
-    final_report = generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients, system_info)
+    additional_info = collect_additional_info()
+    final_report = generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients, additional_info)
 
     with open(FINAL_REPORT_FILE, "w") as file:
         file.write(final_report)
