@@ -71,10 +71,15 @@ def query_llm(api_url, report_file, prompt_file, model="qwen2:7b"):
     report_data = read_file(report_file)
     prompt_data = read_file(prompt_file)
 
-    # Формируем данные для отправки
+    # Формируем данные для отправки (промпт в конце данных для системного отчета)
+    if "system" in report_file.name:
+        combined_data = f"{report_data}\n\n{prompt_data}"
+    else:
+        combined_data = f"{prompt_data}\n\n{report_data}"
+
     data_to_send = {
         "model": model,
-        "prompt": f"{prompt_data}\n\n{report_data}",
+        "prompt": combined_data,
         "stream": False
     }
 
