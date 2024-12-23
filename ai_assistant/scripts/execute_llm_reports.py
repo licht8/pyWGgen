@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# execute_reports.py
+# ai_assistant/scripts/execute_llm_reports.py
 # ==================================================
 # Скрипт для выполнения последовательной генерации
 # отчетов и запроса к LLM-модели.
