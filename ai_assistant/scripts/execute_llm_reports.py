@@ -121,4 +121,5 @@ if __name__ == "__main__":
     process_report(USER_REPORT_FILE, USER_PROMPT_FILE, MODEL)
 
     # Обработка системного отчета
-    process_report(SYSTEM_REPORT_FILE, SYSTEM_PROMPT_FILE, MODEL)
+    #process_report(SYSTEM_REPORT_FILE, SYSTEM_PROMPT_FILE, MODEL)
+    process_report(SYSTEM_REPORT_FILE, MODEL)
