@@ -61,6 +61,8 @@ def query_llm(api_url, report_file, prompt_file):
         data_to_send = f"{report_data}\n\n{prompt_data}"
 
     print(f"\nОтправка данных в LLM для {report_file}...")
+    print(f"Данные, отправляемые в модель:\n{data_to_send}")
+
 
     # Send a request to the LLM API
     payload = {
