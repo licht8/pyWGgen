@@ -3,10 +3,12 @@
 # ==================================================
 # Скрипт для создания структурированного отчета
 # на основе данных из wg_raw_data.txt.
-# Версия: 1.2 (2024-12-21)
+# Версия: 1.3 (2024-12-21)
 # ==================================================
 
 import re
+import subprocess
+from datetime import datetime
 
 RAW_DATA_FILE = "wg_raw_data.txt"
 FINAL_REPORT_FILE = "wg_final_report.txt"
@@ -102,7 +104,46 @@ def analyze_clients(raw_data):
 
     return logins, active_clients, inactive_clients
 
-def generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients):
+def collect_system_info():
+    """Собирает дополнительную информацию о системе и журнале."""
+    system_info = []
+
+    # Команды для сбора данных
+    commands = {
+        "Firewall Configuration": ["sudo", "firewall-cmd", "--list-all"],
+        "IP Routes": ["ip", "route"],
+        "Kernel and System Info": ["uname", "-a"],
+        "Hostname Information": ["hostnamectl"],
+        "Distribution Information": ["lsb_release", "-a"],
+        "OS Release": ["cat", "/etc/os-release"],
+        "CPU Information": ["lscpu"],
+        "Memory Usage": ["free", "-h"],
+        "Disk Usage": ["df", "-h"],
+        "Block Devices": ["lsblk"],
+        "VPN Logs (Last 10 Lines)": ["sudo", "journalctl", "-u", "wg-quick@wg0", "-n", "10"],
+        "System Logs (Last 10 VPN Errors)": ["sudo", "journalctl", "-u", "wg-quick@wg0", "-p", "err", "-n", "10"]
+    }
+
+    # Сбор данных
+    for section, cmd in commands.items():
+        try:
+            output = subprocess.check_output(cmd, text=True)
+            system_info.append(f"=== {section} ===")
+            system_info.append(output.strip())
+        except subprocess.CalledProcessError as e:
+            system_info.append(f"=== {section} ===")
+            system_info.append(f"Error collecting data: {e}")
+        except FileNotFoundError:
+            system_info.append(f"=== {section} ===")
+            system_info.append("Command not found or not executable.")
+
+    # Добавление времени сбора данных
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    system_info.append(f"\nData collected on: {timestamp}")
+
+    return system_info
+
+def generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients, system_info):
     """Генерирует финальный отчет."""
     report = []
 
@@ -136,6 +177,10 @@ def generate_final_report(server_config, wg_params, logins, active_clients, inac
     report.append("\n=== WireGuard Parameters ===")
     report.extend(wg_params)
 
+    # System Information
+    report.append("\n=== System Information ===")
+    report.extend(system_info)
+
     return "\n".join(report)
 
 def main():
@@ -143,7 +188,8 @@ def main():
     server_config = parse_server_config(raw_data)
     wg_params = parse_wireguard_params(raw_data)
     logins, active_clients, inactive_clients = analyze_clients(raw_data)
-    final_report = generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients)
+    system_info = collect_system_info()
+    final_report = generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients, system_info)
 
     with open(FINAL_REPORT_FILE, "w") as file:
         file.write(final_report)
