@@ -3,7 +3,7 @@
 # ==================================================
 # Скрипт для создания структурированного отчета
 # на основе данных из wg_raw_data.txt.
-# Версия: 1.3 (2024-12-23)
+# Версия: 1.4 (2024-12-23)
 # ==================================================
 
 import re
@@ -12,6 +12,8 @@ from datetime import datetime
 
 RAW_DATA_FILE = "wg_raw_data.txt"
 FINAL_REPORT_FILE = "wg_final_report.txt"
+SUMMARY_FILE = "wg_summary_report.txt"
+SYSTEM_INFO_FILE = "wg_system_info_report.txt"
 
 def load_raw_data(filepath):
     """Загружает данные из файла wg_raw_data.txt."""
@@ -130,45 +132,53 @@ def collect_system_info():
 
 def generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients, system_info):
     """Генерирует финальный отчет."""
-    report = []
+    summary = []
+    system_info_report = []
 
     # Summary
-    report.append("=== Summary ===")
-    report.append(f"- Total Users: {len(logins)}")
-    report.append(f"- User Logins: {', '.join(logins)}")
-    report.append("\nActive Users:")
+    summary.append("=== Summary ===")
+    summary.append(f"- Total Users: {len(logins)}")
+    summary.append(f"- User Logins: {', '.join(logins)}")
+    summary.append("\nActive Users:")
     if active_clients:
         for client in active_clients:
-            report.append(
+            summary.append(
                 f"- {client['ip_address']} - {client['login']}: Incoming: {client['traffic']['received']}, Outgoing: {client['traffic']['sent']}"
             )
     else:
-        report.append("- No active users.")
+        summary.append("- No active users.")
 
-    report.append("\nInactive Users:")
+    summary.append("\nInactive Users:")
     if inactive_clients:
         for client in inactive_clients:
-            report.append(
+            summary.append(
                 f"- {client['ip_address']} - {client['login']}"
             )
     else:
-        report.append("- No inactive users.")
+        summary.append("- No inactive users.")
 
     # Server Configuration
-    report.append("\n=== Server Configuration ===")
-    report.extend(server_config)
+    summary.append("\n=== Server Configuration ===")
+    summary.extend(server_config)
 
     # WireGuard Parameters
-    report.append("\n=== WireGuard Parameters ===")
-    report.extend(wg_params)
+    summary.append("\n=== WireGuard Parameters ===")
+    summary.extend(wg_params)
 
     # System Information
-    report.append("\n=== System Information ===")
-    report.append(system_info)
+    system_info_report.append("\n=== System Information ===")
+    system_info_report.append(system_info)
 
-    # Add a final empty line
-    report.append("")
-    return "\n".join(report)
+    return "\n".join(summary), "\n".join(system_info_report)
+
+def save_to_files(summary, system_info):
+    """Сохраняет данные в два отдельных файла."""
+    with open(SUMMARY_FILE, "w") as file:
+        file.write(summary)
+    with open(SYSTEM_INFO_FILE, "w") as file:
+        file.write(system_info)
+    print(f"Summary report saved to {SUMMARY_FILE}")
+    print(f"System info report saved to {SYSTEM_INFO_FILE}")
 
 def main():
     raw_data = load_raw_data(RAW_DATA_FILE)
@@ -176,11 +186,8 @@ def main():
     wg_params = parse_wireguard_params(raw_data)
     logins, active_clients, inactive_clients = analyze_clients(raw_data)
     system_info = collect_system_info()
-    final_report = generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients, system_info)
-
-    with open(FINAL_REPORT_FILE, "w") as file:
-        file.write(final_report)
-    print(f"Final report has been saved to {FINAL_REPORT_FILE}")
+    summary, system_info_report = generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients, system_info)
+    save_to_files(summary, system_info_report)
 
 if __name__ == "__main__":
     main()
