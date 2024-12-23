@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# report_processing_template.py
+# ai_assistant/scripts/report_processing_template.py
 # ==================================================
 # Шаблон для обработки отчетов с использованием LLM.
 # Версия: 1.0
