@@ -122,4 +122,4 @@ if __name__ == "__main__":
 
     # Обработка системного отчета
     #process_report(SYSTEM_REPORT_FILE, SYSTEM_PROMPT_FILE, MODEL)
-    process_report(SYSTEM_REPORT_FILE, MODEL)
+    process_report(SYSTEM_PROMPT_FILE, SYSTEM_REPORT_FILE, MODEL)
