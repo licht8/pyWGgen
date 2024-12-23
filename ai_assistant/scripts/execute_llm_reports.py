@@ -89,7 +89,8 @@ def process_report(report_file, prompt_file, model):
     report_data = read_file(report_file)
     prompt_data = read_file(prompt_file)
 
-    combined_data = f"{prompt_data}\n\n{report_data}"
+    # Системный промпт добавляется после данных
+    combined_data = f"{report_data}\n\n{prompt_data}"
 
     logger.info(f"\nОтправка данных в LLM для {report_file}...")
     response = query_llm(LLM_API_URL, combined_data, model)
@@ -98,6 +99,7 @@ def process_report(report_file, prompt_file, model):
         logger.info(f"Ответ от LLM для {report_file.name}:\n{response}")
     else:
         logger.error(f"Ответ от LLM для {report_file.name} отсутствует.")
+
 
 # === Основной процесс ===
 if __name__ == "__main__":
