@@ -13,8 +13,11 @@ import logging
 from pathlib import Path
 from datetime import datetime
 
-# Импорт настроек проекта
+# Добавление корневого пути проекта в sys.path для импорта settings
 try:
+    SCRIPT_DIR = Path(__file__).resolve().parent
+    PROJECT_ROOT = SCRIPT_DIR.parent.parent
+    sys.path.append(str(PROJECT_ROOT))
     from settings import BASE_DIR, LLM_API_URL
 except ImportError as e:
     print(f"Ошибка импорта settings: {e}")
