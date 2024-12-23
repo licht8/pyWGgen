@@ -6,121 +6,128 @@
 # ==================================================
 
 import subprocess
+import os
+import sys
+from pathlib import Path
 
-RAW_DATA_FILE = "wg_raw_data.txt"
-USER_REPORT_FILE = "user_report.txt"
+# Добавление корневого пути проекта для импорта settings
+try:
+    SCRIPT_DIR = Path(__file__).resolve().parent
+    PROJECT_ROOT = SCRIPT_DIR.parent.parent
+    sys.path.append(str(PROJECT_ROOT))
+    from settings import BASE_DIR
+except ImportError as e:
+    print(f"Ошибка импорта settings: {e}")
+    sys.exit(1)
 
-def load_raw_data(filepath):
-    """Загружает данные из файла wg_raw_data.txt."""
-    with open(filepath, "r") as file:
-        return file.readlines()
+USER_REPORT_FILE = BASE_DIR / "ai_assistant/outputs/user_report.txt"
+SERVER_CONFIG_FILE = Path("/etc/wireguard/wg0.conf")
 
-def parse_server_config(raw_data):
-    """Извлекает конфигурацию сервера."""
-    config = []
-    capture = False
-    for line in raw_data:
-        if "[WireGuard Configuration File]" in line:
-            capture = True
-        elif "### Client" in line:
-            capture = False
-        if capture and line.strip() and "PrivateKey" not in line:
-            config.append(line.strip())
-    return config
 
-def parse_wireguard_params(raw_data):
-    """Извлекает параметры WireGuard."""
-    params = []
-    capture = False
-    for line in raw_data:
-        if "[WireGuard Parameters File]" in line:
-            capture = True
-        elif capture and line.strip() and "SERVER_PRIV_KEY" not in line:
-            params.append(line.strip())
-    return params
+def parse_wg_config(config_path):
+    """Читает конфигурацию WireGuard и извлекает информацию о клиентах."""
+    clients = []
+    current_client = None
 
-def analyze_clients(raw_data):
-    """Анализирует клиентов и их активность на основе данных WireGuard."""
-    logins, active_clients, inactive_clients = [], [], []
-    peer_to_login, peer_to_ip = {}, {}
+    try:
+        with open(config_path, "r") as file:
+            for line in file:
+                line = line.strip()
+                if line.startswith("### Client"):
+                    if current_client:
+                        clients.append(current_client)
+                    current_client = {"login": line.split("### Client")[-1].strip(), "peer": {}}
+                elif line.startswith("[Peer]"):
+                    continue
+                elif "=" in line and current_client:
+                    key, value = map(str.strip, line.split("=", 1))
+                    current_client["peer"][key] = value
+            if current_client:
+                clients.append(current_client)
+    except FileNotFoundError:
+        print(f"Файл конфигурации {config_path} не найден.")
+        sys.exit(1)
 
-    # Извлечение логинов, публичных ключей и IP из конфигурации
-    current_login = None
-    for line in raw_data:
-        line = line.strip()
-        if line.startswith("### Client"):
-            current_login = line.split("### Client")[1].strip()
-        elif line.startswith("[Peer]"):
-            continue
-        elif "=" in line:
-            key, value = map(str.strip, line.split("=", 1))
-            if key == "PublicKey":
-                peer_to_login[value] = current_login
-            elif key == "AllowedIPs":
-                peer_to_ip[current_login] = value
+    return clients
 
-    # Сопоставление данных с выводом команды `wg`
-    wg_output = subprocess.check_output(["wg"], text=True).splitlines()
+
+def get_wg_status():
+    """Получает состояние WireGuard через команду `wg show`."""
+    try:
+        output = subprocess.check_output(["wg", "show"], text=True).splitlines()
+    except subprocess.CalledProcessError as e:
+        print(f"Ошибка выполнения команды wg show: {e}")
+        sys.exit(1)
+
+    peers = {}
     current_peer = None
-    for line in wg_output:
+
+    for line in output:
         if line.startswith("peer:"):
             if current_peer:
-                # Завершить текущего клиента
-                process_client(current_peer, peer_to_login, peer_to_ip, active_clients, inactive_clients)
-            current_peer = {"public_key": line.split("peer:")[1].strip(), "traffic": {"received": "0 MiB", "sent": "0 MiB"}}
+                peers[current_peer["PublicKey"]] = current_peer
+            current_peer = {"PublicKey": line.split("peer:")[1].strip(), "Transfer": {}}
+        elif "latest handshake:" in line and current_peer:
+            current_peer["LatestHandshake"] = line.split("latest handshake:")[1].strip()
         elif "transfer:" in line and current_peer:
             transfer_data = line.split("transfer:")[1].strip().split(",")
-            current_peer["traffic"] = {
-                "received": transfer_data[0].strip(),
-                "sent": transfer_data[1].strip()
+            current_peer["Transfer"] = {
+                "Received": transfer_data[0].strip(),
+                "Sent": transfer_data[1].strip()
             }
-        elif "allowed ips:" in line and current_peer:
-            current_peer["ip"] = line.split("allowed ips:")[1].strip()
 
     if current_peer:
-        process_client(current_peer, peer_to_login, peer_to_ip, active_clients, inactive_clients)
+        peers[current_peer["PublicKey"]] = current_peer
 
-    logins = list(peer_to_login.values())
-    return logins, active_clients, inactive_clients
+    return peers
 
-def process_client(peer, peer_to_login, peer_to_ip, active_clients, inactive_clients):
-    """Обрабатывает одного клиента."""
-    login = peer_to_login.get(peer["public_key"], "Unknown")
-    ip = peer.get("ip", peer_to_ip.get(login, "Unknown"))
-    traffic = peer["traffic"]
-    if any(float(value.split()[0]) > 0 for value in traffic.values()):
-        active_clients.append({"login": login, "ip": ip, "traffic": traffic})
-    else:
-        inactive_clients.append({"login": login, "ip": ip, "traffic": traffic})
 
-def generate_user_report(config, params, logins, active, inactive):
-    """Создает текстовый отчет."""
+def generate_user_report(clients, wg_status):
+    """Создает текстовый отчет о пользователях WireGuard."""
+    active_users = []
+    inactive_users = []
+    all_logins = []
+
+    for client in clients:
+        login = client.get("login", "Unknown")
+        peer = client.get("peer", {})
+        public_key = peer.get("PublicKey", "Unknown")
+        allowed_ip = peer.get("AllowedIPs", "Unknown")
+
+        wg_peer_status = wg_status.get(public_key, {})
+        transfer = wg_peer_status.get("Transfer", {"Received": "0 MiB", "Sent": "0 MiB"})
+
+        if any(float(value.split()[0]) > 0 for value in transfer.values()):
+            active_users.append(f"- {allowed_ip} - {login}: Incoming: {transfer['Received']}, Outgoing: {transfer['Sent']}")
+        else:
+            inactive_users.append(f"- {allowed_ip} - {login}")
+
+        all_logins.append(login)
+
     report = [
         "=== Summary ===",
-        f"- Total Users: {len(logins)}",
-        f"- User Logins: {', '.join(logins)}",
+        f"- Total Users: {len(all_logins)}",
+        f"- User Logins: {', '.join(all_logins)}",
         "\nActive Users:",
-        *[f"- {client['ip']} - {client['login']}: Incoming: {client['traffic']['received']}, Outgoing: {client['traffic']['sent']}" for client in active],
+        *active_users if active_users else ["- No active users."],
         "\nInactive Users:",
-        *[f"- {client['ip']} - {client['login']}" for client in inactive],
-        "\n=== Server Configuration ===",
-        *config,
-        "\n=== WireGuard Parameters ===",
-        *params,
+        *inactive_users if inactive_users else ["- No inactive users."],
         ""
     ]
+
     return "\n".join(report)
 
+
 def main():
-    raw_data = load_raw_data(RAW_DATA_FILE)
-    server_config = parse_server_config(raw_data)
-    wg_params = parse_wireguard_params(raw_data)
-    logins, active_clients, inactive_clients = analyze_clients(raw_data)
-    report = generate_user_report(server_config, wg_params, logins, active_clients, inactive_clients)
+    clients = parse_wg_config(SERVER_CONFIG_FILE)
+    wg_status = get_wg_status()
+    report = generate_user_report(clients, wg_status)
 
     with open(USER_REPORT_FILE, "w") as file:
         file.write(report)
+
     print(f"User report has been saved to {USER_REPORT_FILE}")
+
 
 if __name__ == "__main__":
     main()
