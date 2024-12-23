@@ -13,11 +13,12 @@ from datetime import datetime
 
 # === Настройки ===
 MODEL = "qwen2:7b"  # Имя модели для обработки
-PROMPT_POSITION = "after"  # Расположение системного промпта: "before" или "after"
+PROMPT_POSITION = "before"  # Расположение системного промпта: "before" или "after"
 
-DATA_FILE = "path/to/data.txt"  # Путь к файлу с данными
-PROMPT_FILE = "path/to/prompt.txt"  # Путь к файлу с промптом
+DATA_FILE = "ai_assistant/inputs/test_data.txt"  # Путь к файлу с данными
+PROMPT_FILE = "ai_assistant/prompts/test_prompt.txt"  # Путь к файлу с промптом
 LLM_API_URL = "http://10.67.67.2:11434/api/generate"  # URL API модели
+
 
 # === Настройка логирования ===
 logger = logging.getLogger(__name__)
