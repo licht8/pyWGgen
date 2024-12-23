@@ -92,8 +92,7 @@ def process_report(report_file, prompt_file, model):
     response = query_llm(LLM_API_URL, combined_data, model)
 
     if response:
-        logger.info(f"Ответ от LLM для {report_file.name}:
-{response}")
+        logger.info(f"Ответ от LLM для {report_file.name}:\n{response}")
     else:
         logger.error(f"Ответ от LLM для {report_file.name} отсутствует.")
 
