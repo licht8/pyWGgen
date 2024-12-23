@@ -8,7 +8,6 @@
 
 import re
 import subprocess
-import os
 from datetime import datetime
 
 RAW_DATA_FILE = "wg_raw_data.txt"
@@ -106,7 +105,7 @@ def analyze_clients(raw_data):
     return logins, active_clients, inactive_clients
 
 def collect_system_info():
-    """Собирает системную информацию."""
+    """Собирает системную информацию и возвращает ее в формате текста."""
     commands = {
         "Firewall Configuration": "sudo firewall-cmd --list-all",
         "IP Routes": "ip route",
@@ -117,19 +116,19 @@ def collect_system_info():
         "Memory Usage": "free -h",
         "Disk Usage": "df -h",
         "Block Devices": "lsblk",
-        "VPN Logs (Last 10 Lines)": "sudo journalctl -u wg-quick@wg0 -n 10",
+        "VPN Logs (Last 10 Lines)": "sudo journalctl -u wg-quick@wg0 | tail -n 10",
         "System Logs (Last 10 VPN Errors)": "sudo journalctl | grep -i wireguard | tail -n 10"
     }
-    system_info = {}
-    for section, command in commands.items():
+    info = []
+    for title, command in commands.items():
         try:
-            result = subprocess.check_output(command, shell=True, text=True)
-            system_info[section] = result.strip()
-        except subprocess.CalledProcessError:
-            system_info[section] = "-- Command failed or no data available --"
-    return system_info
+            output = subprocess.check_output(command, shell=True, text=True)
+            info.append(f"=== {title} ===\n{output.strip()}")
+        except subprocess.CalledProcessError as e:
+            info.append(f"=== {title} ===\nError: {e}")
+    return "\n\n".join(info)
 
-def generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients, additional_info):
+def generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients, system_info):
     """Генерирует финальный отчет."""
     report = []
 
@@ -163,18 +162,12 @@ def generate_final_report(server_config, wg_params, logins, active_clients, inac
     report.append("\n=== WireGuard Parameters ===")
     report.extend(wg_params)
 
-    # Additional System Info
+    # System Information
     report.append("\n=== System Information ===")
-    for section, content in additional_info.items():
-        report.append(f"=== {section} ===")
-        if content:
-            report.extend(content.splitlines())
-        else:
-            report.append("-- No entries --")
+    report.append(system_info)
 
-    # Добавляем пустую строку в конец отчета
-    report.append("")  # Пустая строка
-
+    # Add a final empty line
+    report.append("")
     return "\n".join(report)
 
 def main():
@@ -182,13 +175,11 @@ def main():
     server_config = parse_server_config(raw_data)
     wg_params = parse_wireguard_params(raw_data)
     logins, active_clients, inactive_clients = analyze_clients(raw_data)
-    additional_info = collect_system_info()
-    final_report = generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients, additional_info)
+    system_info = collect_system_info()
+    final_report = generate_final_report(server_config, wg_params, logins, active_clients, inactive_clients, system_info)
 
     with open(FINAL_REPORT_FILE, "w") as file:
         file.write(final_report)
-        file.write("\n")  # Пустая строка в конце файла
-
     print(f"Final report has been saved to {FINAL_REPORT_FILE}")
 
 if __name__ == "__main__":
