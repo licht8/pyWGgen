@@ -3,22 +3,17 @@
 # ==================================================
 # Скрипт для выполнения последовательной генерации
 # отчетов и запроса к LLM-модели.
-# Версия: 1.5
+# Версия: 1.3
 # ==================================================
 
 import subprocess
 import sys
+import requests
+from settings import BASE_DIR, LLM_API_URL
 from pathlib import Path
 
 # Добавляем корневую директорию в PYTHONPATH
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-
-# Импортируем настройки после добавления пути
-from settings import BASE_DIR, LLM_API_URL
-
-# Пути к скриптам
-USER_REPORT_SCRIPT = BASE_DIR / "ai_assistant/scripts/generate_user_report.py"
-SYSTEM_REPORT_SCRIPT = BASE_DIR / "ai_assistant/scripts/generate_system_report.py"
 
 # Пути к отчетам и промптам
 USER_PROMPT_FILE = BASE_DIR / "ai_assistant/prompts/generate_user_report.txt"
@@ -35,16 +30,13 @@ def read_file(filepath):
         print(f"Файл {filepath} не найден.")
         sys.exit(1)
 
-def generate_report(script_path):
+def generate_report(script_name):
     """Запускает скрипт для генерации отчета."""
-    if not script_path.exists():
-        print(f"Скрипт {script_path} не найден.")
-        sys.exit(1)
     try:
-        result = subprocess.run(["python3", str(script_path)], check=True, text=True)
-        print(f"{script_path} выполнен успешно.")
+        result = subprocess.run(["python3", script_name], check=True, text=True)
+        print(f"{script_name} выполнен успешно.")
     except subprocess.CalledProcessError as e:
-        print(f"Ошибка при выполнении {script_path}: {e}")
+        print(f"Ошибка при выполнении {script_name}: {e}")
         sys.exit(1)
 
 def query_llm(api_url, report_file, prompt_file):
@@ -59,21 +51,28 @@ def query_llm(api_url, report_file, prompt_file):
         data_to_send = f"{report_data}\n\n{prompt_data}"
 
     print(f"\nОтправка данных в LLM для {report_file}...")
-    print(data_to_send[:500])  # Показываем начало данных для проверки
 
-    # Имитация запроса к LLM
+    # Запрос к LLM API
+    payload = {
+        "model": "qwen2:7b",
+        "input": data_to_send
+    }
+
     try:
-        print(f"LLM API URL: {api_url}")
-        print(f"Ответ от LLM: <ответ модели для {report_file.name}>")
-    except Exception as e:
+        response = requests.post(api_url, json=payload)
+        response.raise_for_status()  # Проверяем на ошибки HTTP
+        llm_response = response.json().get("output", "<Пустой ответ от модели>")
+        print(f"Ответ от LLM для {report_file.name}:")
+        print(llm_response)
+    except requests.RequestException as e:
         print(f"Ошибка запроса к LLM для {report_file.name}: {e}")
 
 def main():
     print("Генерация отчетов...")
     
     # Генерация отчетов
-    generate_report(USER_REPORT_SCRIPT)
-    generate_report(SYSTEM_REPORT_SCRIPT)
+    generate_report(BASE_DIR / "ai_assistant/scripts/generate_user_report.py")
+    generate_report(BASE_DIR / "ai_assistant/scripts/generate_system_report.py")
 
     print("\nЗагрузка отчетов и промптов...")
 
