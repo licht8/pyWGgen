@@ -2,8 +2,10 @@
 # ai_assistant/scripts/generate_user_report.py
 # ==================================================
 # Скрипт для создания отчета о пользователях и конфигурации WireGuard.
-# Версия: 1.1
+# Версия: 1.2
 # ==================================================
+
+import subprocess
 
 RAW_DATA_FILE = "wg_raw_data.txt"
 USER_REPORT_FILE = "user_report.txt"
@@ -38,38 +40,58 @@ def parse_wireguard_params(raw_data):
     return params
 
 def analyze_clients(raw_data):
-    """Анализирует клиентов и их активность."""
+    """Анализирует клиентов и их активность на основе данных WireGuard."""
     logins, active_clients, inactive_clients = [], [], []
     peer_to_login, peer_to_ip = {}, {}
-    current_peer = None
 
+    # Извлечение логинов, публичных ключей и IP из конфигурации
+    current_login = None
     for line in raw_data:
         line = line.strip()
         if line.startswith("### Client"):
             current_login = line.split("### Client")[1].strip()
         elif line.startswith("[Peer]"):
-            current_peer = {"login": current_login, "ip": None, "traffic": {"received": "0 MiB", "sent": "0 MiB"}}
+            continue
         elif "=" in line:
             key, value = map(str.strip, line.split("=", 1))
-            if key == "AllowedIPs":
-                current_peer["ip"] = value
-            elif key == "PublicKey":
+            if key == "PublicKey":
                 peer_to_login[value] = current_login
-        elif "transfer:" in line and current_peer:
-            received, sent = line.split("transfer:")[1].split(",")
-            current_peer["traffic"] = {"received": received.strip(), "sent": sent.strip()}
-            if float(received.split()[0]) > 0 or float(sent.split()[0]) > 0:
-                active_clients.append(current_peer)
-            else:
-                inactive_clients.append(current_peer)
+            elif key == "AllowedIPs":
+                peer_to_ip[current_login] = value
 
-    # Ensure all clients are accounted for
-    for login in peer_to_login.values():
-        if login not in [client["login"] for client in active_clients + inactive_clients]:
-            inactive_clients.append({"login": login, "ip": peer_to_ip.get(login, "Unknown"), "traffic": {"received": "0 MiB", "sent": "0 MiB"}})
+    # Сопоставление данных с выводом команды `wg`
+    wg_output = subprocess.check_output(["wg"], text=True).splitlines()
+    current_peer = None
+    for line in wg_output:
+        if line.startswith("peer:"):
+            if current_peer:
+                # Завершить текущего клиента
+                process_client(current_peer, peer_to_login, peer_to_ip, active_clients, inactive_clients)
+            current_peer = {"public_key": line.split("peer:")[1].strip(), "traffic": {"received": "0 MiB", "sent": "0 MiB"}}
+        elif "transfer:" in line and current_peer:
+            transfer_data = line.split("transfer:")[1].strip().split(",")
+            current_peer["traffic"] = {
+                "received": transfer_data[0].strip(),
+                "sent": transfer_data[1].strip()
+            }
+        elif "allowed ips:" in line and current_peer:
+            current_peer["ip"] = line.split("allowed ips:")[1].strip()
+
+    if current_peer:
+        process_client(current_peer, peer_to_login, peer_to_ip, active_clients, inactive_clients)
 
     logins = list(peer_to_login.values())
     return logins, active_clients, inactive_clients
+
+def process_client(peer, peer_to_login, peer_to_ip, active_clients, inactive_clients):
+    """Обрабатывает одного клиента."""
+    login = peer_to_login.get(peer["public_key"], "Unknown")
+    ip = peer.get("ip", peer_to_ip.get(login, "Unknown"))
+    traffic = peer["traffic"]
+    if any(float(value.split()[0]) > 0 for value in traffic.values()):
+        active_clients.append({"login": login, "ip": ip, "traffic": traffic})
+    else:
+        inactive_clients.append({"login": login, "ip": ip, "traffic": traffic})
 
 def generate_user_report(config, params, logins, active, inactive):
     """Создает текстовый отчет."""
