@@ -120,7 +120,7 @@ if __name__ == "__main__":
     # Обработка пользовательского отчета
     process_report(USER_REPORT_FILE, USER_PROMPT_FILE, MODEL)
 
-    # Обработка системного отчета в начале
+    # Обработка системного отчета (sys промпт в конце)
     process_report(SYSTEM_REPORT_FILE, SYSTEM_PROMPT_FILE, MODEL)
-    # Обработка системного отчета в конце
+    # Обработка системного отчета (sys промпт в начале)
     #process_report(SYSTEM_PROMPT_FILE, SYSTEM_REPORT_FILE, MODEL)
