@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # ai_assistant/scripts/final_wg_report.py
 # ==================================================
-# Скрипт для создания структурированного отчета
-# на основе данных из wg_raw_data.txt.
-# Версия: 1.3 (2024-12-23)
+# Версия: 1.4 (2024-12-23)
 # ==================================================
 
 import re
@@ -119,7 +117,7 @@ def ensure_logging_config():
 
             updated_lines = lines[:]
             for key, value in expected_settings.items():
-                pattern = rf"^{key}="
+                pattern = rf"^{re.escape(key)}="  # Исправлено регулярное выражение
                 match_found = any(re.match(pattern, line) for line in lines)
                 if not match_found:
                     updated_lines.append(f"{key}={value}\n")
@@ -189,7 +187,6 @@ def collect_additional_info():
         "Disk Usage": ["df", "-h"],
         "Block Devices": ["lsblk"],
         "VPN Logs (Last 10 Lines)": ["journalctl", "-u", "wg-quick@wg0", "--no-pager", "-n", "10"],
-        "System Logs (Last 10 VPN Errors)": ["journalctl", "-xe", "--no-pager", "|", "grep", "-i", "wireguard"],
     }
 
     collected_info = []
