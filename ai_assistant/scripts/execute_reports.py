@@ -1,18 +1,37 @@
+#!/usr/bin/env python3
+# execute_reports.py
+# ==================================================
+# Скрипт для выполнения последовательной генерации
+# отчетов и запроса к LLM-модели.
+# Версия: 1.4
+# ==================================================
+
 import subprocess
 import sys
 import requests
-import logging
 from pathlib import Path
+import logging
+from datetime import datetime
 
-# Логирование
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stdout)]
-)
+# Настройка логирования
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-# Параметры
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(formatter)
+
+file_handler = logging.FileHandler(f'execute_reports_{datetime.now().strftime("%Y%m%d")}.log')
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(formatter)
+
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
+logger.propagate = False
+
+# Добавляем корневую директорию в PYTHONPATH
 CURRENT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = CURRENT_DIR.parent.parent
 sys.path.append(str(PROJECT_DIR))
@@ -23,15 +42,14 @@ except ImportError as e:
     logger.error(f"Ошибка импорта settings: {e}")
     sys.exit(1)
 
-# Пути
+# Пути к отчетам и промптам
 USER_PROMPT_FILE = BASE_DIR / "ai_assistant/prompts/generate_user_report.txt"
 SYSTEM_PROMPT_FILE = BASE_DIR / "ai_assistant/prompts/generate_system_report.txt"
 USER_REPORT_FILE = BASE_DIR / "ai_assistant/scripts/user_report.txt"
 SYSTEM_REPORT_FILE = BASE_DIR / "ai_assistant/scripts/system_report.txt"
 
-# Функции
-
 def read_file(filepath):
+    """Читает содержимое файла."""
     try:
         with open(filepath, "r") as file:
             return file.read()
@@ -40,29 +58,36 @@ def read_file(filepath):
         sys.exit(1)
 
 def generate_report(script_name):
+    """Запускает скрипт для генерации отчета."""
     try:
-        subprocess.run(["python3", script_name], check=True, text=True)
+        result = subprocess.run(["python3", script_name], check=True, text=True)
         logger.info(f"{script_name} выполнен успешно.")
     except subprocess.CalledProcessError as e:
         logger.error(f"Ошибка при выполнении {script_name}: {e}")
         sys.exit(1)
 
-def query_llm(api_url, data_to_send):
-    payload = {
-        "model": "qwen2:7b",
-        "input": data_to_send,
-        "max_tokens": 500,
-        "temperature": 0.7
+def query_llm(api_url, report_file, prompt_file, model="qwen2:7b"):
+    """Выполняет запрос к LLM с отчетом и промптом."""
+    report_data = read_file(report_file)
+    prompt_data = read_file(prompt_file)
+
+    # Формируем данные для отправки
+    data_to_send = {
+        "model": model,
+        "prompt": f"{prompt_data}\n\n{report_data}",
+        "stream": False
     }
+
+    logger.info(f"\nОтправка данных в LLM для {report_file}...")
+
     try:
-        logger.info(f"Отправка запроса в LLM: {api_url}")
-        response = requests.post(api_url, json=payload)
+        response = requests.post(api_url, json=data_to_send)
         response.raise_for_status()
-        result = response.json().get("response", "<Пустой ответ от модели>")
-        return result
+        llm_response = response.json().get("response", "<Пустой ответ от модели>")
+        logger.info(f"Ответ от LLM для {report_file.name}:\n{llm_response}")
     except requests.RequestException as e:
-        logger.error(f"Ошибка запроса к LLM: {e}")
-        return "<Ошибка запроса к модели>"
+        logger.error(f"Ошибка запроса к LLM для {report_file.name}: {e}")
+
 
 def main():
     logger.info("Генерация отчетов...")
@@ -73,28 +98,9 @@ def main():
 
     logger.info("\nЗагрузка отчетов и промптов...")
 
-    # Проверочный запрос
-    test_response = query_llm(LLM_API_URL, "Привет! Проверяем подключение к модели.")
-    logger.info(f"Тестовый ответ от модели: {test_response}")
-    if not test_response or "<Пустой ответ" in test_response:
-        logger.error("Модель не отвечает корректно на тестовый запрос. Проверьте подключение.")
-        sys.exit(1)
-
-    # Запрос для пользовательского отчета
-    user_report = read_file(USER_REPORT_FILE)
-    user_prompt = read_file(USER_PROMPT_FILE)
-    user_data_to_send = f"{user_prompt}\n\n{user_report}"
-    logger.info("Отправка пользовательского отчета в LLM...")
-    user_response = query_llm(LLM_API_URL, user_data_to_send)
-    logger.info(f"Ответ от LLM для пользовательского отчета:\n{user_response}")
-
-    # Запрос для системного отчета
-    system_report = read_file(SYSTEM_REPORT_FILE)
-    system_prompt = read_file(SYSTEM_PROMPT_FILE)
-    system_data_to_send = f"{system_report}\n\n{system_prompt}"
-    logger.info("Отправка системного отчета в LLM...")
-    system_response = query_llm(LLM_API_URL, system_data_to_send)
-    logger.info(f"Ответ от LLM для системного отчета:\n{system_response}")
+    # Запросы к LLM
+    query_llm(LLM_API_URL, USER_REPORT_FILE, USER_PROMPT_FILE)
+    query_llm(LLM_API_URL, SYSTEM_REPORT_FILE, SYSTEM_PROMPT_FILE)
 
 if __name__ == "__main__":
     main()
