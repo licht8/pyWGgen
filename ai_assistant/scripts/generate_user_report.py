@@ -109,13 +109,22 @@ def generate_user_report(clients, wg_status):
         f"- Total Users: {len(all_logins)}",
         f"- User Logins: {', '.join(all_logins)}",
         "\nActive Users:",
-        *active_users if active_users else ["- No active users."],
-        "\nInactive Users:",
-        *inactive_users if inactive_users else ["- No inactive users."],
-        ""
     ]
 
+    if active_users:
+        report.extend(active_users)
+    else:
+        report.append("- No active users.")
+
+    report.append("\nInactive Users:")
+    if inactive_users:
+        report.extend(inactive_users)
+    else:
+        report.append("- No inactive users.")
+
+    report.append("")
     return "\n".join(report)
+
 
 
 def main():
