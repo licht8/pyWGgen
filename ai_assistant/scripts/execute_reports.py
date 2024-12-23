@@ -9,11 +9,18 @@
 import subprocess
 import sys
 import requests
-from settings import BASE_DIR, LLM_API_URL
 from pathlib import Path
 
 # Добавляем корневую директорию в PYTHONPATH
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+CURRENT_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = CURRENT_DIR.parent.parent
+sys.path.append(str(PROJECT_DIR))
+
+try:
+    from settings import BASE_DIR, LLM_API_URL
+except ImportError as e:
+    print(f"Ошибка импорта settings: {e}")
+    sys.exit(1)
 
 # Пути к отчетам и промптам
 USER_PROMPT_FILE = BASE_DIR / "ai_assistant/prompts/generate_user_report.txt"
