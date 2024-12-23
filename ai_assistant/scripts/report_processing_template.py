@@ -2,7 +2,7 @@
 # report_processing_template.py
 # ==================================================
 # Скрипт для обработки данных и отправки запросов в LLM-модель.
-# Версия: 1.0
+# Версия: 1.1
 # ==================================================
 
 import sys
@@ -10,6 +10,12 @@ import requests
 import logging
 from pathlib import Path
 from datetime import datetime
+
+# === Настройка путей ===
+# Добавляем корневую директорию проекта в sys.path
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent.parent
+sys.path.append(str(PROJECT_ROOT))
 
 # Импорт настроек проекта
 try:
