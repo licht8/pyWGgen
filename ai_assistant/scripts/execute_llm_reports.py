@@ -26,9 +26,9 @@ except ImportError as e:
 # === Настройки ===
 
 #MODEL = "qwen2:7b"  # Имя модели для обработки
-MODEL = "gemma:7b"  # Имя модели для обработки
+#MODEL = "gemma:7b"  # Имя модели для обработки
 #MODEL = "dolphin-mixtral:latest"  # Имя модели для обработки
-#MODEL = "qwen2:7b"  # Имя модели для обработки
+MODEL = "qwen2:7b"  # Имя модели для обработки
 USER_REPORT_SCRIPT = BASE_DIR / "ai_assistant/scripts/generate_user_report.py"
 SYSTEM_REPORT_SCRIPT = BASE_DIR / "ai_assistant/scripts/generate_system_report.py"
 USER_REPORT_FILE = BASE_DIR / "ai_assistant/outputs/user_report.txt"
