@@ -3,7 +3,7 @@
 # ==================================================
 # Скрипт для выполнения последовательной генерации
 # отчетов и запроса к LLM-модели.
-# Версия: 1.3
+# Версия: 1.5
 # ==================================================
 
 import subprocess
@@ -16,11 +16,15 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 # Импортируем настройки после добавления пути
 from settings import BASE_DIR, LLM_API_URL
 
+# Пути к скриптам
+USER_REPORT_SCRIPT = BASE_DIR / "ai_assistant/scripts/generate_user_report.py"
+SYSTEM_REPORT_SCRIPT = BASE_DIR / "ai_assistant/scripts/generate_system_report.py"
+
 # Пути к отчетам и промптам
 USER_PROMPT_FILE = BASE_DIR / "ai_assistant/prompts/generate_user_report.txt"
 SYSTEM_PROMPT_FILE = BASE_DIR / "ai_assistant/prompts/generate_system_report.txt"
-USER_REPORT_FILE = BASE_DIR / "scripts/user_report.txt"
-SYSTEM_REPORT_FILE = BASE_DIR / "scripts/system_report.txt"
+USER_REPORT_FILE = BASE_DIR / "ai_assistant/scripts/user_report.txt"
+SYSTEM_REPORT_FILE = BASE_DIR / "ai_assistant/scripts/system_report.txt"
 
 def read_file(filepath):
     """Читает содержимое файла."""
@@ -31,13 +35,16 @@ def read_file(filepath):
         print(f"Файл {filepath} не найден.")
         sys.exit(1)
 
-def generate_report(script_name):
+def generate_report(script_path):
     """Запускает скрипт для генерации отчета."""
+    if not script_path.exists():
+        print(f"Скрипт {script_path} не найден.")
+        sys.exit(1)
     try:
-        result = subprocess.run(["python3", script_name], check=True, text=True)
-        print(f"{script_name} выполнен успешно.")
+        result = subprocess.run(["python3", str(script_path)], check=True, text=True)
+        print(f"{script_path} выполнен успешно.")
     except subprocess.CalledProcessError as e:
-        print(f"Ошибка при выполнении {script_name}: {e}")
+        print(f"Ошибка при выполнении {script_path}: {e}")
         sys.exit(1)
 
 def query_llm(api_url, report_file, prompt_file):
@@ -65,8 +72,8 @@ def main():
     print("Генерация отчетов...")
     
     # Генерация отчетов
-    generate_report(BASE_DIR / "scripts/generate_user_report.py")
-    generate_report(BASE_DIR / "scripts/generate_system_report.py")
+    generate_report(USER_REPORT_SCRIPT)
+    generate_report(SYSTEM_REPORT_SCRIPT)
 
     print("\nЗагрузка отчетов и промптов...")
 
