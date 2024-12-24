@@ -33,6 +33,7 @@ MAX_HISTORY_LENGTH = 50  # Максимальное количество соо�
 # Настройка логирования
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+logger.setLevel(logging.ERROR)
 
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
