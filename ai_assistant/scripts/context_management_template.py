@@ -36,11 +36,12 @@ class Colors:
     GREEN = "\033[92m"
     WHITE = "\033[97m"
     GRAY = "\033[90m"
+    RED = "\033[91m"
     RESET = "\033[0m"
 
 # Настройка логирования
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR)
+logger.setLevel(logging.INFO)
 
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
