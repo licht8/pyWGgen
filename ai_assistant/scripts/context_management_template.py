@@ -3,7 +3,7 @@
 # ==================================================
 # Скрипт для взаимодействия с LLM-моделью с учетом
 # сохранения контекста диалога.
-# Версия: 1.4
+# Версия: 1.5
 # ==================================================
 
 import requests
@@ -30,10 +30,17 @@ MODEL = "qwen2:7b"  # Имя модели для обработки
 HISTORY_FILE = BASE_DIR / "ai_assistant/context/context_history.txt"
 MAX_HISTORY_LENGTH = 50  # Максимальное количество сообщений в истории
 
+# Цвета для чата
+class Colors:
+    BLUE = "\033[94m"
+    GREEN = "\033[92m"
+    WHITE = "\033[97m"
+    GRAY = "\033[90m"
+    RESET = "\033[0m"
+
 # Настройка логирования
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-logger.setLevel(logging.ERROR)
 
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
@@ -115,17 +122,17 @@ if __name__ == "__main__":
 
     try:
         while True:
-            user_input = input("Вы: ")
+            user_input = input(f"{Colors.BLUE}Вы: {Colors.WHITE}")
             if user_input.lower() == "выход":
-                print("Чат завершен. История сохранена.")
+                print(f"{Colors.GREEN}Чат завершен. История сохранена.{Colors.RESET}")
                 break
 
             response = query_llm_with_context(user_input)
             if response:
-                print(f"Ассистент: {response}")
+                print(f"{Colors.GREEN}Ассистент:{Colors.GRAY} {response}{Colors.RESET}")
             else:
-                print("Ошибка: ответ от модели отсутствует.")
+                print(f"{Colors.GREEN}Ассистент:{Colors.GRAY} Ошибка: ответ от модели отсутствует.{Colors.RESET}")
     except KeyboardInterrupt:
-        print("\nЧат прерван пользователем. История сохранена.")
+        print(f"\n{Colors.RED}Чат прерван пользователем. История сохранена.{Colors.RESET}")
         save_dialog_history()
         sys.exit(0)
