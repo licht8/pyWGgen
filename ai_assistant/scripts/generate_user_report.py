@@ -2,7 +2,7 @@
 # ai_assistant/scripts/generate_user_report.py
 # ==================================================
 # Скрипт для создания отчета о пользователях и конфигурации WireGuard.
-# Версия: 1.3
+# Версия: 1.4
 # ==================================================
 
 import subprocess
@@ -22,7 +22,6 @@ except ImportError as e:
 
 USER_REPORT_FILE = BASE_DIR / "ai_assistant/outputs/user_report.txt"
 SERVER_CONFIG_FILE = Path("/etc/wireguard/wg0.conf")
-
 
 def parse_wg_config(config_path):
     """Читает конфигурацию WireGuard и извлекает информацию о клиентах."""
@@ -49,7 +48,6 @@ def parse_wg_config(config_path):
         sys.exit(1)
 
     return clients
-
 
 def get_wg_status():
     """Получает состояние WireGuard через команду `wg show`."""
@@ -80,7 +78,6 @@ def get_wg_status():
         peers[current_peer["PublicKey"]] = current_peer
 
     return peers
-
 
 def generate_user_report(clients, wg_status):
     """Создает текстовый отчет о пользователях WireGuard."""
@@ -125,18 +122,19 @@ def generate_user_report(clients, wg_status):
     report.append("")
     return "\n".join(report)
 
-
-
 def main():
     clients = parse_wg_config(SERVER_CONFIG_FILE)
     wg_status = get_wg_status()
     report = generate_user_report(clients, wg_status)
 
+    # Гарантированно очищаем файл перед записью
+    if USER_REPORT_FILE.exists():
+        USER_REPORT_FILE.unlink()
+
     with open(USER_REPORT_FILE, "w") as file:
         file.write(report)
 
     print(f"User report has been saved to {USER_REPORT_FILE}")
-
 
 if __name__ == "__main__":
     main()
