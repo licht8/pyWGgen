@@ -28,7 +28,7 @@ except ImportError as e:
 # === Настройки ===
 MODEL = "qwen2:7b"  # Имя модели для обработки
 HISTORY_FILE = BASE_DIR / "ai_assistant/context/context_history.txt"
-MAX_HISTORY_LENGTH = 10  # Максимальное количество сообщений в истории
+MAX_HISTORY_LENGTH = 50  # Максимальное количество сообщений в истории
 
 # Настройка логирования
 logger = logging.getLogger(__name__)
