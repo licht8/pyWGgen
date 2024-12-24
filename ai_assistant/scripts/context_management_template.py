@@ -46,7 +46,7 @@ logger.setLevel(logging.ERROR)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
 console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.REEOR)
+console_handler.setLevel(logging.ERROR)
 console_handler.setFormatter(formatter)
 
 file_handler = logging.FileHandler(BASE_DIR / f'logs/chat_with_context_{datetime.now().strftime("%Y%m%d")}.log')
