@@ -123,4 +123,4 @@ if __name__ == "__main__":
     # Обработка системного отчета (sys промпт в конце)
     #process_report(SYSTEM_REPORT_FILE, SYSTEM_PROMPT_FILE, MODEL)
     # Обработка системного отчета (sys промпт в начале)
-    process_report(SYSTEM_PROMPT_FILE, SYSTEM_REPORT_FILE, MODEL)
+    process_report(SYSTEM_PROMPT_FILE, SYSTEM_REPORT_FILE, SYSTEM_PROMPT_FILE, MODEL)
