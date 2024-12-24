@@ -3,7 +3,7 @@
 # ==================================================
 # Скрипт для взаимодействия с LLM-моделью с учетом
 # сохранения контекста диалога.
-# Версия: 1.3
+# Версия: 1.4
 # ==================================================
 
 import requests
@@ -28,6 +28,7 @@ except ImportError as e:
 # === Настройки ===
 MODEL = "qwen2:7b"  # Имя модели для обработки
 HISTORY_FILE = BASE_DIR / "ai_assistant/context/context_history.txt"
+MAX_HISTORY_LENGTH = 10  # Максимальное количество сообщений в истории
 
 # Настройка логирования
 logger = logging.getLogger(__name__)
@@ -48,14 +49,14 @@ logger.addHandler(file_handler)
 logger.propagate = False
 
 # === Глобальная переменная для хранения истории ===
-dialog_history = ""
+dialog_history = []
 
 # === Функции ===
 def save_dialog_history():
     """Сохраняет историю диалога в текстовый файл."""
     try:
         with open(HISTORY_FILE, "w") as file:
-            file.write(dialog_history)
+            file.write("\n".join(dialog_history))
         logger.info(f"История диалога сохранена в {HISTORY_FILE}")
     except Exception as e:
         logger.error(f"Ошибка сохранения истории диалога: {e}")
@@ -66,24 +67,26 @@ def load_dialog_history():
     if HISTORY_FILE.exists() and HISTORY_FILE.stat().st_size > 0:
         try:
             with open(HISTORY_FILE, "r") as file:
-                dialog_history = file.read()
+                dialog_history = file.read().splitlines()
             logger.info(f"История диалога загружена из {HISTORY_FILE}")
         except Exception as e:
             logger.error(f"Ошибка загрузки истории диалога: {e}")
-            dialog_history = ""
+            dialog_history = []
     else:
-        dialog_history = ""
+        dialog_history = []
 
 def query_llm_with_context(user_input):
     """Отправляет запрос в LLM с учетом истории диалога."""
     global dialog_history
 
-    # Формируем новую историю с сообщением пользователя
-    dialog_history += f"Вы: {user_input}\n"
+    # Добавляем сообщение пользователя в историю
+    dialog_history.append(f"Вы: {user_input}")
+    if len(dialog_history) > MAX_HISTORY_LENGTH * 2:  # Умножаем на 2 (по одному сообщению от пользователя и ассистента)
+        dialog_history = dialog_history[-MAX_HISTORY_LENGTH * 2:]
 
     payload = {
         "model": MODEL,
-        "prompt": dialog_history,
+        "prompt": "\n".join(dialog_history),
         "stream": False
     }
 
@@ -93,7 +96,7 @@ def query_llm_with_context(user_input):
 
         # Получаем ответ от модели
         model_response = response.json().get("response", "<Нет ответа>")
-        dialog_history += f"Ассистент: {model_response}\n"
+        dialog_history.append(f"Ассистент: {model_response}")
 
         # Сохраняем историю
         save_dialog_history()
