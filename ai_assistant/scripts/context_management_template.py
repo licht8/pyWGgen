@@ -63,7 +63,7 @@ def save_dialog_history():
 def load_dialog_history():
     """Загружает историю диалога из файла."""
     global dialog_history
-    if HISTORY_FILE.exists():
+    if HISTORY_FILE.exists() and HISTORY_FILE.stat().st_size > 0:
         try:
             with open(HISTORY_FILE, "r") as file:
                 dialog_history = json.load(file)
@@ -73,7 +73,6 @@ def load_dialog_history():
             dialog_history = []
     else:
         dialog_history = []
-
 
 def query_llm_with_context(user_input):
     """Отправляет запрос в LLM с учетом истории диалога."""
@@ -104,7 +103,6 @@ def query_llm_with_context(user_input):
     except requests.RequestException as e:
         logger.error(f"Ошибка запроса к модели: {e}")
         return None
-
 
 # === Основной процесс ===
 if __name__ == "__main__":
