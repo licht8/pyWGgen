@@ -22,6 +22,7 @@ except ImportError as e:
 
 USER_REPORT_FILE = BASE_DIR / "ai_assistant/outputs/user_report.txt"
 SERVER_CONFIG_FILE = Path("/etc/wireguard/wg0.conf")
+PARAMS_FILE = Path("/etc/wireguard/params")
 
 def parse_wg_config(config_path):
     """Читает конфигурацию WireGuard и извлекает информацию о клиентах."""
@@ -79,7 +80,16 @@ def get_wg_status():
 
     return peers
 
-def generate_user_report(clients, wg_status):
+def read_params_file(filepath):
+    """Читает файл параметров WireGuard."""
+    try:
+        with open(filepath, "r") as file:
+            return file.read().strip()
+    except FileNotFoundError:
+        print(f"Файл {filepath} не найден.")
+        return ""
+
+def generate_user_report(clients, wg_status, params_data):
     """Создает текстовый отчет о пользователях WireGuard."""
     active_users = []
     inactive_users = []
@@ -119,17 +129,17 @@ def generate_user_report(clients, wg_status):
     else:
         report.append("- No inactive users.")
 
+    report.append("\n=== WireGuard Parameters ===")
+    report.append(params_data if params_data else "- No parameters found.")
+
     report.append("")
     return "\n".join(report)
 
 def main():
     clients = parse_wg_config(SERVER_CONFIG_FILE)
     wg_status = get_wg_status()
-    report = generate_user_report(clients, wg_status)
-
-    # Гарантированно очищаем файл перед записью
-    if USER_REPORT_FILE.exists():
-        USER_REPORT_FILE.unlink()
+    params_data = read_params_file(PARAMS_FILE)
+    report = generate_user_report(clients, wg_status, params_data)
 
     with open(USER_REPORT_FILE, "w") as file:
         file.write(report)
