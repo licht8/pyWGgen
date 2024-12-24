@@ -3,7 +3,7 @@
 # ==================================================
 # Скрипт для взаимодействия с LLM-моделью с учетом
 # сохранения контекста диалога.
-# Версия: 1.2
+# Версия: 1.3
 # ==================================================
 
 import requests
@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 from datetime import datetime
 import logging
+import readline  # Для поддержки навигации и редактирования в консоли
 
 # === Настройка путей ===
 SCRIPT_DIR = Path(__file__).resolve().parent
