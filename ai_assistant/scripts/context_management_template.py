@@ -7,10 +7,12 @@
 # ==================================================
 
 import requests
+import json
 import sys
 from pathlib import Path
 from datetime import datetime
 import logging
+import readline  # Для поддержки редактирования ввода в терминале
 
 # === Настройка путей ===
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -47,42 +49,43 @@ logger.addHandler(file_handler)
 logger.propagate = False
 
 # === Глобальная переменная для хранения истории ===
-dialog_history = ""
+dialog_history = []
 
 # === Функции ===
 def save_dialog_history():
-    """Сохраняет историю диалога в текстовый файл."""
+    """Сохраняет историю диалога в файл."""
     try:
         with open(HISTORY_FILE, "w") as file:
-            file.write(dialog_history)
+            json.dump(dialog_history, file)
         logger.info(f"История диалога сохранена в {HISTORY_FILE}")
     except Exception as e:
         logger.error(f"Ошибка сохранения истории диалога: {e}")
 
 def load_dialog_history():
-    """Загружает историю диалога из текстового файла."""
+    """Загружает историю диалога из файла."""
     global dialog_history
     if HISTORY_FILE.exists() and HISTORY_FILE.stat().st_size > 0:
         try:
             with open(HISTORY_FILE, "r") as file:
-                dialog_history = file.read()
+                dialog_history = json.load(file)
             logger.info(f"История диалога загружена из {HISTORY_FILE}")
         except Exception as e:
             logger.error(f"Ошибка загрузки истории диалога: {e}")
-            dialog_history = ""
+            dialog_history = []
     else:
-        dialog_history = ""
+        dialog_history = []
 
 def query_llm_with_context(user_input):
     """Отправляет запрос в LLM с учетом истории диалога."""
     global dialog_history
 
-    # Формируем новую историю с сообщением пользователя
-    dialog_history += f"Вы: {user_input}\n"
+    # Добавляем сообщение пользователя в историю
+    dialog_history.append({"role": "user", "content": user_input})
 
+    # Формируем payload с историей
     payload = {
         "model": MODEL,
-        "prompt": dialog_history,
+        "messages": dialog_history,
         "stream": False
     }
 
@@ -92,7 +95,7 @@ def query_llm_with_context(user_input):
 
         # Получаем ответ от модели
         model_response = response.json().get("response", "<Нет ответа>")
-        dialog_history += f"Ассистент: {model_response}\n"
+        dialog_history.append({"role": "assistant", "content": model_response})
 
         # Сохраняем историю
         save_dialog_history()
@@ -108,14 +111,19 @@ if __name__ == "__main__":
 
     print("Добро пожаловать в чат с LLM! Введите 'выход' для завершения.")
 
-    while True:
-        user_input = input("Вы: ")
-        if user_input.lower() == "выход":
-            print("Чат завершен. История сохранена.")
-            break
+    try:
+        while True:
+            user_input = input("Вы: ")
+            if user_input.lower() == "выход":
+                print("Чат завершен. История сохранена.")
+                break
 
-        response = query_llm_with_context(user_input)
-        if response:
-            print(f"Ассистент: {response}")
-        else:
-            print("Ошибка: ответ от модели отсутствует.")
+            response = query_llm_with_context(user_input)
+            if response:
+                print(f"Ассистент: {response}")
+            else:
+                print("Ошибка: ответ от модели отсутствует.")
+    except KeyboardInterrupt:
+        print("\nЧат прерван пользователем. История сохранена.")
+        save_dialog_history()
+        sys.exit(0)
