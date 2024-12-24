@@ -3,7 +3,7 @@
 # ==================================================
 # Скрипт для взаимодействия с LLM-моделью с учетом
 # сохранения контекста диалога.
-# Версия: 1.1
+# Версия: 1.2
 # ==================================================
 
 import requests
@@ -108,14 +108,19 @@ if __name__ == "__main__":
 
     print("Добро пожаловать в чат с LLM! Введите 'выход' для завершения.")
 
-    while True:
-        user_input = input("Вы: ")
-        if user_input.lower() == "выход":
-            print("Чат завершен. История сохранена.")
-            break
+    try:
+        while True:
+            user_input = input("Вы: ")
+            if user_input.lower() == "выход":
+                print("Чат завершен. История сохранена.")
+                break
 
-        response = query_llm_with_context(user_input)
-        if response:
-            print(f"Ассистент: {response}")
-        else:
-            print("Ошибка: ответ от модели отсутствует.")
+            response = query_llm_with_context(user_input)
+            if response:
+                print(f"Ассистент: {response}")
+            else:
+                print("Ошибка: ответ от модели отсутствует.")
+    except KeyboardInterrupt:
+        print("\nЧат прерван пользователем. История сохранена.")
+        save_dialog_history()
+        sys.exit(0)
