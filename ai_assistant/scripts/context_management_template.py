@@ -3,7 +3,7 @@
 # ==================================================
 # Скрипт для взаимодействия с LLM-моделью с учетом
 # сохранения контекста диалога.
-# Версия: 1.1
+# Версия: 1.2
 # ==================================================
 
 import requests
@@ -56,7 +56,8 @@ def save_dialog_history():
     """Сохраняет историю диалога в файл."""
     try:
         with open(HISTORY_FILE, "w") as file:
-            json.dump(dialog_history, file)
+            for entry in dialog_history:
+                file.write(f"{entry['role']}: {entry['content']}\n")
         logger.info(f"История диалога сохранена в {HISTORY_FILE}")
     except Exception as e:
         logger.error(f"Ошибка сохранения истории диалога: {e}")
@@ -67,7 +68,10 @@ def load_dialog_history():
     if HISTORY_FILE.exists() and HISTORY_FILE.stat().st_size > 0:
         try:
             with open(HISTORY_FILE, "r") as file:
-                dialog_history = json.load(file)
+                dialog_history = [
+                    {"role": line.split(": ")[0], "content": ": ".join(line.split(": ")[1:]).strip()}
+                    for line in file.readlines() if ": " in line
+                ]
             logger.info(f"История диалога загружена из {HISTORY_FILE}")
         except Exception as e:
             logger.error(f"Ошибка загрузки истории диалога: {e}")
