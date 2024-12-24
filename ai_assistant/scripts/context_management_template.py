@@ -28,7 +28,7 @@ except ImportError as e:
 # === Настройки ===
 MODEL = "qwen2:7b"  # Имя модели для обработки
 PROMPT_POSITION = "before"  # Расположение системного промпта: "before" или "after"
-CONTEXT_FILE = BASE_DIR / "ai_assistant/inputs/context_history.txt"  # Путь к файлу для хранения контекста
+CONTEXT_FILE = BASE_DIR / "ai_assistant/context/context_history.txt"  # Путь к файлу для хранения контекста
 DATA_FILE = BASE_DIR / "ai_assistant/inputs/test_data.txt"  # Путь к файлу с данными
 PROMPT_FILE = BASE_DIR / "ai_assistant/prompts/test_prompt.txt"  # Путь к файлу с промптом
 
