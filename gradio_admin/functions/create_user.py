@@ -6,9 +6,6 @@ import os
 import subprocess
 
 def create_user(username, email="N/A", telegram_id="N/A"):
-    """
-    Создание пользователя через main.py.
-    """
     if not username:
         return "Ошибка: имя пользователя не может быть пустым.", None
 
@@ -20,6 +17,10 @@ def create_user(username, email="N/A", telegram_id="N/A"):
         )
         qr_code_path = os.path.join("user", "data", "qrcodes", f"{username}.png")
         absolute_path = os.path.abspath(qr_code_path)
+        
+        # Добавьте перезапуск WireGuard
+        restart_command = "systemctl restart wg-quick@wg0"
+        subprocess.run(restart_command, shell=True, check=True)
         
         if os.path.exists(absolute_path):
             return f"✅ Пользователь {username} успешно создан.", absolute_path
