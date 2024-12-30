@@ -18,15 +18,13 @@ def create_user(username, email="N/A", telegram_id="N/A"):
         qr_code_path = os.path.join("user", "data", "qrcodes", f"{username}.png")
         absolute_path = os.path.abspath(qr_code_path)
         
-        # Добавьте перезапуск WireGuard
-        restart_command = "systemctl restart wg-quick@wg0"
-        subprocess.run(restart_command, shell=True, check=True)
+        # Добавьте команду синхронизации WireGuard
+        sync_command = 'wg syncconf "wg0" <(wg-quick strip "wg0")'
+        subprocess.run(sync_command, shell=True, check=True, executable='/bin/bash')
         
         if os.path.exists(absolute_path):
             return f"✅ Пользователь {username} успешно создан.", absolute_path
         return f"✅ Пользователь {username} успешно создан, но QR-код не найден.", None
 
     except subprocess.CalledProcessError as e:
-        return f"❌ Ошибка при создании пользователя: {str(e)}", None
-    except Exception as e:
-        return f"❌ Непредвиденная ошибка: {str(e)}", None
+        return f"Ошибка при создании пользователя: {str(e)}", None
