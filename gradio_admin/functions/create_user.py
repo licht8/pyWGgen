@@ -18,10 +18,6 @@ def create_user(username, email="N/A", telegram_id="N/A"):
         qr_code_path = os.path.join("user", "data", "qrcodes", f"{username}.png")
         absolute_path = os.path.abspath(qr_code_path)
         
-        # Добавьте команду синхронизации WireGuard
-        sync_command = 'wg syncconf "wg0" <(wg-quick strip "wg0")'
-        subprocess.run(sync_command, shell=True, check=True, executable='/bin/bash')
-        
         if os.path.exists(absolute_path):
             return f"✅ Пользователь {username} успешно создан.", absolute_path
         return f"✅ Пользователь {username} успешно создан, но QR-код не найден.", None
