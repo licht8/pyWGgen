@@ -231,6 +231,42 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
         add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), new_ipv4)
         logger.info("Пользователь успешно добавлен в конфигурацию сервера.")
 
+        # Добавление записи пользователя
+        user_record = create_user_record(
+            username=nickname,
+            address=new_ipv4,
+            public_key=public_key.decode('utf-8'),
+            preshared_key=preshared_key.decode('utf-8'),
+            qr_code_path=qr_path,
+            email=email,
+            telegram_id=telegram_id
+        )
+
+        # Сохраняем в базе данных
+        user_records_path = os.path.join("user", "data", "user_records.json")
+        if os.path.exists(user_records_path):
+            with open(user_records_path, "r", encoding="utf-8") as file:
+                try:
+                    user_data = json.load(file)
+                except json.JSONDecodeError:
+                    logger.warning("Ошибка чтения базы данных пользователей, будет создана новая.")
+                    user_data = {}
+        else:
+            user_data = {}
+
+        user_data[nickname] = user_record
+        os.makedirs(os.path.dirname(user_records_path), exist_ok=True)
+        with open(user_records_path, "w", encoding="utf-8") as file:
+            json.dump(user_data, file, indent=4)
+        logger.info(f"Данные пользователя {nickname} успешно добавлены в {user_records_path}")
+
+        logger.info("+--------- Процесс 🌱 создания пользователя завершен --------------+\n")
+        return config_path, qr_path
+    except Exception as e:
+        logger.error(f"Ошибка выполнения: {e}")
+        logger.info("+--------- Процесс 🌱 создания пользователя завершен --------------+\n")
+        raise
+
         return config_path, qr_path
     except Exception as e:
         logger.error(f"Ошибка выполнения: {e}")
