@@ -21,7 +21,7 @@ from modules.client_config import create_client_config
 from modules.main_registration_fields import create_user_record  # Импорт новой функции
 import subprocess
 import logging
-import qrcode  # Для генерации QR-кодов
+import qrcode
 
 # Настройка логгера
 logging.basicConfig(
