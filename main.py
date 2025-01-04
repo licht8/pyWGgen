@@ -260,6 +260,9 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
             json.dump(user_data, file, indent=4)
         logger.info(f"Данные пользователя {nickname} успешно добавлены в {user_records_path}")
 
+        # Перезапуск WireGuard
+        restart_wireguard(params['SERVER_WG_NIC'])
+
         logger.info("+--------- Процесс 🌱 создания пользователя завершен --------------+\n")
         return config_path, qr_path
     except Exception as e:
