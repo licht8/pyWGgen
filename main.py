@@ -261,24 +261,27 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
         logger.info(f"{INFO_EMOJI} Данные пользователя {nickname} успешно добавлены в {user_records_path}")
 
         # Синхронизация WireGuard
-        try:
-            stripped_config = subprocess.check_output(['wg-quick', 'strip', 'wg0'])
-            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                temp_file.write(stripped_config)
-                temp_file.flush()
-                subprocess.run(['wg', 'syncconf', 'wg0', temp_file.name], check=True)
-            logger.info(f"{WG_EMOJI} Конфигурация WireGuard успешно синхронизирована.")
-        except subprocess.CalledProcessError as e:
-            logger.error(f"{ERROR_EMOJI} Ошибка при синхронизации конфигурации WireGuard: {e}")
-            raise
-        except Exception as e:
-            logger.error(f"{ERROR_EMOJI} Непредвиденная ошибка при синхронизации WireGuard: {e}")
-            raise
+        params_path = "/etc/wireguard/params"
+        if os.path.exists(params_path):
+            with open(params_path, "r") as file:
+                for line in file:
+                    if line.startswith("SERVER_WG_NIC="):
+                        server_wg_nic = line.strip().split("=")[1].strip('"')
+                        break
+                else:
+                    raise ValueError("SERVER_WG_NIC не найден в /etc/wireguard/params.")
+        else:
+            raise FileNotFoundError(f"Файл {params_path} не найден.")
+
+        sync_command = f'wg syncconf "{server_wg_nic}" <(wg-quick strip "{server_wg_nic}")'
+        subprocess.run(sync_command, shell=True, check=True, executable='/bin/bash')
+        logger.info(f"WireGuard синхронизирован для интерфейса {server_wg_nic}")
 
         logger.info("+--------- Процесс 🌱 создания пользователя завершен --------------+\n")
         return config_path, qr_path
     except Exception as e:
-        logger.error(f"{ERROR_EMOJI} Ошибка выполнения: {e}")
+        logger.error(f"Ошибка выполнения: {e}")
+        logger.info("+--------- Процесс 🌱 создания пользователя завершен --------------+\n")
         raise
 
 if __name__ == "__main__":
