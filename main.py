@@ -22,6 +22,7 @@ from modules.main_registration_fields import create_user_record  # Импорт 
 import subprocess
 import logging
 import qrcode
+import tempfile
 
 # Настройка логгера
 logging.basicConfig(
