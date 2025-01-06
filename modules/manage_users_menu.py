@@ -40,7 +40,7 @@ def create_user():
 
     try:
         subprocess.run(
-            ["python3", "main.py", username, email, telegram_id],
+            ["python3", os.path.join("wg_qr_generator", "main.py"), username, email, telegram_id],
             check=True,
             cwd=os.path.abspath(os.path.dirname(__file__) + "/../../")
         )
