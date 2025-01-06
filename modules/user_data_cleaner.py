@@ -45,7 +45,20 @@ def clean_user_data():
             # Очистка конфигурации
             with open(WG_CONFIG_FILE, "r") as wg_file:
                 lines = wg_file.readlines()
-            cleaned_lines = [line for line in lines if not line.startswith("[Peer]")]
+
+            # Новый контент без блоков [Peer]
+            cleaned_lines = []
+            inside_peer_block = False
+
+            for line in lines:
+                if line.strip().startswith("[Peer]"):
+                    inside_peer_block = True
+                elif inside_peer_block and line.strip() == "":
+                    # Конец блока [Peer], переключаем флаг
+                    inside_peer_block = False
+                elif not inside_peer_block:
+                    cleaned_lines.append(line)
+
             with open(WG_CONFIG_FILE, "w") as wg_file:
                 wg_file.writelines(cleaned_lines)
             print(f"✅ Конфигурация WireGuard очищена.")
