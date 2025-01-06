@@ -4,6 +4,7 @@
 
 import os
 import json
+import subprocess
 from modules.utils import get_wireguard_subnet, read_json, write_json
 
 USER_RECORDS_FILE = "user/data/user_records.json"
@@ -28,32 +29,31 @@ def save_user_records(user_records):
 
 
 def create_user():
-    """Создание нового пользователя."""
+    """Создание нового пользователя через вызов main.py."""
     username = input("Введите имя пользователя: ").strip()
     if not username:
         print("❌ Имя пользователя не может быть пустым.")
         return
 
+    email = input("Введите email (необязательно): ").strip() or "N/A"
+    telegram_id = input("Введите Telegram ID (необязательно): ").strip() or "N/A"
+
     try:
-        default_subnet = get_wireguard_subnet()
-    except Exception as e:
-        print(f"⚠️ Ошибка получения подсети WireGuard: {e}")
-        default_subnet = "10.66.66.0/24"  # Резервное значение
+        subprocess.run(
+            ["python3", "main.py", username, email, telegram_id],
+            check=True,
+            cwd=os.path.abspath(os.path.dirname(__file__) + "/../../")
+        )
+        qr_code_path = os.path.join("user", "data", "qrcodes", f"{username}.png")
+        absolute_path = os.path.abspath(qr_code_path)
 
-    allowed_ips = input(f"Введите разрешённые IP (например, {default_subnet}): ").strip() or default_subnet
+        if os.path.exists(absolute_path):
+            print(f"✅ Пользователь {username} успешно создан. QR-код: {absolute_path}")
+        else:
+            print(f"✅ Пользователь {username} успешно создан, но QR-код не найден.")
 
-    records = load_user_records()
-    if username in records:
-        print("❌ Пользователь с таким именем уже существует.")
-        return
-
-    records[username] = {
-        "username": username,
-        "allowed_ips": allowed_ips,
-        "status": "inactive",
-    }
-    save_user_records(records)
-    print(f"✅ Пользователь {username} успешно создан с разрешёнными IP: {allowed_ips}")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Ошибка при создании пользователя: {e}")
 
 
 def list_users():
