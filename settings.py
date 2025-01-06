@@ -41,8 +41,9 @@ WG_CONFIG_DIR = BASE_DIR / "user/data/wg_configs"  # Путь к конфигу�
 QR_CODE_DIR = BASE_DIR / "user/data/qrcodes"      # Путь к сохраненным QR-кодам
 STALE_CONFIG_DIR = BASE_DIR / "user/data/usr_stale_config"  # Путь к устаревшим конфигурациям пользователей
 USER_DB_PATH = BASE_DIR / "user/data/user_records.json"  # База данных пользователей
-IP_DB_PATH = BASE_DIR / "user/data/ip_records.json"      # База данных IP-адресов
+#IP_DB_PATH = BASE_DIR / "user/data/ip_records.json"      # База данных IP-адресов
 SERVER_CONFIG_FILE = Path("/etc/wireguard/wg0.conf")     # Путь к конфигурационному файлу сервера WireGuard
+SERVER_BACKUP_CONFIG_FILE = Path("/etc/wireguard/wg0.conf.bak") # Путь к backup конфигурационному файлу сервера WireGuard
 PARAMS_FILE = Path("/etc/wireguard/params")             # Путь к файлу параметров WireGuard
 
 # Параметры WireGuard
@@ -131,7 +132,7 @@ def check_paths():
         "WG_CONFIG_DIR": WG_CONFIG_DIR,
         "QR_CODE_DIR": QR_CODE_DIR,
         "USER_DB_PATH": USER_DB_PATH,
-        "IP_DB_PATH": IP_DB_PATH,
+        #"IP_DB_PATH": IP_DB_PATH,
         "SERVER_CONFIG_FILE": SERVER_CONFIG_FILE,
         "PARAMS_FILE": PARAMS_FILE,
         "LOG_DIR": LOG_DIR,

@@ -5,8 +5,8 @@
 import subprocess
 import json
 import os
+from settings import USER_DB_PATH
 
-USER_RECORDS_JSON = "user/data/user_records.json"
 WG_USERS_JSON = "logs/wg_users.json"
 
 def load_json(filepath):
@@ -50,7 +50,7 @@ def sync_users_with_wireguard():
         wg_output = subprocess.check_output(["wg", "show"], text=True)
         wg_users = parse_wireguard_output(wg_output)
 
-        user_records = load_json(USER_RECORDS_JSON)
+        user_records = load_json(USER_DB_PATH)
         users_json = load_json(WG_USERS_JSON)
 
         key_to_username = {
