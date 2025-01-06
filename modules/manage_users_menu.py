@@ -7,9 +7,8 @@ import json
 import subprocess
 from modules.utils import get_wireguard_subnet, read_json, write_json
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import settings
 from settings import USER_DB_PATH
+from settings import SERVER_CONFIG_FILE
 
 def ensure_directory_exists(filepath):
     """Убедитесь, что директория для файла существует."""
@@ -56,12 +55,114 @@ def list_users():
         print(f"  - {username}: {allowed_ips} | Статус: {status}")
 
 
+def delete_user():
+    """
+    Удаление пользователя из конфигурации WireGuard и связанных файлов.
+    """
+    username = input("Введите имя пользователя для удаления: ").strip()
+    if not username:
+        print("❌ Ошибка: имя пользователя не может быть пустым.")
+        return
+
+    print(f"➡️ Начинаем удаление пользователя: '{username}'.")
+
+    if not os.path.exists(USER_DB_PATH):
+        print(f"❌ Файл данных пользователей не найден: {USER_DB_PATH}")
+        return
+
+    try:
+        # Чтение данных пользователей
+        user_data = read_json(USER_DB_PATH)
+        if username not in user_data:
+            print(f"❌ Пользователь '{username}' не существует.")
+            return
+
+        # Удаление записи пользователя
+        user_data.pop(username)
+        write_json(USER_DB_PATH, user_data)
+        print(f"📝 Запись пользователя '{username}' удалена из данных.")
+
+        # Извлечение публичного ключа пользователя
+        public_key = extract_public_key(username, SERVER_CONFIG_FILE)
+        if not public_key:
+            print(f"❌ Публичный ключ пользователя '{username}' не найден в конфигурации WireGuard.")
+            return
+
+        # Удаление пользователя из WireGuard
+        subprocess.run(["sudo", "wg", "set", "wg0", "peer", public_key, "remove"], check=True)
+        print(f"🔐 Пользователь '{username}' удален из WireGuard.")
+
+        # Обновление конфигурации WireGuard
+        remove_peer_from_config(public_key, SERVER_CONFIG_FILE, username)
+        print(f"✅ Конфигурация WireGuard успешно обновлена.")
+
+        print(f"✅ Пользователь '{username}' успешно удалён.")
+    except Exception as e:
+        print(f"⚠️ Ошибка при удалении пользователя '{username}': {e}")
+
+def extract_public_key(username, config_path):
+    """
+    Извлечение публичного ключа пользователя из конфигурации WireGuard.
+    :param username: Имя пользователя.
+    :param config_path: Путь к конфигурационному файлу WireGuard.
+    :return: Публичный ключ пользователя.
+    """
+    try:
+        with open(config_path, "r") as f:
+            lines = f.readlines()
+
+        found_username = False
+        for line in lines:
+            if username in line:
+                found_username = True
+            elif found_username and line.strip().startswith("PublicKey"):
+                return line.split("=", 1)[1].strip()
+        return None
+    except Exception as e:
+        print(f"⚠️ Ошибка при поиске публичного ключа: {e}")
+        return None
+
+def remove_peer_from_config(public_key, config_path, client_name):
+    """
+    Удаление записи [Peer] и связанного комментария из конфигурационного файла WireGuard.
+    :param public_key: Публичный ключ пользователя.
+    :param config_path: Путь к конфигурационному файлу WireGuard.
+    :param client_name: Имя клиента.
+    """
+    try:
+        with open(config_path, "r") as f:
+            lines = f.readlines()
+
+        updated_lines = []
+        skip_lines = 0
+
+        for line in lines:
+            # Если найден комментарий клиента
+            if line.strip() == f"### Client {client_name}":
+                skip_lines = 5  # Удаляем 5 строк начиная с этого момента
+                continue
+
+            # Пропуск строк, связанных с удаляемым блоком
+            if skip_lines > 0:
+                skip_lines -= 1
+                continue
+
+            # Сохранение остальных строк
+            updated_lines.append(line)
+
+        # Запись обновленной конфигурации
+        with open(config_path, "w") as f:
+            f.writelines(updated_lines)
+    except Exception as e:
+        print(f"⚠️ Ошибка при обновлении конфигурации: {e}")
+
 def manage_users_menu():
     """Меню управления пользователями."""
     while True:
         print("\n========== Управление пользователями ==========")
         print("1. 🌱 Создать пользователя")
         print("2. 🔍 Показать всех пользователей")
+        print("3. ❌ Удалить пользователя")
         print("0. Вернуться в главное меню")
         print("===============================================")
 
@@ -70,6 +171,8 @@ def manage_users_menu():
             create_user()
         elif choice == "2":
             list_users()
+        elif choice == "3":
+            delete_user()
         elif choice in {"0", "q"}:
             break
         else:
