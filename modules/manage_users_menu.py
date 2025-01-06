@@ -7,7 +7,7 @@ import json
 import subprocess
 from modules.utils import get_wireguard_subnet, read_json, write_json
 import sys
-import settings
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from settings import USER_DB_PATH
 
 def ensure_directory_exists(filepath):
@@ -32,9 +32,9 @@ def create_user():
 
     try:
         subprocess.run(
-            ["python3", os.path.join("wg_qr_generator", "main.py"), username, email, telegram_id],
+            ["python3", os.path.join("main.py"), username, email, telegram_id],
             check=True,
-            cwd=os.path.abspath(os.path.dirname(__file__) + "/../../")
+            cwd=os.path.abspath(os.path.dirname(__file__) + "/../")
         )
 
     except subprocess.CalledProcessError as e:
