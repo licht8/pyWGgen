@@ -8,6 +8,7 @@ import subprocess
 from modules.utils import get_wireguard_subnet, read_json, write_json
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import settings
 from settings import USER_DB_PATH
 
 def ensure_directory_exists(filepath):
