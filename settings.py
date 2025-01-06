@@ -29,6 +29,8 @@
 # Версия: 1.5 (2024-12-02) 18:30
 
 from pathlib import Path
+import os
+import configparser
 
 # Определяем базовый путь к корню проекта
 BASE_DIR = Path(__file__).resolve().parent  # Путь к корневой директории wg_qr_generator
@@ -48,7 +50,7 @@ DEFAULT_TRIAL_DAYS = 30  # Базовый срок действия аккаун
 WIREGUARD_PORT = 51820   # Порт для сервера WireGuard (по умолчанию) range [1-65535]
 DEFAULT_SUBNET = "10.66.66.0/24"
 USER_SET_SUBNET = DEFAULT_SUBNET
-DNS_WIREGUAED = "1.1.1.1, 1.0.0.1, 8.8.8.8" 
+DNS_WIREGUAED = "1.1.1.1, 1.0.0.1, 8.8.8.8"
 
 # Настройки для логирования
 LOG_DIR = BASE_DIR / "user/data/logs"  # Директория для хранения логов
@@ -97,7 +99,29 @@ LINE_DELAY = 0.1  # Задержка между строками (в секун�
 # - 0.05: Быстрый переход между строками, для сокращения времени вывода.
 # - 0.2: Медленный переход, акцентирует внимание на новой строке.
 
+# Функция для чтения SERVER_WG_NIC из файла params
+def get_server_wg_nic(params_file):
+    """
+    Извлекает значение SERVER_WG_NIC из файла params.
+    :param params_file: Путь к файлу params
+    :return: Значение SERVER_WG_NIC
+    """
+    if not os.path.exists(params_file):
+        raise FileNotFoundError(f"Файл {params_file} не найден.")
 
+    with open(params_file, "r") as f:
+        for line in f:
+            if line.startswith("SERVER_WG_NIC="):
+                # Извлекаем значение после "=" и удаляем пробелы
+                return line.split("=")[1].strip()
+    raise ValueError("SERVER_WG_NIC не найден в файле params.")
+
+# Определяем SERVER_WG_NIC
+try:
+    SERVER_WG_NIC = get_server_wg_nic(PARAMS_FILE)
+except (FileNotFoundError, ValueError) as e:
+    SERVER_WG_NIC = None
+    print(f"⚠️ Не удалось загрузить SERVER_WG_NIC: {e}")
 
 def check_paths():
     """Проверяет существование файлов и директорий."""

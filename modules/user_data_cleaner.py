@@ -5,6 +5,7 @@
 import os
 import shutil
 import subprocess
+from settings import SERVER_WG_NIC
 
 USER_DATA_DIR = "user/data"
 USER_LOGS_DIR = "logs"
@@ -64,13 +65,11 @@ def clean_user_data():
                 wg_file.writelines(cleaned_lines)
             print(f"✅ Конфигурация WireGuard очищена.")
 
-        # Перезапуск WireGuard
-        if confirm_action("🔄 Перезапустить WireGuard?"):
-            result = subprocess.run(["systemctl", "restart", f"wg-quick@{os.path.basename(WG_CONFIG_FILE).replace('.conf', '')}"])
-            if result.returncode == 0:
-                print("✅ WireGuard успешно перезапущен.")
-            else:
-                print("❌ Не удалось перезапустить WireGuard.")
+        # Синхронизация WireGuard
+
+        sync_command = f'wg syncconf "{SERVER_WG_NIC}" <(wg-quick strip "{SERVER_WG_NIC}")'
+        subprocess.run(sync_command, shell=True, check=True, executable='/bin/bash')
+        print(f"WireGuard синхронизирован для интерфейса {SERVER_WG_NIC}")
 
         print("🎉 Очистка завершена. Все данные обработаны.")
 
