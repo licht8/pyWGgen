@@ -7,6 +7,7 @@ import json
 import subprocess
 from modules.utils import get_wireguard_subnet, read_json, write_json
 import sys
+from settings import BASE_DIR
 from settings import USER_DB_PATH
 
 def ensure_directory_exists(filepath):
