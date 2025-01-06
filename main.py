@@ -111,7 +111,7 @@ def generate_qr_code(data, output_path):
         qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
         img.save(output_path)
-        logger.info(f"QR-код успешно сохранён в {output_path}")
+
     except Exception as e:
         logger.error(f"Ошибка при генерации QR-кода: {e}")
         raise
@@ -226,7 +226,6 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
 
         # Генерация QR-кода
         generate_qr_code(client_config, qr_path)
-        logger.info(f"{INFO_EMOJI} QR-код пользователя сохранён в {qr_path}")
 
         # Добавление пользователя в конфигурацию сервера
         add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), new_ipv4)
@@ -317,7 +316,7 @@ if __name__ == "__main__":
         config_path, qr_path = generate_config(nickname, params, config_file, email, telegram_id)
 
         logger.info(f"✅ Конфигурация пользователя сохранена в {config_path}")
-        logger.info(f"✅ QR-код пользователя сохранён в {qr_path}")
+        logger.info(f"✅ QR-код пользователя успешно сохранён в {qr_path}")
     except FileNotFoundError as e:
         logger.error(f"Файл не найден: {e}")
     except KeyError as e:

@@ -44,13 +44,6 @@ def create_user():
             check=True,
             cwd=os.path.abspath(os.path.dirname(__file__) + "/../../")
         )
-        qr_code_path = os.path.join("user", "data", "qrcodes", f"{username}.png")
-        absolute_path = os.path.abspath(qr_code_path)
-
-        if os.path.exists(absolute_path):
-            print(f"✅ Пользователь {username} успешно создан. QR-код: {absolute_path}")
-        else:
-            print(f"✅ Пользователь {username} успешно создан, но QR-код не найден.")
 
     except subprocess.CalledProcessError as e:
         print(f"❌ Ошибка при создании пользователя: {e}")
