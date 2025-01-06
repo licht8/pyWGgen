@@ -37,7 +37,7 @@ def clean_user_data():
             print(f"✅ {WG_USERS_JSON} очищен.")
 
         # Очистка конфигурации WireGuard
-        if os.path.exists(WG_CONFIG_FILE) and confirm_action("🧹 Очистить файл конфигурации WireGuard (удалить все [Peer])?"):
+        if os.path.exists(WG_CONFIG_FILE) and confirm_action("🧹 Очистить файл конфигурации WireGuard (удалить все ### Client и [Peer])?"):
             # Создание резервной копии
             shutil.copy2(WG_CONFIG_FILE, WG_BACKUP_FILE)
             print(f"✅ Резервная копия создана: {WG_BACKUP_FILE}")
@@ -46,17 +46,18 @@ def clean_user_data():
             with open(WG_CONFIG_FILE, "r") as wg_file:
                 lines = wg_file.readlines()
 
-            # Новый контент без блоков [Peer]
+            # Новый контент без блоков ### Client и связанных [Peer]
             cleaned_lines = []
-            inside_peer_block = False
+            inside_client_block = False
 
             for line in lines:
-                if line.strip().startswith("[Peer]"):
-                    inside_peer_block = True
-                elif inside_peer_block and line.strip() == "":
-                    # Конец блока [Peer], переключаем флаг
-                    inside_peer_block = False
-                elif not inside_peer_block:
+                stripped_line = line.strip()
+                if stripped_line.startswith("### Client"):
+                    inside_client_block = True
+                elif inside_client_block and stripped_line == "":
+                    # Конец блока, переключаем флаг
+                    inside_client_block = False
+                elif not inside_client_block:
                     cleaned_lines.append(line)
 
             with open(WG_CONFIG_FILE, "w") as wg_file:
