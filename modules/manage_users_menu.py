@@ -6,9 +6,8 @@ import os
 import json
 import subprocess
 from modules.utils import get_wireguard_subnet, read_json, write_json
-
-USER_RECORDS_FILE = "user/data/user_records.json"
-
+import sys
+from settings import USER_DB_PATH
 
 def ensure_directory_exists(filepath):
     """Убедитесь, что директория для файла существует."""
@@ -16,17 +15,9 @@ def ensure_directory_exists(filepath):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-
 def load_user_records():
     """Загрузка данных пользователей из JSON."""
-    return read_json(USER_RECORDS_FILE)
-
-
-def save_user_records(user_records):
-    """Сохранение данных пользователей в JSON."""
-    ensure_directory_exists(USER_RECORDS_FILE)
-    write_json(USER_RECORDS_FILE, user_records)
-
+    return read_json(USER_DB_PATH)
 
 def create_user():
     """Создание нового пользователя через вызов main.py."""
