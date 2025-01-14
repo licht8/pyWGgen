@@ -53,39 +53,46 @@ def statistics_tab():
         )
 
     # Функция для показа информации о пользователе
-    def show_user_info(selected_data, query):
-        """Показывает подробную информацию о выбранном пользователе."""
-        print("[DEBUG] Вызов функции show_user_info")  # Отладка
-        print(f"[DEBUG] Query: {query}")  # Отладка
+def show_user_info(selected_data, query):
+    """Показывает подробную информацию о выбранном пользователе."""
+    print(f"[DEBUG] selected_data: {selected_data}")
+    print(f"[DEBUG] query: {query}")
 
-        if not query.strip():
-            return "Please enter a query to filter user data and then click a cell to view user details and perform actions."
+    if not selected_data or not isinstance(selected_data, list):
+        return "Select a valid row from the table!"
 
-        if selected_data is None or len(selected_data) == 0:
-            return "Select a row from the table!"
+    try:
+        # Извлекаем имя пользователя из выбранной строки
+        row = selected_data
+        username = row[0] if len(row) > 0 else "N/A"
+        username = username.strip().lower()
+        print(f"[DEBUG] Extracted username: {username}")
 
-        try:
-            row = selected_data if isinstance(selected_data, list) else selected_data.iloc[0].values
-            username = row[0].replace("👤 User account : ", "") if len(row) > 0 else "N/A"
-            records = load_user_records()
-            user_data = records.get(username, {})
+        # Загружаем данные из user_records.json
+        records = load_user_records()
+        user_data = records.get(username)
 
-            created = user_data.get("created_at", "N/A")
-            expires = user_data.get("expires_at", "N/A")
-            int_ip = user_data.get("address", "N/A")
+        if not user_data:
+            print(f"[DEBUG] User '{username}' not found in records.")
+            return f"User '{username}' not found in records."
 
-            user_info = f"""
-    👤 User: {username}
-    📧 Email: user@mail.wg
-    🌱 Created: {format_time(created)}
-    🔥 Expires: {format_time(expires)}
-    🌐 Internal IP: {int_ip}
-    """
-            print(f"[DEBUG] User info:\n{user_info}")  # Отладка
-            return user_info.strip()
-        except Exception as e:
-            print(f"[DEBUG] Error: {e}")  # Отладка
-            return f"Error processing data: {str(e)}"
+        # Форматируем информацию
+        created = user_data.get("created_at", "N/A")
+        expires = user_data.get("expires_at", "N/A")
+        int_ip = user_data.get("allowed_ips", "N/A")
+
+        user_info = f"""
+👤 User: {username}
+📧 Email: user@mail.wg
+🌱 Created: {format_time(created)}
+🔥 Expires: {format_time(expires)}
+🌐 Internal IP: {int_ip}
+"""
+        print(f"[DEBUG] User info:\n{user_info}")
+        return user_info.strip()
+    except Exception as e:
+        print(f"[DEBUG] Error: {e}")
+        return f"Error processing data: {str(e)}"
         
 
     stats_table.select(
