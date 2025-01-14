@@ -5,11 +5,12 @@
 
 import os
 import json
+import sys
 import subprocess
 from modules.utils import get_wireguard_subnet, read_json, write_json
-import sys
 from settings import USER_DB_PATH, SERVER_CONFIG_FILE, WG_CONFIG_DIR, QR_CODE_DIR, SERVER_WG_NIC
 from modules.traffic_updater import update_traffic_data
+from modules.handshake_updater import update_handshakes
 
 def ensure_directory_exists(filepath):
     """Убедитесь, что директория для файла существует."""
@@ -69,6 +70,21 @@ def show_traffic():
             print(f"  - {username}: {transfer} | Всего: {total_transfer}")
     except Exception as e:
         print(f"⚠️ Ошибка при получении трафика пользователей: {e}")
+
+def show_handshakes():
+    """Получение и отображение информации о последних рукопожатиях."""
+    try:
+        print("\n🔄 Обновляем информацию о последних рукопожатиях...")
+        update_handshakes(USER_DB_PATH, SERVER_WG_NIC)
+        print("✅ Информация о последних рукопожатиях обновлена.")
+
+        records = load_user_records()
+        print("\n🤝 Последние рукопожатия пользователей:")
+        for username, data in records.items():
+            last_handshake = data.get("last_handshake", "Never")
+            print(f"  - {username}: Последнее рукопожатие: {last_handshake}")
+    except Exception as e:
+        print(f"⚠️ Ошибка при обновлении информации о рукопожатиях: {e}")
 
 def delete_user():
     """
@@ -196,6 +212,7 @@ def manage_users_menu():
         print("2. 🔍 Показать всех пользователей")
         print("3. ❌ Удалить пользователя")
         print("4. 📊 Получить трафик пользователей")
+        print("5. 🤝 Получить последние рукопожатия пользователей")
         print("0. Вернуться в главное меню")
         print("===============================================")
 
@@ -208,6 +225,8 @@ def manage_users_menu():
             delete_user()
         elif choice == "4":
             show_traffic()
+        elif choice == "5":
+            show_handshakes()
         elif choice in {"0", "q"}:
             break
         else:
