@@ -55,15 +55,16 @@ def statistics_tab():
     # Функция для показа информации о пользователе
     def show_user_info(selected_data, query):
         """Показывает подробную информацию о выбранном пользователе."""
-        print(f"[DEBUG] selected_data: {selected_data}")
-        print(f"[DEBUG] query: {query}")
+        print(f"[DEBUG] selected_data: {selected_data}")  # Отладка
+        print(f"[DEBUG] query: {query}")  # Отладка
 
-        if not selected_data or not isinstance(selected_data, list):
+        # Проверка на пустой DataFrame
+        if selected_data is None or selected_data.empty:
             return "Select a valid row from the table!"
 
         try:
-            # Извлекаем имя пользователя из выбранной строки
-            row = selected_data
+            # Извлекаем первую строку DataFrame
+            row = selected_data.iloc[0].tolist()  # Преобразуем строку в список
             username = row[0] if len(row) > 0 else "N/A"
             username = username.strip().lower()
             print(f"[DEBUG] Extracted username: {username}")
@@ -93,6 +94,7 @@ def statistics_tab():
         except Exception as e:
             print(f"[DEBUG] Error: {e}")
             return f"Error processing data: {str(e)}"
+
         
 
     stats_table.select(
