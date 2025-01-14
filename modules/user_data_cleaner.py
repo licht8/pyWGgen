@@ -80,7 +80,6 @@ def clean_user_data():
             print(f"✅ QR-коды пользователей в {QR_CODE_DIR} очищены.")
 
         # Синхронизация WireGuard
-
         sync_command = f'wg syncconf "{SERVER_WG_NIC}" <(wg-quick strip "{SERVER_WG_NIC}")'
         subprocess.run(sync_command, shell=True, check=True, executable='/bin/bash')
         print(f"WireGuard синхронизирован для интерфейса {SERVER_WG_NIC}")

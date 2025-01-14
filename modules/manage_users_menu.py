@@ -7,7 +7,7 @@ import json
 import subprocess
 from modules.utils import get_wireguard_subnet, read_json, write_json
 import sys
-from settings import USER_DB_PATH, SERVER_CONFIG_FILE, WG_CONFIG_DIR, QR_CODE_DIR
+from settings import USER_DB_PATH, SERVER_CONFIG_FILE, WG_CONFIG_DIR, QR_CODE_DIR, SERVER_WG_NIC
 
 def ensure_directory_exists(filepath):
     """Убедитесь, что директория для файла существует."""
@@ -106,6 +106,11 @@ def delete_user():
         # Обновление конфигурации WireGuard
         remove_peer_from_config(public_key, SERVER_CONFIG_FILE, username)
         print(f"✅ Конфигурация WireGuard успешно обновлена.")
+
+        # Синхронизация WireGuard
+        sync_command = f'wg syncconf "{SERVER_WG_NIC}" <(wg-quick strip "{SERVER_WG_NIC}")'
+        subprocess.run(sync_command, shell=True, check=True, executable='/bin/bash')
+        print(f"WireGuard синхронизирован для интерфейса {SERVER_WG_NIC}")
 
         print(f"✅ Пользователь '{username}' успешно удалён.")
     except Exception as e:

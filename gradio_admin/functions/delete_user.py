@@ -6,6 +6,7 @@ import os
 import subprocess
 from datetime import datetime
 from modules.utils import read_json, write_json, get_wireguard_config_path
+from settings import WG_CONFIG_DIR, QR_CODE_DIR, SERVER_WG_NIC
 
 # Функция для логирования (аналог log_debug)
 def log_debug(message):
@@ -45,11 +46,23 @@ def delete_user(username):
             log_debug("---------- Процесс 🔥 удаления пользователя завершен ---------------\n")
             return f"❌ Пользователь '{username}' не существует."
 
-        # Удаление записи пользователя
+        # Удаление записи пользователя в файле user_records.json
         user_info = user_data.pop(username)
         user_info["removed_at"] = datetime.now().isoformat()
         write_json(user_records_path, user_data)
         log_debug(f"📝 Запись пользователя '{username}' удалена из данных.")
+
+        # Удаление конфигурации пользователя
+        wg_config_file = os.path.join(WG_CONFIG_DIR, f"{username}.conf")
+        if os.path.exists(wg_config_file):
+            os.remove(wg_config_file)
+            log_debug(f"🗑️ Конфигурационный файл пользователя '{wg_config_file}' удалён.")
+
+        # Удаление QR-кода пользователя
+        qr_code_file = os.path.join(QR_CODE_DIR, f"{username}.png")
+        if os.path.exists(qr_code_file):
+            os.remove(qr_code_file)
+            log_debug(f"🗑️ QR-код пользователя '{qr_code_file}' удалён.")
 
         # Извлечение публичного ключа пользователя
         public_key = extract_public_key(username, wg_config_path)
@@ -65,6 +78,11 @@ def delete_user(username):
         # Обновление конфигурации WireGuard
         remove_peer_from_config(public_key, wg_config_path, username)
         log_debug(f"✅ Конфигурация WireGuard успешно обновлена.")
+
+        # Синхронизация WireGuard
+        sync_command = f'wg syncconf "{SERVER_WG_NIC}" <(wg-quick strip "{SERVER_WG_NIC}")'
+        subprocess.run(sync_command, shell=True, check=True, executable='/bin/bash')
+        print(f"WireGuard синхронизирован для интерфейса {SERVER_WG_NIC}")
 
         log_debug("---------- Процесс 🔥 удаления пользователя завершен ---------------\n")
         return f"✅ Пользователь '{username}' успешно удалён."
