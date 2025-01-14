@@ -55,8 +55,8 @@ def statistics_tab():
     # Функция для показа информации о пользователе
     def show_user_info(selected_data, query):
         """Показывает подробную информацию о выбранном пользователе."""
-        print(f"[DEBUG] selected_data: {selected_data}")  # Отладка
-        print(f"[DEBUG] query: {query}")  # Отладка
+        print(f"[DEBUG] selected_data: {selected_data}")
+        print(f"[DEBUG] query: {query}")
 
         # Проверка на пустой DataFrame
         if selected_data is None or selected_data.empty:
@@ -81,13 +81,27 @@ def statistics_tab():
             created = user_data.get("created_at", "N/A")
             expires = user_data.get("expires_at", "N/A")
             int_ip = user_data.get("allowed_ips", "N/A")
+            total_transfer = user_data.get("total_transfer", "N/A")
+            last_handshake = user_data.get("last_handshake", "N/A")
+            status = user_data.get("status", "N/A")
+            email = user_data.get("email", "N/A")
+            telegram_id = user_data.get("telegram_id", "N/A")
+            subscription_plan = user_data.get("subscription_plan", "N/A")
+            total_spent = user_data.get("total_spent", "N/A")
+            notes = user_data.get("user_notes", "No notes provided")
 
             user_info = f"""
-    👤 User: {username}
-    📧 Email: user@mail.wg
-    🌱 Created: {format_time(created)}
-    🔥 Expires: {format_time(expires)}
-    🌐 Internal IP: {int_ip}
+    👤 **User:** {username}
+    📧 **Email:** {email}
+    🌱 **Created:** {format_time(created)}
+    🔥 **Expires:** {format_time(expires)}
+    🌐 **Internal IP:** {int_ip}
+    📊 **Total Transfer:** {total_transfer}
+    🤝 **Last Handshake:** {last_handshake}
+    ⚡ **Status:** {status}
+    📜 **Subscription Plan:** {subscription_plan}
+    💳 **Total Spent:** {total_spent}
+    📝 **Notes:** {notes}
     """
             print(f"[DEBUG] User info:\n{user_info}")
             return user_info.strip()
@@ -95,7 +109,6 @@ def statistics_tab():
             print(f"[DEBUG] Error: {e}")
             return f"Error processing data: {str(e)}"
 
-        
 
     stats_table.select(
         fn=show_user_info,
