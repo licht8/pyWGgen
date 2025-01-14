@@ -3,7 +3,7 @@
 
 import os
 import json
-import pandas as pd
+import pandas as pd # type: ignore
 from settings import USER_DB_PATH  # Путь к JSON с данными пользователей
 
 def load_data(show_inactive=True):
@@ -25,7 +25,7 @@ def load_data(show_inactive=True):
             "status": user_info.get("status", "inactive"),
             "subscription_price": user_info.get("subscription_price", "0.00 USD"),
             "user_id": user_info.get("user_id", "N/A"),  # Сохраняем UID
-            "ip_address": user_info.get("address", "N/A")  # Новый столбец: IP Address
+            "allowed_ips": user_info.get("allowed_ips", "N/A")  # Новый столбец: IP Address
         })
     return table
 
@@ -42,7 +42,7 @@ def update_table(show_inactive):
             user["status"],
             user["subscription_price"],
             user["user_id"],  # UID добавляем в таблицу
-            user["ip_address"],  # IP Address
+            user["allowed_ips"],  # IP Address
         ])
 
     return pd.DataFrame(
