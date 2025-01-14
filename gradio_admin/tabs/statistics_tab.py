@@ -91,17 +91,17 @@ def statistics_tab():
             notes = user_data.get("user_notes", "No notes provided")
 
             user_info = f"""
-    👤 **User:** {username}
-    📧 **Email:** {email}
-    🌱 **Created:** {format_time(created)}
-    🔥 **Expires:** {format_time(expires)}
-    🌐 **Internal IP:** {int_ip}
-    📊 **Total Transfer:** {total_transfer}
-    🤝 **Last Handshake:** {last_handshake}
-    ⚡ **Status:** {status}
-    📜 **Subscription Plan:** {subscription_plan}
-    💳 **Total Spent:** {total_spent}
-    📝 **Notes:** {notes}
+    👤 User: {username}
+    📧 Email: {email}
+    🌱 Created: {format_time(created)}
+    🔥 Expires: {format_time(expires)}
+    🌐 Internal IP: {int_ip}
+    📊 Total Transfer: {total_transfer}
+    🤝 Last Handshake: {last_handshake}
+    ⚡ Status: {status}
+    📜 Subscription Plan: {subscription_plan}
+    💳 Total Spent: {total_spent}
+    📝 Notes: {notes}
     """
             print(f"[DEBUG] User info:\n{user_info}")
             return user_info.strip()
