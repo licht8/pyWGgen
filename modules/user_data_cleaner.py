@@ -9,6 +9,7 @@ from settings import SERVER_WG_NIC # SERVER_WG_NIC из файла params
 from settings import USER_DB_PATH # База данных пользователей
 from settings import SERVER_CONFIG_FILE
 from settings import SERVER_BACKUP_CONFIG_FILE
+from settings import WG_CONFIG_DIR, QR_CODE_DIR
 
 WG_USERS_JSON = "logs/wg_users.json"
 
@@ -61,6 +62,22 @@ def clean_user_data():
             with open(SERVER_CONFIG_FILE, "w") as wg_file:
                 wg_file.writelines(cleaned_lines)
             print(f"✅ Конфигурация WireGuard очищена.")
+
+        # Очистка конфигурационных файлов пользователей
+        if os.path.exists(WG_CONFIG_DIR) and confirm_action("🧹 Очистить все конфигурационные файлы пользователей?"):
+            for config_file in os.listdir(WG_CONFIG_DIR):
+                file_path = os.path.join(WG_CONFIG_DIR, config_file)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            print(f"✅ Конфигурационные файлы пользователей в {WG_CONFIG_DIR} очищены.")
+
+        # Очистка QR-кодов пользователей
+        if os.path.exists(QR_CODE_DIR) and confirm_action("🧹 Очистить все QR-коды пользователей?"):
+            for qr_code_file in os.listdir(QR_CODE_DIR):
+                file_path = os.path.join(QR_CODE_DIR, qr_code_file)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            print(f"✅ QR-коды пользователей в {QR_CODE_DIR} очищены.")
 
         # Синхронизация WireGuard
 
