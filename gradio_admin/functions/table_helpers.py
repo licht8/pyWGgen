@@ -22,7 +22,7 @@ def load_data(show_inactive=True):
             "username": user_info.get("username", "N/A"),
             "data_used": user_info.get("data_used", "0.0 KiB"),
             "data_limit": user_info.get("data_limit", "100.0 GB"),
-            "ip_address": user_info.get("address", "N/A"),  # Adding IP address
+            "allowed_ips": user_info.get("allowed_ips", "N/A"),  # Adding IP address
             "status": user_info.get("status", "inactive"),
             "subscription_price": user_info.get("subscription_price", "0.00 USD"),
             "user_id": user_info.get("user_id", "N/A")  # UID added
@@ -40,7 +40,7 @@ def update_table(show_inactive):
             user["username"],
             user["data_used"],
             user["data_limit"],
-            user["ip_address"],  # Including IP address after data_limit
+            user["allowed_ips"],  # Including IP address after data_limit
             user["status"],
             user["subscription_price"],
             user["user_id"]  # UID
