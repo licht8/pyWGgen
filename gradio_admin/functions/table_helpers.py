@@ -20,7 +20,7 @@ def load_data(show_inactive=True):
             continue
         table.append({
             "username": user_info.get("username", "N/A"),
-            "data_used": user_info.get("data_used", "0.0 KiB"),
+            "total_transfer": user_info.get("total_transfer", "0.0 KiB"),
             "data_limit": user_info.get("data_limit", "100.0 GB"),
             "allowed_ips": user_info.get("allowed_ips", "N/A"),  # Adding IP address
             "status": user_info.get("status", "inactive"),
@@ -38,7 +38,7 @@ def update_table(show_inactive):
     for user in users:
         formatted_rows.append([
             user["username"],
-            user["data_used"],
+            user["total_transfer"],
             user["data_limit"],
             user["allowed_ips"],  # Including IP address after data_limit
             user["status"],
