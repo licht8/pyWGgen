@@ -1,11 +1,13 @@
 # gradio_admin/tabs/statistics_tab.py
 # Вкладка "Statistics" для Gradio-интерфейса проекта wg_qr_generator
 
-import gradio as gr
-import pandas as pd
+import gradio as gr # type: ignore
+import pandas as pd # type: ignore
 from gradio_admin.functions.table_helpers import update_table
 from gradio_admin.functions.format_helpers import format_user_info
 from gradio_admin.functions.user_records import load_user_records
+from modules.traffic_updater import update_traffic_data
+from settings import USER_DB_PATH
 
 def statistics_tab():
     """Возвращает вкладку статистики пользователей WireGuard."""
@@ -42,7 +44,7 @@ def statistics_tab():
     # Таблица с данными
     with gr.Row():
         stats_table = gr.Dataframe(
-            headers=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $", "UID", "🌐 IP Address"],  # Обновлено
+            headers=["👤 User", "📊 Used", "📦 Limit", "🌐 IP Address", "⚡ St.", "💳 $", "UID"],  # Обновлено
             value=update_table(True),
             interactive=False,  # Таблица только для чтения
             wrap=True
@@ -61,6 +63,7 @@ def statistics_tab():
 
     # Обновление данных при нажатии кнопки "Refresh"
     def refresh_table(show_inactive):
+        update_traffic_data(USER_DB_PATH)  # Обновление трафика пользователей
         """Очищает строку поиска, сбрасывает информацию о пользователе и обновляет таблицу."""
         return "", "Please enter a query to filter user data and then Click a cell to view user details after the search. and perform actions.", update_table(show_inactive)
 
