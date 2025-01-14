@@ -7,8 +7,7 @@ import json
 import subprocess
 from modules.utils import get_wireguard_subnet, read_json, write_json
 import sys
-from settings import USER_DB_PATH
-from settings import SERVER_CONFIG_FILE
+from settings import USER_DB_PATH, SERVER_CONFIG_FILE, WG_CONFIG_DIR, QR_CODE_DIR
 
 def ensure_directory_exists(filepath):
     """Убедитесь, что директория для файла существует."""
@@ -81,6 +80,18 @@ def delete_user():
         user_data.pop(username)
         write_json(USER_DB_PATH, user_data)
         print(f"📝 Запись пользователя '{username}' удалена из данных.")
+
+        # Удаление конфигурации пользователя
+        wg_config_path = WG_CONFIG_DIR / f"{username}.conf"
+        if wg_config_path.exists():
+            wg_config_path.unlink()
+            print(f"🗑️ Конфигурация '{wg_config_path}' удалена.")
+
+        # Удаление QR-кода пользователя
+        qr_code_path = QR_CODE_DIR / f"{username}.png"
+        if qr_code_path.exists():
+            qr_code_path.unlink()
+            print(f"🗑️ QR-код '{qr_code_path}' удалён.")
 
         # Извлечение публичного ключа пользователя
         public_key = extract_public_key(username, SERVER_CONFIG_FILE)
