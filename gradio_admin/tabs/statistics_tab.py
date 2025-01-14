@@ -42,7 +42,7 @@ def statistics_tab():
     # Таблица с данными
     with gr.Row():
         stats_table = gr.Dataframe(
-            headers=["👥 User's info", "🆔 Other info"],
+            headers=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $", "UID", "🌐 IP Address"],  # Обновлено
             value=update_table(True),
             interactive=False,  # Таблица только для чтения
             wrap=True

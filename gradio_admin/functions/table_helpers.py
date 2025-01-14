@@ -6,7 +6,6 @@ import json
 import pandas as pd
 from settings import USER_DB_PATH  # Путь к JSON с данными пользователей
 
-
 def load_data(show_inactive=True):
     """Загружает данные пользователей из JSON."""
     if not os.path.exists(USER_DB_PATH):
@@ -25,10 +24,10 @@ def load_data(show_inactive=True):
             "data_limit": user_info.get("data_limit", "100.0 GB"),
             "status": user_info.get("status", "inactive"),
             "subscription_price": user_info.get("subscription_price", "0.00 USD"),
-            "user_id": user_info.get("user_id", "N/A")  # Сохраняем UID
+            "user_id": user_info.get("user_id", "N/A"),  # Сохраняем UID
+            "ip_address": user_info.get("address", "N/A")  # Новый столбец: IP Address
         })
     return table
-
 
 def update_table(show_inactive):
     """Создает таблицу для отображения в Gradio."""
@@ -43,9 +42,10 @@ def update_table(show_inactive):
             user["status"],
             user["subscription_price"],
             user["user_id"],  # UID добавляем в таблицу
+            user["ip_address"],  # IP Address
         ])
 
     return pd.DataFrame(
         formatted_rows,
-        columns=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $", "UID"]
+        columns=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $", "UID", "🌐 IP Address"]
     )
