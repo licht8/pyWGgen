@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # modules/manage_users_menu.py
 # Модуль для управления пользователями WireGuard
+# Обновлен 14/01/25
 
 import os
 import json
@@ -8,6 +9,7 @@ import subprocess
 from modules.utils import get_wireguard_subnet, read_json, write_json
 import sys
 from settings import USER_DB_PATH, SERVER_CONFIG_FILE, WG_CONFIG_DIR, QR_CODE_DIR, SERVER_WG_NIC
+from modules.traffic_updater import update_traffic_data
 
 def ensure_directory_exists(filepath):
     """Убедитесь, что директория для файла существует."""
@@ -39,7 +41,6 @@ def create_user():
     except subprocess.CalledProcessError as e:
         print(f"❌ Ошибка при создании пользователя: {e}")
 
-
 def list_users():
     """Вывод списка всех пользователей."""
     records = load_user_records()
@@ -53,6 +54,21 @@ def list_users():
         status = data.get("status", "N/A")
         print(f"  - {username}: {allowed_ips} | Статус: {status}")
 
+def show_traffic():
+    """Получение и отображение трафика пользователей."""
+    try:
+        print("\n🔄 Обновляем трафик пользователей...")
+        update_traffic_data(USER_DB_PATH)
+        print("✅ Трафик пользователей обновлён.")
+
+        records = load_user_records()
+        print("\n📊 Трафик пользователей:")
+        for username, data in records.items():
+            transfer = data.get("transfer", "N/A")
+            total_transfer = data.get("total_transfer", "N/A")
+            print(f"  - {username}: {transfer} | Всего: {total_transfer}")
+    except Exception as e:
+        print(f"⚠️ Ошибка при получении трафика пользователей: {e}")
 
 def delete_user():
     """
@@ -179,6 +195,7 @@ def manage_users_menu():
         print("1. 🌱 Создать пользователя")
         print("2. 🔍 Показать всех пользователей")
         print("3. ❌ Удалить пользователя")
+        print("4. 📊 Получить трафик пользователей")
         print("0. Вернуться в главное меню")
         print("===============================================")
 
@@ -189,6 +206,8 @@ def manage_users_menu():
             list_users()
         elif choice == "3":
             delete_user()
+        elif choice == "4":
+            show_traffic()
         elif choice in {"0", "q"}:
             break
         else:
