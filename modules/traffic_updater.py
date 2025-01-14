@@ -7,7 +7,7 @@ import subprocess
 from settings import SERVER_WG_NIC  # Импорт интерфейса WireGuard из настроек
 from settings import USER_DB_PATH
 
-def update_traffic_data():
+def update_traffic_data(user_records_path):
     """
     Обновляет данные о текущем и общем трафике пользователей, записывая одинаковые значения для transfer и total_transfer в user_records.json.
     """
