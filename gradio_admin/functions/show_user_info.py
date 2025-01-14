@@ -1,3 +1,4 @@
+'''
 #!/usr/bin/env python3
 # gradio_admin/functions/show_user_info.py
 
@@ -37,3 +38,4 @@ def show_user_info(selected_data, query):
     except Exception as e:
         print(f"[DEBUG] Error: {e}")  # Отладка
         return f"Error processing data: {str(e)}"
+'''
