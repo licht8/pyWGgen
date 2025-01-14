@@ -7,7 +7,7 @@ import pandas as pd # type: ignore
 from settings import USER_DB_PATH  # Путь к JSON с данными пользователей
 
 def load_data(show_inactive=True):
-    """Загружает данные пользователей из JSON."""
+    """Loads user data from JSON."""
     if not os.path.exists(USER_DB_PATH):
         return []
 
@@ -22,15 +22,16 @@ def load_data(show_inactive=True):
             "username": user_info.get("username", "N/A"),
             "data_used": user_info.get("data_used", "0.0 KiB"),
             "data_limit": user_info.get("data_limit", "100.0 GB"),
+            "ip_address": user_info.get("address", "N/A"),  # Adding IP address
             "status": user_info.get("status", "inactive"),
             "subscription_price": user_info.get("subscription_price", "0.00 USD"),
-            "user_id": user_info.get("user_id", "N/A"),  # Сохраняем UID
-            "allowed_ips": user_info.get("allowed_ips", "N/A")  # Новый столбец: IP Address
+            "user_id": user_info.get("user_id", "N/A")  # UID added
         })
     return table
 
+
 def update_table(show_inactive):
-    """Создает таблицу для отображения в Gradio."""
+    """Creates a table for display in Gradio."""
     users = load_data(show_inactive)
     formatted_rows = []
 
@@ -39,13 +40,13 @@ def update_table(show_inactive):
             user["username"],
             user["data_used"],
             user["data_limit"],
+            user["ip_address"],  # Including IP address after data_limit
             user["status"],
             user["subscription_price"],
-            user["user_id"],  # UID добавляем в таблицу
-            user["allowed_ips"],  # IP Address
+            user["user_id"]  # UID
         ])
 
     return pd.DataFrame(
         formatted_rows,
-        columns=["👤 User", "📊 Used", "📦 Limit", "⚡ St.", "💳 $", "UID", "🌐 IP Address"]
+        columns=["👤 User", "📊 Used", "📦 Limit", "🌐 IP Address", "⚡ St.", "💳 $", "UID"]  # Updated headers
     )
