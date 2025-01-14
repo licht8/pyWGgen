@@ -53,46 +53,46 @@ def statistics_tab():
         )
 
     # Функция для показа информации о пользователе
-def show_user_info(selected_data, query):
-    """Показывает подробную информацию о выбранном пользователе."""
-    print(f"[DEBUG] selected_data: {selected_data}")
-    print(f"[DEBUG] query: {query}")
+    def show_user_info(selected_data, query):
+        """Показывает подробную информацию о выбранном пользователе."""
+        print(f"[DEBUG] selected_data: {selected_data}")
+        print(f"[DEBUG] query: {query}")
 
-    if not selected_data or not isinstance(selected_data, list):
-        return "Select a valid row from the table!"
+        if not selected_data or not isinstance(selected_data, list):
+            return "Select a valid row from the table!"
 
-    try:
-        # Извлекаем имя пользователя из выбранной строки
-        row = selected_data
-        username = row[0] if len(row) > 0 else "N/A"
-        username = username.strip().lower()
-        print(f"[DEBUG] Extracted username: {username}")
+        try:
+            # Извлекаем имя пользователя из выбранной строки
+            row = selected_data
+            username = row[0] if len(row) > 0 else "N/A"
+            username = username.strip().lower()
+            print(f"[DEBUG] Extracted username: {username}")
 
-        # Загружаем данные из user_records.json
-        records = load_user_records()
-        user_data = records.get(username)
+            # Загружаем данные из user_records.json
+            records = load_user_records()
+            user_data = records.get(username)
 
-        if not user_data:
-            print(f"[DEBUG] User '{username}' not found in records.")
-            return f"User '{username}' not found in records."
+            if not user_data:
+                print(f"[DEBUG] User '{username}' not found in records.")
+                return f"User '{username}' not found in records."
 
-        # Форматируем информацию
-        created = user_data.get("created_at", "N/A")
-        expires = user_data.get("expires_at", "N/A")
-        int_ip = user_data.get("allowed_ips", "N/A")
+            # Форматируем информацию
+            created = user_data.get("created_at", "N/A")
+            expires = user_data.get("expires_at", "N/A")
+            int_ip = user_data.get("allowed_ips", "N/A")
 
-        user_info = f"""
-👤 User: {username}
-📧 Email: user@mail.wg
-🌱 Created: {format_time(created)}
-🔥 Expires: {format_time(expires)}
-🌐 Internal IP: {int_ip}
-"""
-        print(f"[DEBUG] User info:\n{user_info}")
-        return user_info.strip()
-    except Exception as e:
-        print(f"[DEBUG] Error: {e}")
-        return f"Error processing data: {str(e)}"
+            user_info = f"""
+    👤 User: {username}
+    📧 Email: user@mail.wg
+    🌱 Created: {format_time(created)}
+    🔥 Expires: {format_time(expires)}
+    🌐 Internal IP: {int_ip}
+    """
+            print(f"[DEBUG] User info:\n{user_info}")
+            return user_info.strip()
+        except Exception as e:
+            print(f"[DEBUG] Error: {e}")
+            return f"Error processing data: {str(e)}"
         
 
     stats_table.select(
