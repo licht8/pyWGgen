@@ -70,8 +70,8 @@ def unblock_user(username):
 
 def update_wireguard_config(username, block=True):
     """
-    Обновляет конфигурационный файл WireGuard.
-    1. Если block=True, комментирует весь блок [Peer] для пользователя.
+    Обновляет конфигурационный файл WireGuard:
+    1. Если block=True, комментирует весь блок [Peer], связанный с пользователем.
     2. Если block=False, восстанавливает блок [Peer].
     """
     try:
@@ -82,49 +82,57 @@ def update_wireguard_config(username, block=True):
         in_peer_block = False
         peer_belongs_to_user = False
 
-        for line in config_lines:
+        # Логика обработки строк файла
+        for idx, line in enumerate(config_lines):
             stripped_line = line.strip()
 
-            # Начало нового блока [Peer]
+            # Обнаружение начала блока [Peer]
             if stripped_line == "[Peer]":
+                # Если уже в блоке, завершаем предыдущий
                 if in_peer_block:
-                    # Если мы в предыдущем блоке, завершаем его
                     in_peer_block = False
                     peer_belongs_to_user = False
 
+                # Начинаем новый блок [Peer]
                 in_peer_block = True
-                updated_lines.append(line)
+                peer_belongs_to_user = False  # Сброс флага для проверки
+                updated_lines.append(line)  # Добавляем строку [Peer] как есть
                 continue
 
             # Проверка, принадлежит ли текущий блок пользователю
-            if in_peer_block and "PublicKey" in stripped_line and username in stripped_line:
+            if in_peer_block and stripped_line.startswith("PublicKey") and username in stripped_line:
                 peer_belongs_to_user = True
+                if block:
+                    updated_lines.append(f"# {line}")  # Комментируем строку PublicKey
+                else:
+                    updated_lines.append(line.replace("# ", ""))  # Убираем комментарий
+                continue
 
-            # Обработка строк внутри блока [Peer]
+            # Если мы в блоке нужного пользователя, обрабатываем строки
             if in_peer_block and peer_belongs_to_user:
                 if block:
-                    # Комментируем все строки текущего блока
                     if not line.startswith("#"):
-                        updated_lines.append(f"# {line}")
+                        updated_lines.append(f"# {line}")  # Комментируем строку
                     else:
-                        updated_lines.append(line)  # Строка уже закомментирована
+                        updated_lines.append(line)  # Уже закомментировано
                 else:
-                    # Убираем комментарии
                     if line.startswith("# "):
-                        updated_lines.append(line[2:])
+                        updated_lines.append(line[2:])  # Убираем комментарий
                     else:
-                        updated_lines.append(line)  # Строка уже разблокирована
+                        updated_lines.append(line)  # Уже разблокировано
                 continue
 
             # Конец блока [Peer] (пустая строка)
             if in_peer_block and stripped_line == "":
                 in_peer_block = False
                 peer_belongs_to_user = False
+                updated_lines.append(line)  # Добавляем пустую строку
+                continue
 
             # Все остальные строки
             updated_lines.append(line)
 
-        # Сохраняем обновлённый конфигурационный файл
+        # Сохраняем изменения в конфигурационном файле
         with open(SERVER_CONFIG_FILE, "w") as f:
             f.writelines(updated_lines)
 
@@ -134,6 +142,7 @@ def update_wireguard_config(username, block=True):
         print(f"WireGuard синхронизирован для интерфейса {SERVER_WG_NIC}")
 
         return True
+
     except Exception as e:
         print(f"[ERROR] Failed to update WireGuard config: {e}")
         return False
