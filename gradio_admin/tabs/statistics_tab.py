@@ -35,7 +35,7 @@ def statistics_tab():
     with gr.Row():
         stats_table = gr.Dataframe(
             headers=["👤 User", "📊 Used", "📦 Limit", "🌐 IP Address", "⚡ St.", "💳 $", "UID"],
-            value=update_table(True),  # Функция возвращает данные для таблицы
+            value=pd.DataFrame(columns=["👤 User", "📊 Used", "📦 Limit", "🌐 IP Address", "⚡ St.", "💳 $", "UID"]),
             interactive=False,
             wrap=True
         )
@@ -44,10 +44,13 @@ def statistics_tab():
     def refresh_table(show_inactive):
         update_traffic_data(USER_DB_PATH)
         table = update_table(show_inactive)
-        print(f"[DEBUG] Updated table:\n{table}")  # Отладочный вывод
-        user_list = table["👤 User"].tolist() if not table.empty else []  # Извлекаем список пользователей
-        print(f"[DEBUG] User list: {user_list}")  # Отладочный вывод списка пользователей
-        return "", table, gr.update(choices=user_list)
+        if table.empty:
+            print("[DEBUG] Table is empty after update.")
+        else:
+            print(f"[DEBUG] Updated table:\n{table}")
+        user_list = table["👤 User"].tolist() if not table.empty else []
+        print(f"[DEBUG] User list: {user_list}")
+        return "", gr.update(value=table), gr.update(choices=user_list)
 
     # Обновление таблицы при нажатии Refresh
     refresh_button.click(
@@ -62,8 +65,8 @@ def statistics_tab():
         if query:
             table = table.loc[table.apply(lambda row: query.lower() in " ".join(map(str, row)).lower(), axis=1)]
         user_list = table["👤 User"].tolist() if not table.empty else []
-        print(f"[DEBUG] Filtered user list: {user_list}")  # Отладка
-        return table, gr.update(choices=user_list)
+        print(f"[DEBUG] Filtered user list: {user_list}")
+        return gr.update(value=table), gr.update(choices=user_list)
 
     search_input.change(
         fn=search_and_update_table,
@@ -76,7 +79,7 @@ def statistics_tab():
         if not selected_user:
             return "Please select a user to view details."
         user_info = show_user_info(selected_user)
-        print(f"[DEBUG] User info:\n{user_info}")  # Отладка
+        print(f"[DEBUG] User info:\n{user_info}")
         return user_info
 
     user_selector.change(
