@@ -44,14 +44,14 @@ def statistics_tab():
         Обрабатывает выбор строки в таблице и возвращает информацию о выбранном пользователе.
         :param row_index: Индекс выбранной строки.
         """
-        print(f"[DEBUG] Selected row index: {row_index}")  # Отладка
+        print(f"[DEBUG] Selected row index: {row_index}")
+
+        if row_index is None or row_index < 0:
+            return "No row selected. Please select a row from the table!"
 
         try:
-            if row_index is None or row_index < 0:
-                return "No row selected. Please select a row from the table!"
-
-            # Получаем данные таблицы
-            table = update_table(True)
+            # Загружаем данные таблицы
+            table = update_table(True)  # Данные таблицы
             selected_row = table.iloc[row_index]  # Извлекаем строку по индексу
             username = selected_row["👤 User"].strip()  # Извлекаем имя пользователя
             print(f"[DEBUG] Extracted username: {username}")
@@ -62,7 +62,7 @@ def statistics_tab():
             print(f"[DEBUG] IndexError for row_index: {row_index}")
             return "Invalid row index. Please try again."
         except Exception as e:
-            print(f"[DEBUG] Error in handle_user_selection: {e}")
+            print(f"[DEBUG] Error: {e}")
             return f"Error processing data: {str(e)}"
 
 
