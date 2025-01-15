@@ -13,7 +13,7 @@ from modules.traffic_updater import update_traffic_data
 from settings import USER_DB_PATH
 
 def statistics_tab():
-    """Возвращает вкладку статистики пользователей WireGuard."""
+    """Создает вкладку статистики пользователей WireGuard."""
     with gr.Row():
         gr.Markdown("## Statistics")
 
@@ -27,58 +27,64 @@ def statistics_tab():
         selected_user_info = gr.Textbox(
             label="User Information", 
             interactive=False, 
-            value="Use the search below for filtering.",
-            elem_id="user-info-block"  # Добавляем ID для CSS
+            value="Select a user to view details.",
+            elem_id="user-info-block"
         )
-
-    # Кнопки действий на одной строке
-    with gr.Row():
-        block_button = gr.Button("Block", elem_id="block-button")
-        delete_button = gr.Button("Delete", elem_id="delete-button")
 
     # Поле поиска
     with gr.Row():
         search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True)
 
-    # Надпись над таблицей
-    with gr.Row():
-        gr.Markdown("Click a cell to view user details after the search.", elem_id="table-help-text", elem_classes=["small-text"])
-
     # Таблица с данными
     with gr.Row():
         stats_table = gr.Dataframe(
-            headers=["👤 User", "📊 Used", "📦 Limit", "🌐 IP Address", "⚡ St.", "💳 $", "UID"],  # Обновлено
-            value=update_table(True),
+            headers=["👤 User", "📊 Used", "📦 Limit", "🌐 IP Address", "⚡ St.", "💳 $", "UID"],
+            value=update_table(True),  # Функция возвращает данные для таблицы
             interactive=False,  # Таблица только для чтения
             wrap=True
         )
 
-    stats_table.select(
-        fn=show_user_info,
-        inputs=[stats_table, search_input],
-        outputs=[selected_user_info]
-    )   
+    # Функция для отображения информации о пользователе
+    def handle_user_selection(row_index, query):
+        """Показывает информацию о пользователе на основе выбранной строки."""
+        print(f"[DEBUG] row_index: {row_index}")
+        if row_index is None or row_index < 0:
+            return "Select a valid row from the table!"
+        
+        try:
+            # Получаем данные таблицы
+            table = update_table(True)
+            selected_row = table[row_index]  # Извлекаем выбранную строку
+            username = selected_row[0].strip().lower()  # Извлекаем имя пользователя
+            print(f"[DEBUG] Extracted username: {username}")
+            return show_user_info(username, query)
+        except Exception as e:
+            print(f"[DEBUG] Error: {e}")
+            return f"Error processing data: {str(e)}"
 
-    # Обновление данных при нажатии кнопки "Refresh"
+    # Привязка выбора строки к отображению данных
+    stats_table.select(
+        fn=handle_user_selection,
+        inputs=[stats_table.select, search_input],  # Передаём индекс выбранной строки
+        outputs=[selected_user_info]
+    )
+
+    # Обновление таблицы при нажатии Refresh
     def refresh_table(show_inactive):
-        update_traffic_data(USER_DB_PATH)  # Обновление трафика пользователей
-        """Очищает строку поиска, сбрасывает информацию о пользователе и обновляет таблицу."""
-        return "", "Please enter a query to filter user data and then Click a cell to view user details after the search. and perform actions.", update_table(show_inactive)
+        update_traffic_data(USER_DB_PATH)
+        return "", update_table(show_inactive)
 
     refresh_button.click(
         fn=refresh_table,
         inputs=[show_inactive],
-        outputs=[search_input, selected_user_info, stats_table]
+        outputs=[search_input, stats_table]
     )
 
     # Поиск
     def search_and_update_table(query, show_inactive):
-        """Фильтрует данные таблицы по запросу."""
         table = update_table(show_inactive)
         if query:
-            table = [
-                row for row in table if query.lower() in " ".join(map(str, row)).lower()
-            ]
+            table = [row for row in table if query.lower() in " ".join(map(str, row)).lower()]
         return table
 
     search_input.change(
