@@ -26,6 +26,11 @@ def statistics_tab():
     with gr.Row():
         search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True)
 
+    # Выбор пользователя
+    with gr.Row():
+        user_selector = gr.Dropdown(label="Select User", choices=[], interactive=True)
+        user_info_display = gr.Textbox(label="User Details", lines=10, interactive=False)
+
     # Таблица с данными
     with gr.Row():
         stats_table = gr.Dataframe(
@@ -35,15 +40,18 @@ def statistics_tab():
             wrap=True
         )
 
-    # Обновление таблицы при нажатии Refresh
+    # Функция для обновления таблицы и списка пользователей
     def refresh_table(show_inactive):
         update_traffic_data(USER_DB_PATH)
-        return "", update_table(show_inactive)
+        table = update_table(show_inactive)
+        user_list = table["👤 User"].tolist()
+        return "", table, user_list
 
+    # Обновление таблицы при нажатии Refresh
     refresh_button.click(
         fn=refresh_table,
         inputs=[show_inactive],
-        outputs=[search_input, stats_table]
+        outputs=[search_input, stats_table, user_selector]
     )
 
     # Поиск
@@ -51,10 +59,23 @@ def statistics_tab():
         table = update_table(show_inactive)
         if query:
             table = [row for row in table if query.lower() in " ".join(map(str, row)).lower()]
-        return table
+        user_list = table["👤 User"].tolist()
+        return table, user_list
 
     search_input.change(
         fn=search_and_update_table,
         inputs=[search_input, show_inactive],
-        outputs=[stats_table]
+        outputs=[stats_table, user_selector]
+    )
+
+    # Показ информации о пользователе
+    def display_user_info(selected_user):
+        if not selected_user:
+            return "Please select a user to view details."
+        return show_user_info(selected_user)
+
+    user_selector.change(
+        fn=display_user_info,
+        inputs=[user_selector],
+        outputs=[user_info_display]
     )
