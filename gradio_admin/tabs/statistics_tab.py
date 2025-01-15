@@ -49,7 +49,7 @@ def statistics_tab():
             wrap=True
         )
 
-    # Функция для обновления таблицы и списка пользователей
+    # Функция для обновления таблицы и сброса данных
     def refresh_table(show_inactive):
         update_traffic_data(USER_DB_PATH)
         table = update_table(show_inactive)
@@ -59,6 +59,7 @@ def statistics_tab():
             print(f"[DEBUG] Updated table:\n{table}")
         user_list = table["👤 User"].tolist() if not table.empty else []
         print(f"[DEBUG] User list: {user_list}")
+        # Сбрасываем user_info_display
         return "", table, user_list, ""
 
     # Обновление таблицы при нажатии Refresh
