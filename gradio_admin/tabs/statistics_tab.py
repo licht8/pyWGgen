@@ -34,7 +34,7 @@ def statistics_tab():
     with gr.Row():
         stats_table = gr.Dataframe(
             headers=["👤 User", "📊 Used", "📦 Limit", "🌐 IP Address", "⚡ St.", "💳 $", "UID"],
-            value=update_table(True).values.tolist(),  # Преобразуем в список списков
+            value=update_table(True).values.tolist(),
             interactive=False  # Таблица только для чтения
         )
 
@@ -43,24 +43,25 @@ def statistics_tab():
         """Обрабатывает выбор строки в таблице."""
         print(f"[DEBUG] Selected data: {selected_data}")  # Отладка
 
+        # Проверка на пустые данные
         if selected_data is None:
-            return "No row selected. Please select a row from the table!"
+            return "No row selected. Please select a row from the table."
 
         try:
-            # Извлекаем данные строки
-            username = selected_data[0]  # Извлекаем имя пользователя из первой ячейки строки
+            # Извлечение имени пользователя из выбранной строки
+            username = selected_data[0]  # Первый элемент строки
             print(f"[DEBUG] Extracted username: {username}")
             return show_user_info(username)  # Форматируем данные пользователя
         except Exception as e:
-            print(f"[DEBUG] Error in handle_user_selection: {e}")  # Отладка
+            print(f"[DEBUG] Error in handle_user_selection: {e}")
             return f"Error processing data: {str(e)}"
 
 
     # Привязка выбора строки к отображению данных
     stats_table.select(
         fn=handle_user_selection,
-        inputs=None,  # Убираем входные параметры
-        outputs=[selected_user_info]
+        inputs=[stats_table],  # Передаём таблицу как вход
+        outputs=[selected_user_info]  # Текстбокс как выход
     )
 
     # Обновление таблицы при нажатии Refresh
