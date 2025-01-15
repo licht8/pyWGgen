@@ -2,7 +2,7 @@
 
 import json
 import subprocess  # Для управления VPN через системные команды
-from settings import USER_DB_PATH, WG_CONFIG_PATH  # Путь к JSON и конфигурации WireGuard
+from settings import USER_DB_PATH, SERVER_CONFIG_FILE  # Путь к JSON и конфигурации WireGuard
 
 def load_user_records():
     """Загружает записи пользователей из JSON."""
@@ -80,7 +80,7 @@ def disable_vpn_for_user(username):
     """
     try:
         # Например, отключаем пользователя через `wg` команду
-        command = f"wg set {WG_CONFIG_PATH} peer {username} remove"
+        command = f"wg set {SERVER_CONFIG_FILE} peer {username} remove"
         subprocess.run(command, shell=True, check=True)
         return True
     except subprocess.CalledProcessError as e:
@@ -93,7 +93,7 @@ def enable_vpn_for_user(username):
     """
     try:
         # Например, восстанавливаем конфигурацию пользователя через WireGuard
-        command = f"wg set {WG_CONFIG_PATH} peer {username} allowed-ips 0.0.0.0/0"
+        command = f"wg set {SERVER_CONFIG_FILE} peer {username} allowed-ips 0.0.0.0/0"
         subprocess.run(command, shell=True, check=True)
         return True
     except subprocess.CalledProcessError as e:
