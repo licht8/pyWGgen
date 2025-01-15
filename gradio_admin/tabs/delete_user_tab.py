@@ -29,10 +29,6 @@ def delete_user_tab():
         # Кнопка для обновления списка
         refresh_list_button = gr.Button("Refresh List")
 
-    # Информация о выбранном пользователе
-    with gr.Row():
-        user_info_display = gr.Textbox(label="User Info", value="", lines=5, interactive=False)
-
     # Кнопка для удаления
     with gr.Row():
         delete_button = gr.Button("Delete User")
@@ -49,19 +45,6 @@ def delete_user_tab():
         fn=refresh_user_list,
         inputs=[],
         outputs=[user_selector, result_display]
-    )
-
-    # Обновление информации о выбранном пользователе
-    def display_user_info(selected_user):
-        if not selected_user or selected_user == "Select a user":
-            return "No user selected."
-        user_info = show_user_info(selected_user)
-        return user_info
-
-    user_selector.change(
-        fn=display_user_info,
-        inputs=[user_selector],
-        outputs=[user_info_display]
     )
 
     # Удаление пользователя
