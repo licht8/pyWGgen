@@ -87,6 +87,14 @@ def statistics_tab():
     def display_user_info(selected_user):
         if not selected_user:
             return "Please select a user to view details."
+
+        # Убедимся, что selected_user — это строка
+        if isinstance(selected_user, list) and len(selected_user) > 0:
+            selected_user = selected_user[0]
+        elif isinstance(selected_user, list):
+            return "No user selected."
+
+        # Получение информации о пользователе
         user_info = show_user_info(selected_user)
         print(f"[DEBUG] User info:\n{user_info}")
         return user_info
