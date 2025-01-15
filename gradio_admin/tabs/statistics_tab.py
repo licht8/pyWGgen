@@ -38,7 +38,7 @@ def statistics_tab():
     # Выбор пользователя
     with gr.Row():
         user_selector = gr.Dropdown(label="Select User", choices=initial_user_list, interactive=True)
-        user_info_display = gr.Textbox(label="User Details", lines=10, interactive=False)
+        user_info_display = gr.Textbox(label="User Details", value="", lines=10, interactive=False)
 
     # Таблица с данными
     with gr.Row():
@@ -59,13 +59,13 @@ def statistics_tab():
             print(f"[DEBUG] Updated table:\n{table}")
         user_list = table["👤 User"].tolist() if not table.empty else []
         print(f"[DEBUG] User list: {user_list}")
-        return "", table, user_list
+        return "", table, user_list, ""
 
     # Обновление таблицы при нажатии Refresh
     refresh_button.click(
         fn=refresh_table,
         inputs=[show_inactive],
-        outputs=[search_input, stats_table, user_selector]
+        outputs=[search_input, stats_table, user_selector, user_info_display]
     )
 
     # Поиск
@@ -86,13 +86,12 @@ def statistics_tab():
     # Показ информации о пользователе
     def display_user_info(selected_user):
         if not selected_user:
-            return "Please select a user to view details."
-
+            return ""
         # Убедимся, что selected_user — это строка
         if isinstance(selected_user, list) and len(selected_user) > 0:
             selected_user = selected_user[0]
         elif isinstance(selected_user, list):
-            return "No user selected."
+            return ""
 
         # Получение информации о пользователе
         user_info = show_user_info(selected_user)
