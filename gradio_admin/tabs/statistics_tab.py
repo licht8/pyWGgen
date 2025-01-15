@@ -65,7 +65,7 @@ def statistics_tab():
     # Привязка выбора строки к отображению данных
     stats_table.select(
         fn=handle_user_selection,
-        inputs=[stats_table.select, search_input],  # Передаём индекс выбранной строки
+        inputs=[search_input],  # Передаём только search_input
         outputs=[selected_user_info]
     )
 
