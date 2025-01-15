@@ -59,6 +59,9 @@ def statistics_tab():
         outputs=[search_input, stats_table, user_selector]
     )
 
+    # Автоматическая загрузка данных при старте
+    gr.Page(load_fn=refresh_table, inputs=[show_inactive], outputs=[search_input, stats_table, user_selector])
+
     # Поиск
     def search_and_update_table(query, show_inactive):
         table = update_table(show_inactive)
