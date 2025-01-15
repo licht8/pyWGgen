@@ -53,21 +53,24 @@ def statistics_tab():
 
     # Обработка выбора строки в таблице
     def handle_user_selection(row_index):
-        print(f"[DEBUG] Row index selected: {row_index}")
+        """Показывает информацию о пользователе на основе выбранной строки."""
+        print(f"[DEBUG] Row index received: {row_index}")
         try:
-            row_index = int(row_index)  # Преобразование индекса строки в число
-            table = update_table(True)  # Загружаем данные таблицы
+            # Проверяем, передан ли индекс строки
+            if row_index is None:
+                return "No row selected. Please select a row from the table!"
+
+            # Преобразуем индекс в целое число
+            row_index = int(row_index)
+
+            # Получаем данные таблицы
+            table = update_table(True)
             selected_row = table.iloc[row_index]  # Извлекаем выбранную строку
             username = selected_row["👤 User"]
+            print(f"[DEBUG] Extracted username: {username}")
             return show_user_info(username, None)  # Форматируем данные пользователя
         except ValueError:
             return "Invalid row selected. Please try again."
         except Exception as e:
             print(f"[DEBUG] Error in handle_user_selection: {e}")
             return f"Error processing data: {str(e)}"
-
-    stats_table.select(
-        fn=handle_user_selection,
-        inputs=[],
-        outputs=[selected_user_info]
-    )
