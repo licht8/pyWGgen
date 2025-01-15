@@ -13,7 +13,7 @@ from modules.traffic_updater import update_traffic_data
 from settings import USER_DB_PATH
 
 def statistics_tab():
-    """Создаёт вкладку статистики пользователей WireGuard."""
+    """Создает вкладку статистики пользователей WireGuard."""
     with gr.Row():
         gr.Markdown("## Statistics")
 
@@ -22,67 +22,39 @@ def statistics_tab():
         show_inactive = gr.Checkbox(label="Show inactive", value=True)
         refresh_button = gr.Button("Refresh")
 
-    # Область для отображения информации о выбранном пользователе
+    # Поле поиска
     with gr.Row():
-        selected_user_info = gr.Textbox(
-            label="User Information",
-            interactive=False,
-            value="Select a user to view details."
-        )
+        search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True)
 
-    # Таблица с данными пользователей
+    # Таблица с данными
     with gr.Row():
         stats_table = gr.Dataframe(
             headers=["👤 User", "📊 Used", "📦 Limit", "🌐 IP Address", "⚡ St.", "💳 $", "UID"],
-            value=update_table(True).values.tolist(),
-            interactive=False  # Таблица только для чтения
+            value=update_table(True),  # Функция возвращает данные для таблицы
+            interactive=False,
+            wrap=True
         )
-
-    # Функция для обработки выбора строки
-    def handle_user_selection(row_index):
-        """
-        Обрабатывает выбор строки в таблице и возвращает информацию о выбранном пользователе.
-        :param row_index: Индекс выбранной строки.
-        """
-        print(f"[DEBUG] Selected row index: {row_index}")
-
-        if row_index is None or row_index < 0:
-            return "No row selected. Please select a row from the table!"
-
-        try:
-            # Загружаем данные таблицы
-            table = update_table(True)  # Данные таблицы
-            selected_row = table.iloc[row_index]  # Извлекаем строку по индексу
-            username = selected_row["👤 User"].strip()  # Извлекаем имя пользователя
-            print(f"[DEBUG] Extracted username: {username}")
-
-            # Возвращаем информацию о пользователе
-            return show_user_info(username)
-        except IndexError:
-            print(f"[DEBUG] IndexError for row_index: {row_index}")
-            return "Invalid row index. Please try again."
-        except Exception as e:
-            print(f"[DEBUG] Error: {e}")
-            return f"Error processing data: {str(e)}"
-
-
-
-    # Привязка выбора строки к отображению данных
-    stats_table.select(
-        fn=handle_user_selection,  # Передаём функцию для обработки
-        inputs=None,               # Gradio автоматически передаёт индекс строки
-        outputs=[selected_user_info]  # Поле для отображения информации
-    )
 
     # Обновление таблицы при нажатии Refresh
     def refresh_table(show_inactive):
-        update_traffic_data(USER_DB_PATH)  # Обновляем данные
-        return update_table(show_inactive).values.tolist(), "Select a user to view details."
+        update_traffic_data(USER_DB_PATH)
+        return "", update_table(show_inactive)
 
     refresh_button.click(
         fn=refresh_table,
         inputs=[show_inactive],
-        outputs=[stats_table, selected_user_info]
+        outputs=[search_input, stats_table]
     )
 
-    return gr.Blocks()
+    # Поиск
+    def search_and_update_table(query, show_inactive):
+        table = update_table(show_inactive)
+        if query:
+            table = [row for row in table if query.lower() in " ".join(map(str, row)).lower()]
+        return table
+
+    search_input.change(
+        fn=search_and_update_table,
+        inputs=[search_input, show_inactive],
+        outputs=[stats_table]
+    )
