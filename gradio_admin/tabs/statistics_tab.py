@@ -44,14 +44,14 @@ def statistics_tab():
         Обрабатывает выбор строки в таблице и возвращает информацию о выбранном пользователе.
         :param row_index: Индекс выбранной строки.
         """
-        print(f"[DEBUG] Selected row index: {row_index}")
+        print(f"[DEBUG] Selected row index: {row_index}")  # Отладка
 
         try:
             if row_index is None or row_index < 0:
                 return "No row selected. Please select a row from the table!"
 
             # Получаем данные таблицы
-            table = update_table(True)
+            table = update_table(True)  # Предполагаем, что update_table возвращает DataFrame
             selected_row = table.iloc[row_index]  # Извлекаем строку по индексу
             username = selected_row["👤 User"].strip()  # Извлекаем имя пользователя
             print(f"[DEBUG] Extracted username: {username}")
@@ -69,8 +69,8 @@ def statistics_tab():
     # Привязка выбора строки к отображению данных
     stats_table.select(
         fn=handle_user_selection,
-        inputs=None,  # Для select inputs можно не указывать
-        outputs=[selected_user_info]  # Вывод в поле информации о пользователе
+        inputs=None,  # Указываем, что Gradio передаёт только индекс строки
+        outputs=[selected_user_info]
     )
 
     # Обновление таблицы при нажатии Refresh
