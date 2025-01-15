@@ -39,28 +39,22 @@ def statistics_tab():
         )
 
     # Функция для обработки выбора строки
-    def handle_user_selection(row_index):
-        print(f"[DEBUG] Raw row_index: {row_index}")  # Отладка
+    def handle_user_selection(selected_data):
+        """Обрабатывает выбор строки в таблице."""
+        print(f"[DEBUG] Selected data: {selected_data}")  # Отладка
+
+        if selected_data is None:
+            return "No row selected. Please select a row from the table!"
 
         try:
-            if row_index is None or row_index == "":
-                return "No row selected. Please select a row from the table."
-
-            row_index = int(row_index)  # Преобразуем индекс строки
-            print(f"[DEBUG] Parsed row_index: {row_index}")  # Отладка
-
-            # Получаем данные таблицы
-            table = update_table(True).values.tolist()  # Загружаем данные как список списков
-            selected_row = table[row_index]  # Извлекаем выбранную строку
-            username = selected_row[0]  # Извлекаем имя пользователя
+            # Извлекаем данные строки
+            username = selected_data[0]  # Извлекаем имя пользователя из первой ячейки строки
             print(f"[DEBUG] Extracted username: {username}")
             return show_user_info(username)  # Форматируем данные пользователя
-        except (ValueError, IndexError) as e:
-            print(f"[DEBUG] Error in handle_user_selection: {e}")  # Отладка
-            return "Invalid row index. Please try again."
         except Exception as e:
-            print(f"[DEBUG] Unexpected error in handle_user_selection: {e}")  # Отладка
+            print(f"[DEBUG] Error in handle_user_selection: {e}")  # Отладка
             return f"Error processing data: {str(e)}"
+
 
     # Привязка выбора строки к отображению данных
     stats_table.select(
