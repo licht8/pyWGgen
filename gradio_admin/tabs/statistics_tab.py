@@ -49,7 +49,7 @@ def statistics_tab():
             wrap=True
         )
 
-    # Функция для обновления таблицы и списка пользователей
+    # Функция для обновления таблицы и сброса данных
     def refresh_table(show_inactive):
         update_traffic_data(USER_DB_PATH)
         table = update_table(show_inactive)
@@ -86,8 +86,17 @@ def statistics_tab():
 
     # Показ информации о пользователе
     def display_user_info(selected_user):
+        # Убедимся, что selected_user — это строка, а не список
+        if isinstance(selected_user, list):
+            if len(selected_user) > 0:
+                selected_user = selected_user[0]
+            else:
+                selected_user = "Choose user"
+
+        # Если выбран "Choose user", возвращаем пустую строку
         if not selected_user or selected_user == "Choose user":
             return ""
+
         # Получение информации о пользователе
         user_info = show_user_info(selected_user)
         print(f"[DEBUG] User info:\n{user_info}")
