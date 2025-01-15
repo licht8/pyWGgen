@@ -44,7 +44,7 @@ def statistics_tab():
     def refresh_table(show_inactive):
         update_traffic_data(USER_DB_PATH)
         table = update_table(show_inactive)
-        user_list = table["👤 User"].tolist()
+        user_list = table["👤 User"].tolist()  # Извлекаем список пользователей из таблицы
         return "", table, user_list
 
     # Обновление таблицы при нажатии Refresh
@@ -58,8 +58,8 @@ def statistics_tab():
     def search_and_update_table(query, show_inactive):
         table = update_table(show_inactive)
         if query:
-            table = [row for row in table if query.lower() in " ".join(map(str, row)).lower()]
-        user_list = table["👤 User"].tolist()
+            table = table.loc[table.apply(lambda row: query.lower() in " ".join(map(str, row)).lower(), axis=1)]
+        user_list = table["👤 User"].tolist()  # Обновляем список пользователей
         return table, user_list
 
     search_input.change(
