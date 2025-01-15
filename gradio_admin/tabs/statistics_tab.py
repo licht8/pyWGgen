@@ -46,8 +46,14 @@ def statistics_tab():
 
     # Функция для отображения информации о пользователе
     def handle_user_selection(row_index, query=None):
+        """Показывает информацию о пользователе на основе выбранной строки."""
         print(f"[DEBUG] Raw row_index: {row_index}")  # Отладка
+
         try:
+            # Проверка на пустое значение
+            if not row_index:
+                return "No row selected. Please select a row from the table!"
+
             row_index = int(row_index)  # Преобразование в число
             print(f"[DEBUG] Parsed row_index: {row_index}")  # Отладка
 
@@ -66,6 +72,7 @@ def statistics_tab():
         except Exception as e:
             print(f"[DEBUG] Error: {e}")  # Отладка
             return f"Error processing data: {str(e)}"
+
 
 
     # Привязка выбора строки к отображению данных
