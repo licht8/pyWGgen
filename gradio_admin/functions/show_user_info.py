@@ -6,17 +6,18 @@ from gradio_admin.functions.format_helpers import format_time
 
 def show_user_info(selected_data, query):
     """Показывает подробную информацию о выбранном пользователе."""
-    print(f"[DEBUG] selected_data: {selected_data}")  # Отладка
-    print(f"[DEBUG] query: {query}")  # Отладка
+    print(f"[DEBUG] selected_data: {selected_data}")
+    print(f"[DEBUG] query: {query}")
 
     # Проверка на пустой DataFrame
     if selected_data is None or selected_data.empty:
         return "Select a valid row from the table!"
 
     try:
-        # Извлекаем первую строку DataFrame
-        row = selected_data.iloc[0].tolist()  # Преобразуем строку в список
-        username = row[0].strip().lower()  # Имя пользователя
+        # Определяем индекс выбранной строки
+        selected_index = selected_data.index[0]
+        row = selected_data.iloc[selected_index].tolist()  # Преобразуем выбранную строку в список
+        username = row[0].strip().lower()  # Извлекаем имя пользователя
         print(f"[DEBUG] Extracted username: {username}")
 
         # Загружаем данные из user_records.json
@@ -57,7 +58,3 @@ def show_user_info(selected_data, query):
     except Exception as e:
         print(f"[DEBUG] Error: {e}")
         return f"Error processing data: {str(e)}"
-
-def clear_user_info():
-    """Очищает информацию о пользователе."""
-    return ""
