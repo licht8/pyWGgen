@@ -71,8 +71,8 @@ def unblock_user(username):
 def update_wireguard_config(username, block=True):
     """
     Обновляет конфигурационный файл WireGuard.
-    1. Если block=True, комментирует запись пользователя.
-    2. Если block=False, восстанавливает запись.
+    1. Если block=True, комментирует весь блок [Peer] для пользователя.
+    2. Если block=False, восстанавливает блок [Peer].
     """
     try:
         with open(SERVER_CONFIG_FILE, "r") as f:
@@ -80,37 +80,49 @@ def update_wireguard_config(username, block=True):
 
         updated_lines = []
         in_peer_block = False
-        peer_found = False
+        peer_belongs_to_user = False
 
         for line in config_lines:
-            # Начало блока [Peer]
-            if line.strip() == "[Peer]":
-                in_peer_block = True
-                peer_found = False
-                updated_lines.append(line)  # Добавляем [Peer] (не комментируем)
+            stripped_line = line.strip()
 
-            elif in_peer_block and "PublicKey" in line and username in line:
-                # Идентифицируем, что этот [Peer] принадлежит пользователю
-                peer_found = True
-                if block:
-                    # Если блокируем, добавляем комментарии
-                    updated_lines.append(f"# {line}")
-                else:
-                    # Если разблокируем, убираем комментарии
-                    updated_lines.append(line.replace("# ", ""))
-            elif in_peer_block and line.strip() == "":
-                # Конец блока [Peer]
-                in_peer_block = False
-                updated_lines.append(line)  # Добавляем пустую строку как есть
-            elif peer_found:
-                # Если мы внутри блока нужного [Peer], комментируем или восстанавливаем строки
-                if block:
-                    updated_lines.append(f"# {line}")
-                else:
-                    updated_lines.append(line.replace("# ", ""))
-            else:
-                # Все остальные строки добавляем без изменений
+            # Начало нового блока [Peer]
+            if stripped_line == "[Peer]":
+                if in_peer_block:
+                    # Если мы в предыдущем блоке, завершаем его
+                    in_peer_block = False
+                    peer_belongs_to_user = False
+
+                in_peer_block = True
                 updated_lines.append(line)
+                continue
+
+            # Проверка, принадлежит ли текущий блок пользователю
+            if in_peer_block and "PublicKey" in stripped_line and username in stripped_line:
+                peer_belongs_to_user = True
+
+            # Обработка строк внутри блока [Peer]
+            if in_peer_block and peer_belongs_to_user:
+                if block:
+                    # Комментируем все строки текущего блока
+                    if not line.startswith("#"):
+                        updated_lines.append(f"# {line}")
+                    else:
+                        updated_lines.append(line)  # Строка уже закомментирована
+                else:
+                    # Убираем комментарии
+                    if line.startswith("# "):
+                        updated_lines.append(line[2:])
+                    else:
+                        updated_lines.append(line)  # Строка уже разблокирована
+                continue
+
+            # Конец блока [Peer] (пустая строка)
+            if in_peer_block and stripped_line == "":
+                in_peer_block = False
+                peer_belongs_to_user = False
+
+            # Все остальные строки
+            updated_lines.append(line)
 
         # Сохраняем обновлённый конфигурационный файл
         with open(SERVER_CONFIG_FILE, "w") as f:
