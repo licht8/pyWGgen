@@ -46,13 +46,11 @@ def statistics_tab():
 
     # Функция для отображения информации о пользователе
     def handle_user_selection(row_index, query=None):
-        """Показывает информацию о пользователе на основе выбранной строки."""
-        print(f"[DEBUG] row_index: {row_index}")
-        
+        print(f"[DEBUG] Raw row_index: {row_index}")  # Отладка
         try:
-            # Преобразуем индекс в число
-            row_index = int(row_index)
-            
+            row_index = int(row_index)  # Преобразование в число
+            print(f"[DEBUG] Parsed row_index: {row_index}")  # Отладка
+
             if row_index < 0:
                 return "Select a valid row from the table!"
             
@@ -63,10 +61,12 @@ def statistics_tab():
             print(f"[DEBUG] Extracted username: {username}")
             return show_user_info(username, query)
         except ValueError:
+            print(f"[DEBUG] ValueError for row_index: {row_index}")  # Отладка
             return "Invalid row index. Please try again."
         except Exception as e:
-            print(f"[DEBUG] Error: {e}")
+            print(f"[DEBUG] Error: {e}")  # Отладка
             return f"Error processing data: {str(e)}"
+
 
     # Привязка выбора строки к отображению данных
     stats_table.select(
