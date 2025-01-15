@@ -5,60 +5,55 @@
 import gradio as gr # type: ignore
 from gradio_admin.functions.delete_user import delete_user
 from gradio_admin.functions.user_records import load_user_records
-from gradio_admin.functions.show_user_info import show_user_info
+from gradio_admin.functions.block_user import block_user, unblock_user
 
 def delete_user_tab():
-    """Создает вкладку для удаления пользователей WireGuard."""
-    # Загрузка пользователей из базы
+    """Создает вкладку для удаления, блокировки и разблокировки пользователей WireGuard."""
     def get_user_list():
         records = load_user_records()
-        return ["Select a user"] + list(records.keys())
+        user_list = []
+        for username, user_data in records.items():
+            status = user_data.get("status", "unknown")
+            display_status = f"({status.capitalize()})" if status else ""
+            user_list.append(f"{username} {display_status}".strip())
+        return ["Select a user"] + user_list
 
-    # Поле для выбора пользователя
-    with gr.Row():
-        gr.Markdown("## Delete Users")
-
-    with gr.Row():
-        # Выпадающий список для выбора пользователя
-        user_selector = gr.Dropdown(
-            label="Select User",
-            choices=get_user_list(),
-            value="Select a user",
-            interactive=True
-        )
-        # Кнопка для обновления списка
-        refresh_list_button = gr.Button("Refresh List")
-
-    # Кнопка для удаления
-    with gr.Row():
-        delete_button = gr.Button("Delete User")
-
-    # Результат удаления
-    with gr.Row():
-        result_display = gr.Textbox(label="Result", value="", lines=2, interactive=False)
-
-    # Функция для обновления списка пользователей
     def refresh_user_list():
         return gr.update(choices=get_user_list(), value="Select a user"), "User list updated."
 
-    refresh_list_button.click(
-        fn=refresh_user_list,
-        inputs=[],
-        outputs=[user_selector, result_display]
-    )
-
-    # Удаление пользователя
     def handle_user_deletion(selected_user):
-        if not selected_user or selected_user == "Select a user":
-            return "No user selected to delete."
-        success = delete_user(selected_user)
+        username = selected_user.split(" ")[0]
+        success = delete_user(username)
         if success:
-            return gr.update(choices=get_user_list(), value="Select a user"), f"User '{selected_user}' deleted successfully."
-        else:
-            return gr.update(), f"Failed to delete user '{selected_user}'."
+            return gr.update(choices=get_user_list(), value="Select a user"), f"User '{username}' deleted successfully."
+        return gr.update(), f"Failed to delete user '{username}'."
 
-    delete_button.click(
-        fn=handle_user_deletion,
-        inputs=[user_selector],
-        outputs=[user_selector, result_display]
-    )
+    def handle_user_block(selected_user):
+        username = selected_user.split(" ")[0]
+        success, message = block_user(username)
+        return gr.update(choices=get_user_list(), value="Select a user"), message
+
+    def handle_user_unblock(selected_user):
+        username = selected_user.split(" ")[0]
+        success, message = unblock_user(username)
+        return gr.update(choices=get_user_list(), value="Select a user"), message
+
+    with gr.Row():
+        gr.Markdown("## Manage Users")
+
+    with gr.Row():
+        user_selector = gr.Dropdown(choices=get_user_list(), value="Select a user", interactive=True)
+        refresh_button = gr.Button("Refresh List")
+
+    with gr.Row():
+        delete_button = gr.Button("Delete User")
+        block_button = gr.Button("Block User")
+        unblock_button = gr.Button("Unblock User")
+
+    with gr.Row():
+        result_display = gr.Textbox(label="Result", value="", lines=2, interactive=False)
+
+    refresh_button.click(fn=refresh_user_list, inputs=[], outputs=[user_selector, result_display])
+    delete_button.click(fn=handle_user_deletion, inputs=[user_selector], outputs=[user_selector, result_display])
+    block_button.click(fn=handle_user_block, inputs=[user_selector], outputs=[user_selector, result_display])
+    unblock_button.click(fn=handle_user_unblock, inputs=[user_selector], outputs=[user_selector, result_display])
