@@ -18,7 +18,7 @@ def statistics_tab():
     def get_initial_data():
         update_traffic_data(USER_DB_PATH)
         table = update_table(True)
-        user_list = table["👤 User"].tolist() if not table.empty else []
+        user_list = ["Choose user"] + table["👤 User"].tolist() if not table.empty else ["Choose user"]
         return table, user_list
 
     initial_table, initial_user_list = get_initial_data()
@@ -37,7 +37,7 @@ def statistics_tab():
 
     # Выбор пользователя
     with gr.Row():
-        user_selector = gr.Dropdown(label="Select User", choices=initial_user_list, interactive=True)
+        user_selector = gr.Dropdown(label="Select User", choices=initial_user_list, value="Choose user", interactive=True)
         user_info_display = gr.Textbox(label="User Details", value="", lines=10, interactive=False)
 
     # Таблица с данными
@@ -49,7 +49,7 @@ def statistics_tab():
             wrap=True
         )
 
-    # Функция для обновления таблицы и сброса данных
+    # Функция для обновления таблицы и списка пользователей
     def refresh_table(show_inactive):
         update_traffic_data(USER_DB_PATH)
         table = update_table(show_inactive)
@@ -57,7 +57,7 @@ def statistics_tab():
             print("[DEBUG] Table is empty after update.")
         else:
             print(f"[DEBUG] Updated table:\n{table}")
-        user_list = table["👤 User"].tolist() if not table.empty else []
+        user_list = ["Choose user"] + table["👤 User"].tolist() if not table.empty else ["Choose user"]
         print(f"[DEBUG] User list: {user_list}")
         # Сбрасываем user_info_display
         return "", table, user_list, ""
@@ -74,7 +74,7 @@ def statistics_tab():
         table = update_table(show_inactive)
         if query:
             table = table.loc[table.apply(lambda row: query.lower() in " ".join(map(str, row)).lower(), axis=1)]
-        user_list = table["👤 User"].tolist() if not table.empty else []
+        user_list = ["Choose user"] + table["👤 User"].tolist() if not table.empty else ["Choose user"]
         print(f"[DEBUG] Filtered user list: {user_list}")
         return table, user_list
 
@@ -86,14 +86,8 @@ def statistics_tab():
 
     # Показ информации о пользователе
     def display_user_info(selected_user):
-        if not selected_user:
+        if not selected_user or selected_user == "Choose user":
             return ""
-        # Убедимся, что selected_user — это строка
-        if isinstance(selected_user, list) and len(selected_user) > 0:
-            selected_user = selected_user[0]
-        elif isinstance(selected_user, list):
-            return ""
-
         # Получение информации о пользователе
         user_info = show_user_info(selected_user)
         print(f"[DEBUG] User info:\n{user_info}")
