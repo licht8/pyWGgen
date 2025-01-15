@@ -7,7 +7,7 @@ from gradio_admin.functions.delete_user import delete_user
 from gradio_admin.functions.user_records import load_user_records
 from gradio_admin.functions.show_user_info import show_user_info
 
-def delete_users_tab():
+def delete_user_tab():
     """Создает вкладку для удаления пользователей WireGuard."""
     # Загрузка пользователей из базы
     def get_user_list():
