@@ -29,73 +29,84 @@ def block_user(username):
     """
     Блокирует пользователя:
     1. Обновляет статус в JSON на 'blocked'.
-    2. Отключает VPN (например, через WireGuard).
+    2. Удаляет пользователя из конфигурации WireGuard.
     """
     records = load_user_records()
     if username not in records:
         return False, f"User '{username}' not found."
     
-    # Обновляем статус
+    # Обновляем статус в JSON
     records[username]["status"] = "blocked"
-    
-    # Сохраняем обновления в JSON
     if not save_user_records(records):
         return False, f"Failed to update JSON for user '{username}'."
-    
-    # Отключаем VPN для пользователя
-    result = disable_vpn_for_user(username)
-    if result:
-        return True, f"User '{username}' has been blocked and VPN access revoked."
-    else:
-        return False, f"Failed to revoke VPN access for user '{username}'."
+
+    # Удаляем пользователя из конфигурации
+    if not update_wireguard_config(username, block=True):
+        return False, f"Failed to block VPN access for user '{username}'."
+
+    return True, f"User '{username}' has been blocked and VPN access revoked."
 
 def unblock_user(username):
     """
     Разблокирует пользователя:
     1. Обновляет статус в JSON на 'active'.
-    2. Включает VPN (например, через WireGuard).
+    2. Восстанавливает пользователя в конфигурации WireGuard.
     """
     records = load_user_records()
     if username not in records:
         return False, f"User '{username}' not found."
     
-    # Обновляем статус
+    # Обновляем статус в JSON
     records[username]["status"] = "active"
-    
-    # Сохраняем обновления в JSON
     if not save_user_records(records):
         return False, f"Failed to update JSON for user '{username}'."
-    
-    # Включаем VPN для пользователя
-    result = enable_vpn_for_user(username)
-    if result:
-        return True, f"User '{username}' has been unblocked and VPN access restored."
-    else:
+
+    # Восстанавливаем пользователя в конфигурации
+    if not update_wireguard_config(username, block=False):
         return False, f"Failed to restore VPN access for user '{username}'."
 
-def disable_vpn_for_user(username):
-    """
-    Отключает VPN для пользователя.
-    Предполагается, что VPN управляется через WireGuard.
-    """
-    try:
-        # Например, отключаем пользователя через `wg` команду
-        command = f"wg set {SERVER_CONFIG_FILE} peer {username} remove"
-        subprocess.run(command, shell=True, check=True)
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"[ERROR] Failed to disable VPN for user '{username}': {e}")
-        return False
+    return True, f"User '{username}' has been unblocked and VPN access restored."
 
-def enable_vpn_for_user(username):
+def update_wireguard_config(username, block=True):
     """
-    Включает VPN для пользователя.
+    Обновляет конфигурационный файл WireGuard.
+    1. Если block=True, комментирует запись пользователя.
+    2. Если block=False, восстанавливает запись.
     """
     try:
-        # Например, восстанавливаем конфигурацию пользователя через WireGuard
-        command = f"wg set {SERVER_CONFIG_FILE} peer {username} allowed-ips 0.0.0.0/0"
-        subprocess.run(command, shell=True, check=True)
+        with open(SERVER_CONFIG_FILE, "r") as f:
+            config_lines = f.readlines()
+
+        updated_lines = []
+        found_peer = False
+
+        for line in config_lines:
+            if f"[Peer] # {username}" in line or (f"[Peer]" in line and username in line):
+                found_peer = True
+                if block:
+                    # Комментируем запись для блокировки
+                    updated_lines.append(f"# {line}")
+                else:
+                    # Восстанавливаем запись
+                    updated_lines.append(line.replace("# ", ""))
+            elif found_peer and line.startswith("PublicKey") and block:
+                updated_lines.append(f"# {line}")
+            elif found_peer and line.startswith("PublicKey") and not block:
+                updated_lines.append(line)
+            else:
+                updated_lines.append(line)
+
+            if found_peer and line.strip() == "":
+                # После пустой строки завершаем обработку [Peer]
+                found_peer = False
+
+        # Сохраняем обновлённый конфигурационный файл
+        with open(SERVER_CONFIG_FILE, "w") as f:
+            f.writelines(updated_lines)
+
+        # Применяем изменения в WireGuard
+        subprocess.run(["systemctl", "restart", "wg-quick@wg0"], check=True)
         return True
-    except subprocess.CalledProcessError as e:
-        print(f"[ERROR] Failed to enable VPN for user '{username}': {e}")
+    except Exception as e:
+        print(f"[ERROR] Failed to update WireGuard config: {e}")
         return False
