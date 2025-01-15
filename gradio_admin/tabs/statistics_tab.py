@@ -40,28 +40,36 @@ def statistics_tab():
 
     # Функция для обработки выбора строки
     def handle_user_selection(selected_data):
-        """Обрабатывает выбор строки в таблице."""
+        """
+        Обрабатывает выбор строки в таблице и возвращает информацию о выбранном пользователе.
+        """
         print(f"[DEBUG] Selected data: {selected_data}")  # Отладка
 
-        # Проверка на пустые данные
-        if selected_data is None:
-            return "No row selected. Please select a row from the table."
-
         try:
-            # Извлечение имени пользователя из выбранной строки
-            username = selected_data[0]  # Первый элемент строки
+            if selected_data is None or len(selected_data) == 0:
+                return "No row selected. Please select a row from the table!"
+
+            # Предполагаем, что `selected_data` содержит DataFrame
+            selected_row = selected_data.iloc[0]  # Получаем первую строку
+            username = selected_row["👤 User"].strip()  # Извлекаем имя пользователя
             print(f"[DEBUG] Extracted username: {username}")
-            return show_user_info(username)  # Форматируем данные пользователя
+
+            # Возвращаем информацию о пользователе
+            return show_user_info(username)
+        except KeyError as e:
+            print(f"[DEBUG] KeyError in handle_user_selection: {e}")
+            return "Error: Missing expected column in data."
         except Exception as e:
             print(f"[DEBUG] Error in handle_user_selection: {e}")
             return f"Error processing data: {str(e)}"
 
 
+
     # Привязка выбора строки к отображению данных
     stats_table.select(
         fn=handle_user_selection,
-        inputs=[stats_table],  # Передаём таблицу как вход
-        outputs=[selected_user_info]  # Текстбокс как выход
+        inputs=[stats_table],  # Таблица передаётся как вход
+        outputs=[selected_user_info]  # Выводится информация о пользователе
     )
 
     # Обновление таблицы при нажатии Refresh
