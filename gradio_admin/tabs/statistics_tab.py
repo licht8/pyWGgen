@@ -99,7 +99,7 @@ def statistics_tab():
 
         # Получение информации о пользователе
         user_info = show_user_info(selected_user)
-        print(f"[DEBUG] User info:\n{user_info}")
+        # print(f"[DEBUG] User info:\n{user_info}")
         return user_info
 
     user_selector.change(
