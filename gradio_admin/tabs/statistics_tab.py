@@ -38,7 +38,38 @@ def statistics_tab():
             interactive=False  # Таблица только для чтения
         )
 
-    # Обновление таблицы при нажатии кнопки Refresh
+    # Функция для обработки выбора строки
+    def handle_user_selection(row_index):
+        print(f"[DEBUG] Raw row_index: {row_index}")  # Отладка
+
+        try:
+            if row_index is None or row_index == "":
+                return "No row selected. Please select a row from the table."
+
+            row_index = int(row_index)  # Преобразуем индекс строки
+            print(f"[DEBUG] Parsed row_index: {row_index}")  # Отладка
+
+            # Получаем данные таблицы
+            table = update_table(True).values.tolist()  # Загружаем данные как список списков
+            selected_row = table[row_index]  # Извлекаем выбранную строку
+            username = selected_row[0]  # Извлекаем имя пользователя
+            print(f"[DEBUG] Extracted username: {username}")
+            return show_user_info(username)  # Форматируем данные пользователя
+        except (ValueError, IndexError) as e:
+            print(f"[DEBUG] Error in handle_user_selection: {e}")  # Отладка
+            return "Invalid row index. Please try again."
+        except Exception as e:
+            print(f"[DEBUG] Unexpected error in handle_user_selection: {e}")  # Отладка
+            return f"Error processing data: {str(e)}"
+
+    # Привязка выбора строки к отображению данных
+    stats_table.select(
+        fn=handle_user_selection,
+        inputs=None,  # Убираем входные параметры
+        outputs=[selected_user_info]
+    )
+
+    # Обновление таблицы при нажатии Refresh
     def refresh_table(show_inactive):
         update_traffic_data(USER_DB_PATH)  # Обновляем данные
         return update_table(show_inactive).values.tolist(), "Select a user to view details."
@@ -49,28 +80,4 @@ def statistics_tab():
         outputs=[stats_table, selected_user_info]
     )
 
-    # Функция для обработки выбора строки
-    def handle_user_selection(row_index):
-        print(f"[DEBUG] Selected row index: {row_index}")
-        if row_index is None or row_index == "":
-            return "No row selected. Please select a row from the table."
-
-        try:
-            row_index = int(row_index)  # Преобразуем индекс строки
-            table = update_table(True).values.tolist()  # Загружаем данные как список списков
-            selected_row = table[row_index]  # Извлекаем выбранную строку
-            username = selected_row[0]  # Извлекаем имя пользователя
-            print(f"[DEBUG] Extracted username: {username}")
-            return show_user_info(username)  # Форматируем данные пользователя
-        except (ValueError, IndexError):
-            return "Invalid selection. Please select a valid row."
-        except Exception as e:
-            print(f"[DEBUG] Error in handle_user_selection: {e}")
-            return f"Error processing data: {str(e)}"
-
-    # Связываем выбор строки с функцией отображения данных
-    stats_table.select(
-        fn=handle_user_selection,
-        inputs=[],
-        outputs=[selected_user_info]
-    )
+    return gr.Blocks()
