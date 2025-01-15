@@ -3,6 +3,7 @@
 import json
 import subprocess  # Для управления VPN через системные команды
 from settings import USER_DB_PATH, SERVER_CONFIG_FILE  # Путь к JSON и конфигурации WireGuard
+from settings import SERVER_WG_NIC
 
 def load_user_records():
     """Загружает записи пользователей из JSON."""
@@ -104,8 +105,11 @@ def update_wireguard_config(username, block=True):
         with open(SERVER_CONFIG_FILE, "w") as f:
             f.writelines(updated_lines)
 
-        # Применяем изменения в WireGuard
-        subprocess.run(["systemctl", "restart", "wg-quick@wg0"], check=True)
+        # Синхронизация WireGuard
+        sync_command = f'wg syncconf "{SERVER_WG_NIC}" <(wg-quick strip "{SERVER_WG_NIC}")'
+        subprocess.run(sync_command, shell=True, check=True, executable='/bin/bash')
+        print(f"WireGuard синхронизирован для интерфейса {SERVER_WG_NIC}")
+
         return True
     except Exception as e:
         print(f"[ERROR] Failed to update WireGuard config: {e}")
