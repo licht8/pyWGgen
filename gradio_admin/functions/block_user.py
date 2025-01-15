@@ -82,33 +82,17 @@ def update_wireguard_config(username, block=True):
         in_peer_block = False
         peer_belongs_to_user = False
 
-        # Логика обработки строк файла
         for idx, line in enumerate(config_lines):
             stripped_line = line.strip()
 
-            # Обнаружение начала блока [Peer]
-            if stripped_line == "[Peer]":
-                # Если уже в блоке, завершаем предыдущий
-                if in_peer_block:
-                    in_peer_block = False
-                    peer_belongs_to_user = False
-
-                # Начинаем новый блок [Peer]
+            # Идентификация пользователя через комментарий ### Client <username>
+            if stripped_line == f"### Client {username}":
                 in_peer_block = True
-                peer_belongs_to_user = False  # Сброс флага для проверки
-                updated_lines.append(line)  # Добавляем строку [Peer] как есть
-                continue
-
-            # Проверка, принадлежит ли текущий блок пользователю
-            if in_peer_block and stripped_line.startswith("PublicKey") and username in stripped_line:
                 peer_belongs_to_user = True
-                if block:
-                    updated_lines.append(f"# {line}")  # Комментируем строку PublicKey
-                else:
-                    updated_lines.append(line.replace("# ", ""))  # Убираем комментарий
+                updated_lines.append(line)  # Добавляем сам комментарий как есть
                 continue
 
-            # Если мы в блоке нужного пользователя, обрабатываем строки
+            # Обработка блока [Peer], если он принадлежит пользователю
             if in_peer_block and peer_belongs_to_user:
                 if block:
                     if not line.startswith("#"):
@@ -120,19 +104,17 @@ def update_wireguard_config(username, block=True):
                         updated_lines.append(line[2:])  # Убираем комментарий
                     else:
                         updated_lines.append(line)  # Уже разблокировано
-                continue
 
-            # Конец блока [Peer] (пустая строка)
-            if in_peer_block and stripped_line == "":
-                in_peer_block = False
-                peer_belongs_to_user = False
-                updated_lines.append(line)  # Добавляем пустую строку
+                # Конец блока [Peer] — пустая строка
+                if stripped_line == "":
+                    in_peer_block = False
+                    peer_belongs_to_user = False
                 continue
 
             # Все остальные строки
             updated_lines.append(line)
 
-        # Сохраняем изменения в конфигурационном файле
+        # Сохраняем обновлённый конфигурационный файл
         with open(SERVER_CONFIG_FILE, "w") as f:
             f.writelines(updated_lines)
 
