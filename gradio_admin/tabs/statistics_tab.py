@@ -39,37 +39,38 @@ def statistics_tab():
         )
 
     # Функция для обработки выбора строки
-    def handle_user_selection(selected_data):
+    def handle_user_selection(selected_index):
         """
         Обрабатывает выбор строки в таблице и возвращает информацию о выбранном пользователе.
+        :param selected_index: Индекс выбранной строки.
         """
-        print(f"[DEBUG] Selected data: {selected_data}")  # Отладка
+        print(f"[DEBUG] Selected index: {selected_index}")  # Отладка
 
         try:
-            if selected_data is None or len(selected_data) == 0:
+            if selected_index is None or selected_index < 0:
                 return "No row selected. Please select a row from the table!"
 
-            # Предполагаем, что `selected_data` содержит DataFrame
-            selected_row = selected_data.iloc[0]  # Получаем первую строку
+            # Получаем данные таблицы
+            table = update_table(True)
+            selected_row = table.iloc[selected_index]  # Извлекаем данные по индексу
             username = selected_row["👤 User"].strip()  # Извлекаем имя пользователя
             print(f"[DEBUG] Extracted username: {username}")
 
-            # Возвращаем информацию о пользователе
+            # Получаем и возвращаем информацию о пользователе
             return show_user_info(username)
-        except KeyError as e:
-            print(f"[DEBUG] KeyError in handle_user_selection: {e}")
-            return "Error: Missing expected column in data."
+        except IndexError:
+            print(f"[DEBUG] IndexError for selected_index: {selected_index}")
+            return "Invalid row index. Please try again."
         except Exception as e:
             print(f"[DEBUG] Error in handle_user_selection: {e}")
             return f"Error processing data: {str(e)}"
 
 
-
     # Привязка выбора строки к отображению данных
     stats_table.select(
         fn=handle_user_selection,
-        inputs=[stats_table],  # Таблица передаётся как вход
-        outputs=[selected_user_info]  # Выводится информация о пользователе
+        inputs=None,  # Для select inputs можно не указывать
+        outputs=[selected_user_info]  # Вывод в поле информации о пользователе
     )
 
     # Обновление таблицы при нажатии Refresh
