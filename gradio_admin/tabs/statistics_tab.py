@@ -33,7 +33,7 @@ def statistics_tab():
 
     # Поле поиска
     with gr.Row():
-        search_input = gr.Textbox(label="Search", placeholder="Enter data to filter...", interactive=True)
+        search_input = gr.Textbox(label="Search", placeholder="Enter text to filter table...", interactive=True)
 
     # Выбор пользователя
     with gr.Row():
@@ -69,19 +69,23 @@ def statistics_tab():
         outputs=[search_input, stats_table, user_selector, user_info_display]
     )
 
-    # Поиск
-    def search_and_update_table(query, show_inactive):
-        table = update_table(show_inactive)
+    # Функция для поиска по таблице
+    def search_table(query):
+        table = update_table(True)  # Загружаем оригинальную таблицу
         if query:
-            table = table.loc[table.apply(lambda row: query.lower() in " ".join(map(str, row)).lower(), axis=1)]
-        user_list = ["Select a user"] + table["👤 User"].tolist() if not table.empty else ["Select a user"]
-        print(f"[DEBUG] Filtered user list: {user_list}")
-        return table, user_list
+            # Фильтруем таблицу по всем колонкам
+            filtered_table = table.loc[
+                table.apply(lambda row: query.lower() in " ".join(map(str, row)).lower(), axis=1)
+            ]
+            print(f"[DEBUG] Filtered table:\n{filtered_table}")
+            return filtered_table
+        return table  # Если запрос пуст, возвращаем оригинальную таблицу
 
+    # Поиск по таблице
     search_input.change(
-        fn=search_and_update_table,
-        inputs=[search_input, show_inactive],
-        outputs=[stats_table, user_selector]
+        fn=search_table,
+        inputs=[search_input],
+        outputs=[stats_table]
     )
 
     # Показ информации о пользователе
@@ -99,7 +103,7 @@ def statistics_tab():
 
         # Получение информации о пользователе
         user_info = show_user_info(selected_user)
-        # print(f"[DEBUG] User info:\n{user_info}")
+        print(f"[DEBUG] User info:\n{user_info}")
         return user_info
 
     user_selector.change(
