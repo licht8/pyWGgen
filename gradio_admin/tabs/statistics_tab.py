@@ -18,7 +18,7 @@ def statistics_tab():
     def get_initial_data():
         update_traffic_data(USER_DB_PATH)
         table = update_table(True)
-        user_list = ["Choose user"] + table["👤 User"].tolist() if not table.empty else ["Choose user"]
+        user_list = ["Select a user"] + table["👤 User"].tolist() if not table.empty else ["Select a user"]
         return table, user_list
 
     initial_table, initial_user_list = get_initial_data()
@@ -37,7 +37,7 @@ def statistics_tab():
 
     # Выбор пользователя
     with gr.Row():
-        user_selector = gr.Dropdown(label="Select User", choices=initial_user_list, value="Choose user", interactive=True)
+        user_selector = gr.Dropdown(label="Select User", choices=initial_user_list, value="Select a user", interactive=True)
         user_info_display = gr.Textbox(label="User Details", value="", lines=10, interactive=False)
 
     # Таблица с данными
@@ -57,7 +57,7 @@ def statistics_tab():
             print("[DEBUG] Table is empty after update.")
         else:
             print(f"[DEBUG] Updated table:\n{table}")
-        user_list = ["Choose user"] + table["👤 User"].tolist() if not table.empty else ["Choose user"]
+        user_list = ["Select a user"] + table["👤 User"].tolist() if not table.empty else ["Select a user"]
         print(f"[DEBUG] User list: {user_list}")
         # Сбрасываем user_info_display
         return "", table, user_list, ""
@@ -74,7 +74,7 @@ def statistics_tab():
         table = update_table(show_inactive)
         if query:
             table = table.loc[table.apply(lambda row: query.lower() in " ".join(map(str, row)).lower(), axis=1)]
-        user_list = ["Choose user"] + table["👤 User"].tolist() if not table.empty else ["Choose user"]
+        user_list = ["Select a user"] + table["👤 User"].tolist() if not table.empty else ["Select a user"]
         print(f"[DEBUG] Filtered user list: {user_list}")
         return table, user_list
 
@@ -91,10 +91,10 @@ def statistics_tab():
             if len(selected_user) > 0:
                 selected_user = selected_user[0]
             else:
-                selected_user = "Choose user"
+                selected_user = "Select a user"
 
-        # Если выбран "Choose user", возвращаем пустую строку
-        if not selected_user or selected_user == "Choose user":
+        # Если выбран "Select a user", возвращаем пустую строку
+        if not selected_user or selected_user == "Select a user":
             return ""
 
         # Получение информации о пользователе
