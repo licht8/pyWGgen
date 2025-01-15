@@ -59,8 +59,8 @@ def statistics_tab():
             print(f"[DEBUG] Updated table:\n{table}")
         user_list = ["Select a user"] + table["👤 User"].tolist() if not table.empty else ["Select a user"]
         print(f"[DEBUG] User list: {user_list}")
-        # Сбрасываем user_info_display
-        return "", table, user_list, ""
+        # Сбрасываем user_info_display и user_selector
+        return "", table, gr.update(choices=user_list, value="Select a user"), ""
 
     # Обновление таблицы при нажатии Refresh
     refresh_button.click(
