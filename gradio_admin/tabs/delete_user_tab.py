@@ -12,22 +12,22 @@ def delete_user_tab():
     # Загрузка пользователей из базы
     def get_user_list():
         records = load_user_records()
-        return list(records.keys())
-
-    # Обновляем список пользователей
-    initial_user_list = ["Select a user"] + get_user_list()
+        return ["Select a user"] + list(records.keys())
 
     # Поле для выбора пользователя
     with gr.Row():
         gr.Markdown("## Delete Users")
 
     with gr.Row():
+        # Выпадающий список для выбора пользователя
         user_selector = gr.Dropdown(
             label="Select User",
-            choices=initial_user_list,
+            choices=get_user_list(),
             value="Select a user",
             interactive=True
         )
+        # Кнопка для обновления списка
+        refresh_list_button = gr.Button("Refresh List")
 
     # Информация о выбранном пользователе
     with gr.Row():
@@ -40,6 +40,16 @@ def delete_user_tab():
     # Результат удаления
     with gr.Row():
         result_display = gr.Textbox(label="Result", value="", lines=2, interactive=False)
+
+    # Функция для обновления списка пользователей
+    def refresh_user_list():
+        return gr.update(choices=get_user_list(), value="Select a user"), "User list updated."
+
+    refresh_list_button.click(
+        fn=refresh_user_list,
+        inputs=[],
+        outputs=[user_selector, result_display]
+    )
 
     # Обновление информации о выбранном пользователе
     def display_user_info(selected_user):
@@ -60,8 +70,7 @@ def delete_user_tab():
             return "No user selected to delete."
         success = delete_user(selected_user)
         if success:
-            updated_user_list = ["Select a user"] + get_user_list()
-            return gr.update(choices=updated_user_list, value="Select a user"), f"User '{selected_user}' deleted successfully."
+            return gr.update(choices=get_user_list(), value="Select a user"), f"User '{selected_user}' deleted successfully."
         else:
             return gr.update(), f"Failed to delete user '{selected_user}'."
 
