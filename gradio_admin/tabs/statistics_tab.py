@@ -50,7 +50,7 @@ def statistics_tab():
             print(f"[DEBUG] Updated table:\n{table}")
         user_list = table["👤 User"].tolist() if not table.empty else []
         print(f"[DEBUG] User list: {user_list}")
-        return "", gr.update(value=table), gr.update(choices=user_list)
+        return "", table, user_list
 
     # Обновление таблицы при нажатии Refresh
     refresh_button.click(
@@ -60,7 +60,7 @@ def statistics_tab():
     )
 
     # Автоматическая загрузка данных при старте
-    gr.Page(load_fn=refresh_table, inputs=[show_inactive], outputs=[search_input, stats_table, user_selector])
+    stats_table.load(fn=refresh_table, inputs=[show_inactive], outputs=[search_input, stats_table, user_selector])
 
     # Поиск
     def search_and_update_table(query, show_inactive):
@@ -69,7 +69,7 @@ def statistics_tab():
             table = table.loc[table.apply(lambda row: query.lower() in " ".join(map(str, row)).lower(), axis=1)]
         user_list = table["👤 User"].tolist() if not table.empty else []
         print(f"[DEBUG] Filtered user list: {user_list}")
-        return gr.update(value=table), gr.update(choices=user_list)
+        return table, user_list
 
     search_input.change(
         fn=search_and_update_table,
