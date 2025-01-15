@@ -51,7 +51,7 @@ def statistics_tab():
                 return "No row selected. Please select a row from the table!"
 
             # Получаем данные таблицы
-            table = update_table(True)  # Предполагаем, что update_table возвращает DataFrame
+            table = update_table(True)
             selected_row = table.iloc[row_index]  # Извлекаем строку по индексу
             username = selected_row["👤 User"].strip()  # Извлекаем имя пользователя
             print(f"[DEBUG] Extracted username: {username}")
@@ -66,11 +66,12 @@ def statistics_tab():
             return f"Error processing data: {str(e)}"
 
 
+
     # Привязка выбора строки к отображению данных
     stats_table.select(
-        fn=handle_user_selection,
-        inputs=None,  # Указываем, что Gradio передаёт только индекс строки
-        outputs=[selected_user_info]
+        fn=handle_user_selection,  # Передаём функцию для обработки
+        inputs=None,               # Gradio автоматически передаёт индекс строки
+        outputs=[selected_user_info]  # Поле для отображения информации
     )
 
     # Обновление таблицы при нажатии Refresh
