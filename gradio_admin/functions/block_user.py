@@ -79,27 +79,38 @@ def update_wireguard_config(username, block=True):
             config_lines = f.readlines()
 
         updated_lines = []
-        found_peer = False
+        in_peer_block = False
+        peer_found = False
 
         for line in config_lines:
-            if f"[Peer] # {username}" in line or (f"[Peer]" in line and username in line):
-                found_peer = True
+            # Начало блока [Peer]
+            if line.strip() == "[Peer]":
+                in_peer_block = True
+                peer_found = False
+                updated_lines.append(line)  # Добавляем [Peer] (не комментируем)
+
+            elif in_peer_block and "PublicKey" in line and username in line:
+                # Идентифицируем, что этот [Peer] принадлежит пользователю
+                peer_found = True
                 if block:
-                    # Комментируем запись для блокировки
+                    # Если блокируем, добавляем комментарии
                     updated_lines.append(f"# {line}")
                 else:
-                    # Восстанавливаем запись
+                    # Если разблокируем, убираем комментарии
                     updated_lines.append(line.replace("# ", ""))
-            elif found_peer and line.startswith("PublicKey") and block:
-                updated_lines.append(f"# {line}")
-            elif found_peer and line.startswith("PublicKey") and not block:
-                updated_lines.append(line)
+            elif in_peer_block and line.strip() == "":
+                # Конец блока [Peer]
+                in_peer_block = False
+                updated_lines.append(line)  # Добавляем пустую строку как есть
+            elif peer_found:
+                # Если мы внутри блока нужного [Peer], комментируем или восстанавливаем строки
+                if block:
+                    updated_lines.append(f"# {line}")
+                else:
+                    updated_lines.append(line.replace("# ", ""))
             else:
+                # Все остальные строки добавляем без изменений
                 updated_lines.append(line)
-
-            if found_peer and line.strip() == "":
-                # После пустой строки завершаем обработку [Peer]
-                found_peer = False
 
         # Сохраняем обновлённый конфигурационный файл
         with open(SERVER_CONFIG_FILE, "w") as f:
