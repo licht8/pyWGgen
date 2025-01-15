@@ -14,10 +14,9 @@ from settings import USER_DB_PATH
 
 def statistics_tab():
     """Создает вкладку статистики пользователей WireGuard."""
+    # Чекбокс Show inactive и кнопка Refresh
     with gr.Row():
         gr.Markdown("## Statistics")
-
-    # Чекбокс Show inactive и кнопка Refresh
     with gr.Row():
         show_inactive = gr.Checkbox(label="Show inactive", value=True)
         refresh_button = gr.Button("Refresh")
@@ -52,20 +51,19 @@ def statistics_tab():
         print(f"[DEBUG] User list: {user_list}")
         return "", table, user_list
 
-    # Начальная загрузка данных
-    initial_search_input, initial_table, initial_user_list = refresh_table(True)
-
-    # Применяем начальные данные
-    search_input.value = initial_search_input
-    stats_table.value = initial_table
-    user_selector.choices = initial_user_list
-
     # Обновление таблицы при нажатии Refresh
     refresh_button.click(
         fn=refresh_table,
         inputs=[show_inactive],
         outputs=[search_input, stats_table, user_selector]
     )
+
+    # Инициализация данных при создании вкладки
+    initial_search_input, initial_table, initial_user_list = refresh_table(True)
+
+    # Устанавливаем начальные значения
+    stats_table.update(value=initial_table)
+    user_selector.update(choices=initial_user_list)
 
     # Поиск
     def search_and_update_table(query, show_inactive):
