@@ -47,7 +47,7 @@ def statistics_tab():
         print(f"[DEBUG] Updated table:\n{table}")  # Отладочный вывод
         user_list = table["👤 User"].tolist() if not table.empty else []  # Извлекаем список пользователей
         print(f"[DEBUG] User list: {user_list}")  # Отладочный вывод списка пользователей
-        return "", table, gr.Dropdown.update(choices=user_list)
+        return "", table, gr.update(choices=user_list)
 
     # Обновление таблицы при нажатии Refresh
     refresh_button.click(
@@ -63,7 +63,7 @@ def statistics_tab():
             table = table.loc[table.apply(lambda row: query.lower() in " ".join(map(str, row)).lower(), axis=1)]
         user_list = table["👤 User"].tolist() if not table.empty else []
         print(f"[DEBUG] Filtered user list: {user_list}")  # Отладка
-        return table, gr.Dropdown.update(choices=user_list)
+        return table, gr.update(choices=user_list)
 
     search_input.change(
         fn=search_and_update_table,
