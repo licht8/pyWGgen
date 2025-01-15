@@ -52,15 +52,20 @@ def statistics_tab():
         print(f"[DEBUG] User list: {user_list}")
         return "", table, user_list
 
+    # Начальная загрузка данных
+    initial_search_input, initial_table, initial_user_list = refresh_table(True)
+
+    # Применяем начальные данные
+    search_input.value = initial_search_input
+    stats_table.value = initial_table
+    user_selector.choices = initial_user_list
+
     # Обновление таблицы при нажатии Refresh
     refresh_button.click(
         fn=refresh_table,
         inputs=[show_inactive],
         outputs=[search_input, stats_table, user_selector]
     )
-
-    # Автоматическая загрузка данных при старте
-    stats_table.load(fn=refresh_table, inputs=[show_inactive], outputs=[search_input, stats_table, user_selector])
 
     # Поиск
     def search_and_update_table(query, show_inactive):
