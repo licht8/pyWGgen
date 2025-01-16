@@ -29,7 +29,7 @@ def statistics_tab():
 
     # Чекбокс Show inactive и кнопка Refresh
     with gr.Row():
-        show_inactive = gr.Checkbox(label="Show inactive", value=True)
+        show_inactive = gr.Checkbox(label="Show blocked", value=True)
         refresh_button = gr.Button("Refresh")
 
     # Поле поиска
