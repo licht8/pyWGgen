@@ -140,8 +140,8 @@ def show_main_menu():
             display_test_report()
             time.sleep(2)
         elif choice == "sy":
-            from modules.sync import sync_users_with_wireguard
-            sync_users_with_wireguard()
+            from modules.sync import sync_users_from_config
+            sync_users_from_config()
         elif choice == "dg":
             from modules.debugger import run_diagnostics
             run_diagnostics()
