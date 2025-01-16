@@ -37,12 +37,27 @@ def statistics_tab():
         search_input = gr.Textbox(label="Search", placeholder="Enter text to filter table...", interactive=True)
 
     # Выбор пользователя и отображение информации и QR-кода
-    with gr.Row():
-        with gr.Column(scale=3):  # Колонка для User Details
-            user_selector = gr.Dropdown(label="Select User", choices=initial_user_list, value="Select a user", interactive=True)
-            user_info_display = gr.Textbox(label="User Details", value="", lines=10, interactive=False)
-        with gr.Column(scale=1):  # Колонка для QR-кода
-            qr_code_display = gr.Image(label="User QR Code", type="filepath", interactive=False, height=150)
+    with gr.Row(equal_height=True):  # Устанавливаем одинаковую высоту
+        with gr.Column(scale=3):  # Левая колонка для User Details
+            user_selector = gr.Dropdown(
+                label="Select User",
+                choices=initial_user_list,
+                value="Select a user",
+                interactive=True
+            )
+            user_info_display = gr.Textbox(
+                label="User Details",
+                value="",
+                lines=10,
+                interactive=False
+            )
+        with gr.Column(scale=1, min_width=200):  # Правая колонка для QR-кода
+            qr_code_display = gr.Image(
+                label="User QR Code",
+                type="filepath",
+                interactive=False,
+                height=200  # Делаем высоту фиксированной для пропорционального вида
+            )
 
     # Таблица с данными
     with gr.Row():
