@@ -24,6 +24,9 @@ def statistics_tab():
 
     initial_table, initial_user_list = get_initial_data()
 
+    # Директория с QR-кодами
+    QR_CODE_DIR = BASE_DIR / "user/data/qrcodes"
+
     with gr.Row():
         gr.Markdown("## Statistics")
 
@@ -36,14 +39,13 @@ def statistics_tab():
     with gr.Row():
         search_input = gr.Textbox(label="Search", placeholder="Enter text to filter table...", interactive=True)
 
-    # Выбор пользователя
+    # Выбор пользователя и отображение информации и QR-кода
     with gr.Row():
-        user_selector = gr.Dropdown(label="Select User", choices=initial_user_list, value="Select a user", interactive=True)
-        user_info_display = gr.Textbox(label="User Details", value="", lines=10, interactive=False)
-
-    # Отображение QR-кода
-    with gr.Row():
-        qr_code_display = gr.Image(label="User QR Code", type="filepath", interactive=False)
+        with gr.Column(scale=3):  # Колонка для User Details
+            user_selector = gr.Dropdown(label="Select User", choices=initial_user_list, value="Select a user", interactive=True)
+            user_info_display = gr.Textbox(label="User Details", value="", lines=10, interactive=False)
+        with gr.Column(scale=1):  # Колонка для QR-кода
+            qr_code_display = gr.Image(label="User QR Code", type="filepath", interactive=False, height=150)
 
     # Таблица с данными
     with gr.Row():
