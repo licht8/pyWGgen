@@ -2,76 +2,81 @@
 # modules/sync.py
 # Модуль для синхронизации пользователей WireGuard с проектом
 
-import subprocess
 import json
-import os
-from settings import USER_DB_PATH
+from pathlib import Path
+from settings import USER_DB_PATH, SERVER_CONFIG_FILE
+from modules.main_registration_fields import create_user_record
 
-WG_USERS_JSON = "logs/wg_users.json"
-
-def load_json(filepath):
-    """Загружает JSON-файл."""
-    if os.path.exists(filepath):
-        with open(filepath, "r") as file:
-            try:
-                return json.load(file)
-            except json.JSONDecodeError:
-                print(f"⚠️ Файл {filepath} поврежден. Создаем новый.")
-                return {}
-    return {}
-
-def save_json(filepath, data):
-    """Сохраняет данные в JSON-файл."""
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    with open(filepath, "w") as file:
-        json.dump(data, file, indent=4)
-
-def parse_wireguard_output(wg_output):
-    """Парсит вывод команды `wg show`."""
-    lines = wg_output.splitlines()
-    peers = {}
-    current_peer = None
-
-    for line in lines:
-        if line.startswith("peer:"):
-            current_peer = line.split(":")[1].strip()
-            peers[current_peer] = {"last_handshake": "N/A", "allowed_ips": "N/A"}
-        elif current_peer and line.strip().startswith("allowed ips:"):
-            peers[current_peer]["allowed_ips"] = line.split(":")[1].strip()
-        elif current_peer and line.strip().startswith("latest handshake:"):
-            peers[current_peer]["last_handshake"] = line.split(":")[1].strip()
-
-    return peers
-
-def sync_users_with_wireguard():
-    """Синхронизирует пользователей WireGuard с JSON-файлами."""
+def sync_users_from_config():
+    """
+    Синхронизирует пользователей из конфигурационного файла WireGuard с user_records.json.
+    """
     try:
-        print("🔄 Получение информации из WireGuard...")
-        wg_output = subprocess.check_output(["wg", "show"], text=True)
-        wg_users = parse_wireguard_output(wg_output)
+        # Чтение конфигурационного файла WireGuard
+        with open(SERVER_CONFIG_FILE, "r") as f:
+            config_lines = f.readlines()
 
-        user_records = load_json(USER_DB_PATH)
-        users_json = load_json(WG_USERS_JSON)
+        # Парсинг пользователей из конфигурации
+        users_in_config = []
+        current_user = {}
 
-        key_to_username = {
-            record.get("public_key", ""): username
-            for username, record in user_records.items()
-        }
+        for line in config_lines:
+            stripped_line = line.strip()
 
-        for public_key, data in wg_users.items():
-            username = key_to_username.get(public_key, "unknown_user")
-            users_json[username] = {
-                "public_key": public_key,
-                **data,
-                "status": "active" if data["last_handshake"] != "N/A" else "inactive"
-            }
+            # Ищем комментарий ### Client <name>
+            if stripped_line.startswith("### Client"):
+                if current_user:
+                    users_in_config.append(current_user)  # Сохраняем предыдущего пользователя
+                current_user = {"username": stripped_line.split("### Client")[1].strip()}
+            
+            # Извлекаем PublicKey, PresharedKey и AllowedIPs
+            elif stripped_line.startswith("PublicKey ="):
+                current_user["public_key"] = stripped_line.split("PublicKey =")[1].strip()
+            elif stripped_line.startswith("PresharedKey ="):
+                current_user["preshared_key"] = stripped_line.split("PresharedKey =")[1].strip()
+            elif stripped_line.startswith("AllowedIPs ="):
+                current_user["allowed_ips"] = stripped_line.split("AllowedIPs =")[1].strip()
+            
+            # Конец блока [Peer]
+            elif stripped_line == "" and current_user:
+                users_in_config.append(current_user)
+                current_user = {}
 
-        save_json(WG_USERS_JSON, users_json)
-        print("✅ Пользователи успешно синхронизированы.")
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Ошибка выполнения команды WireGuard: {e}")
+        # Добавляем последнего пользователя, если он есть
+        if current_user:
+            users_in_config.append(current_user)
+
+        print(f"[DEBUG] Users in config: {users_in_config}")
+
+        # Чтение текущих записей в user_records.json
+        user_records = {}
+        if Path(USER_DB_PATH).exists():
+            with open(USER_DB_PATH, "r") as f:
+                user_records = json.load(f)
+
+        # Синхронизация пользователей
+        new_users = 0
+        for user in users_in_config:
+            username = user["username"]
+            if username not in user_records:
+                # Создание нового пользователя с использованием create_user_record
+                user_record = create_user_record(
+                    username=username,
+                    address=user["allowed_ips"],
+                    public_key=user["public_key"],
+                    preshared_key=user["preshared_key"],
+                    qr_code_path=f"user/data/qrcodes/{username}.png"  # Путь к QR-коду
+                )
+                user_records[username] = user_record
+                new_users += 1
+
+        # Сохраняем обновлённый user_records.json
+        with open(USER_DB_PATH, "w") as f:
+            json.dump(user_records, f, indent=4)
+
+        print(f"[INFO] Sync complete. {new_users} new user(s) added.")
+        return f"Sync complete. {new_users} new user(s) added."
+
     except Exception as e:
-        print(f"❌ Ошибка синхронизации пользователей: {e}")
-
-if __name__ == "__main__":
-    sync_users_with_wireguard()
+        print(f"[ERROR] Failed to sync users: {e}")
+        return f"Failed to sync users: {e}"
