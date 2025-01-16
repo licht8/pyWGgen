@@ -24,9 +24,6 @@ def statistics_tab():
 
     initial_table, initial_user_list = get_initial_data()
 
-    # Директория с QR-кодами
-    QR_CODE_DIR = BASE_DIR / "user/data/qrcodes"
-
     with gr.Row():
         gr.Markdown("## Statistics")
 
