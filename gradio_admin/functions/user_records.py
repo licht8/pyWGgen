@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # gradio_admin/functions/user_records.py
-# Утилиты для работы с пользовательскими данными в проекте wg_qr_generator
+# Utilities for working with user data in the wg_qr_generator project
 
 import json
 import os
@@ -8,7 +8,7 @@ import os
 USER_RECORDS_PATH = os.path.join(os.path.dirname(__file__), "../../user/data/user_records.json")
 
 def load_user_records():
-    """Загружает данные о пользователях из файла user_records.json."""
+    """Loads user data from the user_records.json file."""
     try:
         with open(USER_RECORDS_PATH, "r") as f:
             return json.load(f)
