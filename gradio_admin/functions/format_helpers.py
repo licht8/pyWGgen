@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # gradio_admin/functions/format_helpers.py
-# Helper functions for formatting data in the wg_qr_generator project
+# Helper functions for formatting data in the pyWGgen project
 
 from datetime import datetime
 
