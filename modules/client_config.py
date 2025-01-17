@@ -2,18 +2,18 @@
 
 def create_client_config(private_key, address, dns_servers, server_public_key, preshared_key, endpoint):
     """
-    Создает конфигурацию клиента WireGuard.
+    Creates a WireGuard client configuration.
 
     Args:
-        private_key (bytes): Приватный ключ клиента.
-        address (str): IP-адрес клиента.
-        dns_servers (str): Список DNS-серверов для клиента.
-        server_public_key (str): Публичный ключ сервера WireGuard.
-        preshared_key (bytes): Pre-shared ключ для соединения.
-        endpoint (str): Адрес сервера (IP и порт).
+        private_key (bytes): The client's private key.
+        address (str): The client's IP address.
+        dns_servers (str): List of DNS servers for the client.
+        server_public_key (str): WireGuard server's public key.
+        preshared_key (bytes): Pre-shared key for the connection.
+        endpoint (str): Server address (IP and port).
 
     Returns:
-        str: Конфигурация клиента в формате WireGuard.
+        str: Client configuration in WireGuard format.
     """
     client_config = f"""[Interface]
 PrivateKey = {private_key.decode('utf-8')}
