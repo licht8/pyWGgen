@@ -1,10 +1,10 @@
 #!/bin/bash
 # run_project.sh
-## Installation and startup script for the wg_qr_generator project
+## Installation and startup script for the pyWGgen project
 
 # Repository and directory names
-GITHUB_REPO="https://github.com/licht8/wg_qr_generator.git"
-PROJECT_DIR="wg_qr_generator"
+GITHUB_REPO="https://github.com/licht8/pyWGgen.git"
+PROJECT_DIR="pyWGgen"
 VENV_DIR="venv" # Ensure the path is relative to create it within $PROJECT_DIR
 WIREGUARD_INSTALL_SCRIPT="wireguard-install.sh"
 WIREGUARD_BINARY="/usr/bin/wg"
@@ -22,11 +22,11 @@ GREEN='\033[1;32m'
 BOLD='\033[1m'
 UNDERLINE='\033[4m'
 
-echo -e "\n=== Installing the wg_qr_generator Project ===\n"
+echo -e "\n=== Installing the pyWGgen Project ===\n"
 
 # Function to parse the Gradio port from settings.py
 get_gradio_port() {
-    local file_path="wg_qr_generator/settings.py"
+    local file_path="pyWGgen/settings.py"
     local port
 
     # Extract GRADIO_PORT value
@@ -164,7 +164,7 @@ fi
 
 echo -e " ⚙️  WireGuard configuration file: /etc/wireguard/wg0.conf"
 echo -e " 🌐 Gradio admin panel: http://${EXTERNAL_IP}:${GRADIO_PORT}"
-echo -e " 📂 Repository: https://github.com/licht8/wg_qr_generator"
+echo -e " 📂 Repository: https://github.com/licht8/pyWGgen"
 echo -e "\n=========================================="
 
 # Display a success message
