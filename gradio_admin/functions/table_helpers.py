@@ -3,8 +3,8 @@
 
 import os
 import json
-import pandas as pd # type: ignore
-from settings import USER_DB_PATH  # Путь к JSON с данными пользователей
+import pandas as pd  # type: ignore
+from settings import USER_DB_PATH  # Path to the JSON file with user data
 
 def load_data(show_inactive=True):
     """Loads user data from JSON."""
@@ -28,7 +28,6 @@ def load_data(show_inactive=True):
             "user_id": user_info.get("user_id", "N/A")  # UID added
         })
     return table
-
 
 def update_table(show_inactive):
     """Creates a table for display in Gradio."""
