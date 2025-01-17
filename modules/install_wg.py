@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 # modules/install_wg.py
 # ===========================================
-# Установщик WireGuard с полной поддержкой параметров
-# Версия 2.8
+# WireGuard Installer with Full Parameter Support
+# Version 2.8
 # ===========================================
-# Назначение:
-# - Установка и настройка WireGuard на CentOS 8 / CentOS Stream 8.
-# - Генерация конфигурационного файла wg0.conf.
-# - Создание параметров в файле /etc/wireguard/params.
-# - Запись пользовательских параметров в .env.
-# - Настройка firewalld для работы с WireGuard.
+# Purpose:
+# - Install and configure WireGuard on CentOS 8 / CentOS Stream 8.
+# - Generate the wg0.conf configuration file.
+# - Create parameters in the /etc/wireguard/params file.
+# - Save user parameters in the .env file.
+# - Configure firewalld for WireGuard.
 #
-# Особенности:
-# - Поддержка интерактивного ввода подсети и порта.
-# - Полная совместимость с bash-скриптом по функционалу.
+# Features:
+# - Support for interactive input of subnet and port.
+# - Full compatibility with bash script functionality.
 # ===========================================
 
 import os
@@ -27,30 +27,30 @@ from settings import DEFAULT_SUBNET, WIREGUARD_PORT, SERVER_CONFIG_FILE, PARAMS_
 ENV_FILE = Path(".env")
 
 def log_message(message: str, level: str = "INFO"):
-    """Логирует сообщение."""
+    """Logs a message."""
     print(f"{level}: {message}")
 
 def is_root():
-    """Проверяет запуск от имени root."""
+    """Checks if the script is run as root."""
     if os.geteuid() != 0:
-        raise PermissionError("Скрипт должен быть запущен от имени root.")
+        raise PermissionError("The script must be run as root.")
 
 def check_os():
-    """Проверяет, что ОС является CentOS 8 или CentOS Stream 8."""
+    """Checks that the OS is CentOS 8 or CentOS Stream 8."""
     with open("/etc/os-release") as f:
         os_info = f.read()
     if not (("CentOS" in os_info and "8" in os_info) or "CentOS Stream 8" in os_info):
-        raise EnvironmentError("Требуется CentOS Linux 8 или CentOS Stream 8.")
+        raise EnvironmentError("CentOS Linux 8 or CentOS Stream 8 is required.")
 
 def create_wireguard_directory():
-    """Создает директорию /etc/wireguard, если она отсутствует."""
+    """Creates the /etc/wireguard directory if it does not exist."""
     wg_dir = Path("/etc/wireguard")
     if not wg_dir.exists():
         wg_dir.mkdir(mode=0o700, parents=True)
-        log_message("Создана директория /etc/wireguard")
+        log_message("Created directory /etc/wireguard")
 
 def detect_server_ip_and_nic():
-    """Определяет публичный IP-адрес и сетевой интерфейс сервера."""
+    """Detects the server's public IP address and network interface."""
     try:
         server_pub_nic = subprocess.check_output(
             ["ip", "route", "show", "default"], text=True
@@ -59,30 +59,30 @@ def detect_server_ip_and_nic():
         server_pub_ip = get_external_ip()
 
         if not server_pub_ip or server_pub_ip.startswith("N/A"):
-            raise RuntimeError("Не удалось определить внешний IP-адрес.")
+            raise RuntimeError("Failed to determine external IP address.")
         return server_pub_ip, server_pub_nic
     except (IndexError, subprocess.CalledProcessError) as e:
-        raise RuntimeError(f"Ошибка определения IP-адреса или сетевого интерфейса: {e}")
+        raise RuntimeError(f"Error determining IP address or network interface: {e}")
 
 def write_env_file(subnet, port):
-    """Создает файл .env с пользовательскими параметрами."""
+    """Creates a .env file with user parameters."""
     dns = "1.1.1.1, 1.0.0.1, 8.8.8.8"
     env_content = f"""
-# Параметры WireGuard (установленное пользователем)
+# WireGuard Parameters (set by user)
 WIREGUARD_PORT={port}
 DEFAULT_SUBNET="{DEFAULT_SUBNET}"
 USER_SET_SUBNET="{subnet}"
 DNS_WIREGUARD="{dns}"
 """
     with open(ENV_FILE, "w") as env_file:
-        env_file.write(env_content.strip() + "\n")  # Гарантируем переход на новую строку
-    log_message(f"Файл .env создан: {ENV_FILE}")
+        env_file.write(env_content.strip() + "\n")  # Ensure newline at the end
+    log_message(f".env file created: {ENV_FILE}")
 
 def write_params_file(subnet, port, private_key, public_key):
-    """Создает файл /etc/wireguard/params с параметрами сервера."""
+    """Creates the /etc/wireguard/params file with server parameters."""
     server_pub_ip, server_pub_nic = detect_server_ip_and_nic()
 
-    # Убедимся, что SERVER_WG_IPV4 корректно использует первый IP из подсети
+    # Ensure SERVER_WG_IPV4 uses the first IP from the subnet
     server_wg_ipv4 = str(ipaddress.ip_network(subnet, strict=False).network_address + 1)
 
     params_content = f"""
@@ -99,39 +99,39 @@ CLIENT_DNS_1=1.1.1.1
 CLIENT_DNS_2=1.0.0.1
 """
     with open(PARAMS_FILE, "w") as params_file:
-        params_file.write(params_content.strip() + "\n")  # Гарантируем переход на новую строку
+        params_file.write(params_content.strip() + "\n")  # Ensure newline at the end
     os.chmod(PARAMS_FILE, 0o600)
-    log_message(f"Файл параметров создан: {PARAMS_FILE}")
+    log_message(f"Parameters file created: {PARAMS_FILE}")
 
 def validate_subnet(subnet):
-    """Проверяет корректность подсети."""
+    """Validates the subnet."""
     try:
         ipaddress.ip_network(subnet, strict=True)
         return subnet
     except ValueError:
-        raise ValueError(f"Некорректная подсеть: {subnet}")
+        raise ValueError(f"Invalid subnet: {subnet}")
 
 def prompt_parameters():
-    """Запрашивает параметры WireGuard у пользователя."""
-    subnet = input(f"Введите подсеть WireGuard [{DEFAULT_SUBNET}]: ") or DEFAULT_SUBNET
+    """Prompts the user for WireGuard parameters."""
+    subnet = input(f"Enter WireGuard subnet [{DEFAULT_SUBNET}]: ") or DEFAULT_SUBNET
     subnet = validate_subnet(subnet)
 
-    port = input(f"Введите порт WireGuard [{WIREGUARD_PORT}]: ") or WIREGUARD_PORT
+    port = input(f"Enter WireGuard port [{WIREGUARD_PORT}]: ") or WIREGUARD_PORT
     port = int(port)
 
     return subnet, port
 
 def generate_keypair():
-    """Генерирует приватный и публичный ключи."""
+    """Generates private and public keys."""
     wg_path = shutil.which("wg")
     if not wg_path:
-        raise RuntimeError("WireGuard не установлен. Установите его перед началом.")
+        raise RuntimeError("WireGuard is not installed. Install it before proceeding.")
     private_key = subprocess.check_output([wg_path, "genkey"]).decode().strip()
     public_key = subprocess.check_output([wg_path, "pubkey"], input=private_key.encode()).decode().strip()
     return private_key, public_key
 
 def generate_wg_config(subnet, port):
-    """Генерирует конфигурацию WireGuard."""
+    """Generates the WireGuard configuration."""
     base_subnet = subnet.split("/")[0]
     server_private_key, server_public_key = generate_keypair()
 
@@ -153,7 +153,7 @@ PostDown = firewall-cmd --remove-port {port}/udp && firewall-cmd --remove-rich-r
     return server_private_key, server_public_key
 
 def configure_firewalld(port, subnet):
-    """Настраивает firewalld."""
+    """Configures firewalld."""
     base_subnet = subnet.split("/")[0]
     subprocess.run(["firewall-cmd", "--add-port", f"{port}/udp", "--permanent"], check=True)
     subprocess.run(["firewall-cmd", "--add-rich-rule", f"rule family=ipv4 source address={base_subnet}/24 masquerade", "--permanent"], check=True)
@@ -161,25 +161,25 @@ def configure_firewalld(port, subnet):
     subprocess.run(["firewall-cmd", "--reload"], check=True)
 
 def enable_and_start_service(port):
-    """Активирует и запускает WireGuard."""
+    """Enables and starts WireGuard."""
     service_name = f"wg-quick@wg0"
     subprocess.run(["systemctl", "enable", service_name], check=True)
     subprocess.run(["systemctl", "start", service_name], check=True)
-    log_message(f"WireGuard успешно запущен на порту {port}.")
+    log_message(f"WireGuard successfully started on port {port}.")
 
 def install_wireguard_packages():
-    """Устанавливает все необходимые пакеты для WireGuard."""
-    log_message("Установка пакетов для WireGuard...")
+    """Installs all necessary packages for WireGuard."""
+    log_message("Installing packages for WireGuard...")
     try:
         subprocess.run(["dnf", "install", "-y", "epel-release", "elrepo-release"], check=True)
         subprocess.run(["dnf", "install", "-y", "wireguard-tools", "kmod-wireguard", "qrencode", "iptables"], check=True)
-        log_message("Все пакеты успешно установлены.")
+        log_message("All packages installed successfully.")
     except subprocess.CalledProcessError as e:
-        log_message(f"Ошибка при установке пакетов: {e}", level="ERROR")
+        log_message(f"Error installing packages: {e}", level="ERROR")
         raise
 
 def install_wireguard():
-    """Устанавливает WireGuard с настройками."""
+    """Installs WireGuard with configuration."""
     try:
         is_root()
         check_os()
@@ -193,9 +193,9 @@ def install_wireguard():
         configure_firewalld(port, subnet)
         enable_and_start_service(port)
 
-        log_message("✅ Установка WireGuard завершена.")
+        log_message("✅ WireGuard installation completed.")
     except Exception as e:
-        log_message(f"Ошибка: {e}", level="ERROR")
+        log_message(f"Error: {e}", level="ERROR")
 
 if __name__ == "__main__":
     install_wireguard()
