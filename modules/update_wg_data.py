@@ -14,8 +14,8 @@ from datetime import datetime
 
 # File paths
 WG_CONFIG_PATH = "/etc/wireguard/wg0.conf"
-JSON_LOG_PATH = "/root/pyWGgenerator/wg_qr_generator/logs/wg_users.json"
-TEXT_LOG_PATH = "/root/pyWGgenerator/wg_qr_generator/logs/wg_activity.log"
+JSON_LOG_PATH = "/root/pyWGgenerator/pyWGgen/logs/wg_users.json"
+TEXT_LOG_PATH = "/root/pyWGgenerator/pyWGgen/logs/wg_activity.log"
 
 def parse_wg_show():
     """Reads and parses the output of the `wg show` command."""
