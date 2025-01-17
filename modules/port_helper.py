@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # modules/port_helper.py
-# Утилита для проверки и управления портами
+# Utility for checking and managing ports
 
 import os
 import signal
@@ -8,9 +8,9 @@ import psutil
 
 def check_port_and_handle(port):
     """
-    Проверяет, занят ли указанный порт, и предлагает действия пользователю.
+    Checks if the specified port is in use and offers actions to the user.
     
-    :param port: Номер порта для проверки.
+    :param port: Port number to check.
     :return: None
     """
     for conn in psutil.net_connections(kind="inet"):
@@ -18,22 +18,22 @@ def check_port_and_handle(port):
             pid = conn.pid
             if pid is not None:
                 process = psutil.Process(pid)
-                print(f"⚠️ Порт {port} уже занят процессом:")
+                print(f"⚠️ Port {port} is already in use by the following process:")
                 print(f" - PID: {pid}")
-                print(f" - Имя процесса: {process.name()}")
-                print(f" - Команда: {' '.join(process.cmdline())}\n")
+                print(f" - Process name: {process.name()}")
+                print(f" - Command: {' '.join(process.cmdline())}\n")
 
-                choice = input("Выберите действие: [k] Убить процесс / [i] Игнорировать и выйти: ").strip().lower()
+                choice = input("Choose an action: [k] Kill process / [i] Ignore and exit: ").strip().lower()
                 if choice == "k":
                     try:
                         os.kill(pid, signal.SIGKILL)
-                        print(f"✅ Процесс PID {pid} успешно завершен.")
+                        print(f"✅ Process with PID {pid} terminated successfully.")
                     except Exception as e:
-                        print(f"❌ Ошибка при завершении процесса: {e}")
+                        print(f"❌ Error terminating process: {e}")
                 else:
-                    print("🔙 Возврат в меню.")
+                    print("🔙 Returning to menu.")
                     return False
             else:
-                print(f"⚠️ Порт {port} занят, но идентификатор процесса не определен.")
+                print(f"⚠️ Port {port} is in use, but the process ID could not be determined.")
                 return False
     return True
