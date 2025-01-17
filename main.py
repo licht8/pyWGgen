@@ -15,7 +15,6 @@ from datetime import datetime
 import settings
 from modules.config import load_params
 from modules.keygen import generate_private_key, generate_public_key, generate_preshared_key
-from modules.config_writer import add_user_to_server_config
 from modules.directory_setup import setup_directories
 from modules.client_config import create_client_config
 from modules.main_registration_fields import create_user_record  # Импорт новой функции
@@ -150,6 +149,7 @@ def is_user_in_server_config(nickname, config_file):
         logger.warning(f"Файл конфигурации {config_file} не найден.")
     return False
 
+'''
 def restart_wireguard(interface="wg0"):
     """
     Перезапускает WireGuard и показывает его статус.
@@ -172,6 +172,15 @@ def restart_wireguard(interface="wg0"):
 
     except subprocess.CalledProcessError as e:
         logger.error(f"Ошибка перезапуска WireGuard: {e}")
+'''
+
+def add_user_to_server_config(config_file, nickname, public_key, preshared_key, allowed_ips):
+    with open(config_file, 'a') as file:
+        file.write(f"\n### Client {nickname}\n")
+        file.write(f"[Peer]\n")
+        file.write(f"PublicKey = {public_key}\n")
+        file.write(f"PresharedKey = {preshared_key}\n")
+        file.write(f"AllowedIPs = {allowed_ips}\n")
 
 def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A"):
     """
