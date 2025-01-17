@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # modules/test_report_generator.py
-# Script for generating a complete report on the state of the wg_qr_generator project
+# Script for generating a complete report on the state of the pyWGgen project
 # Version: 2.1
 # Updated: 2024-12-10
 # Purpose: Generate a detailed report for diagnosing the project's state.
@@ -56,7 +56,7 @@ def generate_report():
     user_records = load_json(USER_DB_PATH)
 
     report_lines = [
-        f"\n === 📝  Project wg_qr_generator Status Report  ===",
+        f"\n === 📝  Project _generator Status Report  ===",
         f" 📅  Date and Time: {timestamp}\n"
     ]
 
