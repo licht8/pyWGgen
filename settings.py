@@ -1,131 +1,129 @@
 #!/usr/bin/env python3
 # wg_qr_generator/settings.py
 # ===========================================
-# Настройки проекта wg_qr_generator
+# Settings for the wg_qr_generator project
 # ===========================================
-# Этот файл содержит основные настройки проекта, включая пути к файлам,
-# директориям, конфигурациям, а также глобальные параметры.
-# Он централизует все важные переменные для упрощения поддержки проекта.
+# This file contains the main settings for the project, including file paths,
+# directories, configurations, and global parameters.
+# It centralizes all important variables to simplify project maintenance.
 #
-# Пример использования:
+# Example usage:
 # ---------------------
 # from settings import BASE_DIR, WG_CONFIG_DIR, GRADIO_PORT
 # 
-# print(f"Корневая директория проекта: {BASE_DIR}")
-# print(f"Директория конфигураций WireGuard: {WG_CONFIG_DIR}")
-# print(f"Порт для запуска Gradio: {GRADIO_PORT}")
+# print(f"Project base directory: {BASE_DIR}")
+# print(f"WireGuard configuration directory: {WG_CONFIG_DIR}")
+# print(f"Port for running Gradio: {GRADIO_PORT}")
 #
-# ВАЖНО: Все пути и параметры следует указывать относительно BASE_DIR.
+# IMPORTANT: All paths and parameters should be specified relative to BASE_DIR.
 # ===========================================
-# Логирование:
-# Для управления логированием в проекте используется модуль logging.
-# Вы можете изменить уровень логирования через переменную LOG_LEVEL:
-# - DEBUG: Вывод всех сообщений, включая отладочные.
-# - INFO: Основные действия без отладочных сообщений.
-# - WARNING: Только предупреждения и ошибки.
-# - ERROR: Только ошибки.
-# Логи записываются как в консоль, так и в файл, путь к которому указан в LOG_FILE_PATH.
+# Logging:
+# The logging module is used to manage logging in the project.
+# You can change the logging level through the LOG_LEVEL variable:
+# - DEBUG: Displays all messages, including debug information.
+# - INFO: Main actions without debug messages.
+# - WARNING: Only warnings and errors.
+# - ERROR: Only errors.
+# Logs are written to both the console and a file specified in LOG_FILE_PATH.
 #
-# Версия: 1.6 (2025-01-06) 16:11
+# Version: 1.6 (2025-01-06) 16:11
 
 from pathlib import Path
 import os
 import configparser
 
-# Определяем базовый путь к корню проекта
-BASE_DIR = Path(__file__).resolve().parent  # Путь к корневой директории wg_qr_generator
-PROJECT_DIR = BASE_DIR  # Для совместимости, PROJECT_DIR равен BASE_DIR
+# Define the base path to the project root
+BASE_DIR = Path(__file__).resolve().parent  # Path to the wg_qr_generator root directory
+PROJECT_DIR = BASE_DIR  # For compatibility, PROJECT_DIR equals BASE_DIR
 
-# Пути к файлам и директориям
-WG_CONFIG_DIR = BASE_DIR / "user/data/wg_configs"  # Путь к конфигурациям WireGuard пользователей
-QR_CODE_DIR = BASE_DIR / "user/data/qrcodes"      # Путь к сохраненным QR-кодам
-STALE_CONFIG_DIR = BASE_DIR / "user/data/usr_stale_config"  # Путь к устаревшим конфигурациям пользователей
-USER_DB_PATH = BASE_DIR / "user/data/user_records.json"  # База данных пользователей
-#IP_DB_PATH = BASE_DIR / "user/data/ip_records.json"      # База данных IP-адресов
-SERVER_CONFIG_FILE = Path("/etc/wireguard/wg0.conf")     # Путь к конфигурационному файлу сервера WireGuard
-SERVER_BACKUP_CONFIG_FILE = Path("/etc/wireguard/wg0.conf.bak") # Путь к backup конфигурационному файлу сервера WireGuard
-PARAMS_FILE = Path("/etc/wireguard/params")             # Путь к файлу параметров WireGuard
+# File and directory paths
+WG_CONFIG_DIR = BASE_DIR / "user/data/wg_configs"  # Path to user WireGuard configurations
+QR_CODE_DIR = BASE_DIR / "user/data/qrcodes"      # Path to saved QR codes
+STALE_CONFIG_DIR = BASE_DIR / "user/data/usr_stale_config"  # Path to stale user configurations
+USER_DB_PATH = BASE_DIR / "user/data/user_records.json"  # User database
+#IP_DB_PATH = BASE_DIR / "user/data/ip_records.json"      # IP address database
+SERVER_CONFIG_FILE = Path("/etc/wireguard/wg0.conf")     # Path to WireGuard server configuration file
+SERVER_BACKUP_CONFIG_FILE = Path("/etc/wireguard/wg0.conf.bak") # Path to WireGuard server backup configuration file
+PARAMS_FILE = Path("/etc/wireguard/params")             # Path to WireGuard parameters file
 
-# Параметры WireGuard
-DEFAULT_TRIAL_DAYS = 30  # Базовый срок действия аккаунта в днях
-WIREGUARD_PORT = 51820   # Порт для сервера WireGuard (по умолчанию) range [1-65535]
+# WireGuard parameters
+DEFAULT_TRIAL_DAYS = 30  # Default account validity in days
+WIREGUARD_PORT = 51820   # WireGuard server port (default) range [1-65535]
 DEFAULT_SUBNET = "10.66.66.0/24"
 USER_SET_SUBNET = DEFAULT_SUBNET
 DNS_WIREGUAED = "1.1.1.1, 1.0.0.1, 8.8.8.8"
 
-# Настройки для логирования
-LOG_DIR = BASE_DIR / "user/data/logs"  # Директория для хранения логов
-DIAGNOSTICS_LOG = LOG_DIR / "diagnostics.log"  # Файл логов диагностики
-SUMMARY_REPORT_PATH = LOG_DIR / "summary_report.txt"  # Файл для хранения обобщенного отчета
-LOG_FILE_PATH = LOG_DIR / "app.log"  # Файл для записи логов приложения
-LOG_LEVEL = "DEBUG"  # Уровень логирования: DEBUG, INFO, WARNING, ERROR
+# Logging settings
+LOG_DIR = BASE_DIR / "user/data/logs"  # Directory for storing logs
+DIAGNOSTICS_LOG = LOG_DIR / "diagnostics.log"  # Diagnostics log file
+SUMMARY_REPORT_PATH = LOG_DIR / "summary_report.txt"  # File for storing summary reports
+LOG_FILE_PATH = LOG_DIR / "app.log"  # Application log file
+LOG_LEVEL = "DEBUG"  # Logging level: DEBUG, INFO, WARNING, ERROR
 
-# Пути к отчетам и базе сообщений
-DEBUG_REPORT_PATH = BASE_DIR / "ai_diagnostics/debug_report.txt"  # Путь к отчету диагностики
-TEST_REPORT_PATH = BASE_DIR / "ai_diagnostics/test_report.txt"    # Путь к отчету тестирования
-MESSAGES_DB_PATH = BASE_DIR / "ai_diagnostics/messages_db.json"   # Путь к базе сообщений диагностики
+# Paths for reports and message database
+DEBUG_REPORT_PATH = BASE_DIR / "ai_diagnostics/debug_report.txt"  # Path to diagnostics report
+TEST_REPORT_PATH = BASE_DIR / "ai_diagnostics/test_report.txt"    # Path to test report
+MESSAGES_DB_PATH = BASE_DIR / "ai_diagnostics/messages_db.json"   # Path to diagnostics message database
 
-# Пути к справке
-HELP_JSON_PATH = BASE_DIR / "ai_diagnostics/ai_help/ai_help.json"  # Новый путь для справочной системы
+# Paths for help
+HELP_JSON_PATH = BASE_DIR / "ai_diagnostics/ai_help/ai_help.json"  # New path for the help system
 
-# Дополнительные пути для модулей и утилит
-MODULES_DIR = BASE_DIR / "modules"            # Директория с модулями
-AI_DIAGNOSTICS_DIR = BASE_DIR / "ai_diagnostics"  # Директория с файлами диагностики
+# Additional paths for modules and utilities
+MODULES_DIR = BASE_DIR / "modules"            # Directory containing modules
+AI_DIAGNOSTICS_DIR = BASE_DIR / "ai_diagnostics"  # Directory with diagnostic files
 
-# Порт для Gradio
-GRADIO_PORT = 7860  # Порт для запуска Gradio интерфейса
+# Port for Gradio
+GRADIO_PORT = 7860  # Port for running the Gradio interface
 
 # LLM_API_URL
 LLM_API_URL = "http://10.67.67.2:11434/api/generate"
 
+# Animation and print speed settings
+ANIMATION_SPEED = 0.2  # Delay between animation iterations (in seconds)
+# Examples:
+# - 0.1: Accelerated animation, suitable for short messages.
+# - 0.2 (default): Standard speed, smooth animation for comfortable perception.
+# - 0.3: Slightly slower, even smoother effect.
+# - 0.5: Slow animation, emphasizes importance or draws attention.
 
-# Настройки скорости для анимации и имитации печати
-ANIMATION_SPEED = 0.2  # Задержка между итерациями анимации (в секундах)
-# Примеры значений:
-# - 0.1: Ускоренная анимация, подходит для коротких сообщений.
-# - 0.2 (по умолчанию): Стандартная скорость, плавная анимация для комфортного восприятия.
-# - 0.3: Немного медленнее, ещё более плавный эффект.
-# - 0.5: Медленная анимация, подчёркивает важность или акцентирует внимание.
+PRINT_SPEED = 0.02  # Speed of character output (in seconds)
+# Examples:
+# - 0.02 (default): Standard speed, mimics manual typing.
+# - 0.01: Fast typing, almost instantaneous.
+# - 0.05: Slow typing, creates a thoughtful text effect.
 
+LINE_DELAY = 0.1  # Delay between lines (in seconds)
+# Examples:
+# - 0.1 (default): Smooth transition between lines.
+# - 0.05: Fast transition between lines, reduces output time.
+# - 0.2: Slow transition, draws attention to the new line.
 
-PRINT_SPEED = 0.02  # Скорость вывода символов (в секундах)
-# Пример использования:
-# - 0.02 (по умолчанию): Стандартная скорость, напоминающая ручной ввод текста.
-# - 0.01: Быстрая печать, практически мгновенная.
-# - 0.05: Медленная печать, создаёт эффект вдумчивого текста.
-
-LINE_DELAY = 0.1  # Задержка между строками (в секундах)
-# Пример использования:
-# - 0.1 (по умолчанию): Плавный переход между строками.
-# - 0.05: Быстрый переход между строками, для сокращения времени вывода.
-# - 0.2: Медленный переход, акцентирует внимание на новой строке.
-
-# Функция для чтения SERVER_WG_NIC из файла params
+# Function to read SERVER_WG_NIC from the params file
 def get_server_wg_nic(params_file):
     """
-    Извлекает значение SERVER_WG_NIC из файла params.
-    :param params_file: Путь к файлу params
-    :return: Значение SERVER_WG_NIC
+    Extracts the SERVER_WG_NIC value from the params file.
+    :param params_file: Path to the params file
+    :return: SERVER_WG_NIC value
     """
     if not os.path.exists(params_file):
-        raise FileNotFoundError(f"Файл {params_file} не найден.")
+        raise FileNotFoundError(f"File {params_file} not found.")
 
     with open(params_file, "r") as f:
         for line in f:
             if line.startswith("SERVER_WG_NIC="):
-                # Извлекаем значение после "=" и удаляем пробелы
+                # Extract the value after "=" and strip spaces
                 return line.split("=")[1].strip()
-    raise ValueError("SERVER_WG_NIC не найден в файле params.")
+    raise ValueError("SERVER_WG_NIC not found in the params file.")
 
-# Определяем SERVER_WG_NIC
+# Define SERVER_WG_NIC
 try:
     SERVER_WG_NIC = get_server_wg_nic(PARAMS_FILE)
 except (FileNotFoundError, ValueError) as e:
     SERVER_WG_NIC = None
-    print(f"⚠️ Не удалось загрузить SERVER_WG_NIC: {e}")
+    print(f"⚠️ Failed to load SERVER_WG_NIC: {e}")
 
 def check_paths():
-    """Проверяет существование файлов и директорий."""
+    """Checks the existence of files and directories."""
     paths = {
         "BASE_DIR": BASE_DIR,
         "PROJECT_DIR": PROJECT_DIR,
@@ -147,16 +145,16 @@ def check_paths():
     }
     status = []
     for name, path in paths.items():
-        exists = " ✅  Доступен" if path.exists() else " ❌  Отсутствует"
+        exists = " ✅  Available" if path.exists() else " ❌  Missing"
         status.append(f"{name}: {exists} ({path})")
     return "\n".join(status)
 
 
 if __name__ == "__main__":
-    print(f"\n === 🛠️  Состояние проекта wg_qr_generator  ===\n")
-    print(f"  Корневая директория проекта: {BASE_DIR}")
-    print(f"  Порт для запуска Gradio: {GRADIO_PORT}")
-    print(f"  Порт WireGuard: {WIREGUARD_PORT}\n")
-    print(f" === 📂  Проверка файлов и директорий  ===\n")
+    print(f"\n === 🛠️  wg_qr_generator Project Status ===\n")
+    print(f"  Project base directory: {BASE_DIR}")
+    print(f"  Gradio port: {GRADIO_PORT}")
+    print(f"  WireGuard port: {WIREGUARD_PORT}\n")
+    print(f" === 📂  Checking files and directories ===\n")
     print(check_paths())
     print(f"\n")
