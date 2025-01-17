@@ -1,90 +1,77 @@
-
 # wg_qr_generator
 
-> **⚠️ Внимание!**
-> 
-> Этот проект находится в разработке и еще не готов к использованию.
-> Пожалуйста, следите за обновлениями!
+> **⚠️ Attention!**
+> This project is under development and is not yet ready for use. Stay tuned for updates!
 
-
-
-**wg_qr_generator** – это система автоматизации управления WireGuard, включающая генерацию конфигураций, создание QR-кодов, управление пользователями и очистку устаревших данных.
-
-Система предоставляет как веб-интерфейс на базе **Gradio**, так и консольное меню для управления пользователями и конфигурациями.
+**wg_qr_generator** is a modern WireGuard management system that includes:
+- Configuration and QR code generation.
+- User and expiration management.
+- Removal of outdated data.
+- A web interface based on **Gradio** and a console menu for management.
 
 ---
 
-## Оглавление
+## Table of Contents
 
-1. [Основные возможности](#основные-возможности)
-2. [Веб-интерфейс Gradio](#веб-интерфейс-gradio)
-   - [Как запустить админку](#как-запустить-админку)
-3. [Требования](#требования)
-4. [Установка и запуск проекта](#установка-и-запуск-проекта)
-   - [Быстрая установка](#быстрая-установка)
-5. [Использование меню](#использование-меню)
-6. [Структура проекта](#структура-проекта)
-7. [Тестирование](#тестирование)
-8. [Обновление](#обновление)
-9. [Лицензия](#лицензия)
-10. [Контакты](#контакты)
-
----
-
-## Основные возможности
-
-- **Генерация конфигураций**: Автоматическое создание конфигурационных файлов и QR-кодов для пользователей.
-- **Управление сроком действия**: Проверка, продление, сброс срока действия аккаунтов.
-- **Удаление устаревших данных**: Автоматическое удаление просроченных аккаунтов, IP-адресов и QR-кодов.
-- **Синхронизация конфигураций**: Интеграция с сервером WireGuard.
-- **Проверка перед созданием**: Проверяет существование пользователя перед созданием нового.
-- **Веб-интерфейс**: Простая и удобная админка на базе Gradio для управления пользователями.
-- **Подробные отчеты**: Генерация детальных отчетов о состоянии проекта.
-- **Обновление проекта**: Удобный механизм обновления кода и зависимостей.
+1. [Key Features](#key-features)
+2. [Gradio Web Interface](#gradio-web-interface)
+   - [How to Launch the Admin Panel](#how-to-launch-the-admin-panel)
+3. [Requirements](#requirements)
+4. [Installing and Running the Project](#installing-and-running-the-project)
+   - [Quick Installation](#quick-installation)
+5. [Using the Menu](#using-the-menu)
+6. [Project Structure](#project-structure)
+7. [Testing](#testing)
+8. [Updating](#updating)
+9. [License](#license)
+10. [Contacts](#contacts)
 
 ---
 
-## Веб-интерфейс Gradio
+## Key Features
 
-**Gradio Admin Panel** предоставляет интерфейс для:
-- Просмотра списка пользователей.
-- Создания нового пользователя.
-- Удаления пользователей.
-- Просмотра состояния системы и текущих конфигураций.
-
-### Как запустить админку
-
-Из консольного меню выберите пункт:
-```plaintext
-3. 🌐 Открыть Gradio админку
-```
-
-Админка запускается на порту **7860**. Локальный адрес:
-```
-http://127.0.0.1:7860
-```
-
-Если сервер имеет внешний IP, админка будет доступна в интернете после открытия порта **7860** через `firewalld`. Также автоматически создается временная публичная ссылка через Gradio:
-
-```
-🌐 Публичная ссылка: https://<уникальный_адрес>.gradio.live
-```
+- **Configuration Generation**: Create configuration files and QR codes.
+- **Expiration Management**: Check and update user data.
+- **Automation**: Remove outdated accounts and sync with the WireGuard server.
+- **Web Interface**: Easy-to-use interface powered by Gradio.
+- **Pre-Creation Validation**: Prevent data duplication.
+- **Updates and Reports**: Simplified updates and detailed reports.
 
 ---
 
-## Требования
+## Gradio Web Interface
 
-1. **Python 3.8+** (рекомендуется Python 3.11).
-2. **Git** для клонирования репозитория.
-3. **Node.js** для работы Gradio.
-4. **lsof** для проверки портов.
-5. **firewalld** для управления сетевыми правилами.
+Gradio provides an intuitive interface for managing the system. With it, you can:
+- View and edit users.
+- Create new configurations.
+- Manage server status.
+- Generate system state reports.
+
+### How to Launch the Admin Panel
+
+1. Select **g. 🌐 Open Gradio Admin Panel** in the console menu.
+2. The admin panel will launch on port **7860**:
+   ```plaintext
+   http://127.0.0.1:7860
+   ```
+3. For external access, open the port in `firewalld`. Gradio will also generate a temporary public link:
+   ```plaintext
+   🌐 Public link: https://<unique_address>.gradio.live
+   ```
 
 ---
 
-## Установка проекта
+## Requirements
 
-Подготовка к установке проекта:
+1. **Python 3.8+** (Python 3.11 recommended).
+2. **Git** for cloning the repository.
+3. **Node.js** for Gradio support.
+4. **lsof** for port checks.
+5. **firewalld** for managing network rules.
+
+---
+
+## Installing dependencies:
 
 ```bash
 sudo dnf update -y && sudo dnf install epel-release -y && \
@@ -97,18 +84,20 @@ sudo dnf install python3.11 -y && \
 sudo alternatives --set python3 /usr/bin/python3.11 && python3 --version
 ```
 
-### Описание команды:
-1. **Обновление системы**: `sudo dnf update -y`.
-2. **Установка EPEL-репозитория**: Для получения дополнительных пакетов.
-3. **Установка Node.js**: Через официальный источник NodeSource.
-4. **Обновление системных пакетов и установка зависимостей**:
-   - Инструменты разработки (`gcc`, `curl`, `openssl-devel`, `bzip2-devel`, `libffi-devel`, `zlib-devel`).
-   - Утилиты (`net-tools`, `lsof`, `mc`).
-5. **Установка Python 3.11**: С последующей настройкой как основной версии Python.
+#### Command Description:
+1. **System Update**: `sudo dnf update -y`.
+2. **Install EPEL repository**: To obtain additional packages.
+3. **Installing Node.js**: Via the official NodeSource.
+4. **Updating system packages and installing dependencies**:
+   - Development tools (`gcc`, `curl`, `openssl-devel`, `bzip2-devel`, `libffi-devel`, `zlib-devel`).
+   - Utilities (`net-tools`, `lsof`, `mc`).
+5. **Installation of Python 3.11**: Followed by customization as a major version of Python.
 
-### Запуск проекта
+---
 
-Для установки и запуска выполните:
+## Installing and Running the Project
+
+Run the following commands:
 ```bash
 mkdir -p pyWGgen && cd pyWGgen
 wget https://raw.githubusercontent.com/licht8/wg_qr_generator/refs/heads/main/run_project.sh
@@ -116,143 +105,100 @@ chmod +x run_project.sh
 ./run_project.sh
 ```
 
-Эта команда:
-1. Создает директорию `pyWGgen` и переходит в нее.
-2. Загружает скрипт `run_project.sh`.
-3. Настраивает виртуальное окружение, устанавливает зависимости.
-4. Запускает консольное меню.
+### Installation Overview
+1. Creates a `pyWGgen` directory.
+2. Downloads and executes the `run_project.sh` script.
+3. Sets up a virtual environment and installs libraries.
 
 ---
 
-## Использование меню
+## Using the Menu
 
-Консольное меню предоставляет следующие возможности:
+The console menu provides convenient access to the project's main features:
 
 ```plaintext
-==================  Меню  ==================
+🛡️  ======  Menu wg_qr_generator  ======= 🛡️
+ ------------------------------------------
+  g. 🌐  Open Gradio Admin Panel
+  u. 👤  Manage Users
+ sy. 📡  Synchronize Users
+ du. 🧹  Clear User Database
+ ------------------------------------------
+  rw. ♻️   Reinstall WireGuard
+  dw. 🗑️   Remove WireGuard
+  iw. ⚙️   Install WireGuard
+ up. 🔄  Update Dependencies
+ ------------------------------------------
+  i. 🛠️   Project Status Information
+ rg. 📋  Generate Project Status Report
+ fr. 📄  Show Project Status Report
+ dg. 🛠️   Run Project Diagnostics
+ sd. 📋  Show Diagnostics Log
+  t. 🧪  Run Tests
 
- 1. 🛠️   Информация о состоянии проекта
- 2. 🧪   Запустить тесты
- u. 🔄   Запустить обновление проекта и зависимостей
---------------------------------------------
- 3. 🌐   Открыть Gradio админку
- 4. 👤   Управление пользователями
---------------------------------------------
- 5. ♻️   Переустановить WireGuard
- 6. 🗑️   Удалить WireGuard
---------------------------------------------
- 7. 🧹   Очистить базу пользователей
- 8. 📋   Запустить генерацию отчета
- 9. 🗂️   Показать краткий отчет
-10. 📄   Показать полный отчет
+🧩 === Help and Diagnostics Section ==== 🧩
+  aih. 🗨️  Help and Diagnostics
+  aid. 🤖 Run Project Diagnostics
 
-	 0 или q. Выход
+	 0 or q. Exit
  ==========================================
 ```
 
 ---
 
-## Структура проекта
+## Project Structure
 
 ```plaintext
-wg_qr_generator
-├── menu.py                      # Главное меню проекта. Управляет взаимодействием пользователя с функциями проекта через консоль.
-├── run_project.sh               # Скрипт запуска и установки проекта. Проверяет зависимости, создает виртуальное окружение, настраивает проект.
-├── requirements.txt             # Список Python-зависимостей, необходимых для работы проекта.
-├── gradio_admin                 # Папка для веб-интерфейса Gradio.
-│   ├── main_interface.py        # Главный скрипт интерфейса Gradio. Запускает вкладки и управляет настройками.
-│   ├── tabs                     # Подпапка с вкладками веб-интерфейса.
-│   │   ├── create_user_tab.py   # Вкладка создания пользователя через Gradio.
-│   │   ├── delete_user_tab.py   # Вкладка удаления пользователей.
-│   │   ├── statistics_tab.py    # Вкладка статистики и состояния системы.
-│   └── functions                # Вспомогательные функции для интерфейса.
-│       ├── format_helpers.py    # Форматирование текста и данных для отображения в Gradio.
-│       ├── table_helpers.py     # Управление таблицами, отображаемыми в Gradio.
-│       ├── user_records.py      # Функции для работы с файлами пользователей.
-├── modules                      # Основные модули проекта.
-│   ├── wireguard_utils.py       # Функции для работы с WireGuard: управление конфигурацией, проверка статуса.
-│   ├── firewall_utils.py        # Управление портами через firewalld.
-│   ├── gradio_utils.py          # Функции для работы с интерфейсом Gradio.
-│   ├── report_utils.py          # Генерация и отображение отчетов о состоянии проекта.
-│   ├── update_utils.py          # Функции для обновления проекта и зависимостей.
-│   ├── user_management.py       # Управление пользователями: создание, удаление, проверка.
-│   ├── directory_setup.py       # Создание и настройка необходимых директорий.
-│   ├── qr_generator.py          # Генерация QR-кодов для конфигураций WireGuard.
-│   ├── config_writer.py         # Запись конфигурационных файлов.
-│   └── ip_management.py         # Управление IP-адресами пользователей.
-└── test                         # Папка с тестами для модулей проекта.
-    ├── test_wireguard_utils.py  # Тесты для wireguard_utils.py.
-    ├── test_firewall_utils.py   # Тесты для firewall_utils.py.
-    ├── test_gradio_utils.py     # Тесты для gradio_utils.py.
-    ├── test_report_utils.py     # Тесты для report_utils.py.
-    ├── test_update_utils.py     # Тесты для update_utils.py.
-    ├── test_user_management.py  # Тесты для user_management.py.
-    ├── test_directory_setup.py  # Тесты для directory_setup.py.
-    ├── test_qr_generator.py     # Тесты для qr_generator.py.
-    ├── test_config_writer.py    # Тесты для config_writer.py.
-    └── test_ip_management.py    # Тесты для ip_management.py.
+wg_qr_generator/
+├── ai_assistant/
+│   ├── chats/                # Stores chat logs and history related to the AI assistant.
+│   ├── contexts/             # Contextual data used by the AI assistant for generating responses.
+│   ├── inputs/               # Input files and data used by the AI assistant.
+│   ├── logs/                 # Logs generated during AI assistant operations.
+│   ├── models/               # Pre-trained and custom models used by the AI assistant.
+│   ├── outputs/              # Output files and generated data from the AI assistant.
+│   ├── prompts/              # Prompt templates and configurations for the AI assistant.
+│   └── scripts/              # Custom scripts related to the AI assistant's functionality.
+├── ai_diagnostics/
+│   ├── ai_help/              # Contains diagnostic tools and scripts for AI troubleshooting.
+│   ├── modules/              # Additional modules for AI diagnostics.
+├── docs/                     # Documentation for the project.
+├── gradio_admin/
+│   ├── functions/            # Core utility functions used by the Gradio admin interface.
+│   └── tabs/                 # Tabs and sections for the Gradio interface.
+├── logs/                     # General logs for the entire project.
+├── modules/                  # Core project modules for various functionalities.
+├── temp/                     # Temporary files and data.
+├── test/                     # Test scripts and files for the project.
+├── user/                     # User-specific data and configurations.
+│   └── data/                 # Detailed user data structure.
+│       ├── logs/             # User-specific logs.
+│       ├── qrcodes/          # QR codes generated for users.
+│       ├── usr_stale_config/ # Stale or outdated user configurations.
+│       └── wg_configs/       # WireGuard configuration files for users.
+└── venv/                     # Python virtual environment for the project dependencies.
 ```
-
-### Разделы структуры
-
-#### 1. **Корневые файлы**
-- **`menu.py`**: Основное меню для управления проектом через консоль. Вызывает функции из модулей и предоставляет доступ к основным возможностям проекта.
-- **`run_project.sh`**: Автоматизирует процесс установки и запуска проекта. Создает виртуальное окружение, устанавливает зависимости, запускает меню.
-- **`requirements.txt`**: Содержит все Python-библиотеки, необходимые для работы проекта.
-
-#### 2. **`gradio_admin`**
-- Хранилище веб-интерфейса проекта на базе Gradio.
-- **`main_interface.py`**: Координирует запуск вкладок и настройки.
-- **`tabs`**: Содержит файлы для каждого отдельного компонента интерфейса (создание пользователей, удаление, статистика).
-- **`functions`**: Утилитарные функции для обработки данных в интерфейсе.
-
-#### 3. **`modules`**
-- Вспомогательные модули с ключевой бизнес-логикой проекта.
-- **`wireguard_utils.py`**: Управление WireGuard (проверка статуса, конфигурации).
-- **`firewall_utils.py`**: Работа с firewalld (открытие и закрытие портов).
-- **`gradio_utils.py`**: Настройки и запуск Gradio.
-- **`report_utils.py`**: Генерация текстовых отчетов.
-- **`update_utils.py`**: Функции для обновления проекта.
-- **`user_management.py`**: Создание, удаление и управление пользователями.
-- **`directory_setup.py`**: Убедитесь, что все необходимые папки существуют.
-- **`qr_generator.py`**: Создание QR-кодов для конфигураций.
-- **`config_writer.py`**: Запись и управление конфигурационными файлами.
-- **`ip_management.py`**: Назначение и управление IP-адресами пользователей.
-
-#### 4. **`test`**
-- Тесты для всех модулей проекта.
-- Каждый файл тестирует соответствующий модуль, что обеспечивает надежность и предотвращение ошибок в коде.
 
 ---
 
-## Тестирование
+## Updating
 
-Запуск тестов:
+To update the project you can start .sh script:
 ```bash
-pytest
+./run_project.sh
 ```
 
----
-
-## Обновление
-
-Для обновления проекта выберите пункт `u` в меню или выполните команду:
-```bash
-git pull
-pip install -r requirements.txt
-```
+Or select `up. 🔄 Update Dependencies` in the console menu.
 
 ---
 
-## Лицензия
+## License
 
-Проект распространяется под лицензией [MIT](LICENSE).
-
----
-
-## Контакты
-
-Свяжитесь через [Issues](https://github.com/licht8/wg_qr_generator/issues).
+This project is distributed under the [MIT License](LICENSE).
 
 ---
+
+## Contacts
+
+If you have questions, create an [Issue](https://github.com/licht8/wg_qr_generator/issues).
 
