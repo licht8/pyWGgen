@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # modules/wireguard_utils.py
-# Функции для работы с WireGuard
+# Functions for working with WireGuard
 
 import os
 import subprocess
@@ -8,6 +8,5 @@ import subprocess
 WIREGUARD_BINARY = "/usr/bin/wg"
 
 def check_wireguard_installed():
-    """Проверяет, установлен ли WireGuard."""
+    """Checks if WireGuard is installed."""
     return os.path.isfile(WIREGUARD_BINARY)
-
