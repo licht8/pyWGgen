@@ -1,48 +1,48 @@
 #!/usr/bin/env python3
 # gradio_admin/gradio_cli.py
-# Скрипт для запуска проекта через эмуляцию командной строки Gradio.
+# Script for launching the project via Gradio's command-line emulation.
 
 import os
 import subprocess
 from pathlib import Path
 import sys
 
-# Путь к корневой директории проекта
+# Path to the project's root directory
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# Путь к виртуальному окружению
-VENV_ACTIVATE_PATH = PROJECT_ROOT / "venv/bin/activate"  # Для Linux/macOS
-# VENV_ACTIVATE_PATH = PROJECT_ROOT / "venv/Scripts/activate"  # Для Windows
+# Path to the virtual environment
+VENV_ACTIVATE_PATH = PROJECT_ROOT / "venv/bin/activate"  # For Linux/macOS
+# VENV_ACTIVATE_PATH = PROJECT_ROOT / "venv/Scripts/activate"  # For Windows
 
-# Путь к скрипту запуска проекта
+# Path to the project launch script
 RUN_PROJECT_SCRIPT = PROJECT_ROOT / "run_project.sh"
 
 def run_project():
     """
-    Выполняет запуск проекта через ./run_project.sh, активируя виртуальное окружение.
+    Executes the project launch via ./run_project.sh, activating the virtual environment.
     """
     if not RUN_PROJECT_SCRIPT.exists():
-        return f"❌ Скрипт {RUN_PROJECT_SCRIPT} не найден. Убедитесь, что он существует."
+        return f"❌ Script {RUN_PROJECT_SCRIPT} not found. Ensure it exists."
     
     if not VENV_ACTIVATE_PATH.exists():
-        return f"❌ Виртуальное окружение {VENV_ACTIVATE_PATH} не найдено. Проверьте корректность пути."
+        return f"❌ Virtual environment {VENV_ACTIVATE_PATH} not found. Check the path."
 
     try:
-        # Команды для выполнения
+        # Command to execute
         command = f"bash -c 'source {VENV_ACTIVATE_PATH} && {RUN_PROJECT_SCRIPT}'"
 
-        # Выполняем команду и собираем результат
+        # Execute the command and collect the result
         result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
         if result.returncode == 0:
-            return f"✅ Проект успешно запущен!\n{result.stdout.strip()}"
+            return f"✅ Project successfully launched!\n{result.stdout.strip()}"
         else:
-            return f"❌ Ошибка при запуске проекта:\n{result.stderr.strip()}"
+            return f"❌ Error while launching the project:\n{result.stderr.strip()}"
 
     except Exception as e:
-        return f"❌ Произошла ошибка: {str(e)}"
+        return f"❌ An error occurred: {str(e)}"
 
 if __name__ == "__main__":
-    # Выполняем запуск проекта
+    # Execute the project launch
     output = run_project()
     print(output)
