@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # wg_qr_generator/modules/uninstall_wg.py
 # ===========================================
-# Скрипт для удаления WireGuard
+# Script for uninstalling WireGuard
 # ===========================================
 
 import os
@@ -34,17 +34,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def uninstall_wireguard():  # Переименуйте функцию для ясности
-    local_print_speed = PRINT_SPEED  # Локальная скорость для изменения
-    """Функция для удаления WireGuard."""
+def uninstall_wireguard():
+    local_print_speed = PRINT_SPEED  # Local speed for adjustment
+    """Function to uninstall WireGuard."""
     
     def confirm_action(prompt="Are you sure? (yes/no): "):
-        """Запрашивает у пользователя подтверждение действия."""
+        """Asks the user for confirmation to proceed."""
         while True:
             choice = input(prompt).strip().lower()
             if choice in {"yes", "no"}:
                 return choice == "yes"
-            print("⚠️  Некорректный ввод. Введите 'yes' или 'no'.")
+            print("⚠️  Invalid input. Enter 'yes' or 'no'.")
 
     def is_wireguard_installed():
         """Check if WireGuard is installed."""
@@ -112,13 +112,13 @@ def uninstall_wireguard():  # Переименуйте функцию для я�
             if subprocess.run(["firewall-cmd", "--zone=public", "--remove-interface=wg0"], check=False).returncode != 0:
                 print("⚠️ Firewall interface 'wg0' not found or already removed.")
                 logger.warning("Firewall interface 'wg0' not found or already removed.")
-            # Добавьте другие правила, если необходимо
+            # Add additional rules if necessary
             print("✅ Firewall rules removed.")
         except Exception as e:
             logger.error("Failed to remove firewall rules: %s", e)
             print("❌ Failed to remove firewall rules. Check logs for details.")
 
-    # Основная логика удаления WireGuard
+    # Main logic for uninstalling WireGuard
     if not is_wireguard_installed():
         print("❌ WireGuard is not installed. Exiting.")
         return
@@ -132,6 +132,6 @@ def uninstall_wireguard():  # Переименуйте функцию для я�
     remove_firewall_rules()
     print("✅ WireGuard has been successfully uninstalled.")
 
-# Вызов функции, если скрипт запускается напрямую
+# Call the function if the script is run directly
 if __name__ == "__main__":
     uninstall_wireguard()
