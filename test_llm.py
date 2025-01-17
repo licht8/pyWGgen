@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 # test_llm.py
 # ==================================================
-# Тестовый скрипт для проверки взаимодействия с LLM.
-# Версия: 1.5 (2024-12-21)
+# Test script for verifying interaction with LLM.
+# Version: 1.5 (2024-12-21)
 # ==================================================
-# Описание:
-# Этот скрипт проверяет передачу системного промпта и запроса к модели,
-# чтобы избежать дублирования в ответах.
+# Description:
+# This script tests the transmission of a system prompt and user query to the model
+# to avoid duplication in responses.
 # ==================================================
 
 import requests
 import logging
 
-# Конфигурация API
+# API Configuration
 LLM_API_URL = "http://10.67.67.2:11434/api/generate"
 MODEL_NAME = "llama3:latest"
 
-# Настройка логирования
+# Logging setup
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -27,13 +27,13 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 def test_query_llm():
-    """Тестовый запрос к LLM с системным промптом."""
+    """Test query to LLM with a system prompt."""
     try:
-        # Системный и пользовательский промпты
-        system_prompt = "Вы профессиональный администратор WireGuard. Вас зовут Пулька. Начинайте каждый ответ с 'Привет, я Пулька!'"
-        user_prompt = "Расскажите немного о себе."
+        # System and user prompts
+        system_prompt = "You are a professional WireGuard administrator. Your name is Pulka. Start every response with 'Hi, I am Pulka!'"
+        user_prompt = "Tell me a bit about yourself."
 
-        # Полный промпт
+        # Full prompt
         prompt = f"{system_prompt}\n\n{user_prompt}"
 
         payload = {
@@ -42,21 +42,21 @@ def test_query_llm():
             "stream": False
         }
 
-        logger.info(f"Отправка запроса к LLM: {LLM_API_URL}")
+        logger.info(f"Sending request to LLM: {LLM_API_URL}")
         response = requests.post(LLM_API_URL, json=payload)
         response.raise_for_status()
 
         result = response.json()
-        return result.get("response", "Ошибка: нет ответа")
+        return result.get("response", "Error: No response")
 
     except requests.HTTPError as http_err:
-        logger.error(f"HTTP ошибка при обращении к LLM: {http_err}")
+        logger.error(f"HTTP error while communicating with LLM: {http_err}")
         return f"HTTP Error: {http_err}"
     except Exception as e:
-        logger.error(f"Ошибка при обращении к LLM: {e}")
+        logger.error(f"Error while communicating with LLM: {e}")
         return f"Error: {e}"
 
 if __name__ == "__main__":
     response = test_query_llm()
-    print("\nОтвет LLM:")
+    print("\nLLM Response:")
     print(response)
