@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
 # gradio_admin/functions/format_helpers.py
-# Вспомогательные функции для форматирования данных в проекте wg_qr_generator
-
+# Helper functions for formatting data in the wg_qr_generator project
 
 from datetime import datetime
 
 def format_time(iso_time):
-    """Форматирует время из ISO 8601 в читаемый формат."""
+    """Formats time from ISO 8601 to a readable format."""
     try:
         dt = datetime.fromisoformat(iso_time)
         return dt.strftime("%Y-%m-%d %H:%M:%S")
     except Exception:
         return "N/A"
 
-
 def calculate_time_remaining(expiry_time):
-    """Вычисляет оставшееся время до истечения."""
+    """Calculates the remaining time until expiration."""
     try:
         dt_expiry = datetime.fromisoformat(expiry_time)
         delta = dt_expiry - datetime.now()
@@ -25,15 +23,14 @@ def calculate_time_remaining(expiry_time):
     except Exception:
         return "N/A"
 
-
 def format_user_info(username, user_data, table_row):
     """
-    Форматирует информацию о пользователе для отображения в интерфейсе.
+    Formats user information for display in the interface.
 
-    :param username: Имя пользователя
-    :param user_data: Словарь с информацией о пользователе
-    :param table_row: Список данных строки таблицы
-    :return: Отформатированная строка с информацией о пользователе
+    :param username: Username
+    :param user_data: Dictionary containing user information
+    :param table_row: List of table row data
+    :return: Formatted string with user information
     """
     created = user_data.get("created_at", "N/A")
     expires = user_data.get("expires_at", "N/A")
@@ -43,7 +40,7 @@ def format_user_info(username, user_data, table_row):
     down = table_row[5] if len(table_row) > 5 else "N/A"
     state = table_row[6] if len(table_row) > 6 else "N/A"
 
-    # Формируем текстовый вывод
+    # Construct the textual output
     user_info = f"""
 👤 User: {username}
 📧 Email: user@mail.wg
@@ -51,8 +48,8 @@ def format_user_info(username, user_data, table_row):
 🔥 Expires: {format_time(expires)}
 🌐 Internal IP: {int_ip}
 🌎 External IP: {ext_ip}
-⬆️ Uploaded: {up}
-⬇️ Downloaded: {down}
+💾 Uploaded: {up}
+💽 Downloaded: {down}
 ✅ Status: {state}
 """
     return user_info.strip()
