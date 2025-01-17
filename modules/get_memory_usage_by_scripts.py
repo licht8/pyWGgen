@@ -2,7 +2,7 @@
 
 """
 get_memory_usage_by_scripts.py
-Script to analyze memory consumption of the wg_qr_generator project with detailed breakdown.
+Script to analyze memory consumption of the pyWGgen project with detailed breakdown.
 """
 
 import psutil
