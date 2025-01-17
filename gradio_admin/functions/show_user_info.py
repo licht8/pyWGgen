@@ -5,10 +5,10 @@ from gradio_admin.functions.user_records import load_user_records
 from gradio_admin.functions.format_helpers import format_time
 
 def show_user_info(username):
-    """Показывает подробную информацию о пользователе."""
+    """Displays detailed information about a user."""
     print(f"[DEBUG] Username: {username}")
 
-    # Загружаем данные из user_records.json
+    # Load data from user_records.json
     records = load_user_records()
     user_data = records.get(username)
 
@@ -16,7 +16,7 @@ def show_user_info(username):
         print(f"[DEBUG] User '{username}' not found in records.")
         return f"User '{username}' not found in records."
 
-    # Форматируем информацию о пользователе
+    # Format user information
     created = user_data.get("created_at", "N/A")
     expires = user_data.get("expires_at", "N/A")
     int_ip = user_data.get("allowed_ips", "N/A")
