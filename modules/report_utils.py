@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # modules/report_utils.py
 # ===========================================
-# Module for handling reports in the wg_qr_generator project
+# Module for handling reports in the pyWGgen project
 # ===========================================
 # This module provides functions for generating and displaying reports,
 # including full reports, brief reports, summary reports, and project status information.
@@ -130,7 +130,7 @@ def show_project_status():
     print(f" 🌐  Active peers: {get_wireguard_peers()}")
 
     # Last report
-    report_path = os.path.join("wg_qr_generator", "test_report.txt")
+    report_path = os.path.join("pyWGgen", "test_report.txt")
     if os.path.exists(report_path):
         print(f" 📋  Last Report: {report_path}")
     else:
@@ -172,11 +172,11 @@ def display_test_summary():
                     print(line.strip())
             print("\n=========================================")
     else:
-        print(f"  ❌  Project status report file wg_qr_generator not found: {TEST_REPORT_PATH}")
+        print(f"  ❌  Project status report file pyWGgen not found: {TEST_REPORT_PATH}")
 
 def display_summary_report():
     """
-    Reads and displays the content of the project status report wg_qr_generator.
+    Reads and displays the content of the project status report pyWGgen.
     Uses the file path from settings.py.
     If the file is missing, initiates its creation.
     """
@@ -187,11 +187,11 @@ def display_summary_report():
         with open(SUMMARY_REPORT_PATH, "r", encoding="utf-8") as file:
             content = file.read()
 
-        print("\n=== 📋 Project Status Report wg_qr_generator ===\n")
+        print("\n=== 📋 Project Status Report pyWGgen ===\n")
         print(content)
 
     except Exception as e:
-        print(f" ❌ Error reading project status report wg_qr_generator: {e}")
+        print(f" ❌ Error reading project status report pyWGgen: {e}")
 
 if __name__ == "__main__":
     show_project_status()
