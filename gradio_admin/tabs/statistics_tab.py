@@ -1,5 +1,5 @@
 # gradio_admin/tabs/statistics_tab.py
-# Вкладка "Statistics" для Gradio-интерфейса проекта wg_qr_generator
+# Вкладка "Statistics" для Gradio-интерфейса проекта pyWGgen
 
 import gradio as gr # type: ignore
 import pandas as pd # type: ignore
