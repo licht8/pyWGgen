@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # modules/input_utils.py
-# Модуль для ввода с поддержкой истории через readline.
+# Module for input with history support using readline.
 
 import readline
 import os
@@ -10,29 +10,29 @@ readline.set_history_length(50)
 
 def setup_history():
     """
-    Настраивает историю ввода для readline.
-    Загружает существующую историю или создает новую.
+    Configures input history for readline.
+    Loads an existing history or creates a new one.
     """
     try:
         readline.read_history_file(HISTORY_FILE)
     except FileNotFoundError:
-        # Если файла истории нет, создаем пустой
+        # If the history file does not exist, create an empty one
         open(HISTORY_FILE, "wb").close()
 
-    # Устанавливаем автоматическое сохранение истории при завершении
+    # Set up automatic saving of history on exit
     import atexit
     atexit.register(readline.write_history_file, HISTORY_FILE)
 
 def input_with_history(prompt):
     """
-    Ввод с поддержкой истории.
-    
-    :param prompt: Текст подсказки для ввода.
-    :return: Строка ввода пользователя.
+    Input with history support.
+
+    :param prompt: Prompt text for the user.
+    :return: User input string.
     """
     setup_history()
     try:
         return input(prompt)
     except KeyboardInterrupt:
-        print("\n ❌ Ввод отменен.")
+        print("\n ❌ Input canceled.")
         return ""
