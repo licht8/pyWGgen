@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # gradio_admin/functions/create_user.py
-# Логика создания пользователей через main.py
+# Logic for creating users via main.py
 
 import os
 import subprocess
 
 def create_user(username, email="N/A", telegram_id="N/A"):
     if not username:
-        return "Ошибка: имя пользователя не может быть пустым.", None
+        return "Error: username cannot be empty.", None
 
     try:
         subprocess.run(
@@ -19,8 +19,8 @@ def create_user(username, email="N/A", telegram_id="N/A"):
         absolute_path = os.path.abspath(qr_code_path)
         
         if os.path.exists(absolute_path):
-            return f"✅ Пользователь {username} успешно создан.", absolute_path
-        return f"✅ Пользователь {username} успешно создан, но QR-код не найден.", None
+            return f"✅ User {username} successfully created.", absolute_path
+        return f"✅ User {username} successfully created, but QR code not found.", None
 
     except subprocess.CalledProcessError as e:
-        return f"Ошибка при создании пользователя: {str(e)}", None
+        return f"Error while creating user: {str(e)}", None
