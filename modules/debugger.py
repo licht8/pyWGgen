@@ -2,7 +2,7 @@
 # modules/debugger.py
 # -*- coding: utf-8 -*-
 """
-Debugger Module for wg_qr_generator
+Debugger Module for pyWGgen
 ===================================
 This module generates a diagnostic report to help identify potential
 issues within the project structure, dependencies, and functionality.
