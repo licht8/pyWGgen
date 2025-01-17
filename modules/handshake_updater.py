@@ -9,9 +9,9 @@ from settings import USER_DB_PATH, SERVER_WG_NIC
 
 def get_latest_handshakes(interface):
     """
-    Извлекает информацию о последнем рукопожатии пользователей WireGuard.
-    :param interface: Имя интерфейса WireGuard.
-    :return: Словарь {public_key: last_handshake}.
+    Retrieves information about the latest handshakes of WireGuard users.
+    :param interface: Name of the WireGuard interface.
+    :return: Dictionary {public_key: last_handshake}.
     """
     try:
         output = subprocess.check_output(["wg", "show", interface, "latest-handshakes"], text=True)
@@ -27,14 +27,14 @@ def get_latest_handshakes(interface):
 
         return handshakes
     except Exception as e:
-        print(f"Ошибка при получении информации о рукопожатиях: {e}")
+        print(f"Error while retrieving handshake information: {e}")
         return {}
 
 def convert_handshake_timestamp(timestamp):
     """
-    Преобразует Unix timestamp в читаемый формат.
-    :param timestamp: Метка времени (Unix timestamp).
-    :return: Читаемая строка даты и времени в формате UTC или 'Never', если рукопожатие не было установлено (timestamp равен 0).
+    Converts a Unix timestamp into a readable format.
+    :param timestamp: Timestamp (Unix timestamp).
+    :return: Readable date and time string in UTC format or 'Never' if no handshake was established (timestamp equals 0).
     """
     if timestamp == 0:
         return "Never"
@@ -42,12 +42,12 @@ def convert_handshake_timestamp(timestamp):
 
 def update_handshakes(user_records_path, interface):
     """
-    Обновляет информацию о последнем рукопожатии пользователей в user_records.json.
-    :param user_records_path: Путь к файлу user_records.json.
-    :param interface: Имя интерфейса WireGuard.
+    Updates information about the latest handshakes of users in user_records.json.
+    :param user_records_path: Path to the user_records.json file.
+    :param interface: Name of the WireGuard interface.
     """
     if not os.path.exists(user_records_path):
-        print(f"Файл {user_records_path} не найден.")
+        print(f"File {user_records_path} not found.")
         return
 
     with open(user_records_path, "r") as f:
@@ -63,8 +63,8 @@ def update_handshakes(user_records_path, interface):
     with open(user_records_path, "w") as f:
         json.dump(user_records, f, indent=4)
 
-    print("Информация о последнем рукопожатии успешно обновлена.")
+    print("Latest handshake information successfully updated.")
 
 if __name__ == "__main__":
-    # Обновление рукопожатий для пользователей
+    # Update handshakes for users
     update_handshakes(USER_DB_PATH, SERVER_WG_NIC)
