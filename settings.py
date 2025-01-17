@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# wg_qr_generator/settings.py
+# pyWGgen/settings.py
 # ===========================================
-# Settings for the wg_qr_generator project
+# Settings for the pyWGgen project
 # ===========================================
 # This file contains the main settings for the project, including file paths,
 # directories, configurations, and global parameters.
@@ -33,7 +33,7 @@ import os
 import configparser
 
 # Define the base path to the project root
-BASE_DIR = Path(__file__).resolve().parent  # Path to the wg_qr_generator root directory
+BASE_DIR = Path(__file__).resolve().parent  # Path to the pyWGgen root directory
 PROJECT_DIR = BASE_DIR  # For compatibility, PROJECT_DIR equals BASE_DIR
 
 # File and directory paths
@@ -151,7 +151,7 @@ def check_paths():
 
 
 if __name__ == "__main__":
-    print(f"\n === 🛠️  wg_qr_generator Project Status ===\n")
+    print(f"\n === 🛠️  pyWGgen Project Status ===\n")
     print(f"  Project base directory: {BASE_DIR}")
     print(f"  Gradio port: {GRADIO_PORT}")
     print(f"  WireGuard port: {WIREGUARD_PORT}\n")
