@@ -99,7 +99,7 @@ sudo alternatives --set python3 /usr/bin/python3.11 && python3 --version
 
 Run the following commands:
 ```bash
-mkdir -p pyWGgen && cd pyWGgen
+mkdir -p pyWGgenerator && cd pyWGgenerator
 wget https://raw.githubusercontent.com/licht8/pyWGgen/refs/heads/main/run_project.sh
 chmod +x run_project.sh
 ./run_project.sh
