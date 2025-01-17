@@ -1,46 +1,49 @@
-# Основные зависимости для работы проекта
+# Core dependencies for the project
 
-# Модуль для работы с датами, включая поддержку ISO 8601 форматов и работы с временными зонами
+# Module for working with dates, including ISO 8601 formats and time zone support
 python-dateutil>=2.8.2
 
-# Библиотека для создания QR-кодов (комментарий для qrcode, если закомментированную зависимость планируется использовать)
+# Library for generating QR codes (comment for qrcode, if the commented-out dependency is planned to be used)
 qrcode[pil]>=7.3.1
 
-# Криптографическая библиотека для работы с сертификатами, ключами и алгоритмами шифрования
+# Cryptographic library for working with certificates, keys, and encryption algorithms
 cryptography>=41.0.0
 
-# Фреймворк для тестирования Python-приложений, поддерживающий модульные, интеграционные и функциональные тесты
+# Framework for testing Python applications, supporting unit, integration, and functional tests
 pytest>=7.4.0
 
-# Библиотека для HTTP-запросов, удобного взаимодействия с API, отправки GET/POST-запросов и обработки ответов
+# Library for HTTP requests, convenient for API interaction, sending GET/POST requests, and handling responses
 requests>=2.31.0
 
-# Библиотека для генерации QR-кодов, которая поддерживает работу с данными разного формата
+# Library for generating QR codes, supporting data of various formats
 pyqrcode==1.2.1
 
-# Библиотека для создания веб-интерфейсов на основе Python с минимальными усилиями (используется для админ-панели)
+# Library for creating web interfaces in Python with minimal effort (used for the admin panel)
 gradio>=3.36.0
 
-# Библиотека для работы с PNG-изображениями (зависимость для библиотеки pyqrcode)
+# Library for handling PNG images (dependency for the pyqrcode library)
 pypng
 
-# Библиотека для работы с процессами и системной информацией, полезна для мониторинга и управления ресурсами
+# Library for working with processes and system information, useful for monitoring and managing resources
 psutil
 
-# Для добавления цветов и форматирования текста в консольных выводах
+# For adding colors and formatting text in console outputs
 termcolor
 
-# Библиотека для создания текстовых таблиц, используемых в отчетах
+# Library for creating text-based tables, used in reports
 prettytable>=3.7.0
 
-# Библиотека для для визуализации данных.
+# Library for data visualization
 matplotlib
 
-# memory-profiler
+# Memory profiling library
 memory-profiler
 
-# objgraph
+# Library for object graph visualization
 objgraph
 
+# HTTP request library
 requests>=2.31.0
+
+# Library for JSON logging
 python-json-logger>=2.0.7
