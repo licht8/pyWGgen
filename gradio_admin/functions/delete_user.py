@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # delete_user.py
-# Script for deleting users in the wg_qr_generator project
+# Script for deleting users in the pyWGgen project
 
 import os
 import subprocess
