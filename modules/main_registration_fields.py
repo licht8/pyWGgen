@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # modules/main_registration_fields.py
-## Основной модуль для генерации полей пользователя
+## Main module for generating user fields
 
 import uuid
 from datetime import datetime, timedelta
@@ -21,17 +21,35 @@ def create_user_record(
     preferred_language="en"
 ):
     """
-    Создает и возвращает структуру данных пользователя.
+    Creates and returns a user data structure.
+
+    Args:
+        username (str): The username of the user.
+        address (str): The user's allowed IP address.
+        public_key (str): The user's public key.
+        preshared_key (str): The pre-shared key for the user.
+        qr_code_path (str): Path to the user's QR code.
+        email (str, optional): User's email address. Defaults to "N/A".
+        telegram_id (str, optional): User's Telegram ID. Defaults to "N/A".
+        referral_id (str, optional): Referral ID. Defaults to None.
+        coupon_id (str, optional): Coupon ID. Defaults to None.
+        group (str, optional): User group. Defaults to "guest".
+        subscription_plan (str, optional): Subscription plan. Defaults to "free".
+        payment_method (str, optional): Payment method. Defaults to "N/A".
+        preferred_language (str, optional): Preferred language. Defaults to "en".
+
+    Returns:
+        dict: A dictionary representing the user's data structure.
     """
     current_time = datetime.now()
     user_record = {
         "username": username,
-        "user_id": str(uuid.uuid4()),  # Генерация уникального UUID
+        "user_id": str(uuid.uuid4()),  # Generate a unique UUID
         "group": group,
         "tags": ["default-user"],
         "priority": 1,
         "created_at": current_time.isoformat(),
-        "expires_at": (current_time + timedelta(days=30)).isoformat(),  # Срок действия 30 дней
+        "expires_at": (current_time + timedelta(days=30)).isoformat(),  # Validity period: 30 days
         "auto_suspend_date": (current_time + timedelta(days=30)).isoformat(),
         "auto_delete_date": (current_time + timedelta(days=30)).isoformat(),
         "last_config_update": current_time.isoformat(),
