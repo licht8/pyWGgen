@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # menu.py
-# Main menu for managing the wg_qr_generator project
+# Main menu for managing the pyWGgen project
 # ===========================================
 # This file provides a convenient interface
 # for managing various project functions,
@@ -65,7 +65,7 @@ def show_main_menu():
     local_print_speed = 0.005  # Local print speed
     while True:
         wireguard_installed = check_wireguard_installed()
-        display_message_slowly(f"\n🛡️  ======  Menu wg_qr_generator  ======= 🛡️\n", print_speed=local_print_speed, indent=False)
+        display_message_slowly(f"\n🛡️  ======  Menu pyWGgen  ======= 🛡️\n", print_speed=local_print_speed, indent=False)
         display_message_slowly(f" ------------------------------------------", print_speed=local_print_speed, indent=False)
         print(f"  g. 🌐  Open Gradio Admin Panel")
         print(f"  u. 👤  Manage Users")
