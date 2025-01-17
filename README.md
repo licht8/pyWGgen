@@ -1,9 +1,9 @@
-# wg_qr_generator
+# pyWGgen
 
 > **⚠️ Attention!**
 > This project is under development and is not yet ready for use. Stay tuned for updates!
 
-**wg_qr_generator** is a modern WireGuard management system that includes:
+**pyWGgen** is a modern WireGuard management system that includes:
 - Configuration and QR code generation.
 - User and expiration management.
 - Removal of outdated data.
@@ -100,7 +100,7 @@ sudo alternatives --set python3 /usr/bin/python3.11 && python3 --version
 Run the following commands:
 ```bash
 mkdir -p pyWGgen && cd pyWGgen
-wget https://raw.githubusercontent.com/licht8/wg_qr_generator/refs/heads/main/run_project.sh
+wget https://raw.githubusercontent.com/licht8/pyWGgen/refs/heads/main/run_project.sh
 chmod +x run_project.sh
 ./run_project.sh
 ```
@@ -117,7 +117,7 @@ chmod +x run_project.sh
 The console menu provides convenient access to the project's main features:
 
 ```plaintext
-🛡️  ======  Menu wg_qr_generator  ======= 🛡️
+🛡️  ======  Menu pyWGgen  ======= 🛡️
  ------------------------------------------
   g. 🌐  Open Gradio Admin Panel
   u. 👤  Manage Users
@@ -149,7 +149,7 @@ The console menu provides convenient access to the project's main features:
 ## Project Structure
 
 ```plaintext
-wg_qr_generator/
+pyWGgen/
 ├── ai_assistant/
 │   ├── chats/                # Stores chat logs and history related to the AI assistant.
 │   ├── contexts/             # Contextual data used by the AI assistant for generating responses.
@@ -200,5 +200,5 @@ This project is distributed under the [MIT License](LICENSE).
 
 ## Contacts
 
-If you have questions, create an [Issue](https://github.com/licht8/wg_qr_generator/issues).
+If you have questions, create an [Issue](https://github.com/licht8/pyWGgen/issues).
 
