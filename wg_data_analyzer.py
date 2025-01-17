@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 # ai_assistant/scripts/wg_data_analyzer.py
 # ==================================================
-# Скрипт для сбора и анализа данных WireGuard.
-# Версия: 2.5 (2024-12-21)
+# Script for collecting and analyzing WireGuard data.
+# Version: 2.5 (2024-12-21)
 # ==================================================
-# Описание:
-# Этот скрипт собирает данные из трёх источников:
-# - Команда `sudo wg show` (текущее состояние WireGuard);
-# - Файл конфигурации `/etc/wireguard/wg0.conf`;
-# - Файл параметров `/etc/wireguard/params`.
-# 
-# Данные анализируются и сохраняются в формате JSON для дальнейшего
-# использования, включая передачу в LLM для обработки.
-# 
-# Скрипт может работать как модуль (вызов функций) или как самостоятельный файл.
+# Description:
+# This script collects data from three sources:
+# - The `sudo wg show` command (current WireGuard status);
+# - The configuration file `/etc/wireguard/wg0.conf`;
+# - The parameters file `/etc/wireguard/params`.
+#
+# The data is analyzed and saved in JSON format for further
+# use, including sending to an LLM for processing.
+#
+# The script can function either as a module (calling functions)
+# or as a standalone file.
 # ==================================================
 
 import subprocess
@@ -25,7 +26,7 @@ from pathlib import Path
 import logging
 import uuid
 
-# Убедимся, что путь к settings.py доступен
+# Ensure the path to settings.py is accessible
 try:
     SCRIPT_DIR = Path(__file__).resolve().parent
 except NameError:
@@ -34,16 +35,16 @@ except NameError:
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-# Попытка импортировать настройки проекта
+# Attempt to import project settings
 try:
     from settings import BASE_DIR, SERVER_CONFIG_FILE, PARAMS_FILE, LLM_API_URL
 except ModuleNotFoundError as e:
     logger = logging.getLogger(__name__)
-    logger.error("Не удалось найти модуль settings. Убедитесь, что файл settings.py находится в корне проекта.")
-    print("Не удалось найти модуль settings. Убедитесь, что файл settings.py находится в корне проекта.")
+    logger.error("Unable to find the settings module. Ensure settings.py is located in the project root.")
+    print("Unable to find the settings module. Ensure settings.py is located in the project root.")
     sys.exit(1)
 
-# Настройка логирования
+# Configure logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -59,7 +60,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 def get_last_restart():
-    """Получает время последнего перезапуска WireGuard."""
+    """Gets the last restart time of WireGuard."""
     try:
         output = subprocess.check_output(["systemctl", "show", "wg-quick@wg0", "--property=ActiveEnterTimestamp"], text=True)
         if "ActiveEnterTimestamp=" in output:
@@ -71,30 +72,30 @@ def get_last_restart():
         return "No data"
 
 def get_wg_status():
-    """Получает состояние WireGuard через команду `wg show`."""
+    """Gets the WireGuard status using the `wg show` command."""
     try:
         output = subprocess.check_output(["sudo", "wg", "show"], text=True)
         return output
     except subprocess.CalledProcessError as e:
-        logger.error(f"Ошибка выполнения команды wg show: {e}")
+        logger.error(f"Error executing wg show command: {e}")
         return f"Error executing wg show: {e}"
 
 def read_config_file(filepath):
-    """Читает содержимое конфигурационного файла."""
+    """Reads the contents of a configuration file."""
     if not os.path.exists(filepath):
-        logger.warning(f"Файл не найден: {filepath}")
+        logger.warning(f"File not found: {filepath}")
         return f"File not found: {filepath}"
     try:
         with open(filepath, 'r') as file:
             return file.read()
     except Exception as e:
-        logger.error(f"Ошибка чтения файла {filepath}: {e}")
+        logger.error(f"Error reading file {filepath}: {e}")
         return f"Error reading file {filepath}: {e}"
 
 def parse_wg_show(output):
-    """Парсит вывод команды `wg show` и извлекает данные о пирах."""
+    """Parses the output of the `wg show` command and extracts peer data."""
     def convert_to_simple_format(size_str):
-        """Конвертирует размер из строки в простой формат (MB или GB)."""
+        """Converts size strings to a simple format (MB or GB)."""
         try:
             size, unit = size_str.split()
             size = float(size)
@@ -139,16 +140,8 @@ def parse_wg_show(output):
 
     return {"peers": peers}
 
-    # Проверка на отсутствие данных и установка значений по умолчанию
-    for peer in peers:
-        peer["Transfer"]["Received"] = peer["Transfer"]["Received"] or "No data"
-        peer["Transfer"]["Sent"] = peer["Transfer"]["Sent"] or "No data"
-        peer["LatestHandshake"] = peer["LatestHandshake"] or "No data"
-
-    return {"peers": peers}
-
 def parse_config_with_logins(content):
-    """Парсит конфигурационный файл WireGuard и сопоставляет пиров с логинами."""
+    """Parses the WireGuard configuration file and matches peers with logins."""
     peer_data = []
     current_login = None
     current_peer = {}
@@ -175,7 +168,7 @@ def parse_config_with_logins(content):
     return peer_data
 
 def parse_config_file(content):
-    """Парсит содержимое конфигурационного файла и возвращает словарь."""
+    """Parses the contents of a configuration file and returns a dictionary."""
     config = {}
     for line in content.splitlines():
         if "=" in line:
@@ -184,15 +177,15 @@ def parse_config_file(content):
     return config
 
 def collect_and_analyze_wg_data():
-    """Собирает данные из источников и возвращает их в виде словаря."""
+    """Collects data from sources and returns it as a dictionary."""
     data = {}
 
-    # Сбор данных
+    # Data collection
     wg_status = get_wg_status()
     wg0_config = read_config_file(SERVER_CONFIG_FILE)
     params_config = read_config_file(PARAMS_FILE)
 
-    # Анализ данных
+    # Data analysis
     data["wg_status"] = parse_wg_show(wg_status) if "Error" not in wg_status else wg_status
     data["wg0_config"] = parse_config_with_logins(wg0_config) if "Error" not in wg0_config else wg0_config
     data["params_config"] = parse_config_file(params_config) if "Error" not in params_config else params_config
@@ -201,26 +194,26 @@ def collect_and_analyze_wg_data():
     return data
 
 def save_to_json(data, output_file):
-    """Сохраняет данные в формате JSON в указанный файл."""
+    """Saves data in JSON format to the specified file."""
     try:
         with open(output_file, 'w') as json_file:
             json.dump(data, json_file, indent=4)
-        logger.info(f"Данные сохранены в {output_file}")
+        logger.info(f"Data saved to {output_file}")
     except Exception as e:
-        logger.error(f"Ошибка при сохранении данных в JSON: {e}")
+        logger.error(f"Error saving data to JSON: {e}")
 
 def load_system_prompt(prompt_file):
-    """Загружает системный промпт из файла."""
+    """Loads the system prompt from a file."""
     try:
         with open(prompt_file, 'r') as file:
             prompt_data = json.load(file)
         return prompt_data.get("system_prompt", "")
     except Exception as e:
-        logger.error(f"Ошибка загрузки системного промпта: {e}")
+        logger.error(f"Error loading system prompt: {e}")
         return ""
 
 def query_llm(prompt, api_url=LLM_API_URL, model="llama3:latest", max_tokens=500):
-    """Отправляет запрос в LLM и возвращает ответ."""
+    """Sends a query to the LLM and returns the response."""
     try:
         payload = {
             "model": model,
@@ -230,51 +223,51 @@ def query_llm(prompt, api_url=LLM_API_URL, model="llama3:latest", max_tokens=500
         response = requests.post(api_url, json=payload)
         response.raise_for_status()
         result = response.json()
-        return result.get("response", "Ошибка: нет ответа")
+        return result.get("response", "Error: no response")
     except requests.HTTPError as http_err:
-        logger.error(f"HTTP ошибка при обращении к LLM: {http_err}")
+        logger.error(f"HTTP error when querying LLM: {http_err}")
         return f"HTTP Error: {http_err}"
     except Exception as e:
-        logger.error(f"Ошибка при обращении к LLM: {e}")
+        logger.error(f"Error querying LLM: {e}")
         return f"Error: {e}"
 
 def generate_prompt(system_prompt, wg_data):
-    """Создает финальный промпт для анализа данных без дублирования."""
+    """Generates a final prompt for data analysis without duplication."""
     report_id = str(uuid.uuid4())
     formatted_prompt = (
         f"{system_prompt}\n\n"
-        f"Уникальный идентификатор отчета: {report_id}\n\n"
-        f"**Состояние WireGuard:**\n"
+        f"Unique report ID: {report_id}\n\n"
+        f"**WireGuard Status:**\n"
     )
 
     for peer in wg_data['wg0_config']:
         formatted_prompt += (
-            f"- Логин: {peer['login']}, PublicKey: {peer['peer'].get('PublicKey', 'Не найден')}\n"
+            f"- Login: {peer['login']}, PublicKey: {peer['peer'].get('PublicKey', 'Not found')}\n"
         )
 
     formatted_prompt += (
-        f"\n**Конфигурация:**\n"
-        f"📊 Адрес: {wg_data['params_config'].get('SERVER_WG_IPV4', 'Не указан')}\n"
-        f"📊 Порт: {wg_data['params_config'].get('SERVER_PORT', 'Не указан')}\n"
-        f"📊 PublicKey: {wg_data['params_config'].get('SERVER_PUB_KEY', 'Не указан')}\n"
+        f"\n**Configuration:**\n"
+        f"📊 Address: {wg_data['params_config'].get('SERVER_WG_IPV4', 'Not specified')}\n"
+        f"📊 Port: {wg_data['params_config'].get('SERVER_PORT', 'Not specified')}\n"
+        f"📊 PublicKey: {wg_data['params_config'].get('SERVER_PUB_KEY', 'Not specified')}\n"
     )
 
     formatted_prompt += (
-        f"\n**Параметры:**\n"
-        f"📊 IP сервера: {wg_data['params_config'].get('SERVER_PUB_IP', 'Не указан')}\n"
+        f"\n**Parameters:**\n"
+        f"📊 Server IP: {wg_data['params_config'].get('SERVER_PUB_IP', 'Not specified')}\n"
         f"📊 DNS: {', '.join([wg_data['params_config'].get(f'CLIENT_DNS_{i}', '') for i in range(1, 5)])}\n"
     )
 
     formatted_prompt += (
-        f"\n**Последний перезапуск:**\n"
-        f"🕒 {wg_data.get('last_restart', 'Не указано')}\n"
+        f"\n**Last Restart:**\n"
+        f"🕒 {wg_data.get('last_restart', 'Not specified')}\n"
     )
 
     formatted_prompt += (
-        f"\n**Рекомендации:**\n"
-        f"- 🔧 Проверьте статус пиров: `wg show`\n"
-        f"- 🔧 Перезапустите WireGuard: `sudo systemctl restart wg-quick@wg0`\n"
-        f"- 🔧 Проверьте доступность порта: `sudo ss -tuln | grep 51820`\n"
+        f"\n**Recommendations:**\n"
+        f"- 🔧 Check peer status: `wg show`\n"
+        f"- 🔧 Restart WireGuard: `sudo systemctl restart wg-quick@wg0`\n"
+        f"- 🔧 Check port availability: `sudo ss -tuln | grep 51820`\n"
     )
 
     return formatted_prompt
@@ -286,13 +279,13 @@ if __name__ == "__main__":
     data = collect_and_analyze_wg_data()
     save_to_json(data, output_path)
 
-    # Загрузка системного промпта
+    # Load the system prompt
     system_prompt = load_system_prompt(prompt_file)
     prompt = generate_prompt(system_prompt, data)
 
-    # Запрос к LLM
+    # Query the LLM
     llm_response = query_llm(prompt)
 
-    # Вывод результата
+    # Output the result
     print("\nLLM Analysis Output:")
     print(llm_response)
