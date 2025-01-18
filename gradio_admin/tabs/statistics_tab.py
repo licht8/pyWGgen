@@ -144,10 +144,3 @@ def statistics_tab():
         inputs=[user_selector],
         outputs=[user_info_display, qr_code_display]
     )
-
-        # Auto-refresh when the tab loads
-    gr.load_event(
-        fn=refresh_table,
-        inputs=[show_inactive],
-        outputs=[search_input, stats_table, user_selector, user_info_display, qr_code_display]
-    )
