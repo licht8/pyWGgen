@@ -3,24 +3,24 @@
 
 import gradio as gr
 from gradio_admin.tabs.create_user_tab import create_user_tab
-from gradio_admin.tabs.delete_user_tab import delete_user_tab
+from gradio_admin.tabs.manage_user_tab import manage_user_tab
 from gradio_admin.tabs.statistics_tab import statistics_tab
-from gradio_admin.tabs.ollama_chat_tab import ollama_chat_tab  # Новый импорт
+from gradio_admin.tabs.ollama_chat_tab import ollama_chat_tab  # New import
 
-# Создание интерфейса
+# Creating the interface
 with gr.Blocks() as admin_interface:
-    with gr.Tab(label="🌱 Создать"):
+    with gr.Tab(label="🌱 Create"):
         create_user_tab()
     
-    with gr.Tab(label="🔥 Удалить"):
-        delete_user_tab()
+    with gr.Tab(label="🔥 Delete"):
+        manage_user_tab()
     
-    with gr.Tab(label="🔍 Статистика"):
+    with gr.Tab(label="🔍 Statistics"):
         statistics_tab()
     
-    with gr.Tab(label="🤖 Чат с Ai"):
+    with gr.Tab(label="🤖 Chat with AI"):
         ollama_chat_tab()
 
-    
-    #with gr.Tab(label="🖥️ Командная строка"):
-        #command_line_tab()
+    # Uncomment for additional features
+    # with gr.Tab(label="🖥️ Command Line"):
+        # command_line_tab()
