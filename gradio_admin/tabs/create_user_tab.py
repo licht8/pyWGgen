@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 # gradio_admin/tabs/create_user_tab.py
-# Вкладка для создания пользователей
+# Tab for creating users
 
 import gradio as gr
 from gradio_admin.functions.create_user import create_user
 
 def create_user_tab():
     """
-    Вкладка для создания пользователей WireGuard.
+    Tab for creating WireGuard users.
     """
-    username_input = gr.Textbox(label="Имя пользователя", placeholder="Введите имя пользователя...")
-    email_input = gr.Textbox(label="Email (необязательно)", placeholder="Введите email...")
-    telegram_input = gr.Textbox(label="Telegram ID (необязательно)", placeholder="Введите Telegram ID...")
-    create_button = gr.Button("Создать пользователя")
-    output_message = gr.Textbox(label="Результат", interactive=False)
-    qr_code_display = gr.Image(label="QR-код", visible=False)
+    username_input = gr.Textbox(label="Username", placeholder="Enter username...")
+    email_input = gr.Textbox(label="Email (optional)", placeholder="Enter email...")
+    telegram_input = gr.Textbox(label="Telegram ID (optional)", placeholder="Enter Telegram ID...")
+    create_button = gr.Button("Create User")
+    output_message = gr.Textbox(label="Result", interactive=False)
+    qr_code_display = gr.Image(label="QR Code", visible=False)
 
     def handle_create_user(username, email, telegram_id):
         result, qr_code_path = create_user(username, email, telegram_id)
