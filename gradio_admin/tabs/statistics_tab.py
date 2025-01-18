@@ -1,8 +1,8 @@
 # gradio_admin/tabs/statistics_tab.py
-# Вкладка "Statistics" для Gradio-интерфейса проекта pyWGgen
+# "Statistics" tab for the Gradio interface of the pyWGgen project
 
-import gradio as gr # type: ignore
-import pandas as pd # type: ignore
+import gradio as gr  # type: ignore
+import pandas as pd  # type: ignore
 from gradio_admin.functions.user_records import load_user_records
 from gradio_admin.functions.format_helpers import format_time
 from gradio_admin.functions.table_helpers import update_table
@@ -14,8 +14,8 @@ from settings import USER_DB_PATH
 from settings import QR_CODE_DIR
 
 def statistics_tab():
-    """Создает вкладку статистики пользователей WireGuard."""
-    # Получение начальных данных
+    """Creates a statistics tab for WireGuard users."""
+    # Fetch initial data
     def get_initial_data():
         update_traffic_data(USER_DB_PATH)
         table = update_table(True)
@@ -27,18 +27,18 @@ def statistics_tab():
     with gr.Row():
         gr.Markdown("## Statistics")
 
-    # Чекбокс Show inactive и кнопка Refresh
+    # Show inactive checkbox and Refresh button
     with gr.Row():
         show_inactive = gr.Checkbox(label="Show blocked", value=True)
         refresh_button = gr.Button("Refresh")
 
-    # Поле поиска
+    # Search field
     with gr.Row():
         search_input = gr.Textbox(label="Search", placeholder="Enter text to filter table...", interactive=True)
 
-    # Выбор пользователя и отображение информации и QR-кода
-    with gr.Row(equal_height=True):  # Устанавливаем одинаковую высоту
-        with gr.Column(scale=3):  # Левая колонка для User Details
+    # User selection and display of information and QR code
+    with gr.Row(equal_height=True):
+        with gr.Column(scale=3):  # Left column for User Details
             user_selector = gr.Dropdown(
                 label="Select User",
                 choices=initial_user_list,
@@ -51,15 +51,15 @@ def statistics_tab():
                 lines=10,
                 interactive=False
             )
-        with gr.Column(scale=1, min_width=200):  # Правая колонка для QR-кода
+        with gr.Column(scale=1, min_width=200):  # Right column for QR code
             qr_code_display = gr.Image(
                 label="User QR Code",
                 type="filepath",
                 interactive=False,
-                height=200  # Делаем высоту фиксированной для пропорционального вида
+                height=200  # Fixed height for proportional view
             )
 
-    # Таблица с данными
+    # Data table
     with gr.Row():
         stats_table = gr.Dataframe(
             headers=["👤 User", "📊 Used", "📦 Limit", "🌐 IP Address", "⚡ St.", "💳 $", "UID"],
@@ -68,7 +68,7 @@ def statistics_tab():
             wrap=True
         )
 
-    # Функция для обновления таблицы и сброса данных
+    # Function to refresh the table and reset data
     def refresh_table(show_inactive):
         update_traffic_data(USER_DB_PATH)
         table = update_table(show_inactive)
@@ -78,61 +78,61 @@ def statistics_tab():
             print(f"[DEBUG] Updated table:\n{table}")
         user_list = ["Select a user"] + table["👤 User"].tolist() if not table.empty else ["Select a user"]
         print(f"[DEBUG] User list: {user_list}")
-        # Сбрасываем user_info_display, user_selector и qr_code_display
+        # Reset user_info_display, user_selector, and qr_code_display
         return "", table, gr.update(choices=user_list, value="Select a user"), "", None
 
-    # Обновление таблицы при нажатии Refresh
+    # Refresh table on button click
     refresh_button.click(
         fn=refresh_table,
         inputs=[show_inactive],
         outputs=[search_input, stats_table, user_selector, user_info_display, qr_code_display]
     )
 
-    # Функция для поиска по таблице
+    # Function to search within the table
     def search_table(query):
-        table = update_table(True)  # Загружаем оригинальную таблицу
+        table = update_table(True)  # Load the original table
         if query:
-            # Фильтруем таблицу по всем колонкам
+            # Filter the table across all columns
             filtered_table = table.loc[
                 table.apply(lambda row: query.lower() in " ".join(map(str, row)).lower(), axis=1)
             ]
             print(f"[DEBUG] Filtered table:\n{filtered_table}")
             return filtered_table
-        return table  # Если запрос пуст, возвращаем оригинальную таблицу
+        return table  # Return the original table if query is empty
 
-    # Поиск по таблице
+    # Search in the table
     search_input.change(
         fn=search_table,
         inputs=[search_input],
         outputs=[stats_table]
     )
 
-    # Функция для поиска QR-кода пользователя
+    # Function to find a user's QR code
     def find_qr_code(username):
         """
-        Находит путь к QR-коду пользователя.
-        :param username: Имя пользователя
-        :return: Путь к файлу QR-кода или None, если файл не найден.
+        Finds the path to a user's QR code.
+        :param username: User's name
+        :return: Path to the QR code file or None if the file is not found.
         """
         qr_code_file = QR_CODE_DIR / f"{username}.png"
         if qr_code_file.exists():
             return str(qr_code_file)
         return None
 
-    # Показ информации о пользователе и его QR-кода
+    # Display user information and their QR code
     def display_user_info(selected_user):
-        # Убедимся, что selected_user — это строка, а не список
+        # Ensure selected_user is a string, not a list
         if isinstance(selected_user, list):
             if len(selected_user) > 0:
                 selected_user = selected_user[0]
             else:
                 selected_user = "Select a user"
 
-        # Если выбран "Select a user", возвращаем пустую строку и пустой QR-код
+        # If "Select a user" is chosen, return empty strings
         if not selected_user or selected_user == "Select a user":
             return "", None
 
-        # Получение информации о пользователе
+        # Retrieve user information
         user_info = show_user_info(selected_user)
         qr_code_path = find_qr_code(selected_user)
         print(f"[DEBUG] User info:\n{user_info}")
