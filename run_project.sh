@@ -6,7 +6,7 @@
 GITHUB_REPO="https://github.com/licht8/pyWGgen.git"
 PROJECT_DIR="pyWGgen"
 VENV_DIR="venv" # Ensure the path is relative to create it within $PROJECT_DIR
-WIREGUARD_INSTALL_SCRIPT="wireguard-install.sh"
+# WIREGUARD_INSTALL_SCRIPT="wireguard-install.sh"
 WIREGUARD_BINARY="/usr/bin/wg"
 
 # Check if debug mode is enabled
