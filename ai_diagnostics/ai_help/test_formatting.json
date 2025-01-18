@@ -1,14 +1,14 @@
 {
     "test_formatting": {
         "id": "test_formatting",
-        "title": "  ✨  Тест форматирования",
-        "short": "  Проверка корректного отображения форматирования текста.",
-        "long": "  Этот раздел создан для проверки отображения форматирования.\n  Вот пример списка действий:\n\n  1️⃣  Убедитесь, что JSON файл подключён корректно.\n\n  2️⃣  Проверьте, что текст выводится с отступами и переносами.\n\n  💡  Совет:\n    Используйте форматирование \\n для добавления новых строк.\n    Убедитесь, что текст читается легко на экране терминала."
+        "title": "  ✨  Formatting Test",
+        "short": "  Checking the correct display of text formatting.",
+        "long": "  This section is created to verify the display of formatting.\n  Here is an example list of actions:\n\n  1️⃣  Ensure that the JSON file is correctly connected.\n\n  2️⃣  Verify that text is displayed with proper indents and line breaks.\n\n  💡  Tip:\n    Use \\n formatting to add new lines.\n    Ensure that the text is easy to read on a terminal screen."
     },
     "gradio_not_running": {
         "id": "gradio_not_running",
-        "title": "  🌐  Gradio не запущен",
-        "short": "  Сервис Gradio в данный момент не запущен.",
-        "long": "  Сервис Gradio в данный момент не запущен.\n  Чтобы запустить его, выполните следующие шаги:\n\n  1️⃣  Перейдите в корневую директорию проекта:\n      cd {PROJECT_DIR}\n\n  2️⃣  Запустите Gradio интерфейс:\n      python3 main.py\n\n  💡  Совет:\n    Убедитесь, что порт (по умолчанию: 7860)\n    не занят другим процессом."
+        "title": "  🌐  Gradio Not Running",
+        "short": "  The Gradio service is currently not running.",
+        "long": "  The Gradio service is currently not running.\n  To start it, follow these steps:\n\n  1️⃣  Navigate to the project root directory:\n      cd {PROJECT_DIR}\n\n  2️⃣  Start the Gradio interface:\n      python3 main.py\n\n  💡  Tip:\n    Make sure the port (default: 7860)\n    is not occupied by another process."
     }
 }
