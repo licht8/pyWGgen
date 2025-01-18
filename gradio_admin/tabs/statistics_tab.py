@@ -15,14 +15,17 @@ from settings import QR_CODE_DIR
 
 def statistics_tab():
     """Creates a statistics tab for WireGuard users."""
-    # Function to refresh table and user list
-    def refresh_table_on_load():
+    # Fetch initial data
+    def get_initial_data():
         update_traffic_data(USER_DB_PATH)
         table = update_table(True)
         user_list = ["Select a user"] + table["👤 User"].tolist() if not table.empty else ["Select a user"]
-        print(f"[DEBUG] Initial table:\n{table}")
-        print(f"[DEBUG] Initial user list: {user_list}")
-        return table, gr.update(choices=user_list, value="Select a user")
+        return table, user_list
+
+    initial_table, initial_user_list = get_initial_data()
+
+    with gr.Row():
+        gr.Markdown("## Statistics")
 
     # Show inactive checkbox and Refresh button
     with gr.Row():
@@ -38,7 +41,7 @@ def statistics_tab():
         with gr.Column(scale=3):  # Left column for User Details
             user_selector = gr.Dropdown(
                 label="Select User",
-                choices=["Select a user"],  # Placeholder, updated dynamically
+                choices=initial_user_list,
                 value="Select a user",
                 interactive=True
             )
@@ -60,21 +63,25 @@ def statistics_tab():
     with gr.Row():
         stats_table = gr.Dataframe(
             headers=["👤 User", "📊 Used", "📦 Limit", "🌐 IP Address", "⚡ St.", "💳 $", "UID"],
-            value=[],  # Placeholder, updated dynamically
+            value=initial_table,
             interactive=False,
             wrap=True
         )
 
-    # Refresh table on button click
+    # Function to refresh the table and reset data
     def refresh_table(show_inactive):
         update_traffic_data(USER_DB_PATH)
         table = update_table(show_inactive)
+        if table.empty:
+            print("[DEBUG] Table is empty after update.")
+        else:
+            print(f"[DEBUG] Updated table:\n{table}")
         user_list = ["Select a user"] + table["👤 User"].tolist() if not table.empty else ["Select a user"]
-        print(f"[DEBUG] Updated table:\n{table}")
-        print(f"[DEBUG] Updated user list: {user_list}")
+        print(f"[DEBUG] User list: {user_list}")
         # Reset user_info_display, user_selector, and qr_code_display
         return "", table, gr.update(choices=user_list, value="Select a user"), "", None
 
+    # Refresh table on button click
     refresh_button.click(
         fn=refresh_table,
         inputs=[show_inactive],
@@ -136,11 +143,4 @@ def statistics_tab():
         fn=display_user_info,
         inputs=[user_selector],
         outputs=[user_info_display, qr_code_display]
-    )
-
-    # Initial table and user list load
-    stats_table.load(
-        fn=refresh_table_on_load,
-        inputs=[],
-        outputs=[stats_table, user_selector]
     )
