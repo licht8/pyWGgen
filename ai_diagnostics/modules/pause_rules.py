@@ -1,67 +1,67 @@
 #!/usr/bin/env python3
 # ai_diagnostics/modules/pause_rules.py
-# Модуль для определения правил пауз и эмоционального чтения текста.
-# Версия: 1.0
-# Обновлено: 2024-11-29
+# Module for defining pause rules and expressive text reading.
+# Version: 1.0
+# Updated: 2024-11-29
 
 import time
 import random
 
 def get_pause_rules():
     """
-    Возвращает массив с правилами пауз для различных знаков препинания и ситуаций.
+    Returns a list of rules for pauses based on various punctuation marks and contexts.
     """
     return [
         {
-            "trigger": ".",  # Точка
-            "pause_range": (0.4, 0.8),  # Пауза от 0.4 до 0.8 секунд
-            "emotion": "нейтральный конец предложения"
+            "trigger": ".",  # Period
+            "pause_range": (0.4, 0.8),  # Pause between 0.4 and 0.8 seconds
+            "emotion": "neutral sentence ending"
         },
         {
-            "trigger": ",",  # Запятая
-            "pause_range": (0.2, 0.4),  # Короткая пауза
-            "emotion": "перечисление или лёгкая пауза"
+            "trigger": ",",  # Comma
+            "pause_range": (0.2, 0.4),  # Short pause
+            "emotion": "list or light pause"
         },
         {
-            "trigger": "!",  # Восклицательный знак
-            "pause_range": (0.5, 1.0),  # Более длинная пауза
-            "emotion": "восхищение, удивление или сильное чувство"
+            "trigger": "!",  # Exclamation mark
+            "pause_range": (0.5, 1.0),  # Longer pause
+            "emotion": "excitement, surprise, or strong emotion"
         },
         {
-            "trigger": "?",  # Вопросительный знак
-            "pause_range": (0.6, 1.2),  # Пауза с обдумыванием
-            "emotion": "вопрос, ожидание ответа"
+            "trigger": "?",  # Question mark
+            "pause_range": (0.6, 1.2),  # Thoughtful pause
+            "emotion": "question, anticipation of an answer"
         },
         {
-            "trigger": ":",  # Двоеточие
-            "pause_range": (0.3, 0.7),  # Небольшая пауза
-            "emotion": "ожидание важной информации"
+            "trigger": ":",  # Colon
+            "pause_range": (0.3, 0.7),  # Slight pause
+            "emotion": "anticipation of important information"
         },
         {
-            "trigger": ";",  # Точка с запятой
-            "pause_range": (0.3, 0.6),  # Короткая пауза
-            "emotion": "дополнительное уточнение"
+            "trigger": ";",  # Semicolon
+            "pause_range": (0.3, 0.6),  # Short pause
+            "emotion": "additional clarification"
         },
         {
-            "trigger": "—",  # Дефис
-            "pause_range": (0.3, 0.5),  # Лёгкая пауза
-            "emotion": "резкое переключение мысли"
+            "trigger": "—",  # Dash
+            "pause_range": (0.3, 0.5),  # Light pause
+            "emotion": "sharp shift in thought"
         },
         {
-            "trigger": "\n",  # Перенос строки
-            "pause_range": (0.6, 1.0),  # Средняя пауза
-            "emotion": "начало новой строки или абзаца"
+            "trigger": "\n",  # Line break
+            "pause_range": (0.6, 1.0),  # Moderate pause
+            "emotion": "start of a new line or paragraph"
         }
     ]
 
 
 def apply_pause(char, rules):
     """
-    Применяет паузу в зависимости от символа и правил.
+    Applies a pause based on the character and defined rules.
 
     Args:
-        char (str): Символ, после которого нужно сделать паузу.
-        rules (list): Список правил пауз.
+        char (str): The character after which to pause.
+        rules (list): List of pause rules.
 
     Returns:
         None
