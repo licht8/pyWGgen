@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # gradio_admin/tabs/delete_user_tab.py
-# Вкладка для удаления пользователей
+# Tab for managing user deletion, blocking, and unblocking
 
-import gradio as gr # type: ignore
+import gradio as gr  # type: ignore
 from gradio_admin.functions.delete_user import delete_user
 from gradio_admin.functions.user_records import load_user_records
 from gradio_admin.functions.block_user import block_user, unblock_user
 
 def delete_user_tab():
-    """Создает вкладку для удаления, блокировки и разблокировки пользователей WireGuard."""
+    """Creates a tab for deleting, blocking, and unblocking WireGuard users."""
     def get_user_list():
         records = load_user_records()
         user_list = []
