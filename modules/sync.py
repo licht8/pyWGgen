@@ -111,16 +111,24 @@ def sync_users_from_config():
             else:
                 print(f"⚠️ QR-код для {username} не создан (отсутствует конфиг)")
 
-            # Обновление записей
+            # В секции обработки пользователей:
             if username not in user_records:
-                user_records[username] = create_user_record(
+                # Создаем базовую запись
+                user_record = create_user_record(
                     username=username,
                     address=user["allowed_ips"],
                     public_key=user["public_key"],
                     preshared_key=user["preshared_key"],
-                    config_path=str(target_config),
-                    qr_code_path=str(target_qr) if target_qr.exists() else None
+                    qr_code_path=f"user/data/qrcodes/{username}.png"  # Если параметр существует
                 )
+                
+                # Добавляем дополнительные поля
+                user_record.update({
+                    "config_path": str(target_config),
+                    "qr_code_path": str(target_qr) if target_qr.exists() else None
+                })
+                
+                user_records[username] = user_record
                 new_users += 1
 
         # Сохранение данных
