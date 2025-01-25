@@ -41,58 +41,82 @@ def manage_user_tab():
         success, message = unblock_user(username)
         return gr.update(choices=get_user_list(), value="Select a user"), message
 
-    # New function for the "Synchronize" button
     def handle_sync(config_dir_str, qr_dir_str):
         success, log = sync_users_from_config_paths(config_dir_str, qr_dir_str)
         return log  # Return the synchronization logs
 
-    with gr.Row():
-        gr.Markdown("## Manage Users")
+    # We wrap everything in a Box to group the interface nicely
+    with gr.Box():
+        # Custom HTML in Markdown (inline CSS for color, alignment, etc.)
+        gr.Markdown("<h2 style='text-align:center; color:#4CAF50;'>Manage WireGuard Users</h2>")
 
-    # Row with dropdown and "Refresh" button
-    with gr.Row():
-        user_selector = gr.Dropdown(choices=get_user_list(), value="Select a user", interactive=True)
-        refresh_button = gr.Button("Refresh List")
+        # Row with user dropdown and "Refresh" button
+        with gr.Row():
+            user_selector = gr.Dropdown(
+                choices=get_user_list(), 
+                value="Select a user", 
+                label="User List",
+                interactive=True,
+                info="Select a user from the dropdown to manage."
+            )
+            refresh_button = gr.Button("Refresh List", variant="primary")
 
-    # Row with Delete, Block, and Unblock buttons
-    with gr.Row():
-        delete_button = gr.Button("Delete User")
-        block_button = gr.Button("Block User")
-        unblock_button = gr.Button("Unblock User")
+        # Row with Delete, Block, and Unblock buttons
+        with gr.Row():
+            delete_button = gr.Button("Delete User", variant="stop")
+            block_button = gr.Button("Block User", variant="secondary")
+            unblock_button = gr.Button("Unblock User", variant="secondary")
 
-    # Field to display the result (deletion, blocking, unblocking)
-    with gr.Row():
-        result_display = gr.Textbox(label="Result", value="", lines=2, interactive=False)
+        # We can also wrap the result display in its own Box
+        with gr.Box():
+            result_display = gr.Textbox(
+                label="Result", 
+                value="", 
+                lines=3, 
+                interactive=False
+            )
 
-    # ========= New fields and "Synchronize" button =========
-    with gr.Row():
-        config_dir_input = gr.Textbox(label="Path to the config directory", value="", lines=1)
-        qr_dir_input = gr.Textbox(label="Path to the QR code directory", value="", lines=1)
-        sync_button = gr.Button("Synchronize")
+        # Accordion for "additional" synchronization settings
+        with gr.Accordion("Synchronization Settings", open=False):
+            config_dir_input = gr.Textbox(
+                label="Config Directory Path",
+                value="",
+                lines=1,
+                placeholder="/path/to/configs",
+                info="Path where the .conf files for WireGuard clients are located."
+            )
+            qr_dir_input = gr.Textbox(
+                label="QR Code Directory Path",
+                value="",
+                lines=1,
+                placeholder="/path/to/qrcodes",
+                info="Path where the QR code images for WireGuard clients are located."
+            )
+            sync_button = gr.Button("Synchronize", variant="primary")
 
-    # Define button click behaviors
-    refresh_button.click(
-        fn=refresh_user_list,
-        inputs=[],
-        outputs=[user_selector, result_display]
-    )
-    delete_button.click(
-        fn=handle_user_deletion,
-        inputs=[user_selector],
-        outputs=[user_selector, result_display]
-    )
-    block_button.click(
-        fn=handle_user_block,
-        inputs=[user_selector],
-        outputs=[user_selector, result_display]
-    )
-    unblock_button.click(
-        fn=handle_user_unblock,
-        inputs=[user_selector],
-        outputs=[user_selector, result_display]
-    )
-    sync_button.click(
-        fn=handle_sync,
-        inputs=[config_dir_input, qr_dir_input],
-        outputs=[result_display]
-    )
+        # Button click actions
+        refresh_button.click(
+            fn=refresh_user_list,
+            inputs=[],
+            outputs=[user_selector, result_display]
+        )
+        delete_button.click(
+            fn=handle_user_deletion,
+            inputs=[user_selector],
+            outputs=[user_selector, result_display]
+        )
+        block_button.click(
+            fn=handle_user_block,
+            inputs=[user_selector],
+            outputs=[user_selector, result_display]
+        )
+        unblock_button.click(
+            fn=handle_user_unblock,
+            inputs=[user_selector],
+            outputs=[user_selector, result_display]
+        )
+        sync_button.click(
+            fn=handle_sync,
+            inputs=[config_dir_input, qr_dir_input],
+            outputs=[result_display]
+        )
