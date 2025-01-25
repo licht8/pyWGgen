@@ -91,8 +91,6 @@ def manage_user_tab():
         inputs=[user_selector],
         outputs=[user_selector, result_display]
     )
-
-    # Click on "Synchronize"
     sync_button.click(
         fn=handle_sync,
         inputs=[config_dir_input, qr_dir_input],
