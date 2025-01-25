@@ -30,7 +30,7 @@ def find_user_files(username, config_dir, qr_dir):
     
     return config_path, qr_path
 
-def sync_users_interactive():
+def sync_users_from_config():
     """Основная функция синхронизации с интерактивным вводом"""
     try:
         # Шаг 1: Запрос путей у пользователя
@@ -135,4 +135,4 @@ def sync_users_interactive():
         return False
 
 if __name__ == "__main__":
-    sync_users_interactive()
+    sync_users_from_config()
