@@ -7,22 +7,22 @@ from modules.main_registration_fields import create_user_record
 from modules.qr_generator import generate_qr_code
 
 def get_valid_path(prompt):
-    """Запрашивает путь у пользователя до получения валидной директории"""
+    """Requests a path from the user until a valid directory is obtained"""
     while True:
         path = Path(input(prompt).strip())
         if path.exists() and path.is_dir():
             return path
-        print(f"Ошибка: Директория '{path}' не существует или недоступна. Попробуйте снова.\n")
+        print(f"Error: Directory '{path}' does not exist or is inaccessible. Please try again.\n")
 
 def find_user_files(username, config_dir, qr_dir):
-    """Ищет файлы пользователя в указанных директориях"""
-    # Поиск конфига
+    """Searches for user files in specified directories"""
+    # Search for config
     config_path = next(
         (f for ext in ['.conf', '.txt'] 
          if (f := config_dir / f"{username}{ext}").exists()), None
     )
     
-    # Поиск QR-кода
+    # Search for QR code
     qr_path = next(
         (f for ext in ['.png', '.jpg', '.svg'] 
          if (f := qr_dir / f"{username}{ext}").exists()), None
@@ -31,16 +31,16 @@ def find_user_files(username, config_dir, qr_dir):
     return config_path, qr_path
 
 def sync_users_from_config():
-    """Основная функция синхронизации с интерактивным вводом"""
+    """Main synchronization function with interactive input"""
     try:
-        # Шаг 1: Запрос путей у пользователя
-        print("\n=== 🛠 СИНХРОНИЗАЦИЯ ПОЛЬЗОВАТЕЛЕЙ ===")
-        print("Укажите пути к существующим файлам:")
+        # Step 1: Request paths from user
+        print("\n=== 🛠 USER SYNCHRONIZATION ===")
+        print("Specify paths to existing files:")
         
-        config_dir = get_valid_path("Директория с конфигами клиентов: ")
-        qr_dir = get_valid_path("Директория с QR-кодами клиентов: ")
+        config_dir = get_valid_path("Client configs directory: ")
+        qr_dir = get_valid_path("QR codes directory: ")
 
-        # Шаг 2: Парсинг серверного конфига
+        # Step 2: Parse server config
         with open(SERVER_CONFIG_FILE, "r") as f:
             config_content = f.read()
 
@@ -71,7 +71,7 @@ def sync_users_from_config():
         if current_user:
             users.append(current_user)
 
-        # Шаг 3: Обработка пользователей
+        # Step 3: Process users
         user_records = {}
         if Path(USER_DB_PATH).exists():
             with open(USER_DB_PATH, "r") as f:
@@ -80,49 +80,49 @@ def sync_users_from_config():
         new_users = 0
         for user in users:
             username = user["username"]
-            print(f"\n🔍 Обработка пользователя: {username}")
+            print(f"\n🔍 Processing user: {username}")
             
-            # Поиск файлов
+            # Find files
             config_path, qr_path = find_user_files(username, config_dir, qr_dir)
             
-            # Пути в проекте
+            # Project paths
             target_config = Path(f"user/data/wg_configs/{username}.conf")
             target_qr = Path(f"user/data/qrcodes/{username}.png")
             
-            # Создаем директории если отсутствуют
+            # Create directories if missing
             target_config.parent.mkdir(parents=True, exist_ok=True)
             target_qr.parent.mkdir(parents=True, exist_ok=True)
 
-            # Копирование конфига
+            # Copy config
             if config_path:
                 shutil.copy(config_path, target_config)
-                print(f"✅ Конфиг скопирован: {config_path} → {target_config}")
+                print(f"✅ Config copied: {config_path} → {target_config}")
             else:
-                print(f"⚠️ Конфиг для {username} не найден! Создан пустой файл.")
+                print(f"⚠️ Config for {username} not found! Created empty file.")
                 target_config.touch()
                 
-            # Генерация/копирование QR-кода
+            # Handle QR code
             if qr_path:
                 shutil.copy(qr_path, target_qr)
-                print(f"✅ QR-код скопирован: {qr_path} → {target_qr}")
+                print(f"✅ QR code copied: {qr_path} → {target_qr}")
             elif config_path:
                 generate_qr_code(target_config.read_text(), str(target_qr))
-                print(f"🔄 QR-код сгенерирован из конфига")
+                print(f"🔄 QR code generated from config")
             else:
-                print(f"⚠️ QR-код для {username} не создан (отсутствует конфиг)")
+                print(f"⚠️ QR code for {username} not created (missing config)")
 
-            # В секции обработки пользователей:
+            # Update user records
             if username not in user_records:
-                # Создаем базовую запись
+                # Create base record
                 user_record = create_user_record(
                     username=username,
                     address=user["allowed_ips"],
                     public_key=user["public_key"],
                     preshared_key=user["preshared_key"],
-                    qr_code_path=f"user/data/qrcodes/{username}.png"  # Если параметр существует
+                    qr_code_path=f"user/data/qrcodes/{username}.png"
                 )
                 
-                # Добавляем дополнительные поля
+                # Add additional fields
                 user_record.update({
                     "config_path": str(target_config),
                     "qr_code_path": str(target_qr) if target_qr.exists() else None
@@ -131,15 +131,15 @@ def sync_users_from_config():
                 user_records[username] = user_record
                 new_users += 1
 
-        # Сохранение данных
+        # Save data
         with open(USER_DB_PATH, "w") as f:
             json.dump(user_records, f, indent=4)
 
-        print(f"\n🎉 Синхронизация завершена! Добавлено новых пользователей: {new_users}")
+        print(f"\n🎉 Synchronization complete! New users added: {new_users}")
         return True
 
     except Exception as e:
-        print(f"\n❌ Критическая ошибка: {str(e)}")
+        print(f"\n❌ Critical error: {str(e)}")
         return False
 
 if __name__ == "__main__":
