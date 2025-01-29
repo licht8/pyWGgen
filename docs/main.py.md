@@ -1,67 +1,67 @@
-### `main.py` и `main_registration_fields.py` — Полное Руководство
+### `main.py` and `main_registration_fields.py` — Complete Guide
 
 ---
 
-## Оглавление
-1. [Введение](#введение)
-2. [Описание файлов](#описание-файлов)
-   - [Основной файл `main.py`](#основной-файл-mainpy)
-   - [Модуль `main_registration_fields.py`](#модуль-main_registration_fieldspy)
-3. [Пример конфигурации WireGuard](#пример-конфигурации-wireguard)
-4. [Использование `main.py`](#использование-mainpy)
-   - [Синтаксис запуска](#синтаксис-запуска)
-   - [Параметры командной строки](#параметры-командной-строки)
-   - [Примеры запуска](#примеры-запуска)
-5. [Файлы конфигурации и базы данных](#файлы-конфигурации-и-базы-данных)
+## Table of Contents
+1. [Introduction](#introduction)
+2. [File Descriptions](#file-descriptions)
+   - [Main File `main.py`](#main-file-mainpy)
+   - [Module `main_registration_fields.py`](#module-main_registration_fieldspy)
+3. [WireGuard Configuration Example](#wireguard-configuration-example)
+4. [Using `main.py`](#using-mainpy)
+   - [Execution Syntax](#execution-syntax)
+   - [Command Line Parameters](#command-line-parameters)
+   - [Execution Examples](#execution-examples)
+5. [Configuration Files and Databases](#configuration-files-and-databases)
 
 ---
 
-## Введение
+## Introduction
 
-Этот проект позволяет автоматизировать управление пользователями VPN WireGuard. Основной файл `main.py` отвечает за создание новых пользователей, генерацию их конфигураций, добавление их в серверную конфигурацию WireGuard и сохранение метаданных. 
+This project automates the management of VPN WireGuard users. The main file `main.py` handles user creation, configuration generation, adding users to the WireGuard server configuration, and metadata storage.
 
-Модуль `main_registration_fields.py` служит для стандартизации записи данных о пользователях и создания единого формата записи.
-
----
-
-## Описание файлов
-
-### Основной файл `main.py`
-
-`main.py` выполняет следующие задачи:
-1. Генерация приватных, публичных и пресекретных ключей для нового пользователя.
-2. Назначение IP-адреса и создание клиентской конфигурации.
-3. Генерация QR-кода для удобного подключения.
-4. Добавление пользователя в конфигурацию сервера WireGuard.
-5. Создание или обновление базы данных пользователей с подробной информацией.
-6. Перезапуск WireGuard для применения новых настроек.
-
-#### Основные функции:
-- **`generate_config()`**: Генерирует конфигурацию нового пользователя и QR-код.
-- **`restart_wireguard()`**: Перезапускает WireGuard для обновления настроек.
-- **`load_existing_users()`**: Загружает текущую базу данных пользователей.
-- **`is_user_in_server_config()`**: Проверяет наличие пользователя в серверной конфигурации.
-- **`add_user_record()`**: (Заменена на вызов `create_user_record`) добавляет запись пользователя в базу данных.
+The `main_registration_fields.py` module standardizes user data entry and creates a unified record format.
 
 ---
 
-### Модуль `main_registration_fields.py`
+## File Descriptions
 
-`main_registration_fields.py` содержит функцию `create_user_record`, которая создает стандартный формат записи о пользователе. Эта запись используется для базы данных и хранения информации о VPN-пользователях.
+### Main File `main.py`
 
-**Функция `create_user_record` выполняет следующие действия:**
-- Генерация уникального идентификатора пользователя (UUID).
-- Указание сроков действия учетной записи (30 дней по умолчанию).
-- Заполнение всех полей данных, включая контактную информацию, ключи, IP-адрес, реферальные данные, состояние подписки и другую информацию.
+`main.py` performs the following tasks:
+1. Generates private, public, and pre-shared keys for a new user.
+2. Assigns an IP address and creates a client configuration.
+3. Generates a QR code for easy connection.
+4. Adds the user to the WireGuard server configuration.
+5. Creates or updates the user database with detailed information.
+6. Restarts WireGuard to apply new settings.
 
-Пример записи о пользователе:
-Вот полный и обновленный пример записи, включая все поля, созданные функцией `create_user_record` из файла `main_registration_fields.py`. Также добавлено описание всех полей и их использование.
+#### Key Functions:
+- **`generate_config()`**: Generates a new user configuration and QR code.
+- **`restart_wireguard()`**: Restarts WireGuard to apply settings.
+- **`load_existing_users()`**: Loads the current user database.
+- **`is_user_in_server_config()`**: Checks if the user exists in the server configuration.
+- **`add_user_record()`**: (Replaced with `create_user_record`) Adds a user record to the database.
 
 ---
 
-## Описание Полной Структуры Пользователя
+### Module `main_registration_fields.py`
+
+`main_registration_fields.py` contains the function `create_user_record`, which creates a standardized user record format. This record is used for database storage and VPN user management.
+
+**The `create_user_record` function performs the following:**
+- Generates a unique user identifier (UUID).
+- Specifies account validity (30 days by default).
+- Fills all required fields, including contact information, keys, IP address, referral data, subscription status, and more.
+
+Example user record:
+Here is a complete example of a user record generated by `create_user_record` in `main_registration_fields.py`, including descriptions of all fields and their usage.
+
+---
+
+## Full User Structure Description
 # main_registration_fields.py
-Запись о пользователе, генерируемая `create_user_record`, выглядит следующим образом:
+A user record generated by `create_user_record` looks like this:
 
 ```json
 {
@@ -95,11 +95,6 @@
     "email": "john@example.com",
     "telegram_id": "123456789",
     "contact_method": "telegram",
-    "referral_id": null,
-    "coupon_id": null,
-    "referral_earnings": "0.00 USD",
-    "referral_count": 0,
-    "referral_bonus": "0%",
     "subscription_plan": "free",
     "subscription_price": "0.00 USD",
     "payment_method": "N/A",
@@ -108,7 +103,6 @@
     "payment_status": "inactive",
     "total_spent": "0.00 USD",
     "auto_renew": false,
-    "transaction_history": [],
     "preferred_language": "en",
     "admin_notes": "N/A",
     "user_notes": "N/A",
@@ -118,174 +112,66 @@
 
 ---
 
-### Описание Полей
+## Using `main.py`
 
-| Поле                   | Описание                                                                                                   |
-|-------------------------|-----------------------------------------------------------------------------------------------------------|
-| **`username`**          | Имя пользователя.                                                                                        |
-| **`user_id`**           | Уникальный идентификатор пользователя (UUID).                                                            |
-| **`group`**             | Группа пользователя (например, `guest`, `admin`).                                                       |
-| **`tags`**              | Теги для классификации пользователей. По умолчанию: `["default-user"]`.                                  |
-| **`priority`**          | Приоритет пользователя (числовое значение).                                                             |
-| **`created_at`**        | Время создания записи в формате ISO8601.                                                                |
-| **`expires_at`**        | Дата окончания действия учетной записи.                                                                 |
-| **`auto_suspend_date`** | Дата автоматической приостановки учетной записи.                                                        |
-| **`auto_delete_date`**  | Дата автоматического удаления учетной записи.                                                           |
-| **`last_config_update`**| Время последнего обновления конфигурации.                                                               |
-| **`status`**            | Статус учетной записи: `active`, `inactive`, `blocked`.                                                 |
-| **`blocked_reason`**    | Причина блокировки, если есть.                                                                          |
-| **`renewal_requested`** | Флаг: запросил ли пользователь продление.                                                               |
-| **`allowed_ips`**       | Назначенный IP-адрес для клиента (например, `192.168.1.2/32`).                                          |
-| **`allowed_ips_custom`**| Пользовательский IP, если задан.                                                                         |
-| **`dns_custom`**        | Настраиваемый список DNS серверов (например, `1.1.1.1,8.8.8.8`).                                        |
-| **`public_key`**        | Публичный ключ WireGuard.                                                                                |
-| **`preshared_key`**     | Пресекретный ключ WireGuard.                                                                             |
-| **`endpoint`**          | Адрес сервера WireGuard.                                                                                |
-| **`last_handshake`**    | Дата последнего рукопожатия WireGuard.                                                                  |
-| **`uploaded`**          | Объем данных, загруженных клиентом.                                                                     |
-| **`downloaded`**        | Объем данных, скачанных клиентом.                                                                       |
-| **`transfer`**          | Суммарный трафик за текущую сессию.                                                                     |
-| **`total_transfer`**    | Общее количество переданных данных.                                                                     |
-| **`data_limit`**        | Лимит данных для пользователя.                                                                          |
-| **`data_used`**         | Использованные данные.                                                                                  |
-| **`qr_code_path`**      | Путь к QR-коду для подключения клиента.                                                                 |
-| **`email`**             | Email пользователя.                                                                                     |
-| **`telegram_id`**       | Telegram ID пользователя.                                                                               |
-| **`contact_method`**    | Основной метод связи с пользователем (`telegram` или `email`).                                           |
-| **`referral_id`**       | Идентификатор реферала, если есть.                                                                      |
-| **`coupon_id`**         | Идентификатор купона, если применялся.                                                                  |
-| **`referral_earnings`** | Доход, полученный по реферальной программе.                                                             |
-| **`referral_count`**    | Количество привлеченных рефералов.                                                                      |
-| **`referral_bonus`**    | Процент бонуса за рефералы.                                                                             |
-| **`subscription_plan`** | План подписки (`free`, `premium`).                                                                      |
-| **`subscription_price`**| Стоимость подписки.                                                                                     |
-| **`payment_method`**    | Способ оплаты (`credit_card`, `paypal`, `N/A`).                                                         |
-| **`last_payment_date`** | Дата последнего платежа.                                                                                |
-| **`next_payment_date`** | Дата следующего платежа.                                                                                |
-| **`payment_status`**    | Статус платежа (`active`, `inactive`).                                                                  |
-| **`total_spent`**       | Сумма, потраченная пользователем.                                                                       |
-| **`auto_renew`**        | Автопродление подписки (`true` или `false`).                                                            |
-| **`transaction_history`**| История всех транзакций пользователя.                                                                  |
-| **`preferred_language`**| Предпочтительный язык интерфейса (например, `en`, `ru`).                                                |
-| **`admin_notes`**       | Заметки администратора, связанные с пользователем.                                                      |
-| **`user_notes`**        | Заметки пользователя.                                                                                   |
-| **`ip_history`**        | История всех IP-адресов, используемых пользователем.                                                    |
-
----
-
-## Использование
-
-### Создание нового пользователя с настройками
-
-#### Команда:
-```bash
-python3 main.py JohnDoe john@example.com 123456789
-```
-
-#### Результат:
-- Создается запись пользователя в базе данных с полями, описанными выше.
-- Генерируется файл конфигурации клиента.
-- Генерируется QR-код для подключения.
-
----
-
-## Файлы
-
-- **Путь к QR-коду**: `settings.QR_CODE_DIR/JohnDoe.png`
-- **Путь к конфигурации**: `settings.WG_CONFIG_DIR/JohnDoe.conf`
-- **Путь к базе данных пользователей**: `user/data/user_records.json`
-
----
-
-## Пример конфигурации WireGuard
-
-Файл конфигурации для клиента (создается для каждого пользователя) может выглядеть следующим образом:
-
-```ini
-[Interface]
-PrivateKey = ABCDEFGHIJKLMNOPQRSTUVXYZ1234567890
-Address = 192.168.1.2/32
-DNS = 1.1.1.1,8.8.8.8
-
-[Peer]
-PublicKey = ABCDEFGHIJKLMNOPQRSTUVXYZ1234567890
-PresharedKey = ABCDEFGHIJKLMNOPQRSTUVXYZ1234567890
-Endpoint = vpn.example.com:51820
-AllowedIPs = 0.0.0.0/0, ::/0
-PersistentKeepalive = 25
-```
-
----
-
-## Использование `main.py`
-
-### Синтаксис запуска
+### Execution Syntax
 
 ```bash
 python3 main.py <nickname> [email] [telegram_id]
 ```
 
-### Параметры командной строки
+### Command Line Parameters
 
-1. **`<nickname>`** (обязательный): Никнейм нового пользователя. Используется как уникальный идентификатор.
-2. **`[email]`** (опционально): Email-адрес пользователя.
-3. **`[telegram_id]`** (опционально): Telegram ID пользователя.
+1. **`<nickname>`** (required): The new user's nickname, used as a unique identifier.
+2. **`[email]`** (optional): The user's email address.
+3. **`[telegram_id]`** (optional): The user's Telegram ID.
 
-### Примеры запуска
+### Execution Examples
 
-#### Создание пользователя с минимальными данными:
+#### Creating a user with minimal data:
 ```bash
 python3 main.py JohnDoe
 ```
-*Результат:*
-- Будет создан пользователь с ником `JohnDoe`.
-- Конфигурационный файл будет сохранен в `settings.WG_CONFIG_DIR`.
-- QR-код будет сохранен в `settings.QR_CODE_DIR`.
+*Result:*
+- A user with the nickname `JohnDoe` will be created.
+- The configuration file will be saved in `settings.WG_CONFIG_DIR`.
+- The QR code will be saved in `settings.QR_CODE_DIR`.
 
-#### Создание пользователя с дополнительными данными:
+#### Creating a user with additional data:
 ```bash
 python3 main.py JohnDoe john@example.com 123456789
 ```
-*Результат:*
-- В базу данных добавится информация о `email` и `telegram_id`.
+*Result:*
+- The database will be updated with `email` and `telegram_id` information.
 
 ---
 
-## Файлы конфигурации и базы данных
+## Configuration Files and Databases
 
-### База данных пользователей
+### User Database
 
-- Файл: `user/data/user_records.json`
-- Хранит данные всех пользователей в формате JSON.
-- При каждом добавлении пользователя файл обновляется.
+- File: `user/data/user_records.json`
+- Stores all user data in JSON format.
+- The file is updated each time a user is added.
 
-### Конфигурации клиентов
+### Client Configurations
 
-- Путь: `settings.WG_CONFIG_DIR/<nickname>.conf`
-- Содержит индивидуальный файл настройки VPN для клиента.
+- Path: `settings.WG_CONFIG_DIR/<nickname>.conf`
+- Contains the individual VPN configuration file for the client.
 
-### QR-коды
+### QR Codes
 
-- Путь: `settings.QR_CODE_DIR/<nickname>.png`
-- Содержит QR-код для быстрой настройки клиента.
-
----
-
-## Советы по использованию
-
-1. **Перед добавлением нового пользователя** убедитесь, что сервер WireGuard запущен и настроен.
-2. **Удаление пользователей** из базы данных или серверной конфигурации нужно делать вручную. Этот скрипт добавляет пользователей, но не удаляет.
-3. **Для массового добавления** пользователей можно создать скрипт, который вызовет `main.py` несколько раз с разными параметрами.
+- Path: `settings.QR_CODE_DIR/<nickname>.png`
+- Contains the QR code for quick client setup.
 
 ---
 
-## Примечания
+## Notes
 
-- Все настройки, такие как директории для конфигураций и QR-кодов, находятся в файле `settings.py`.
-- Логи работы скрипта выводятся в стандартный поток и включают уровни сообщений (`INFO`, `DEBUG`, `ERROR`).
-- Скрипт требует запуска с правами администратора для изменения настроек WireGuard.
+- All settings, such as configuration and QR code directories, are stored in `settings.py`.
+- Script logs are displayed in the standard output and include message levels (`INFO`, `DEBUG`, `ERROR`).
+- The script requires administrator privileges to modify WireGuard settings.
 
-```markdown
+```bash
 python3 main.py --help
-# Запустите эту команду, чтобы получить справку, если такая опция будет добавлена в будущем.
-```
+# Run this command for help if such an option is added in the future.

@@ -1,1 +1,1 @@
-# Входные данные для анализа
+# Input data for analysis

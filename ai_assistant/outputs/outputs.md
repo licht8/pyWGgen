@@ -1,1 +1,1 @@
-# Результаты работы ассистента
+# The results of the assistant's work

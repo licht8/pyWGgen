@@ -1,1 +1,1 @@
-# Шаблоны промптов для LLM
+# Prompt templates for LLMs

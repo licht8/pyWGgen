@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # ai_assistant/scripts/generate_system_report.py
 # ==================================================
-# Скрипт для создания системного отчета WireGuard.
-# Версия: 1.3
+# Script for generating a WireGuard system report.
+# Version: 1.3
 # ==================================================
 
 import subprocess
@@ -10,29 +10,29 @@ import os
 import sys
 from pathlib import Path
 
-# Добавление корневого пути проекта для импорта settings
+# Adding the project root path for importing settings
 try:
     SCRIPT_DIR = Path(__file__).resolve().parent
     PROJECT_ROOT = SCRIPT_DIR.parent.parent
     sys.path.append(str(PROJECT_ROOT))
     from settings import BASE_DIR
 except ImportError as e:
-    print(f"Ошибка импорта settings: {e}")
+    print(f"Error importing settings: {e}")
     sys.exit(1)
 
 SYSTEM_REPORT_FILE = BASE_DIR / "ai_assistant/outputs/system_report.txt"
 
 
 def run_command(command):
-    """Выполняет команду и возвращает ее вывод."""
+    """Executes a command and returns its output."""
     try:
         return subprocess.check_output(command, shell=True, text=True).strip()
     except subprocess.CalledProcessError as e:
-        return f"Ошибка выполнения команды {command}: {e}"
+        return f"Error executing command {command}: {e}"
 
 
 def generate_system_report():
-    """Создает системный отчет."""
+    """Generates a system report."""
     report = [
         "=== System Information ===",
         run_command("uname -a"),

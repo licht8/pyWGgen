@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # ai_assistant/scripts/generate_user_report.py
 # ==================================================
-# Скрипт для создания отчета о пользователях и конфигурации WireGuard.
-# Версия: 1.4
+# Script for generating a report on WireGuard users and configuration.
+# Version: 1.4
 # ==================================================
 
 import subprocess
@@ -10,14 +10,14 @@ import os
 import sys
 from pathlib import Path
 
-# Добавление корневого пути проекта для импорта settings
+# Adding the project root path for importing settings
 try:
     SCRIPT_DIR = Path(__file__).resolve().parent
     PROJECT_ROOT = SCRIPT_DIR.parent.parent
     sys.path.append(str(PROJECT_ROOT))
     from settings import BASE_DIR
 except ImportError as e:
-    print(f"Ошибка импорта settings: {e}")
+    print(f"Error importing settings: {e}")
     sys.exit(1)
 
 USER_REPORT_FILE = BASE_DIR / "ai_assistant/outputs/user_report.txt"
@@ -25,7 +25,7 @@ SERVER_CONFIG_FILE = Path("/etc/wireguard/wg0.conf")
 PARAMS_FILE = Path("/etc/wireguard/params")
 
 def parse_wg_config(config_path):
-    """Читает конфигурацию WireGuard и извлекает информацию о клиентах."""
+    """Reads WireGuard configuration and extracts client information."""
     clients = []
     current_client = None
 
@@ -45,17 +45,17 @@ def parse_wg_config(config_path):
             if current_client:
                 clients.append(current_client)
     except FileNotFoundError:
-        print(f"Файл конфигурации {config_path} не найден.")
+        print(f"Configuration file {config_path} not found.")
         sys.exit(1)
 
     return clients
 
 def get_wg_status():
-    """Получает состояние WireGuard через команду `wg show`."""
+    """Gets WireGuard status using the `wg show` command."""
     try:
         output = subprocess.check_output(["wg", "show"], text=True).splitlines()
     except subprocess.CalledProcessError as e:
-        print(f"Ошибка выполнения команды wg show: {e}")
+        print(f"Error executing wg show command: {e}")
         sys.exit(1)
 
     peers = {}
@@ -81,16 +81,16 @@ def get_wg_status():
     return peers
 
 def read_params_file(filepath):
-    """Читает файл параметров WireGuard."""
+    """Reads the WireGuard parameters file."""
     try:
         with open(filepath, "r") as file:
             return file.read().strip()
     except FileNotFoundError:
-        print(f"Файл {filepath} не найден.")
+        print(f"File {filepath} not found.")
         return ""
 
 def generate_user_report(clients, wg_status, params_data):
-    """Создает текстовый отчет о пользователях WireGuard."""
+    """Generates a text report on WireGuard users."""
     active_users = []
     inactive_users = []
     all_logins = []

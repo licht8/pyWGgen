@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # ai_assistant/scripts/chat_with_context.py
 # ==================================================
-# Скрипт для взаимодействия с LLM-моделью с учетом
-# сохранения контекста диалога.
-# Версия: 1.5
+# Script for interacting with an LLM model while preserving 
+# the dialogue context.
+# Version: 1.5
 # ==================================================
 
 import requests
@@ -11,26 +11,26 @@ import sys
 from pathlib import Path
 from datetime import datetime
 import logging
-import readline  # Для поддержки навигации и редактирования в консоли
+import readline  # For console navigation and editing support
 
-# === Настройка путей ===
+# === Path Configuration ===
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-# Импорт настроек проекта
+# Import project settings
 try:
     from settings import BASE_DIR, LLM_API_URL
 except ImportError as e:
-    print(f"Ошибка импорта settings: {e}")
+    print(f"Error importing settings: {e}")
     sys.exit(1)
 
-# === Настройки ===
-MODEL = "qwen2:7b"  # Имя модели для обработки
+# === Settings ===
+MODEL = "qwen2:7b"  # Model name for processing
 HISTORY_FILE = BASE_DIR / "ai_assistant/context/context_history.txt"
-MAX_HISTORY_LENGTH = 50  # Максимальное количество сообщений в истории
+MAX_HISTORY_LENGTH = 50  # Maximum number of messages in history
 
-# Цвета для чата
+# Chat colors
 class Colors:
     BLUE = "\033[94m"
     GREEN = "\033[92m"
@@ -39,7 +39,7 @@ class Colors:
     RED = "\033[91m"
     RESET = "\033[0m"
 
-# Настройка логирования
+# Logging setup
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
@@ -57,40 +57,40 @@ logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 logger.propagate = False
 
-# === Глобальная переменная для хранения истории ===
+# === Global Variable for Storing History ===
 dialog_history = []
 
-# === Функции ===
+# === Functions ===
 def save_dialog_history():
-    """Сохраняет историю диалога в текстовый файл."""
+    """Saves the dialogue history to a text file."""
     try:
         with open(HISTORY_FILE, "w") as file:
             file.write("\n".join(dialog_history))
-        logger.info(f"История диалога сохранена в {HISTORY_FILE}")
+        logger.info(f"Dialogue history saved in {HISTORY_FILE}")
     except Exception as e:
-        logger.error(f"Ошибка сохранения истории диалога: {e}")
+        logger.error(f"Error saving dialogue history: {e}")
 
 def load_dialog_history():
-    """Загружает историю диалога из текстового файла."""
+    """Loads the dialogue history from a text file."""
     global dialog_history
     if HISTORY_FILE.exists() and HISTORY_FILE.stat().st_size > 0:
         try:
             with open(HISTORY_FILE, "r") as file:
                 dialog_history = file.read().splitlines()
-            logger.info(f"История диалога загружена из {HISTORY_FILE}")
+            logger.info(f"Dialogue history loaded from {HISTORY_FILE}")
         except Exception as e:
-            logger.error(f"Ошибка загрузки истории диалога: {e}")
+            logger.error(f"Error loading dialogue history: {e}")
             dialog_history = []
     else:
         dialog_history = []
 
 def query_llm_with_context(user_input):
-    """Отправляет запрос в LLM с учетом истории диалога."""
+    """Sends a request to the LLM while considering dialogue history."""
     global dialog_history
 
-    # Добавляем сообщение пользователя в историю
-    dialog_history.append(f"Вы: {user_input}")
-    if len(dialog_history) > MAX_HISTORY_LENGTH * 2:  # Умножаем на 2 (по одному сообщению от пользователя и ассистента)
+    # Add user message to history
+    dialog_history.append(f"You: {user_input}")
+    if len(dialog_history) > MAX_HISTORY_LENGTH * 2:  # Multiply by 2 (one message from user and one from assistant)
         dialog_history = dialog_history[-MAX_HISTORY_LENGTH * 2:]
 
     payload = {
@@ -103,37 +103,37 @@ def query_llm_with_context(user_input):
         response = requests.post(LLM_API_URL, json=payload)
         response.raise_for_status()
 
-        # Получаем ответ от модели
-        model_response = response.json().get("response", "<Нет ответа>")
-        dialog_history.append(f"Ассистент: {model_response}")
+        # Get response from the model
+        model_response = response.json().get("response", "<No response>")
+        dialog_history.append(f"Assistant: {model_response}")
 
-        # Сохраняем историю
+        # Save history
         save_dialog_history()
 
         return model_response
     except requests.RequestException as e:
-        logger.error(f"Ошибка запроса к модели: {e}")
+        logger.error(f"Error requesting the model: {e}")
         return None
 
-# === Основной процесс ===
+# === Main Process ===
 if __name__ == "__main__":
     load_dialog_history()
 
-    print("Добро пожаловать в чат с LLM! Введите 'выход' для завершения.")
+    print("Welcome to the LLM chat! Type 'exit' to quit.")
 
     try:
         while True:
-            user_input = input(f"{Colors.BLUE}Вы: {Colors.WHITE}")
-            if user_input.lower() == "выход":
-                print(f"{Colors.GREEN}Чат завершен. История сохранена.{Colors.RESET}")
+            user_input = input(f"{Colors.BLUE}You: {Colors.WHITE}")
+            if user_input.lower() == "exit":
+                print(f"{Colors.GREEN}Chat ended. History saved.{Colors.RESET}")
                 break
 
             response = query_llm_with_context(user_input)
             if response:
-                print(f"{Colors.GREEN}Ассистент:{Colors.GRAY} {response}{Colors.RESET}")
+                print(f"{Colors.GREEN}Assistant:{Colors.GRAY} {response}{Colors.RESET}")
             else:
-                print(f"{Colors.GREEN}Ассистент:{Colors.GRAY} Ошибка: ответ от модели отсутствует.{Colors.RESET}")
+                print(f"{Colors.GREEN}Assistant:{Colors.GRAY} Error: no response from the model.{Colors.RESET}")
     except KeyboardInterrupt:
-        print(f"\n{Colors.RED}Чат прерван пользователем. История сохранена.{Colors.RESET}")
+        print(f"\n{Colors.RED}Chat interrupted by user. History saved.{Colors.RESET}")
         save_dialog_history()
         sys.exit(0)

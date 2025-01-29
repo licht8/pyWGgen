@@ -1,169 +1,169 @@
-# swap_edit.py
+### `swap_edit.py`
 
-## Назначение
+## Purpose
 
-`s`wap_edit.py` — это утилита для управления и оптимизации файла подкачки (swap) в системах Linux.  
-Она позволяет создавать, изменять и удалять swap-файлы, оптимизируя использование памяти в системе.  
-Скрипт подходит как для ручного управления, так и для автоматизации в проектах.
-
----
-
-## Содержание
-
-1. [Возможности](#возможности)
-2. [Поддерживаемые параметры](#поддерживаемые-параметры)
-3. [Режимы работы](#режимы-работы)
-4. [Примеры использования](#примеры-использования)
-5. [Тихий режим](#тихий-режим)
-6. [Логирование](#логирование)
-7. [Польза swap](#польза-swap)
-8. [Заключение](#заключение)
+`swap_edit.py` is a utility for managing and optimizing the swap file in Linux systems.  
+It allows creating, modifying, and deleting swap files, optimizing memory usage in the system.  
+The script is suitable for both manual management and automation in projects.
 
 ---
 
-## Возможности
+## Table of Contents
 
-1. **Проверка текущего состояния swap:**
-   - Узнает наличие swap, его размер и степень использования.
-
-2. **Создание swap:**
-   - Генерация swap-файлов с фиксированным или адаптивным размером.
-
-3. **Удаление swap:**
-   - Отключение и удаление существующего swap.
-
-4. **Режимы работы:**
-   - Интерактивный режим.
-   - Управление через параметры командной строки.
-
-5. **Интеграция в проекты:**
-   - Функции `swap_edit` и `check_swap_edit` можно использовать в сторонних проектах.
+1. [Features](#features)
+2. [Supported Parameters](#supported-parameters)
+3. [Operating Modes](#operating-modes)
+4. [Usage Examples](#usage-examples)
+5. [Silent Mode](#silent-mode)
+6. [Logging](#logging)
+7. [Benefits of Swap](#benefits-of-swap)
+8. [Conclusion](#conclusion)
 
 ---
 
-## Поддерживаемые параметры
+## Features
+
+1. **Check current swap status:**
+   - Detects swap presence, size, and usage.
+
+2. **Create swap:**
+   - Generates swap files with fixed or adaptive sizes.
+
+3. **Delete swap:**
+   - Disables and removes existing swap.
+
+4. **Operating Modes:**
+   - Interactive mode.
+   - Command-line parameter control.
+
+5. **Project Integration:**
+   - Functions `swap_edit` and `check_swap_edit` can be used in external projects.
+
+---
+
+## Supported Parameters
 
 1. `--memory_required` (`--mr`):
-   - Минимальный объем swap (в MB), необходимый для работы.
-   - Размер ограничен: до 10% от дискового объема или 2048 MB.
-   - **Пример:**
+   - Minimum swap size (in MB) required for operation.
+   - Limited to 10% of disk size or 2048 MB.
+   - **Example:**
      ```bash
      sudo python3 swap_edit.py --memory_required 1024
      ```
 
 2. `--min_swap` (`--ms`):
-   - Создает минимальный swap объемом 64 MB.
-   - **Пример:**
+   - Creates a minimum swap size of 64 MB.
+   - **Example:**
      ```bash
      sudo python3 swap_edit.py --min_swap
      ```
 
 3. `--eco_swap`:
-   - Создает swap размером 2% от общего объема диска.
-   - **Пример:**
+   - Creates a swap file with 2% of total disk size.
+   - **Example:**
      ```bash
      sudo python3 swap_edit.py --eco_swap
      ```
 
 4. `--micro_swap`:
-   - Создает swap объемом 64 MB без вывода сообщений.
-   - **Пример:**
+   - Creates a 64 MB swap file without output messages.
+   - **Example:**
      ```bash
      sudo python3 swap_edit.py --micro_swap
      ```
 
 5. `--erase_swap`:
-   - Удаляет существующий swap.
-   - **Пример:**
+   - Removes existing swap.
+   - **Example:**
      ```bash
      sudo python3 swap_edit.py --erase_swap
      ```
 
 ---
 
-## Режимы работы
+## Operating Modes
 
-1. **Интерактивный режим**:
-   - Скрипт предлагает выбор: создать swap, удалить существующий или выйти.
-   - **Пример:**
+1. **Interactive Mode:**
+   - The script prompts for action: create swap, delete existing swap, or exit.
+   - **Example:**
      ```bash
      sudo python3 swap_edit.py
      ```
 
-2. **Автоматический режим**:
-   - При передаче параметров, например `--min_swap`, скрипт выполняет команды без подтверждения.
-   - **Пример:**
+2. **Automatic Mode:**
+   - When parameters are passed, such as `--min_swap`, the script executes commands without confirmation.
+   - **Example:**
      ```bash
      sudo python3 swap_edit.py --min_swap
      ```
 
-3. **Тихий режим**:
-   - Подавляет вывод сообщений в консоль, минимизирует взаимодействие.
-   - **Пример:**
+3. **Silent Mode:**
+   - Suppresses console output, minimizing interaction.
+   - **Example:**
      ```bash
      sudo python3 swap_edit.py --micro_swap
      ```
 
-4. **Интеграция**:
-   - Вызов функций `swap_edit` и `check_swap_edit` из других проектов.
-   - **Пример:**
+4. **Integration:**
+   - Calling `swap_edit` and `check_swap_edit` functions from other projects.
+   - **Example:**
      ```python
      from modules.swap_edit import check_swap_edit
      
-     # Проверить swap размером 128 MB
+     # Check swap with 128 MB size
      check_swap_edit(size_mb=128, silent=True)
      ```
 
 ---
 
-## Примеры использования
+## Usage Examples
 
-### 1. Проверка текущего swap
+### 1. Check Current Swap
 
 ```plaintext
-📊 Текущее состояние памяти:
+📊 Current Memory Status:
 +-------+-------+--------------+----------+
-|  Тип  | Общий | Использовано | Свободно |
+| Type  | Total | Used         | Free     |
 +-------+-------+--------------+----------+
 | Mem:  | 2048  |     1024     |   1024   |
 | Swap: |  512  |      256     |    256   |
 +-------+-------+--------------+----------+
 ```
 
-### 2. Создание swap
+### 2. Create Swap
 
 ```plaintext
-🔍 Текущий swap: отсутствует.
-🛠️ Создаю swap размером 1024 MB...
-✅ Swap успешно создан. Итоговый размер: 1024 MB.
+🔍 Current swap: not found.
+🛠️ Creating swap of size 1024 MB...
+✅ Swap successfully created. Final size: 1024 MB.
 ```
 
-### 3. Удаление swap
+### 3. Delete Swap
 
 ```plaintext
-🔍 Найден существующий swap объемом 512 MB.
-🗑️ Удаляю swap...
-✅ Swap удален.
+🔍 Found existing swap of 512 MB.
+🗑️ Removing swap...
+✅ Swap removed.
 ```
 
-### 4. Автоматический режим с параметрами
+### 4. Automatic Mode with Parameters
 
 ```plaintext
-✅ Текущий swap (1024 MB) уже оптимален. Никаких изменений не требуется.
+✅ Current swap (1024 MB) is already optimized. No changes required.
 ```
 
 ---
 
-## Тихий режим
+## Silent Mode
 
-Используется для минимизации вывода сообщений. Подходит для интеграции в автоматические скрипты.
+Used to minimize output messages. Suitable for integration into automated scripts.
 
-1. **Командная строка:**
+1. **Command Line:**
    ```bash
    sudo python3 swap_edit.py --micro_swap
    ```
 
-2. **Программный вызов:**
+2. **Programmatic Call:**
    ```python
    from modules.swap_edit import check_swap_edit
    check_swap_edit(size_mb=64, silent=True)
@@ -171,38 +171,37 @@
 
 ---
 
-## Логирование
+## Logging
 
-**Описание:**
-- Все действия логируются в файл, указанный в `settings.LOG_FILE_PATH`.
-- Уровень логирования настраивается через `settings.LOG_LEVEL`.
+**Description:**
+- All actions are logged to a file specified in `settings.LOG_FILE_PATH`.
+- Logging level can be configured via `settings.LOG_LEVEL`.
 
-**Пример логов:**
+**Example Logs:**
 
 ```plaintext
-2024-12-04 08:10:12,345 - DEBUG - Текущий swap: 512 MB
-2024-12-04 08:10:12,345 - DEBUG - Требуемый swap: 1024 MB
-2024-12-04 08:10:12,345 - INFO - Swap (512 MB) меньше требуемого (1024 MB). Создаю новый swap.
+2024-12-04 08:10:12,345 - DEBUG - Current swap: 512 MB
+2024-12-04 08:10:12,345 - DEBUG - Required swap: 1024 MB
+2024-12-04 08:10:12,345 - INFO - Swap (512 MB) is less than required (1024 MB). Creating new swap.
 ```
 
 ---
 
-## Польза swap
+## Benefits of Swap
 
-1. **Резерв памяти:**
-   Swap предотвращает нехватку памяти, перераспределяя ресурсы на диск.
+1. **Memory Reserve:**
+   Swap prevents memory shortages by reallocating resources to disk.
 
-2. **Стабильность:**
-   Помогает избежать сбоев при пиковых нагрузках.
+2. **Stability:**
+   Helps prevent crashes under peak loads.
 
-3. **Гибкость:**
-   Позволяет адаптировать конфигурацию системы под конкретные задачи.
+3. **Flexibility:**
+   Allows system configuration adaptation for specific tasks.
 
 ---
 
-## Заключение
+## Conclusion
 
-`s`wap_edit.py` — это надежное решение для управления памятью в Linux.  
-Скрипт поддерживает гибкую настройку, автоматизацию и интеграцию.  
-Подходит как для пользователей, так и для системных администраторов.
-
+`swap_edit.py` is a reliable solution for memory management in Linux.  
+The script supports flexible configuration, automation, and integration.  
+It is suitable for both users and system administrators.

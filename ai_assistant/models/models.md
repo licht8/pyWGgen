@@ -1,1 +1,1 @@
-# Файлы и настройки, связанные с моделями LLM
+# Files and settings related to LLM models
