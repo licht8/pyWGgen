@@ -73,13 +73,25 @@ def sync_users_from_config_paths(config_dir_str: str, qr_dir_str: str):
                     users.append(current_user)
                 current_user = {"username": line.split("### Client")[1].strip()}
             elif line.startswith("PublicKey ="):
-                current_user["public_key"] = line.split("=")[1].strip()
+                # Исправлено: разделение только по первому '='
+                _, value = line.split('=', 1)
+                public_key = value.strip()
+                # Добавление паддинга
+                missing_padding = len(public_key) % 4
+                if missing_padding:
+                    public_key += '=' * (4 - missing_padding)
+                current_user["public_key"] = public_key
             elif line.startswith("PresharedKey ="):
-                current_user["preshared_key"] = line.split("=")[1].strip()
+                # Аналогично для PresharedKey
+                _, value = line.split('=', 1)
+                preshared_key = value.strip()
+                missing_padding = len(preshared_key) % 4
+                if missing_padding:
+                    preshared_key += '=' * (4 - missing_padding)
+                current_user["preshared_key"] = preshared_key
             elif line.startswith("AllowedIPs ="):
-                current_user["allowed_ips"] = line.split("=")[1].strip()
+                current_user["allowed_ips"] = line.split('=', 1)[1].strip()
             elif line == "" and current_user:
-                # user definition ended
                 users.append(current_user)
                 current_user = {}
 
