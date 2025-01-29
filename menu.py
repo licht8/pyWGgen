@@ -84,7 +84,7 @@ def show_main_menu():
         print(f" fr. 📄  Show Project Status Report")
         print(f" dg. 🛠️   Run Project Diagnostics")
         print(f" sd. 📋  Show Diagnostics Log")
-        print(f"  t. 🧪  Run Tests")
+        # print(f"  t. 🧪  Run Tests")
 
         display_message_slowly(f"\n🧩 === Help and Diagnostics Section ==== 🧩\n", print_speed=local_print_speed, indent=False)
         print(f" aih. 🗨️  Help and Diagnostics")
@@ -102,9 +102,9 @@ def show_main_menu():
             from modules.report_utils import display_summary_report, show_project_status
             display_summary_report()
             show_project_status()
-        elif choice == "t":
-            print(f" 🔍  Running tests...")
-            subprocess.run(["pytest"])
+        #elif choice == "t":
+        #    print(f" 🔍  Running tests...")
+        #    subprocess.run(["pytest"])
         elif choice == "up":
             from modules.update_utils import update_project
             update_project()
