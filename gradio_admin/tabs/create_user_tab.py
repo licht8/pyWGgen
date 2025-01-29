@@ -18,9 +18,12 @@ def create_user_tab():
 
     def handle_create_user(username, email, telegram_id):
         result, qr_code_path = create_user(username, email, telegram_id)
-        if qr_code_path:
-            return result, gr.update(visible=True, value=qr_code_path)
-        return result, gr.update(visible=False)
+        
+        # Разделяем успешные и ошибочные сообщения
+        if result.startswith("✅"):
+            return result, gr.update(visible=True, value=qr_code_path) if qr_code_path else gr.update(visible=False)
+        else:
+            return result, gr.update(visible=False)
 
     create_button.click(
         handle_create_user,

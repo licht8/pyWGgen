@@ -1,26 +1,39 @@
 #!/usr/bin/env python3
-# gradio_admin/functions/create_user.py
-# Logic for creating users via main.py
-
 import os
 import subprocess
+from pathlib import Path
 
 def create_user(username, email="N/A", telegram_id="N/A"):
     if not username:
-        return "Error: username cannot be empty.", None
+        return "Error: Username cannot be empty.", None
+
+    # Получаем абсолютные пути
+    base_dir = Path(__file__).parent.parent.parent
+    config_path = base_dir / "configs" / f"{username}.conf"
+    
+    # Проверка существования пользователя перед вызовом subprocess
+    if config_path.exists():
+        return f"Error: User '{username}' already exists!", None
 
     try:
-        subprocess.run(
+        # Запускаем процесс с захватом stderr
+        result = subprocess.run(
             ["python3", "main.py", username, email, telegram_id],
             check=True,
-            cwd=os.path.abspath(os.path.dirname(__file__) + "/../../")
+            cwd=str(base_dir),
+            capture_output=True,
+            text=True
         )
-        qr_code_path = os.path.join("user", "data", "qrcodes", f"{username}.png")
-        absolute_path = os.path.abspath(qr_code_path)
         
-        if os.path.exists(absolute_path):
-            return f"✅ User {username} successfully created.", absolute_path
-        return f"✅ User {username} successfully created, but QR code not found.", None
+        # Проверяем создание QR-кода
+        qr_code_path = base_dir / "user" / "data" / "qrcodes" / f"{username}.png"
+        if qr_code_path.exists():
+            return f"✅ User {username} successfully created.", str(qr_code_path)
+        return f"✅ User {username} created, but QR code not found.", None
 
     except subprocess.CalledProcessError as e:
-        return f"Error while creating user: {str(e)}", None
+        # Обрабатываем ошибки из stderr
+        error_msg = e.stderr.strip()
+        if "already exists" in error_msg:
+            return f"Error: User '{username}' already exists!", None
+        return f"Error: {error_msg or 'Unknown error'}", None
