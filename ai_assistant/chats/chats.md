@@ -1,1 +1,1 @@
-#  History of chats with administrator
+#  История чатов с администратором
