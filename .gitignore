@@ -1,4 +1,7 @@
 ai_assistant/prompts/
 temp/
-
+generate_system_report.txt
+generate_user_report.txt
+test_prompt.txt
+context_management_template.py
 .codegpt
