@@ -9,6 +9,30 @@ from gradio_admin.functions.block_user import block_user, unblock_user
 # Import the new synchronization function
 from sync import sync_users_from_config_paths
 
+import os
+
+WG_CONFIGS_PATH = "/root/pyWGgenerator/pyWGgen/user/data/wg_configs"
+
+def get_user_config_path(username):
+    possible_files = [
+        f"{username}.conf",
+        f"{username}_local.conf"
+    ]
+    for fname in possible_files:
+        full_path = os.path.join(WG_CONFIGS_PATH, fname)
+        if os.path.isfile(full_path):
+            return full_path
+    return None
+
+def handle_download_config(selected_user):
+    if not selected_user or selected_user == "Select a user":
+        return None, "Сначала выберите пользователя."
+    username = selected_user.split(" ")[0]
+    config_path = get_user_config_path(username)
+    if config_path:
+        return config_path, f"Файл конфига для пользователя {username} готов к скачиванию."
+    return None, f"Конфиг для {username} не найден."
+
 def manage_user_tab():
     """Creates a tab for user management (deletion, blocking, unblocking)."""
 
@@ -54,15 +78,20 @@ def manage_user_tab():
         user_selector = gr.Dropdown(choices=get_user_list(), value="Select a user", interactive=True)
         refresh_button = gr.Button("Refresh List")
 
-    # Row with Delete, Block, and Unblock buttons
+    # Row with Delete, Block, and Unblock buttons + Download Config
     with gr.Row():
         delete_button = gr.Button("Delete User")
         block_button = gr.Button("Block User")
         unblock_button = gr.Button("Unblock User")
+        download_button = gr.Button("Скачать конфиг")
 
-    # Field to display the result (deletion, blocking, unblocking)
+    # Field to display the result (deletion, blocking, unblocking, download)
     with gr.Row():
         result_display = gr.Textbox(label="Result", value="", lines=2, interactive=False)
+
+    # Download output row
+    with gr.Row():
+        download_output = gr.File(label="Файл для скачивания")
 
     # ========= New fields and "Synchronize" button =========
     with gr.Row():
@@ -95,4 +124,9 @@ def manage_user_tab():
         fn=handle_sync,
         inputs=[config_dir_input, qr_dir_input],
         outputs=[result_display]
+    )
+    download_button.click(
+        fn=handle_download_config,
+        inputs=[user_selector],
+        outputs=[download_output, result_display]
     )
