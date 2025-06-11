@@ -18,8 +18,11 @@ with gr.Blocks() as admin_interface:
     with gr.Tab(label="🔍 Statistics"):
         statistics_tab()
     
+    '''
     with gr.Tab(label="🤖 Chat with AI"):
         ollama_chat_tab()
+    '''
+
 
     # Uncomment for additional features
     # with gr.Tab(label="🖥️ Command Line"):
