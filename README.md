@@ -18,7 +18,6 @@
    - [How to Launch the Admin Panel](#how-to-launch-the-admin-panel)
 3. [Requirements](#requirements)
 4. [Installing and Running the Project](#installing-and-running-the-project)
-   - [Quick Installation](#quick-installation)
 5. [Using the Menu](#using-the-menu)
 6. [Project Structure](#project-structure)
 7. [Testing](#testing)
