@@ -90,7 +90,7 @@ HELP_JSON_PATH = BASE_DIR / "ai_diagnostics/ai_help/ai_help.json"  # New path fo
 
 # Additional paths for modules and utilities
 MODULES_DIR = BASE_DIR / "modules"            # Directory containing modules
-AI_DIAGNOSTICS_DIR = BASE_DIR / "ai_diagnostics"  # Directory with diagnostic files
+# AI_DIAGNOSTICS_DIR = BASE_DIR / "ai_diagnostics"  # Directory with diagnostic files
 
 # Port for Gradio
 GRADIO_PORT = 7860  # Port for running the Gradio interface
