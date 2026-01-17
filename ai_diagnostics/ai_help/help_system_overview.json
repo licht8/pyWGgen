@@ -1,8 +1,0 @@
-{
-    "help_system_overview": {
-        "id": "help_system_overview",
-        "title": "  🛠️  How the Help System Works",
-        "short": "  A brief overview of how the help system operates.",
-        "long": "  The help system provides users with a convenient interface to search\n  and explore information. Its workflow consists of the following steps:\n\n  1️⃣  **Initialization**:\n      - The system loads settings from `settings.py` and data from all JSON files.\n      - The JSON structure is checked for the presence of `title`, `short`, and `long` keys.\n\n  2️⃣  **Menu**:\n      - A list of available sections with brief descriptions is displayed to the user.\n      - Users are prompted to enter a section number or a keyword to search.\n\n  3️⃣  **Search**:\n      - If the input is a number, the corresponding section is displayed.\n      - If the input is text:\n        - Exact matches with menu item titles are searched first.\n        - If no matches are found, the system searches all keys (`title`, `short`, `long`).\n        - For multiple matches, the user is prompted to refine their query.\n\n  4️⃣  **Displaying the Section**:\n      - The section's title and content are formatted with appropriate line breaks\n        and indents as defined in the JSON.\n      - Variables from `settings.py` are replaced with their corresponding values.\n\n  5️⃣  **Additional Actions**:\n      - The user can save the current section to a text file.\n      - Exit commands (`0`, `q`, `exit`) are supported.\n\n  6️⃣  **Cycle Repetition**:\n      - After completing work with a section, the system returns to the main menu.\n\n  💡  Tip:\n      Use keyword searches for quick access to the information you need."
-    }
-}
