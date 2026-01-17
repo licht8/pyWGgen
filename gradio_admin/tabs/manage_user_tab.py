@@ -7,7 +7,7 @@ from gradio_admin.functions.user_records import load_user_records
 from gradio_admin.functions.block_user import block_user, unblock_user
 
 # Import the new synchronization function
-from sync import sync_users_from_config_paths
+from modules.sync import sync_users_from_config_paths
 
 import os
 
