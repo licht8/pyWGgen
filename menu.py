@@ -21,15 +21,37 @@ import sys
 import subprocess
 from modules.input_utils import input_with_history  # Importing our function
 from modules.firewall_utils import get_external_ip
-from settings import LOG_DIR, LOG_FILE_PATH, DIAGNOSTICS_LOG
+from settings import LOG_DIR, LOG_FILE_PATH, DIAGNOSTICS_LOG, PRINT_SPEED
 from modules.uninstall_wg import uninstall_wireguard
 from modules.install_wg import install_wireguard  # Importing the install_wireguard function
 # Module imports
 from modules.wireguard_utils import check_wireguard_installed
-from ai_diagnostics.ai_diagnostics import display_message_slowly
 from modules.swap_edit import check_swap_edit, swap_edit
 from modules.report_utils import create_summary_report
-from modules.swap_edit import check_swap_edit
+
+# LINE_DELAY constant
+LINE_DELAY = 0.05
+
+
+def display_message_slowly(message, print_speed=None, end="\n", indent=True):
+    """
+    Prints a message line by line with optional indentation and custom speed.
+
+    :param message: Message to display.
+    :param print_speed: Character printing speed (in seconds). If None, global PRINT_SPEED is used.
+    :param end: End character for the line (default: "\\n").
+    :param indent: If True, adds a 3-space indent before each line.
+    """
+    effective_speed = print_speed if print_speed is not None else PRINT_SPEED
+    for line in message.split("\n"):
+        if indent:
+            print("   ", end="")  # Add indent if indent=True
+        for char in line:
+            print(char, end="", flush=True)
+            time.sleep(effective_speed)
+        print(end, end="", flush=True)
+        time.sleep(LINE_DELAY)
+
 
 # Check and create a swap file of size 512 MB if needed
 check_swap_edit(size_mb=512, action="micro", silent=True)
@@ -90,7 +112,7 @@ def show_main_menu():
         print(f" aih. 🗨️  Help and Diagnostics")
         print(f" aid. 🤖 Run Project Diagnostics")
         print(f"\n\t 0 or q. Exit")
-        display_message_slowly(f" ==========================================""\n", print_speed=local_print_speed, indent=False)
+        display_message_slowly(f" =========================================""\n", print_speed=local_print_speed, indent=False)
 
         choice = input_with_history(" Select an action: ").strip().lower()
 
