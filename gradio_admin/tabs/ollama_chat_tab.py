@@ -1,163 +1,213 @@
+#!/usr/bin/env python3
+"""AI Chat Tab для Gradio."""
+
 import gradio as gr
-import requests
-import json
-import logging
 import sys
-from datetime import datetime
+import os
 
-# Logging setup with forced console output
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+import settings
 
-# Create a formatter for logs
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+from ai_assistant.data_collector import collect_all_data
+from ai_assistant.ai_chat import ask_question
+from ai_assistant.utils import check_ollama, run_cmd
 
-# Console handler
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(formatter)
+# Глобальные настройки AI
+ai_settings = {
+    "temperature": 0.7,
+    "max_tokens": 2000,
+    "system_prompt": "Ты опытный системный администратор, специализирующийся на WireGuard VPN. Отвечай на русском языке, будь точным и конкретным."
+}
 
-# File handler
-file_handler = logging.FileHandler(f'ollama_chat_{datetime.now().strftime("%Y%m%d")}.log')
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(formatter)
 
-# Add handlers to the logger
-logger.addHandler(console_handler)
-logger.addHandler(file_handler)
-
-# Prevent log propagation
-logger.propagate = False
-
-def chat_with_ollama(message, history, model="llama2"):
-    """Function to interact with the Ollama API."""
-    # Log the incoming request
-    logger.info(" " + "-" * 50)
-    logger.info(f"New request to model {model}")
-    logger.info(f"User: {message}")
-    logger.info("-" * 50)
-    
-    if not message:
-        logger.warning("Received an empty message")
-        return "", history
-    
-    api_url = "http://10.67.67.2:11434/api/generate"
+def load_ai_help() -> str:
+    """Загрузить справку по AI из файла."""
+    help_file = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "ai_assistant",
+        "ai_help.md"
+    )
     
     try:
-        # Send the request
-        logger.info(f"Sending request to {api_url}")
-        response = requests.post(api_url, json={
-            "model": model,
-            "prompt": message,
-            "stream": False
-        })
-        response.raise_for_status()
+        with open(help_file, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        return f"❌ Ошибка загрузки справки: {str(e)}"
+
+
+def get_server_context_html() -> str:
+    """Получить HTML контекст сервера."""
+    try:
+        data = collect_all_data()
         
-        result = response.json()
-        assistant_response = result.get("response", "Error: No response")
+        nat = data.get("nat", {})
+        fw = data.get("firewalld", {})
+        wg_status = data.get("wg_status", {})
         
-        # Log the assistant's response
-        logger.info(f"Assistant: {assistant_response}")
-        logger.info("-=" * 25)
+        # Внешний IP
+        external_ip = run_cmd("curl -s ifconfig.me") or "N/A"
         
-        new_message = {
-            "role": "assistant",
-            "content": assistant_response
-        }
+        # Внутренний IP WireGuard
+        wg_internal_ip = "N/A"
+        wg_interface = "N/A"
+        for iface, info in wg_status.items():
+            if iface == "wg-mgmt":
+                continue
+            if info.get("service_active"):
+                wg_interface = iface
+                ip_output = run_cmd(f"ip addr show {iface} | grep 'inet ' | awk '{{print $2}}'")
+                if ip_output:
+                    wg_internal_ip = ip_output.split('\n')[0]
+                break
         
-        return "", history + [
-            {"role": "user", "content": message},
-            new_message
-        ]
+        wg_port = fw.get('wg_port', 'N/A')
+        ollama_status = "🟢 Доступен" if data.get("health", {}).get("ollama_ok") else "🔴 Недоступен"
+        nat_status = "🟢 OK" if nat.get("ok") else "🔴 Проблема"
+        
+        context = f"""**🖥️  Hostname:** {data.get('hostname')}  
+**🌐 External IP:** {external_ip}  
+**🔧 Uptime:** {data.get('uptime')}
+
+---
+
+**📡 WireGuard Interface:** {wg_interface}  
+**🔗 Tunnel IP:** {wg_internal_ip}  
+**🔌 Port:** {wg_port}  
+**📊 Status:** {data.get('wg_active')}/{data.get('wg_total')} активны
+
+---
+
+**👥 Peers:**
+- Активных: {data.get('peers_active', 0)}
+- Настроено: {data.get('peers_configured', 0)}
+- Пользовательских: {data.get('user_peer_files', {}).get('total', 0)}
+
+---
+
+**🔥 Firewalld:** {fw.get('active')}  
+**🛡️  NAT:** {nat_status}  
+**🤖 Ollama:** {ollama_status}  
+**🧠 Model:** {settings.MODEL_NAME}
+"""
+        
+        return context
     
     except Exception as e:
-        error_msg = f"Error: {str(e)}"
-        logger.error(f"An error occurred: {error_msg}")
-        logger.info("-=" * 25)
-        return error_msg, history
+        return f"❌ **Ошибка загрузки контекста:**\n\n```\n{str(e)}\n```"
 
-def list_models():
-    """Fetch the list of available models."""
-    logger.info("Requesting list of models...")
+
+def update_ai_settings(temperature, max_tokens, system_prompt):
+    """Обновить настройки AI."""
+    ai_settings["temperature"] = temperature
+    ai_settings["max_tokens"] = max_tokens
+    ai_settings["system_prompt"] = system_prompt
+    return f"✅ Настройки AI обновлены:\n- Temperature: {temperature}\n- Max tokens: {max_tokens}"
+
+
+def chat_with_ai(message, history):
+    """Чат с AI (для Gradio ChatInterface)."""
     try:
-        response = requests.get("http://10.67.67.2:11434/api/tags", timeout=5)
-        response.raise_for_status()
-        models = response.json()
-        logger.info(f"Received list of models: {json.dumps(models, ensure_ascii=False)}")
-        return [model["name"] for model in models["models"]]
+        # Собираем данные
+        data = collect_all_data()
+        
+        # Проверка Ollama
+        if not check_ollama(settings.OLLAMA_HOST):
+            return f"❌ Ollama недоступен. Проверь: {settings.OLLAMA_HOST}"
+        
+        # Получаем ответ от AI (пока используем стандартные настройки)
+        # TODO: передать ai_settings в ask_question если поддерживается
+        response = ask_question(data, message)
+        
+        return response
+    
     except Exception as e:
-        logger.error(f"Error fetching model list: {str(e)}")
-        return ["llama2"]
+        return f"❌ Ошибка: {str(e)}"
+
 
 def ollama_chat_tab():
-    """Create the chat tab interface."""
-    logger.info("Initializing chat interface")
+    """Создание таба AI Chat."""
     
-    with gr.Column():
-        # Status message
-        status = gr.Textbox(
-            label="Connection Status",
-            interactive=False
-        )
+    gr.Markdown("# 💬 AI Chat - Интерактивный режим\n\nЗадавай вопросы по VPN серверу")
+    
+    with gr.Row():
+        # Чат слева (70% ширины)
+        with gr.Column(scale=7):
+            gr.ChatInterface(
+                fn=chat_with_ai,
+                chatbot=gr.Chatbot(height=500),
+                textbox=gr.Textbox(placeholder="Напиши вопрос...", container=False, scale=7),
+                examples=[
+                    "Сколько peers подключено?",
+                    "Какой у меня внешний IP?",
+                    "Покажи статус WireGuard",
+                    "Как добавить нового пользователя?",
+                    "Проверь работу NAT"
+                ]
+            )
         
-        # Dropdown for selecting the model
-        available_models = list_models()
-        logger.info(f"Available models: {available_models}")
-        
-        model_dropdown = gr.Dropdown(
-            choices=available_models,
-            value=available_models[0] if available_models else "llama2",
-            label="Select Model"
-        )
-        
-        # Chat component
-        chatbot = gr.Chatbot(
-            label="Chat with Ollama",
-            type="messages"
-        )
-        
-        # Message input field
-        msg = gr.Textbox(
-            label="Enter Message",
-            placeholder="Type something... (Shift + Enter to send)",
-            lines=3
-        )
-        
-        # Buttons
-        with gr.Row():
-            submit = gr.Button("Send (Shift + Enter)")
-            clear = gr.Button("Clear History")
-        
-        # Event handlers
-        def update_status():
-            try:
-                logger.info("Checking connection to Ollama API...")
-                response = requests.get("http://10.67.67.2:11434/api/version", timeout=5)
-                logger.info(f"Received response: {response.text}")
-                version = response.json().get("version", "unknown")
-                status_msg = f"✅ Connected to Ollama API (version {version})"
-                logger.info(status_msg)
-                return status_msg
-            except Exception as e:
-                error_msg = f"❌ No connection to Ollama API: {str(e)}"
-                logger.error(error_msg)
-                return error_msg
-        
-        # Update status on load
-        status.value = update_status()
-        
-        submit.click(
-            chat_with_ollama,
-            inputs=[msg, chatbot, model_dropdown],
-            outputs=[msg, chatbot]
-        )
-        
-        msg.submit(
-            chat_with_ollama,
-            inputs=[msg, chatbot, model_dropdown],
-            outputs=[msg, chatbot]
-        )
-        
-        clear.click(lambda: [], None, chatbot, queue=False)
-
-    logger.info("Chat interface initialized")
+        # Настройки справа (30% ширины)
+        with gr.Column(scale=3):
+            
+            # Контекст сервера
+            with gr.Accordion("Контекст сервера", open=False, elem_id="server_context_accordion"):
+                context_output = gr.Markdown(value=get_server_context_html())
+                refresh_context_btn = gr.Button("Обновить", variant="secondary", size="sm")
+                refresh_context_btn.click(fn=get_server_context_html, outputs=context_output)
+            
+            # Настройки AI
+            with gr.Accordion("Настройки AI", open=False, elem_id="ai_settings_accordion"):
+                
+                temperature_slider = gr.Slider(
+                    minimum=0.0,
+                    maximum=2.0,
+                    value=ai_settings["temperature"],
+                    step=0.1,
+                    label="Temperature",
+                    info="Креативность"
+                )
+                
+                max_tokens_slider = gr.Slider(
+                    minimum=500,
+                    maximum=4000,
+                    value=ai_settings["max_tokens"],
+                    step=100,
+                    label="Max Tokens",
+                    info="Длина ответа"
+                )
+                
+                system_prompt_text = gr.Textbox(
+                    value=ai_settings["system_prompt"],
+                    label="System Prompt",
+                    lines=3,
+                    info="Поведение AI"
+                )
+                
+                with gr.Row():
+                    save_settings_btn = gr.Button("Сохранить", variant="primary", size="sm")
+                    reset_settings_btn = gr.Button("Сбросить", variant="secondary", size="sm")
+                
+                settings_status = gr.Markdown(value="")
+                
+                # Обработчики
+                save_settings_btn.click(
+                    fn=update_ai_settings,
+                    inputs=[temperature_slider, max_tokens_slider, system_prompt_text],
+                    outputs=settings_status
+                )
+                
+                def reset_settings():
+                    return (
+                        0.7,
+                        2000,
+                        "Ты опытный системный администратор, специализирующийся на WireGuard VPN. Отвечай на русском языке, будь точным и конкретным.",
+                        "🔄 Настройки сброшены"
+                    )
+                
+                reset_settings_btn.click(
+                    fn=reset_settings,
+                    outputs=[temperature_slider, max_tokens_slider, system_prompt_text, settings_status]
+                )
+            
+            # Справка по настройкам AI (загружается из файла)
+            with gr.Accordion("Справка по настройкам", open=False, elem_id="ai_help_accordion"):
+                gr.Markdown(value=load_ai_help())
