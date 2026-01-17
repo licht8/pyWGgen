@@ -14,8 +14,10 @@ Features:
 
 import os
 import sys
+import time
 import shutil
 import subprocess
+import logging
 from pathlib import Path
 from argparse import ArgumentParser
 from prettytable import PrettyTable
@@ -24,8 +26,49 @@ CURRENT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = CURRENT_DIR.parent
 sys.path.append(str(PROJECT_DIR))
 
-from settings import PRINT_SPEED
-from ai_diagnostics.ai_diagnostics import display_message_slowly
+from settings import PRINT_SPEED, LOG_LEVEL, LOG_FILE_PATH
+
+# Configure logging
+logging.basicConfig(
+    filename=LOG_FILE_PATH,
+    level=getattr(logging, LOG_LEVEL.upper(), logging.DEBUG),
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+
+logger = logging.getLogger(__name__)
+
+
+def display_message_slowly(message, print_speed=None, end="\n", indent=True):
+    """
+    Prints a message line by line with optional indentation and custom speed.
+
+    :param message: Message to display.
+    :param print_speed: Character printing speed (in seconds). If None, global PRINT_SPEED is used.
+    :param end: End character for the line (default: "\\n").
+    :param indent: If True, adds a 3-space indent before each line.
+    """
+    # Retrieve PRINT_SPEED from settings, or use default if not available
+    try:
+        effective_speed = print_speed if print_speed is not None else PRINT_SPEED
+    except NameError:
+        effective_speed = print_speed if print_speed is not None else 0.001  # default fallback
+
+    # LINE_DELAY - define locally if not in settings
+    try:
+        from settings import LINE_DELAY
+        line_delay = LINE_DELAY
+    except (ImportError, NameError):
+        line_delay = 0.05  # default fallback
+
+    for line in message.split("\n"):
+        if indent:
+            print("   ", end="")  # Add indent if indent=True
+        for char in line:
+            print(char, end="", flush=True)
+            time.sleep(effective_speed)
+        print(end, end="", flush=True)
+        time.sleep(line_delay)
+
 
 def run_command(command, check=True):
     """Execute a command in the terminal and return the output."""
@@ -38,11 +81,13 @@ def run_command(command, check=True):
         print(f"   ❌ Error: {e.stderr.strip()}")
         return None
 
+
 def check_root():
     """Check if the script is run as root."""
     if os.geteuid() != 0:
         display_message_slowly("🚨 This script must be run as root.", indent=False)
         exit(1)
+
 
 def display_table(data, headers):
     """Display a table with data."""
@@ -50,6 +95,7 @@ def display_table(data, headers):
     for row in data:
         table.add_row(row)
     return table
+
 
 def get_swap_info():
     """Retrieve information about swap and memory."""
@@ -66,6 +112,7 @@ def get_swap_info():
 
     return display_table(rows, headers)
 
+
 def disable_existing_swap(swap_file="/swap"):
     """Disable and remove the existing swap file if it is in use."""
     if os.path.exists(swap_file):
@@ -76,6 +123,7 @@ def disable_existing_swap(swap_file="/swap"):
             display_message_slowly(f"   🗑️  Removed existing swap file: {swap_file}")
         except Exception as e:
             display_message_slowly(f"   ❌  Failed to remove file: {e}")
+
 
 def create_swap_file(size_mb, reason=None):
     """Create and activate a swap file."""
@@ -99,17 +147,6 @@ def create_swap_file(size_mb, reason=None):
     except Exception as e:
         display_message_slowly(f"   ❌ An error occurred: {e}")
 
-import logging
-from settings import LOG_LEVEL, LOG_FILE_PATH
-
-# Configure logging
-logging.basicConfig(
-    filename=LOG_FILE_PATH,
-    level=getattr(logging, LOG_LEVEL.upper(), logging.DEBUG),
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
-
-logger = logging.getLogger(__name__)
 
 def check_swap_edit(size_mb, action=None, silent=True, tolerance=2):
     """
@@ -146,6 +183,7 @@ def check_swap_edit(size_mb, action=None, silent=True, tolerance=2):
         if not silent:
             display_message_slowly(f"❌ Error: {e}")
 
+
 def interactive_swap_edit():
     """
     Interactive mode for managing swap.
@@ -178,6 +216,7 @@ def interactive_swap_edit():
             break
         else:
             print("❌ Invalid input. Please try again.")
+
 
 def swap_edit(size_mb=None, action=None, silent=False):
     """
@@ -235,6 +274,7 @@ def swap_edit(size_mb=None, action=None, silent=False):
         final_swap_info = get_swap_info()
         if final_swap_info:
             print(final_swap_info)
+
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Utility for managing the swap file.")
