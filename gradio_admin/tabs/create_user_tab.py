@@ -9,6 +9,8 @@ def create_user_tab():
     """
     Tab for creating WireGuard users.
     """
+    gr.Markdown("# 🌱 Create User - Создание пользователя\n\nСоздай нового WireGuard пользователя с конфигом и QR кодом")
+    
     username_input = gr.Textbox(label="Username", placeholder="Enter username...")
     email_input = gr.Textbox(label="Email (optional)", placeholder="Enter email...")
     telegram_input = gr.Textbox(label="Telegram ID (optional)", placeholder="Enter Telegram ID...")
