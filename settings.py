@@ -26,7 +26,7 @@
 # - ERROR: Only errors.
 # Logs are written to both the console and a file specified in LOG_FILE_PATH.
 #
-# Version: 1.6 (2025-01-06) 16:11
+# Version: 1.7 (2026-01-10) 6:39
 
 from pathlib import Path
 import os
@@ -53,6 +53,26 @@ DEFAULT_SUBNET = "10.66.66.0/24"
 USER_SET_SUBNET = DEFAULT_SUBNET
 DNS_WIREGUAED = "1.1.1.1, 1.0.0.1, 8.8.8.8"
 
+# Ollama
+OLLAMA_HOST = "http://10.99.0.2:11434"
+MODEL_NAME = "qwen2.5:3b"
+
+# Логи
+AI_ASSISTANT_LOG_DIR = "ai_assistant/logs"
+
+# WireGuard
+IGNORE_INTERFACES = ["wg-mgmt"]
+WG_PORT = "51820/udp"
+
+# Firewalld
+FIREWALLD_ZONES = ["public", "internal", "external", "home", "trusted", "work", "dmz", "wg"]
+
+# AI
+AI_TEMPERATURE = 0.1
+AI_TIMEOUT = 120
+CHAT_TEMPERATURE = 0.2
+CHAT_TIMEOUT = 90
+
 # Logging settings
 LOG_DIR = BASE_DIR / "user/data/logs"  # Directory for storing logs
 DIAGNOSTICS_LOG = LOG_DIR / "diagnostics.log"  # Diagnostics log file
@@ -70,6 +90,7 @@ HELP_JSON_PATH = BASE_DIR / "ai_diagnostics/ai_help/ai_help.json"  # New path fo
 
 # Additional paths for modules and utilities
 MODULES_DIR = BASE_DIR / "modules"            # Directory containing modules
+AI_DIAGNOSTICS_DIR = BASE_DIR / "ai_diagnostics"  # Directory with diagnostic files
 
 # Port for Gradio
 GRADIO_PORT = 7860  # Port for running the Gradio interface
@@ -140,6 +161,7 @@ def check_paths():
         "MESSAGES_DB_PATH": MESSAGES_DB_PATH,
         "HELP_JSON_PATH": HELP_JSON_PATH,
         "MODULES_DIR": MODULES_DIR,
+        "AI_DIAGNOSTICS_DIR": AI_DIAGNOSTICS_DIR,
     }
     status = []
     for name, path in paths.items():
