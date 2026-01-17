@@ -5,53 +5,23 @@
 # This file provides a convenient interface
 # for managing various project functions,
 # including WireGuard installation, removal, and more.
-# Version: 1.0
-# Updated: 2024-12-03
+# Version: 1.2
+# Updated: 2026-01-10
 # ===========================================
-
-#import pdb; pdb.set_trace()
-
-#import tracemalloc
-# Start memory monitoring with stack depth of 10 levels
-#tracemalloc.start(10)
 
 import os
 import time
 import sys
 import subprocess
-from modules.input_utils import input_with_history  # Importing our function
+from modules.input_utils import input_with_history
 from modules.firewall_utils import get_external_ip
-from settings import LOG_DIR, LOG_FILE_PATH, DIAGNOSTICS_LOG, PRINT_SPEED
+from settings import LOG_DIR, LOG_FILE_PATH, DIAGNOSTICS_LOG
 from modules.uninstall_wg import uninstall_wireguard
-from modules.install_wg import install_wireguard  # Importing the install_wireguard function
-# Module imports
+from modules.install_wg import install_wireguard
 from modules.wireguard_utils import check_wireguard_installed
+from ai_diagnostics.ai_diagnostics import display_message_slowly
 from modules.swap_edit import check_swap_edit, swap_edit
 from modules.report_utils import create_summary_report
-
-# LINE_DELAY constant
-LINE_DELAY = 0.05
-
-
-def display_message_slowly(message, print_speed=None, end="\n", indent=True):
-    """
-    Prints a message line by line with optional indentation and custom speed.
-
-    :param message: Message to display.
-    :param print_speed: Character printing speed (in seconds). If None, global PRINT_SPEED is used.
-    :param end: End character for the line (default: "\\n").
-    :param indent: If True, adds a 3-space indent before each line.
-    """
-    effective_speed = print_speed if print_speed is not None else PRINT_SPEED
-    for line in message.split("\n"):
-        if indent:
-            print("   ", end="")  # Add indent if indent=True
-        for char in line:
-            print(char, end="", flush=True)
-            time.sleep(effective_speed)
-        print(end, end="", flush=True)
-        time.sleep(LINE_DELAY)
-
 
 # Check and create a swap file of size 512 MB if needed
 check_swap_edit(size_mb=512, action="micro", silent=True)
@@ -60,6 +30,7 @@ check_swap_edit(size_mb=512, action="micro", silent=True)
 project_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
+
 
 def show_diagnostics_log():
     """Displays the diagnostics log."""
@@ -70,21 +41,23 @@ def show_diagnostics_log():
     else:
         print("\n ❌  Diagnostics log not found.\n")
 
-# Check and create directories and files
+
 def initialize_project():
     """Initialize the project: create necessary directories and files."""
-    LOG_DIR.mkdir(parents=True, exist_ok=True)  # Create directory if it doesn't exist
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
     if not LOG_FILE_PATH.exists():
-        LOG_FILE_PATH.touch()  # Create an empty file if it doesn't exist
+        LOG_FILE_PATH.touch()
         print(f"Created an empty log file: {LOG_FILE_PATH}")
+
 
 # Call the initialization function
 initialize_project()
 create_summary_report()
 
+
 def show_main_menu():
     """Display the main menu."""
-    local_print_speed = 0.005  # Local print speed
+    local_print_speed = 0.005
     while True:
         wireguard_installed = check_wireguard_installed()
         display_message_slowly(f"\n🛡️  ======  Menu pyWGgen  ======= 🛡️\n", print_speed=local_print_speed, indent=False)
@@ -101,106 +74,135 @@ def show_main_menu():
             print(f" iw. ⚙️   Install WireGuard")
         print(f" up. 🔄  Update Dependencies")
         display_message_slowly(f" ------------------------------------------", print_speed=local_print_speed, indent=False)
-        print(f"  i. 🛠️   Project Status Information")
-        print(f" rg. 📋  Generate Project Status Report")
-        print(f" fr. 📄  Show Project Status Report")
-        print(f" dg. 🛠️   Run Project Diagnostics")
-        print(f" sd. 📋  Show Diagnostics Log")
-        # print(f"  t. 🧪  Run Tests")
+        print(f"  s. 📊  Project Status & Report")
+        print(f"  d. 🛠️   System Diagnostics")
 
-        display_message_slowly(f"\n🧩 === Help and Diagnostics Section ==== 🧩\n", print_speed=local_print_speed, indent=False)
-        print(f" aih. 🗨️  Help and Diagnostics")
-        print(f" aid. 🤖 Run Project Diagnostics")
+        display_message_slowly(f"\n🤖  ======  AI Assistant   ======  🤖\n", print_speed=local_print_speed, indent=False)
+        print(f" aid. 🚀  AI VPN Diagnostics")
+        print(f" aic. 💬  AI Chat")
+        print(f" air. 📄  AI Generate Report")
+        
         print(f"\n\t 0 or q. Exit")
-        display_message_slowly(f" =========================================""\n", print_speed=local_print_speed, indent=False)
+        display_message_slowly(f" ==========================================""\n", print_speed=local_print_speed, indent=False)
 
         choice = input_with_history(" Select an action: ").strip().lower()
 
-        if choice == "0" or choice == "q":
+        if choice in {"0", "q"}:
             print("\n 👋  Exiting. Goodbye!\n")
             break
 
-        if choice == "i":
-            from modules.report_utils import display_summary_report, show_project_status
-            display_summary_report()
-            show_project_status()
-        #elif choice == "t":
-        #    print(f" 🔍  Running tests...")
-        #    subprocess.run(["pytest"])
+        # Project Status & Report (объединено: i + rg + fr)
+        elif choice == "s":
+            from modules.report_utils import display_summary_report, show_project_status, generate_project_report, display_test_report
+            print("\n📊 Generating project status...\n")
+            try:
+                display_summary_report()
+                show_project_status()
+                print("\n📋 Full report:\n")
+                generate_project_report()
+                display_test_report()
+            except Exception as e:
+                print(f"⚠️  Error: {e}")
+            input("\n Press Enter to continue...")
+
+        # System Diagnostics (объединено: dg + sd)
+        elif choice == "d":
+            from modules.debugger import run_diagnostics
+            print("\n🛠️  Running diagnostics...\n")
+            try:
+                run_diagnostics()
+                print("\n📜 Diagnostics log:\n")
+                show_diagnostics_log()
+            except Exception as e:
+                print(f"⚠️  Error: {e}")
+            input("\n Press Enter to continue...")
+
+        # Update Dependencies
         elif choice == "up":
             from modules.update_utils import update_project
             update_project()
+
+        # Gradio Admin Panel
         elif choice == "g":
             from modules.gradio_utils import run_gradio_admin_interface
             port = 7860
             print(f"\n ✅  Launching Gradio interface http://{get_external_ip()}:{port}")
             run_gradio_admin_interface(port=port)
+
+        # Manage Users
         elif choice == "u":
             from modules.manage_users_menu import manage_users_menu
             manage_users_menu()
+
+        # Reinstall WireGuard
         elif choice == "rw":
             install_wireguard()
+
+        # Install WireGuard
         elif choice == "iw":
             install_wireguard()
+
+        # Remove WireGuard
         elif choice == "dw":
             uninstall_wireguard()
+
+        # Clear User Database
         elif choice == "du":
             from modules.user_data_cleaner import clean_user_data
             clean_user_data()
-        elif choice == "rg":
-            from modules.report_utils import generate_project_report
-            generate_project_report()
-        elif choice == "fr":
-            from modules.report_utils import display_test_report
-            display_test_report()
-            time.sleep(2)
+
+        # Synchronize Users
         elif choice == "sy":
             from modules.sync import sync_users_from_config
             sync_users_from_config()
-        elif choice == "dg":
-            from modules.debugger import run_diagnostics
-            run_diagnostics()
-        elif choice == "sd":
-            show_diagnostics_log()
-            time.sleep(2)
-        elif choice == "aih":
-            os.system("python3 ai_diagnostics/ai_help/ai_help.py")
+
+        # ========== AI ASSISTANT ==========
+        # AI VPN Diagnostics (Full)
         elif choice == "aid":
-            os.system("python3 ai_diagnostics/ai_diagnostics.py")
-        elif choice in {"0", "q"}:
-            print("\n 👋  Exiting. Goodbye!\n")
-            break
+            print("\n🚀 Запуск AI VPN Diagnostics...\n")
+            try:
+                subprocess.run(["python3", "ai_assistant/diagnostics.py"])
+            except Exception as e:
+                print(f"⚠️  Error: {e}")
+            input("\n Press Enter to continue...")
+        
+        # AI Chat Mode
+        elif choice == "aic":
+            print("\n💬 Запуск AI Chat...\n")
+            try:
+                from ai_assistant.data_collector import collect_all_data
+                from ai_assistant.ai_chat import interactive_mode
+                print("🔄 Сбор данных VPN сервера...")
+                data = collect_all_data()
+                print("✅ Данные собраны. Запуск чата...\n")
+                interactive_mode(data)
+            except Exception as e:
+                print(f"⚠️  Error: {e}")
+            input("\n Press Enter to continue...")
+        
+        # AI Generate Report
+        elif choice == "air":
+            print("\n📄 Запуск AI Report Generator...\n")
+            try:
+                from ai_assistant.data_collector import collect_all_data
+                from ai_assistant.ai_report import show_report_menu
+                print("🔄 Сбор данных для отчёта...")
+                data = collect_all_data()
+                show_report_menu(data)
+            except Exception as e:
+                print(f"⚠️  Error: {e}")
+            input("\n Press Enter to continue...")
+        # ==================================
+        
         else:
             print(f"\n  ⚠️  Invalid choice. Please try again.")
 
-import tracemalloc
 
 def main():
-    # Start memory monitoring
-    #tracemalloc.start(10)
-
-    # Main program code
+    """Main function."""
     initialize_project()
     show_main_menu()
 
-    # Memory snapshot after completion
-    #snapshot = tracemalloc.take_snapshot()
-    #top_stats = snapshot.statistics("lineno")
-
-    # Print top 10 lines of code by memory consumption
-    #print("\n🔍 Top 10 lines of code by memory usage:")
-    #for stat in top_stats[:10]:
-        #print(f"{stat.traceback.format()}: size={stat.size / 1024:.2f} KB, count={stat.count}, average={stat.size / stat.count if stat.count > 0 else 0:.2f} B")
-        #print(stat)
-
-    # Save report to file (optional)
-    #with open("memory_report.txt", "w") as f:
-        #f.write("\n🔍 Top 10 lines of code by memory usage:\n")
-       # for stat in top_stats[:10]:
-           # f.write(f"{stat.traceback.format()}: size={stat.size / 1024:.2f} KB, count={stat.count}, average={stat.size / stat.count if stat.count > 0 else 0:.2f} B\n")
 
 if __name__ == "__main__":
     main()
-
-#if __name__ == "__main__":
-#    show_main_menu()
