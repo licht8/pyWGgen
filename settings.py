@@ -81,12 +81,7 @@ LOG_FILE_PATH = LOG_DIR / "app.log"  # Application log file
 LOG_LEVEL = "DEBUG"  # Logging level: DEBUG, INFO, WARNING, ERROR
 
 # Paths for reports and message database
-DEBUG_REPORT_PATH = BASE_DIR / "ai_diagnostics/debug_report.txt"  # Path to diagnostics report
-TEST_REPORT_PATH = BASE_DIR / "ai_diagnostics/test_report.txt"    # Path to test report
-MESSAGES_DB_PATH = BASE_DIR / "ai_diagnostics/messages_db.json"   # Path to diagnostics message database
-
-# Paths for help
-HELP_JSON_PATH = BASE_DIR / "ai_diagnostics/ai_help/ai_help.json"  # New path for the help system
+TEST_REPORT_PATH = BASE_DIR / "logs/test_report.txt"    # Path to test report
 
 # Additional paths for modules and utilities
 MODULES_DIR = BASE_DIR / "modules"            # Directory containing modules
@@ -94,9 +89,6 @@ MODULES_DIR = BASE_DIR / "modules"            # Directory containing modules
 
 # Port for Gradio
 GRADIO_PORT = 7860  # Port for running the Gradio interface
-
-# LLM_API_URL
-LLM_API_URL = "http://10.67.67.2:11434/api/generate"
 
 # Animation and print speed settings
 ANIMATION_SPEED = 0.2  # Delay between animation iterations (in seconds)
@@ -156,12 +148,8 @@ def check_paths():
         "LOG_DIR": LOG_DIR,
         "DIAGNOSTICS_LOG": DIAGNOSTICS_LOG,
         "SUMMARY_REPORT_PATH": SUMMARY_REPORT_PATH,
-        "DEBUG_REPORT_PATH": DEBUG_REPORT_PATH,
         "TEST_REPORT_PATH": TEST_REPORT_PATH,
-        "MESSAGES_DB_PATH": MESSAGES_DB_PATH,
-        "HELP_JSON_PATH": HELP_JSON_PATH,
         "MODULES_DIR": MODULES_DIR,
-        "AI_DIAGNOSTICS_DIR": AI_DIAGNOSTICS_DIR,
     }
     status = []
     for name, path in paths.items():
