@@ -23,7 +23,7 @@ from settings import SUMMARY_REPORT_PATH, TEST_REPORT_PATH
 from modules.test_report_generator import generate_report
 
 # Path to the script for creating summary_report
-SUMMARY_SCRIPT = Path(__file__).resolve().parent.parent / "modules" / "ai_diagnostics_summary.py"
+SUMMARY_SCRIPT = Path(__file__).resolve().parent.parent / "modules" / "diagnostics_summary.py"
 
 from datetime import datetime, timedelta
 
