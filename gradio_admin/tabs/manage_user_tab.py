@@ -35,6 +35,8 @@ def handle_download_config(selected_user):
 
 def manage_user_tab():
     """Creates a tab for user management (deletion, blocking, unblocking)."""
+    
+    gr.Markdown("# 🛠️ Manage Users - Управление пользователями\n\nУдаление, блокировка, разблокировка и скачивание конфигов")
 
     def get_user_list():
         records = load_user_records()
@@ -69,9 +71,6 @@ def manage_user_tab():
     def handle_sync(config_dir_str, qr_dir_str):
         success, log = sync_users_from_config_paths(config_dir_str, qr_dir_str)
         return log  # Return the synchronization logs
-
-    with gr.Row():
-        gr.Markdown("## Manage Users")
 
     # Row with dropdown and "Refresh" button
     with gr.Row():
