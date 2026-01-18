@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # modules/report_utils.py
 # ===========================================
-# Module for handling reports in the pyWGgen project
+# Moduł do obsługi raportów w projekcie pyWGgen
 # ===========================================
-# This module provides functions for generating and displaying reports,
-# including full reports, brief reports, summary reports, and project status information.
+# Moduł dostarcza funkcje do generowania i wyświetlania raportów,
+# w tym raportów pełnych, krótkich, podsumowań oraz informacji o stanie projektu.
 #
-# Version: 2.1
-# Updated: 2024-12-10
+# Wersja: 2.1
+# Aktualizacja: 2024-12-10
 
 import os
 import json
@@ -22,163 +22,163 @@ from modules.firewall_utils import get_external_ip
 from settings import SUMMARY_REPORT_PATH, TEST_REPORT_PATH
 from modules.test_report_generator import generate_report
 
-# Path to the script for creating summary_report
+# Ścieżka do skryptu tworzącego summary_report
 SUMMARY_SCRIPT = Path(__file__).resolve().parent.parent / "modules" / "diagnostics_summary.py"
 
 from datetime import datetime, timedelta
 
 def create_summary_report():
-    """Checks if the report is up-to-date and calls the script to create summary_report.txt if needed."""
+    """Sprawdza czy raport jest aktualny i wywołuje skrypt do utworzenia summary_report.txt jeśli potrzeba."""
     try:
-        # Check if the file exists
+        # Sprawdź czy plik istnieje
         if SUMMARY_REPORT_PATH.exists():
-            # Get the file's last modified time
+            # Pobierz czas ostatniej modyfikacji pliku
             last_modified = datetime.fromtimestamp(SUMMARY_REPORT_PATH.stat().st_mtime)
             age = datetime.now() - last_modified
 
             if age < timedelta(minutes=1):
-                print(f" ✅ File {SUMMARY_REPORT_PATH} is up-to-date. Recreation not required.")
+                print(f" ✅ Plik {SUMMARY_REPORT_PATH} jest aktualny. Nie wymaga ponownego utworzenia.")
                 return
             else:
-                print(f" ⏳ File {SUMMARY_REPORT_PATH} is outdated ({age.seconds // 60} minutes). Recreating...")
+                print(f" ⏳ Plik {SUMMARY_REPORT_PATH} jest nieaktualny ({age.seconds // 60} minut). Odświeżanie...")
 
         else:
-            print(f" ⏳ File {SUMMARY_REPORT_PATH} is missing. Creating...")
+            print(f" ⏳ Plik {SUMMARY_REPORT_PATH} nie istnieje. Tworzenie...")
 
-        # Explicit call via Python
+        # Wywołanie przez Python
         subprocess.run(["python3", str(SUMMARY_SCRIPT)], check=True)
         
-        print(f" ✅ File {SUMMARY_REPORT_PATH} successfully created.")
+        print(f" ✅ Plik {SUMMARY_REPORT_PATH} pomyślnie utworzony.")
     except subprocess.CalledProcessError as e:
-        print(f" ❌ Error running script {SUMMARY_SCRIPT}: {e}")
+        print(f" ❌ Błąd uruchamiania skryptu {SUMMARY_SCRIPT}: {e}")
     except Exception as e:
-        print(f" ❌ Unexpected error while creating file {SUMMARY_REPORT_PATH}: {e}")
+        print(f" ❌ Nieoczekiwany błąd podczas tworzenia pliku {SUMMARY_REPORT_PATH}: {e}")
 
 def get_open_ports():
-    """Returns a list of open ports in firewalld."""
+    """Zwraca listę otwartych portów w firewalld."""
     try:
         output = subprocess.check_output(["sudo", "firewall-cmd", "--list-ports"], text=True)
-        return output.strip() if output else colored("No open ports ❌", "red")
+        return output.strip() if output else colored("Brak otwartych portów ❌", "red")
     except subprocess.CalledProcessError:
-        return colored("Error retrieving data ❌", "red")
+        return colored("Błąd pobierania danych ❌", "red")
 
 def get_wireguard_status():
-    """Returns the status of WireGuard."""
+    """Zwraca status WireGuard."""
     try:
         output = subprocess.check_output(["systemctl", "is-active", "wg-quick@wg0"], text=True).strip()
         if output == "active":
-            return colored("active ✅", "green")
-        return colored("inactive ❌", "red")
+            return colored("aktywny ✅", "green")
+        return colored("nieaktywny ❌", "red")
     except subprocess.CalledProcessError:
-        return colored("not installed ❌", "red")
+        return colored("nie zainstalowany ❌", "red")
 
 def get_wireguard_peers():
-    """Gets a list of active WireGuard peers."""
+    """Pobiera listę aktywnych peerów WireGuard."""
     try:
         output = subprocess.check_output(["wg", "show"], text=True).splitlines()
         peers = [line.split(":")[1].strip() for line in output if line.startswith("peer:")]
         if peers:
-            return f"{len(peers)} active peers ✅"
-        return colored("No active peers ❌", "red")
+            return f"{len(peers)} aktywnych peerów ✅"
+        return colored("Brak aktywnych peerów ❌", "red")
     except FileNotFoundError:
-        return colored("Command 'wg' not found ❌", "red")
+        return colored("Komenda 'wg' nie znaleziona ❌", "red")
     except subprocess.CalledProcessError:
-        return colored("Error retrieving data ❌", "red")
+        return colored("Błąd pobierania danych ❌", "red")
 
 def get_users_data():
-    """Retrieves user information from user_records.json."""
+    """Pobiera informacje o użytkownikach z user_records.json."""
     user_records_path = os.path.join("user", "data", "user_records.json")
     try:
         with open(user_records_path, "r") as file:
             return json.load(file)
     except FileNotFoundError:
-        return colored("File user_records.json is missing ❌", "red")
+        return colored("Plik user_records.json nie istnieje ❌", "red")
     except json.JSONDecodeError:
-        return colored("File user_records.json is corrupted ❌", "red")
+        return colored("Plik user_records.json jest uszkodzony ❌", "red")
 
 def get_gradio_status(port=7860):
-    """Checks the status of Gradio."""
+    """Sprawdza status Gradio."""
     try:
         for proc in psutil.process_iter(["pid", "name", "cmdline"]):
             cmdline = proc.info.get("cmdline", [])
             if cmdline and "gradio" in " ".join(cmdline) and str(port) in " ".join(cmdline):
-                return f"running (PID {proc.info['pid']}) ✅"
-        return colored("not running ❌", "red")
+                return f"działa (PID {proc.info['pid']}) ✅"
+        return colored("nie działa ❌", "red")
     except Exception as e:
-        return colored(f"Error checking Gradio: {e} ❌", "red")
+        return colored(f"Błąd sprawdzania Gradio: {e} ❌", "red")
 
 def get_gradio_port_status(port=7860):
-    """Checks if the Gradio port is open."""
+    """Sprawdza czy port Gradio jest otwarty."""
     open_ports = get_open_ports()
     if f"{port}/tcp" in open_ports:
-        return colored("open ✅", "green")
-    return colored("closed ❌", "red")
+        return colored("otwarty ✅", "green")
+    return colored("zamknięty ❌", "red")
 
 def show_project_status():
-    """Displays the project status."""
-    print("=== Project Status Summary ===\n")
+    """Wyświetla status projektu."""
+    print("=== Podsumowanie statusu projektu ===\n")
 
-    # System information
-    print(f" 🖥️   OS: {platform.system()} {platform.release()}")
-    print(f" 🧰  Kernel: {platform.uname().release}")
-    print(f" 🌍  External IP Address: {get_external_ip()}")
+    # Informacje systemowe
+    print(f" 🖥️   System: {platform.system()} {platform.release()}")
+    print(f" 🧰  Jądro: {platform.uname().release}")
+    print(f" 🌍  Zewnętrzny adres IP: {get_external_ip()}")
 
-    # WireGuard status
-    print(f" 🛡️   WireGuard Status: {get_wireguard_status()}")
+    # Status WireGuard
+    print(f" 🛡️   Status WireGuard: {get_wireguard_status()}")
     config_path = "/etc/wireguard/wg0.conf"
-    print(f" ⚙️   Config File: {config_path if os.path.exists(config_path) else colored('missing ❌', 'red')}")
-    print(f" 🌐  Active peers: {get_wireguard_peers()}")
+    print(f" ⚙️   Plik konfiguracyjny: {config_path if os.path.exists(config_path) else colored('brakuje ❌', 'red')}")
+    print(f" 🌐  Aktywni peerzy: {get_wireguard_peers()}")
 
-    # Last report
+    # Ostatni raport
     report_path = os.path.join("pyWGgen", "test_report.txt")
     if os.path.exists(report_path):
-        print(f" 📋  Last Report: {report_path}")
+        print(f" 📋  Ostatni raport: {report_path}")
     else:
-        print(colored(" 📋  Last Report: missing ❌", "red"))
+        print(colored(" 📋  Ostatni raport: brakuje ❌", "red"))
 
     print("\n===========================================\n")
 
 def generate_project_report():
-    """Generates a full report."""
-    print("\n  📋  Generating full report...")
+    """Generuje pełny raport."""
+    print("\n  📋  Generowanie pełnego raportu...")
     try:
         generate_report()
     except Exception as e:
-        print(f" ❌ Error generating full report: {e}")
+        print(f" ❌ Błąd generowania pełnego raportu: {e}")
 
 def display_test_report():
-    """Displays the contents of the full report in the console."""
+    """Wyświetla zawartość pełnego raportu w konsoli."""
     if TEST_REPORT_PATH.exists():
         with open(TEST_REPORT_PATH, "r", encoding="utf-8") as file:
             print(file.read())
     else:
-        print(f"  ❌  Full report file not found: {TEST_REPORT_PATH}")
+        print(f"  ❌  Plik pełnego raportu nie znaleziony: {TEST_REPORT_PATH}")
 
 def display_test_summary():
-    """Displays a brief report."""
+    """Wyświetla krótki raport."""
     if TEST_REPORT_PATH.exists():
         with open(TEST_REPORT_PATH, "r", encoding="utf-8") as file:
             lines = file.readlines()
             summary_keys = [
-                "Date and Time",
-                "WireGuard Status",
+                "Data i czas",
+                "Status WireGuard",
                 "Gradio",
-                "Open Ports",
+                "Otwarte porty",
                 "wg0.conf"
             ]
-            print("\n=== Brief Project Status Report ===")
+            print("\n=== Krótki raport statusu projektu ===")
             for line in lines:
                 if any(key in line for key in summary_keys):
                     print(line.strip())
             print("\n=========================================")
     else:
-        print(f"  ❌  Project status report file pyWGgen not found: {TEST_REPORT_PATH}")
+        print(f"  ❌  Plik raportu statusu projektu nie znaleziony: {TEST_REPORT_PATH}")
 
 def display_summary_report():
     """
-    Reads and displays the content of the project status report pyWGgen.
-    Uses the file path from settings.py.
-    If the file is missing, initiates its creation.
+    Odczytuje i wyświetla zawartość raportu statusu projektu pyWGgen.
+    Używa ścieżki pliku z settings.py.
+    Jeśli plik nie istnieje, inicjuje jego utworzenie.
     """
     try:
         if not SUMMARY_REPORT_PATH.exists():
@@ -187,14 +187,14 @@ def display_summary_report():
         with open(SUMMARY_REPORT_PATH, "r", encoding="utf-8") as file:
             content = file.read()
 
-        print("\n=== 📋 Project Status Report pyWGgen ===\n")
+        print("\n=== 📋 Raport statusu projektu pyWGgen ===\n")
         print(content)
 
     except Exception as e:
-        print(f" ❌ Error reading project status report pyWGgen: {e}")
+        print(f" ❌ Błąd odczytu raportu statusu projektu pyWGgen: {e}")
 
 if __name__ == "__main__":
     show_project_status()
     time.sleep(2)
-    print("\n=== Performing Report Operations ===\n")
+    print("\n=== Wykonywanie operacji raportów ===\n")
     display_summary_report()
