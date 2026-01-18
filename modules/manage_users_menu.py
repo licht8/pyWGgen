@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # modules/manage_users_menu.py
-# Module for managing WireGuard users
-# Updated 01/14/25
+# Moduł do zarządzania użytkownikami WireGuard
+# Aktualizacja: 14/01/25
 
 import os
 import json
@@ -13,24 +13,24 @@ from modules.traffic_updater import update_traffic_data
 from modules.handshake_updater import update_handshakes
 
 def ensure_directory_exists(filepath):
-    """Ensures that the directory for the file exists."""
+    """Zapewnia istnienie katalogu dla pliku."""
     directory = os.path.dirname(filepath)
     if not os.path.exists(directory):
         os.makedirs(directory)
 
 def load_user_records():
-    """Loads user data from a JSON file."""
+    """Wczytuje dane użytkowników z pliku JSON."""
     return read_json(USER_DB_PATH)
 
 def create_user():
-    """Creates a new user by invoking main.py."""
-    username = input("Enter username: ").strip()
+    """Tworzy nowego użytkownika wywołując main.py."""
+    username = input("Wprowadź nazwę użytkownika: ").strip()
     if not username:
-        print("❌ Username cannot be empty.")
+        print("❌ Nazwa użytkownika nie może być pusta.")
         return
 
-    email = input("Enter email (optional): ").strip() or "N/A"
-    telegram_id = input("Enter Telegram ID (optional): ").strip() or "N/A"
+    email = input("Wprowadź email (opcjonalnie): ").strip() or "N/A"
+    telegram_id = input("Wprowadź ID Telegram (opcjonalnie): ").strip() or "N/A"
 
     try:
         subprocess.run(
@@ -40,124 +40,124 @@ def create_user():
         )
 
     except subprocess.CalledProcessError as e:
-        print(f"❌ Error creating user: {e}")
+        print(f"❌ Błąd tworzenia użytkownika: {e}")
 
 def list_users():
-    """Displays a list of all users."""
+    """Wyświetla listę wszystkich użytkowników."""
     records = load_user_records()
     if not records:
-        print("⚠️ User list is empty.")
+        print("⚠️ Lista użytkowników jest pusta.")
         return
 
-    print("\n👤 WireGuard Users:")
+    print("\n👤 Użytkownicy WireGuard:")
     for username, data in records.items():
         allowed_ips = data.get("allowed_ips", "N/A")
         status = data.get("status", "N/A")
         print(f"  - {username}: {allowed_ips} | Status: {status}")
 
 def show_traffic():
-    """Retrieves and displays user traffic."""
+    """Pobiera i wyświetla ruch użytkowników."""
     try:
-        print("\n🔄 Updating user traffic...")
+        print("\n🔄 Aktualizacja ruchu użytkowników...")
         update_traffic_data(USER_DB_PATH)
-        print("✅ User traffic updated.")
+        print("✅ Ruch użytkowników zaktualizowany.")
 
         records = load_user_records()
-        print("\n📊 User Traffic:")
+        print("\n📊 Ruch użytkowników:")
         for username, data in records.items():
             transfer = data.get("transfer", "N/A")
             total_transfer = data.get("total_transfer", "N/A")
-            print(f"  - {username}: {transfer} | Total: {total_transfer}")
+            print(f"  - {username}: {transfer} | Razem: {total_transfer}")
     except Exception as e:
-        print(f"⚠️ Error retrieving user traffic: {e}")
+        print(f"⚠️ Błąd pobierania ruchu użytkowników: {e}")
 
 def show_handshakes():
-    """Retrieves and displays information about the last handshakes."""
+    """Pobiera i wyświetla informacje o ostatnich handshake'ach."""
     try:
-        print("\n🔄 Updating last handshake information...")
+        print("\n🔄 Aktualizacja informacji o ostatnich handshake'ach...")
         update_handshakes(USER_DB_PATH, SERVER_WG_NIC)
-        print("✅ Last handshake information updated.")
+        print("✅ Informacje o ostatnich handshake'ach zaktualizowane.")
 
         records = load_user_records()
-        print("\n🤝 Last Handshakes:")
+        print("\n🤝 Ostatnie handshake'i:")
         for username, data in records.items():
-            last_handshake = data.get("last_handshake", "Never")
-            print(f"  - {username}: Last Handshake: {last_handshake}")
+            last_handshake = data.get("last_handshake", "Nigdy")
+            print(f"  - {username}: Ostatni handshake: {last_handshake}")
     except Exception as e:
-        print(f"⚠️ Error updating handshake information: {e}")
+        print(f"⚠️ Błąd aktualizacji informacji o handshake'ach: {e}")
 
 def delete_user():
     """
-    Deletes a user from the WireGuard configuration and related files.
+    Usuwa użytkownika z konfiguracji WireGuard i powiązanych plików.
     """
-    username = input("Enter username to delete: ").strip()
+    username = input("Wprowadź nazwę użytkownika do usunięcia: ").strip()
     if not username:
-        print("❌ Error: Username cannot be empty.")
+        print("❌ Błąd: Nazwa użytkownika nie może być pusta.")
         return
 
-    print(f"➡️ Starting deletion of user: '{username}'.")
+    print(f"➡️ Rozpoczynanie usuwania użytkownika: '{username}'.")
 
     if not os.path.exists(USER_DB_PATH):
-        print(f"❌ User data file not found: {USER_DB_PATH}")
+        print(f"❌ Plik danych użytkowników nie znaleziony: {USER_DB_PATH}")
         return
 
     try:
-        # Load user data
+        # Wczytaj dane użytkownika
         user_data = read_json(USER_DB_PATH)
         if username not in user_data:
-            print(f"❌ User '{username}' does not exist.")
+            print(f"❌ Użytkownik '{username}' nie istnieje.")
             return
 
-        # Remove user record
+        # Usuń rekord użytkownika
         user_data.pop(username)
         write_json(USER_DB_PATH, user_data)
-        print(f"📝 User record '{username}' removed from data.")
+        print(f"📝 Rekord użytkownika '{username}' usunięty z danych.")
 
-        # Delete user's configuration file
+        # Usuń plik konfiguracyjny użytkownika
         wg_config_path = WG_CONFIG_DIR / f"{username}.conf"
         if wg_config_path.exists():
             wg_config_path.unlink()
-            print(f"🗑️ Configuration '{wg_config_path}' deleted.")
+            print(f"🗑️ Konfiguracja '{wg_config_path}' usunięta.")
 
-        # Delete user's QR code
+        # Usuń kod QR użytkownika
         qr_code_path = QR_CODE_DIR / f"{username}.png"
         if qr_code_path.exists():
             qr_code_path.unlink()
-            print(f"🗑️ QR code '{qr_code_path}' deleted.")
+            print(f"🗑️ Kod QR '{qr_code_path}' usunięty.")
 
-        # Extract user's public key
+        # Wyodrębnij klucz publiczny użytkownika
         public_key = extract_public_key(username, SERVER_CONFIG_FILE)
         if not public_key:
-            print(f"❌ Public key for user '{username}' not found in WireGuard configuration.")
+            print(f"❌ Klucz publiczny użytkownika '{username}' nie znaleziony w konfiguracji WireGuard.")
             return
 
-        # Remove user from WireGuard
+        # Usuń użytkownika z WireGuard
         subprocess.run(["sudo", "wg", "set", "wg0", "peer", public_key, "remove"], check=True)
-        print(f"🔐 User '{username}' removed from WireGuard.")
+        print(f"🔐 Użytkownik '{username}' usunięty z WireGuard.")
 
-        # Update WireGuard configuration
+        # Aktualizuj konfigurację WireGuard
         remove_peer_from_config(public_key, SERVER_CONFIG_FILE, username)
-        print(f"✅ WireGuard configuration updated.")
+        print(f"✅ Konfiguracja WireGuard zaktualizowana.")
 
-        # Synchronize WireGuard
+        # Zsynchronizuj WireGuard
         sync_command = f'wg syncconf "{SERVER_WG_NIC}" <(wg-quick strip "{SERVER_WG_NIC}")'
         subprocess.run(sync_command, shell=True, check=True, executable='/bin/bash')
-        print(f"WireGuard synchronized for interface {SERVER_WG_NIC}")
+        print(f"WireGuard zsynchronizowany dla interfejsu {SERVER_WG_NIC}")
 
-        print(f"✅ User '{username}' successfully deleted.")
+        print(f"✅ Użytkownik '{username}' pomyślnie usunięty.")
     except Exception as e:
-        print(f"⚠️ Error deleting user '{username}': {e}")
+        print(f"⚠️ Błąd usuwania użytkownika '{username}': {e}")
 
 def extract_public_key(username, config_path):
     """
-    Extracts a user's public key from the WireGuard configuration file.
+    Wyodrębnia klucz publiczny użytkownika z pliku konfiguracyjnego WireGuard.
 
     Args:
-        username (str): The username.
-        config_path (str): Path to the WireGuard configuration file.
+        username (str): Nazwa użytkownika.
+        config_path (str): Ścieżka do pliku konfiguracyjnego WireGuard.
 
     Returns:
-        str: The user's public key.
+        str: Klucz publiczny użytkownika.
     """
     try:
         with open(config_path, "r") as f:
@@ -171,17 +171,17 @@ def extract_public_key(username, config_path):
                 return line.split("=", 1)[1].strip()
         return None
     except Exception as e:
-        print(f"⚠️ Error finding public key: {e}")
+        print(f"⚠️ Błąd znajdowania klucza publicznego: {e}")
         return None
 
 def remove_peer_from_config(public_key, config_path, client_name):
     """
-    Removes the [Peer] section and associated comment from the WireGuard configuration file.
+    Usuwa sekcję [Peer] i powiązany komentarz z pliku konfiguracyjnego WireGuard.
 
     Args:
-        public_key (str): The user's public key.
-        config_path (str): Path to the WireGuard configuration file.
-        client_name (str): The client name.
+        public_key (str): Klucz publiczny użytkownika.
+        config_path (str): Ścieżka do pliku konfiguracyjnego WireGuard.
+        client_name (str): Nazwa klienta.
     """
     try:
         with open(config_path, "r") as f:
@@ -191,38 +191,38 @@ def remove_peer_from_config(public_key, config_path, client_name):
         skip_lines = 0
 
         for line in lines:
-            # If the client's comment is found
-            if line.strip() == f"### Client {client_name}":
-                skip_lines = 5  # Remove 5 lines starting from here
+            # Jeśli znaleziono komentarz klienta
+            if line.strip() == f"### Klient {client_name}":
+                skip_lines = 5  # Usuń 5 linii zaczynając od tej
                 continue
 
-            # Skip lines related to the removed block
+            # Pomiń linie związane z usuwanym blokiem
             if skip_lines > 0:
                 skip_lines -= 1
                 continue
 
-            # Keep other lines
+            # Zachowaj inne linie
             updated_lines.append(line)
 
-        # Write updated configuration
+        # Zapisz zaktualizowaną konfigurację
         with open(config_path, "w") as f:
             f.writelines(updated_lines)
     except Exception as e:
-        print(f"⚠️ Error updating configuration: {e}")
+        print(f"⚠️ Błąd aktualizacji konfiguracji: {e}")
 
 def manage_users_menu():
-    """User management menu."""
+    """Menu zarządzania użytkownikami."""
     while True:
-        print("\n========== User Management ==========")
-        print("1. 🌱 Create User")
-        print("2. 🔍 List All Users")
-        print("3. ❌ Delete User")
-        print("4. 📊 View User Traffic")
-        print("5. 🤝 View Last Handshakes")
-        print("0. Return to Main Menu")
-        print("=====================================")
+        print("\n========== Zarządzanie użytkownikami ==========")
+        print("1. 🌱 Utwórz użytkownika")
+        print("2. 🔍 Lista wszystkich użytkowników")
+        print("3. ❌ Usuń użytkownika")
+        print("4. 📊 Zobacz ruch użytkowników")
+        print("5. 🤝 Zobacz ostatnie handshake'i")
+        print("0. Powrót do menu głównego")
+        print("===============================================")
 
-        choice = input("Select an action: ").strip()
+        choice = input("Wybierz akcję: ").strip()
         if choice == "1":
             create_user()
         elif choice == "2":
@@ -236,4 +236,4 @@ def manage_users_menu():
         elif choice in {"0", "q"}:
             break
         else:
-            print("⚠️ Invalid selection. Please try again.")
+            print("⚠️ Nieprawidłowy wybór. Spróbuj ponownie.")
