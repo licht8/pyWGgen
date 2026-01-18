@@ -9,28 +9,28 @@ from gradio_admin.tabs.ollama_chat_tab import ollama_chat_tab
 from gradio_admin.tabs.ai_diagnostics_tab import ai_diagnostics_tab
 from gradio_admin.tabs.ai_report_tab import ai_report_tab
 
-# Creating the interface
-with gr.Blocks(title="pyWGgen - VPN Manager") as admin_interface:
+# Tworzenie interfejsu
+with gr.Blocks(title="pyWGgen - Menedżer VPN") as admin_interface:
     gr.Markdown("""
-    # 🛡️ pyWGgen - WireGuard VPN Manager
+    # 🛡️ pyWGgen - Menedżer VPN WireGuard
     
-    Управление VPN сервером с AI ассистентом
+    Zarządzanie serwerem VPN z asystentem AI
     """)
     
-    with gr.Tab(label="🌱 Create"):
+    with gr.Tab(label="🌱 Tworzenie"):
         create_user_tab()
     
-    with gr.Tab(label="🛠️ Manage"):
+    with gr.Tab(label="🛠️ Zarządzanie"):
         manage_user_tab()
     
-    with gr.Tab(label="🔍 Statistics"):
+    with gr.Tab(label="📊 Statystyki"):
         statistics_tab()
     
-    with gr.Tab(label="🚀 AI Diagnostics"):
+    with gr.Tab(label="🚀 Diagnostyka AI"):
         ai_diagnostics_tab()
     
-    with gr.Tab(label="💬 AI Chat"):
+    with gr.Tab(label="💬 Chat AI"):
         ollama_chat_tab()
     
-    with gr.Tab(label="📄 AI Report"):
+    with gr.Tab(label="📄 Raport AI"):
         ai_report_tab()
