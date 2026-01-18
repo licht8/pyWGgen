@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # main.py
-## Version: 1.0
-## Main script for creating WireGuard users
+## Wersja: 1.0
+## Główny skrypt do tworzenia użytkowników WireGuard
 ##
-## This script automatically generates configurations for new users,
-## including unique keys, IP address, and QR code. The script calculates the subnet
-## based on the server's IP address (SERVER_WG_IPV4) and restarts the WireGuard interface.
+## Ten skrypt automatycznie generuje konfiguracje dla nowych użytkowników,
+## włączając unikalne klucze, adres IP oraz kod QR. Skrypt oblicza podsieć
+## na podstawie adresu IP serwera (SERVER_WG_IPV4) i synchronizuje interfejs WireGuard.
 
 import sys
 import os
@@ -17,13 +17,13 @@ from modules.config import load_params
 from modules.keygen import generate_private_key, generate_public_key, generate_preshared_key
 from modules.directory_setup import setup_directories
 from modules.client_config import create_client_config
-from modules.main_registration_fields import create_user_record  # Import of the new function
+from modules.main_registration_fields import create_user_record  # Import nowej funkcji
 import subprocess
 import logging
 import qrcode
 import tempfile
 
-# Logger setup
+# Konfiguracja loggera
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s - %(levelname)-8s %(message)s",
@@ -53,31 +53,31 @@ logger = EmojiLoggerAdapter(logging.getLogger(__name__), {})
 
 def calculate_subnet(server_wg_ipv4, default_subnet="10.66.66.0/24"):
     """
-    Calculates the subnet based on the WireGuard server's IP address.
-    :param server_wg_ipv4: WireGuard server IP address.
-    :param default_subnet: Default subnet.
-    :return: Subnet in CIDR format (e.g., '10.66.66.0/24').
+    Oblicza podsieć na podstawie adresu IP serwera WireGuard.
+    :param server_wg_ipv4: Adres IP serwera WireGuard.
+    :param default_subnet: Domyślna podsieć.
+    :return: Podsieć w formacie CIDR (np. '10.66.66.0/24').
     """
     try:
         ip = ipaddress.ip_interface(f"{server_wg_ipv4}/24")
         subnet = str(ip.network)
-        logger.debug(f"Subnet calculated based on SERVER_WG_IPV4: {subnet}")
+        logger.debug(f"Podsieć obliczona na podstawie SERVER_WG_IPV4: {subnet}")
         return subnet
     except ValueError as e:
-        logger.warning(f"Error calculating subnet: {e}. Using default value: {default_subnet}")
+        logger.warning(f"Błąd obliczania podsieci: {e}. Używam wartości domyślnej: {default_subnet}")
         return default_subnet
 
 def generate_next_ip(config_file, subnet="10.66.66.0/24"):
     """
-    Generates the next available IP address in the subnet.
-    :param config_file: Path to the WireGuard configuration file.
-    :param subnet: Subnet to search for available IPs.
-    :return: Next available IP address.
+    Generuje następny dostępny adres IP w podsieci.
+    :param config_file: Ścieżka do pliku konfiguracyjnego WireGuard.
+    :param subnet: Podsieć do wyszukiwania wolnych IP.
+    :return: Następny dostępny adres IP.
     """
-    logger.debug(f"Searching for a free IP address in subnet {subnet}.")
+    logger.debug(f"Wyszukiwanie wolnego adresu IP w podsieci {subnet}.")
     existing_ips = []
     if os.path.exists(config_file):
-        logger.debug(f"Reading existing IP addresses from file {config_file}.")
+        logger.debug(f"Odczytywanie istniejących adresów IP z pliku {config_file}.")
         with open(config_file, "r") as f:
             for line in f:
                 if line.strip().startswith("AllowedIPs"):
@@ -87,18 +87,18 @@ def generate_next_ip(config_file, subnet="10.66.66.0/24"):
     for ip in network.hosts():
         ip_str = str(ip)
         if ip_str not in existing_ips and not ip_str.endswith(".0") and not ip_str.endswith(".1") and not ip_str.endswith(".255"):
-            logger.debug(f"Free IP address found: {ip_str}")
+            logger.debug(f"Znaleziono wolny adres IP: {ip_str}")
             return ip_str
-    logger.error("No available IP addresses in the specified subnet.")
-    raise ValueError("No available IP addresses in the specified subnet.")
+    logger.error("Brak dostępnych adresów IP w określonej podsieci.")
+    raise ValueError("Brak dostępnych adresów IP w określonej podsieci.")
 
 def generate_qr_code(data, output_path):
     """
-    Generates a QR code based on the configuration data.
-    :param data: WireGuard configuration text.
-    :param output_path: Path to save the QR code image.
+    Generuje kod QR na podstawie danych konfiguracyjnych.
+    :param data: Tekst konfiguracji WireGuard.
+    :param output_path: Ścieżka do zapisania obrazu kodu QR.
     """
-    logger.debug(f"Generating QR code for data with length {len(data)} characters.")
+    logger.debug(f"Generowanie kodu QR dla danych o długości {len(data)} znaków.")
     try:
         qr = qrcode.QRCode(
             version=1,
@@ -112,71 +112,71 @@ def generate_qr_code(data, output_path):
         img.save(output_path)
 
     except Exception as e:
-        logger.error(f"Error generating QR code: {e}")
+        logger.error(f"Błąd generowania kodu QR: {e}")
         raise
 
 def load_existing_users():
     """
-    Loads the list of existing users from the database.
+    Wczytuje listę istniejących użytkowników z bazy danych.
     """
     user_records_path = os.path.join("user", "data", "user_records.json")
-    logger.debug(f"Loading user database from {user_records_path}")
+    logger.debug(f"Wczytywanie bazy danych użytkowników z {user_records_path}")
     if os.path.exists(user_records_path):
         with open(user_records_path, "r", encoding="utf-8") as file:
             try:
                 user_data = json.load(file)
-                logger.info(f"Successfully loaded {len(user_data)} users.")
-                return {user.lower(): user_data[user] for user in user_data}  # Normalize names
+                logger.info(f"Pomyślnie wczytano {len(user_data)} użytkowników.")
+                return {user.lower(): user_data[user] for user in user_data}  # Normalizacja nazw
             except json.JSONDecodeError as e:
-                logger.warning(f"Error reading database: {e}. Returning an empty database.")
+                logger.warning(f"Błąd odczytu bazy danych: {e}. Zwracam pustą bazę.")
                 return {}
-    logger.warning(f"User database file {user_records_path} not found.")
+    logger.warning(f"Nie znaleziono pliku bazy danych użytkowników {user_records_path}.")
     return {}
 
 def is_user_in_server_config(nickname, config_file):
     """
-    Checks if the user exists in the server configuration.
+    Sprawdza czy użytkownik istnieje w konfiguracji serwera.
     """
     nickname_lower = nickname.lower()
-    logger.debug(f"Checking if user {nickname} exists in configuration {config_file}.")
+    logger.debug(f"Sprawdzanie czy użytkownik {nickname} istnieje w konfiguracji {config_file}.")
     try:
         with open(config_file, "r") as file:
             for line in file:
                 if nickname_lower in line.lower():
-                    logger.info(f"User {nickname} found in the server configuration.")
+                    logger.info(f"Użytkownik {nickname} znaleziony w konfiguracji serwera.")
                     return True
     except FileNotFoundError:
-        logger.warning(f"Configuration file {config_file} not found.")
+        logger.warning(f"Nie znaleziono pliku konfiguracyjnego {config_file}.")
     return False
 
 '''
 def restart_wireguard(interface="wg0"):
     """
-    Restarts WireGuard and displays its status.
+    Restartuje WireGuard i wyświetla jego status.
     """
     try:
-        logger.info(f"Restarting WireGuard interface: {interface}")
+        logger.info(f"Restartowanie interfejsu WireGuard: {interface}")
         subprocess.run(["sudo", "systemctl", "restart", f"wg-quick@{interface}"], check=True)
-        logger.info(f"{WG_EMOJI} WireGuard interface {interface} successfully restarted.")
+        logger.info(f"{WG_EMOJI} Interfejs WireGuard {interface} pomyślnie zrestartowany.")
 
-        # Retrieve WireGuard status
+        # Pobierz status WireGuard
         wg_status = subprocess.check_output(["sudo", "systemctl", "status", f"wg-quick@{interface}"]).decode()
         for line in wg_status.splitlines():
             if "Active:" in line:
-                logger.info(f"{WG_EMOJI} WireGuard status: {line.strip()}")
+                logger.info(f"{WG_EMOJI} Status WireGuard: {line.strip()}")
 
-        # Display firewall status
+        # Wyświetl status zapory
         firewall_status = subprocess.check_output(["sudo", "firewall-cmd", "--list-ports"]).decode()
         for line in firewall_status.splitlines():
-            logger.info(f"{FIREWALL_EMOJI} Firewall status: {line.strip()}")
+            logger.info(f"{FIREWALL_EMOJI} Status zapory: {line.strip()}")
 
     except subprocess.CalledProcessError as e:
-        logger.error(f"Error restarting WireGuard: {e}")
+        logger.error(f"Błąd restartowania WireGuard: {e}")
 '''
 
 def add_user_to_server_config(config_file, nickname, public_key, preshared_key, allowed_ips):
     with open(config_file, 'a') as file:
-        file.write(f"\n### Client {nickname}\n")
+        file.write(f"\n### Klient {nickname}\n")
         file.write(f"[Peer]\n")
         file.write(f"PublicKey = {public_key}\n")
         file.write(f"PresharedKey = {preshared_key}\n")
@@ -184,36 +184,36 @@ def add_user_to_server_config(config_file, nickname, public_key, preshared_key, 
 
 def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A"):
     """
-    Generates the user's configuration and QR code.
+    Generuje konfigurację użytkownika i kod QR.
     """
-    logger.info("+--------- Process 🌱 User Creation Activated ---------+")
+    logger.info("+--------- Proces 🌱 Tworzenie Użytkownika Uruchomione ---------+")
     try:
-        logger.info(f"{INFO_EMOJI} Starting configuration generation for user: {nickname}")
+        logger.info(f"{INFO_EMOJI} Rozpoczynanie generowania konfiguracji dla użytkownika: {nickname}")
         
-        # Check for SERVER_PUB_IP
+        # Sprawdź SERVER_PUB_IP
         server_public_key = params['SERVER_PUB_KEY']
         if not params.get('SERVER_PUB_IP'):
-            raise ValueError("SERVER_PUB_IP parameter is missing. Check the configuration file.")
+            raise ValueError("Brak parametru SERVER_PUB_IP. Sprawdź plik konfiguracyjny.")
         
         endpoint = f"{params['SERVER_PUB_IP']}:{params['SERVER_PORT']}"
         dns_servers = f"{params['CLIENT_DNS_1']},{params['CLIENT_DNS_2']}"
 
         private_key = generate_private_key()
-        logger.debug(f"{DEBUG_EMOJI} Private key successfully generated.")
+        logger.debug(f"{DEBUG_EMOJI} Klucz prywatny pomyślnie wygenerowany.")
         public_key = generate_public_key(private_key)
-        logger.debug(f"{DEBUG_EMOJI} Public key successfully generated.")
+        logger.debug(f"{DEBUG_EMOJI} Klucz publiczny pomyślnie wygenerowany.")
         preshared_key = generate_preshared_key()
-        logger.debug(f"{DEBUG_EMOJI} Preshared key successfully generated.")
+        logger.debug(f"{DEBUG_EMOJI} Klucz współdzielony pomyślnie wygenerowany.")
 
-        # Calculate subnet
+        # Oblicz podsieć
         subnet = calculate_subnet(params.get('SERVER_WG_IPV4', '10.66.66.1'))
-        logger.debug(f"{DEBUG_EMOJI} Subnet being used: {subnet}")
+        logger.debug(f"{DEBUG_EMOJI} Używana podsieć: {subnet}")
 
-        # Generate IP address
+        # Generuj adres IP
         new_ipv4 = generate_next_ip(config_file, subnet)
-        logger.info(f"{INFO_EMOJI} New user IP address: {new_ipv4}")
+        logger.info(f"{INFO_EMOJI} Nowy adres IP użytkownika: {new_ipv4}")
 
-        # Generate client configuration
+        # Generuj konfigurację klienta
         client_config = create_client_config(
             private_key=private_key,
             address=new_ipv4,
@@ -222,25 +222,25 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
             preshared_key=preshared_key,
             endpoint=endpoint
         )
-        logger.debug(f"{DEBUG_EMOJI} Client configuration successfully created.")
+        logger.debug(f"{DEBUG_EMOJI} Konfiguracja klienta pomyślnie utworzona.")
 
         config_path = os.path.join(settings.WG_CONFIG_DIR, f"{nickname}.conf")
         qr_path = os.path.join(settings.QR_CODE_DIR, f"{nickname}.png")
 
-        # Save configuration
+        # Zapisz konfigurację
         os.makedirs(settings.WG_CONFIG_DIR, exist_ok=True)
         with open(config_path, "w") as file:
             file.write(client_config)
-        logger.info(f"{INFO_EMOJI} User configuration saved to {config_path}")
+        logger.info(f"{INFO_EMOJI} Konfiguracja użytkownika zapisana do {config_path}")
 
-        # Generate QR code
+        # Generuj kod QR
         generate_qr_code(client_config, qr_path)
 
-        # Add user to server configuration
+        # Dodaj użytkownika do konfiguracji serwera
         add_user_to_server_config(config_file, nickname, public_key.decode('utf-8'), preshared_key.decode('utf-8'), new_ipv4)
-        logger.info(f"{INFO_EMOJI} User successfully added to the server configuration.")
+        logger.info(f"{INFO_EMOJI} Użytkownik pomyślnie dodany do konfiguracji serwera.")
 
-        # Add user record
+        # Dodaj rekord użytkownika
         user_record = create_user_record(
             username=nickname,
             address=new_ipv4,
@@ -250,25 +250,25 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
             email=email,
             telegram_id=telegram_id
         )
-        logger.debug(f"{DEBUG_EMOJI} User record created.")
+        logger.debug(f"{DEBUG_EMOJI} Rekord użytkownika utworzony.")
 
-        # Save to database
+        # Zapisz do bazy danych
         user_records_path = os.path.join("user", "data", "user_records.json")
         os.makedirs(os.path.dirname(user_records_path), exist_ok=True)
         with open(user_records_path, "r+", encoding="utf-8") as file:
             try:
                 user_data = json.load(file)
-                logger.debug(f"{DEBUG_EMOJI} Loaded existing user records.")
+                logger.debug(f"{DEBUG_EMOJI} Wczytano istniejące rekordy użytkowników.")
             except json.JSONDecodeError:
                 user_data = {}
-                logger.warning(f"{WARNING_EMOJI} Error reading user database, a new one will be created.")
+                logger.warning(f"{WARNING_EMOJI} Błąd odczytu bazy użytkowników, zostanie utworzona nowa.")
             user_data[nickname] = user_record
             file.seek(0)
             json.dump(user_data, file, indent=4)
             file.truncate()
-        logger.info(f"{INFO_EMOJI} User data for {nickname} successfully added to {user_records_path}")
+        logger.info(f"{INFO_EMOJI} Dane użytkownika {nickname} pomyślnie dodane do {user_records_path}")
 
-        # Sync WireGuard
+        # Synchronizuj WireGuard
         params_path = "/etc/wireguard/params"
         if os.path.exists(params_path):
             with open(params_path, "r") as file:
@@ -277,24 +277,24 @@ def generate_config(nickname, params, config_file, email="N/A", telegram_id="N/A
                         server_wg_nic = line.strip().split("=")[1].strip('"')
                         break
                 else:
-                    raise ValueError("SERVER_WG_NIC not found in /etc/wireguard/params.")
+                    raise ValueError("Nie znaleziono SERVER_WG_NIC w /etc/wireguard/params.")
         else:
-            raise FileNotFoundError(f"File {params_path} not found.")
+            raise FileNotFoundError(f"Nie znaleziono pliku {params_path}.")
 
         sync_command = f'wg syncconf "{server_wg_nic}" <(wg-quick strip "{server_wg_nic}")'
         subprocess.run(sync_command, shell=True, check=True, executable='/bin/bash')
-        logger.info(f"WireGuard synchronized for interface {server_wg_nic}")
+        logger.info(f"WireGuard zsynchronizowany dla interfejsu {server_wg_nic}")
 
-        logger.info("+--------- Process 🌱 User Creation Completed --------------+\n")
+        logger.info("+--------- Proces 🌱 Tworzenie Użytkownika Zakończone --------------+\n")
         return config_path, qr_path
     except Exception as e:
-        logger.error(f"Execution error: {e}")
-        logger.info("+--------- Process 🌱 User Creation Completed --------------+\n")
+        logger.error(f"Błąd wykonania: {e}")
+        logger.info("+--------- Proces 🌱 Tworzenie Użytkownika Zakończone --------------+\n")
         raise
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        logger.error("Not enough arguments. Usage: python3 main.py <nickname> [email] [telegram_id]")
+        logger.error("Za mało argumentów. Użycie: python3 main.py <nick> [email] [telegram_id]")
         sys.exit(1)
 
     nickname = sys.argv[1]
@@ -302,35 +302,35 @@ if __name__ == "__main__":
     telegram_id = sys.argv[3] if len(sys.argv) > 3 else "N/A"
     params_file = settings.PARAMS_FILE
 
-    logger.info("Starting the WireGuard user creation process.")
+    logger.info("Rozpoczynanie procesu tworzenia użytkownika WireGuard.")
     try:
-        logger.info("Initializing directories.")
+        logger.info("Inicjalizacja katalogów.")
         setup_directories()
 
-        logger.info(f"Loading parameters from file: {params_file}")
+        logger.info(f"Wczytywanie parametrów z pliku: {params_file}")
         params = load_params(params_file)
 
-        logger.info("Checking for existing user.")
+        logger.info("Sprawdzanie istniejącego użytkownika.")
         existing_users = load_existing_users()
         if nickname.lower() in existing_users:
-            logger.error(f"User with name '{nickname}' already exists in the database.")
+            logger.error(f"Użytkownik o nazwie '{nickname}' już istnieje w bazie danych.")
             sys.exit(1)
 
         if is_user_in_server_config(nickname, settings.SERVER_CONFIG_FILE):
-            logger.error(f"User with name '{nickname}' already exists in the server configuration.")
+            logger.error(f"Użytkownik o nazwie '{nickname}' już istnieje w konfiguracji serwera.")
             sys.exit(1)
 
-        logger.info("Generating user configuration.")
+        logger.info("Generowanie konfiguracji użytkownika.")
         config_file = settings.SERVER_CONFIG_FILE
         config_path, qr_path = generate_config(nickname, params, config_file, email, telegram_id)
 
-        logger.info(f"✅ User configuration saved to {config_path}")
-        logger.info(f"✅ User QR code successfully saved to {qr_path}")
+        logger.info(f"✅ Konfiguracja użytkownika zapisana do {config_path}")
+        logger.info(f"✅ Kod QR użytkownika pomyślnie zapisany do {qr_path}")
     except FileNotFoundError as e:
-        logger.error(f"File not found: {e}")
+        logger.error(f"Nie znaleziono pliku: {e}")
     except KeyError as e:
-        logger.error(f"Missing key in parameters: {e}")
+        logger.error(f"Brak klucza w parametrach: {e}")
     except ValueError as e:
-        logger.error(f"Parameter value error: {e}")
+        logger.error(f"Błąd wartości parametru: {e}")
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"Nieoczekiwany błąd: {e}")
