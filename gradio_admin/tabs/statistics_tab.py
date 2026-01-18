@@ -2,11 +2,17 @@
 # gradio_admin/tabs/statistics_tab.py
 # Zakładka Statystyki - pełna wersja z poprawkami
 
-import gradio as gr
-import pandas as pd
-from functions.table_helpers import update_table
-from functions.user_helpers import update_traffic_data, df_to_html
+import gradio as gr  # type: ignore
+import pandas as pd  # type: ignore
+from gradio_admin.functions.user_records import load_user_records
+from gradio_admin.functions.format_helpers import format_time
+from gradio_admin.functions.table_helpers import update_table
+from gradio_admin.functions.format_helpers import format_user_info
+from gradio_admin.functions.user_records import load_user_records
+from gradio_admin.functions.show_user_info import show_user_info
+from modules.traffic_updater import update_traffic_data
 from settings import USER_DB_PATH
+from settings import QR_CODE_DIR
 
 def get_initial_data():
     """Pobiera początkowe dane dla zakładki Statystyki."""
