@@ -39,7 +39,7 @@ def open_firewalld_port(port):
     # subprocess.run(["firewall-cmd", "--reload"])
 
 
-def close_firewall_port(port):
+def close_firewalld_port(port):
     """
     Zamyka port w firewalld.
 
