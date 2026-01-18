@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AI Report Generator - HTML отчёты с анализом."""
+"""Generator raportów AI - raporty HTML z analizą."""
 
 import json
 import os
@@ -15,14 +15,14 @@ from .utils import run_cmd
 
 
 def get_report_dir() -> Path:
-    """Получить директорию для отчётов."""
-    report_dir = Path(settings.AI_ASSISTANT_LOG_DIR) / "reports"
+    """Pobiera katalog dla raportów."""
+    report_dir = Path(settings.AI_ASSISTANT_LOG_DIR) / "raporty"
     report_dir.mkdir(parents=True, exist_ok=True)
     return report_dir
 
 
 def get_previous_logs(limit: int = 5) -> List[Dict[str, Any]]:
-    """Получить предыдущие логи диагностики."""
+    """Pobiera poprzednie logi diagnostyczne."""
     log_dir = Path(settings.AI_ASSISTANT_LOG_DIR)
     logs = []
     
@@ -37,93 +37,94 @@ def get_previous_logs(limit: int = 5) -> List[Dict[str, Any]]:
     
     return logs
 
+
 def compare_diagnostics(current: Dict[str, Any], previous: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Сравнение текущего состояния с предыдущими."""
+    """Porównuje aktualny stan z poprzednimi."""
     if not previous:
-        return {"changes": [], "message": "Нет предыдущих диагностик для сравнения"}
+        return {"zmiany": [], "wiadomosc": "Brak poprzednich diagnostyk do porównania"}
     
     prev = previous[0]
     changes = []
     
-    # Сравнение WireGuard
+    # Porównanie WireGuard
     if current.get("wg_active") != prev.get("wg_active"):
-        changes.append(f"WireGuard активных: {prev.get('wg_active')} → {current.get('wg_active')}")
+        changes.append(f"WireGuard aktywnych: {prev.get('wg_active')} → {current.get('wg_active')}")
     
-    # Сравнение активных peers
+    # Porównanie aktywnych peers
     if current.get("peers_active") != prev.get("peers_active"):
-        changes.append(f"Активных peers: {prev.get('peers_active', 0)} → {current.get('peers_active', 0)}")
+        changes.append(f"Aktywnych peers: {prev.get('peers_active', 0)} → {current.get('peers_active', 0)}")
     
-    # Сравнение настроенных peers
+    # Porównanie skonfigurowanych peers
     if current.get("peers_configured") != prev.get("peers_configured"):
-        changes.append(f"Настроенных peers: {prev.get('peers_configured', 0)} → {current.get('peers_configured', 0)}")
+        changes.append(f"Skonfigurowanych peers: {prev.get('peers_configured', 0)} → {current.get('peers_configured', 0)}")
     
-    # Сравнение пользовательских конфигов
+    # Porównanie konfiguracji użytkowników
     curr_user_peers = current.get("user_peer_files", {}).get("total", 0)
     prev_user_peers = prev.get("user_peer_files", {}).get("total", 0)
     if curr_user_peers != prev_user_peers:
-        changes.append(f"Пользовательских конфигов: {prev_user_peers} → {curr_user_peers}")
+        changes.append(f"Konfiguracji użytkowników: {prev_user_peers} → {curr_user_peers}")
     
-    # Сравнение NAT
+    # Porównanie NAT
     if current.get("nat", {}).get("ok") != prev.get("nat", {}).get("ok"):
         nat_old = "✅" if prev.get("nat", {}).get("ok") else "❌"
         nat_new = "✅" if current.get("nat", {}).get("ok") else "❌"
-        changes.append(f"NAT статус: {nat_old} → {nat_new}")
+        changes.append(f"Status NAT: {nat_old} → {nat_new}")
     
-    # Сравнение Firewall
+    # Porównanie Firewall
     if current.get("firewalld", {}).get("active") != prev.get("firewalld", {}).get("active"):
         changes.append(f"Firewalld: {prev.get('firewalld', {}).get('active')} → {current.get('firewalld', {}).get('active')}")
     
     return {
-        "changes": changes,
-        "previous_date": prev.get("timestamp", "unknown"),
-        "total_changes": len(changes)
+        "zmiany": changes,
+        "data_poprzednia": prev.get("timestamp", "nieznana"),
+        "laczna_liczba_zmian": len(changes)
     }
 
 
 def generate_html_report(data: Dict[str, Any], comparison: Dict[str, Any]) -> str:
-    """Генерация HTML отчёта."""
+    """Generuje raport HTML."""
     
     nat = data.get("nat", {})
     fw = data.get("firewalld", {})
     wg_status = data.get("wg_status", {})
     user_peers = data.get('user_peer_files', {})
     
-    # Статус иконки
+    # Ikonki statusu
     nat_icon = "🟢" if nat.get("ok") else "🔴"
     fw_icon = "🟢" if fw.get("active") in ["running", "active"] else "🔴"
     ollama_icon = "🟢" if data.get("health", {}).get("ollama_ok") else "🔴"
     
-    # Изменения
+    # Zmiany
     changes_html = ""
-    if comparison.get("changes"):
-        changes_html = "<h2>📊 Изменения с предыдущей диагностики</h2><ul>"
-        for change in comparison["changes"]:
+    if comparison.get("zmiany"):
+        changes_html = "<h2>📊 Zmiany od poprzedniej diagnostyki</h2><ul>"
+        for change in comparison["zmiany"]:
             changes_html += f"<li>{change}</li>"
-        changes_html += f"</ul><p><em>Предыдущая диагностика: {comparison.get('previous_date')}</em></p>"
+        changes_html += f"</ul><p><em>Poprzednia diagnostyka: {comparison.get('data_poprzednia')}</em></p>"
     else:
-        changes_html = "<p><em>Нет изменений или первая диагностика</em></p>"
+        changes_html = "<p><em>Brak zmian lub pierwsza diagnostyka</em></p>"
     
-    # WireGuard интерфейсы
+    # Interfejsy WireGuard
     wg_html = ""
     for iface, info in wg_status.items():
-        status = "🟢 Активен" if info.get("service_active") and info.get("link_up") else "🔴 Неактивен"
+        status = "🟢 Aktywny" if info.get("service_active") and info.get("link_up") else "🔴 Nieaktywny"
         peers_count = info.get('peers_active', 0)
-        wg_html += f"<li><strong>{iface}</strong>: {status} | Активных peers: {peers_count} | Порт: {info.get('listen_port', 'N/A')}</li>"
+        wg_html += f"<li><strong>{iface}</strong>: {status} | Aktywnych peers: {peers_count} | Port: {info.get('listen_port', 'N/A')}</li>"
     
-    # User Peers секция
+    # Sekcja User Peers
     user_peers_html = ""
     
     if user_peers.get('peers'):
-        user_peers_html = "<h2>👤 Пользовательские конфиги</h2>"
-        user_peers_html += f"<p>Всего файлов: <strong>{user_peers.get('total', 0)}</strong> в <code>{user_peers.get('directory')}</code></p>"
-        user_peers_html += "<table><tr><th>Файл</th><th>PublicKey</th><th>AllowedIPs</th><th>Размер</th></tr>"
+        user_peers_html = "<h2>👤 Konfiguracje użytkowników</h2>"
+        user_peers_html += f"<p>Łącznie plików: <strong>{user_peers.get('total', 0)}</strong> w <code>{user_peers.get('directory')}</code></p>"
+        user_peers_html += "<table><tr><th>Plik</th><th>PublicKey</th><th>AllowedIPs</th><th>Rozmiar</th></tr>"
         
         for peer in user_peers['peers']:
             if peer.get('error'):
                 user_peers_html += f"""
                 <tr>
                     <td><code>{peer.get('filename')}</code></td>
-                    <td colspan="3">❌ Ошибка: {peer.get('error')}</td>
+                    <td colspan="3">❌ Błąd: {peer.get('error')}</td>
                 </tr>
                 """
             else:
@@ -133,21 +134,21 @@ def generate_html_report(data: Dict[str, Any], comparison: Dict[str, Any]) -> st
                     <td><code>{peer.get('filename')}</code></td>
                     <td><code>{pk_short}</code></td>
                     <td>{peer.get('allowed_ips', 'N/A')}</td>
-                    <td>{peer.get('size', 0)} байт</td>
+                    <td>{peer.get('size', 0)} bajtów</td>
                 </tr>
                 """
         
         user_peers_html += "</table>"
     else:
-        error_msg = user_peers.get('error', 'Конфиги не найдены')
-        user_peers_html = f"<h2>👤 Пользовательские конфиги</h2><p>❌ {error_msg}</p>"
+        error_msg = user_peers.get('error', 'Nie znaleziono konfiguracji')
+        user_peers_html = f"<h2>👤 Konfiguracje użytkowników</h2><p>❌ {error_msg}</p>"
     
-    # Детали активных peers
+    # Szczegóły aktywnych peers
     active_peers_html = ""
     for iface, info in wg_status.items():
         peers = info.get('peers', [])
         if peers:
-            active_peers_html += f"<h3>Интерфейс: {iface}</h3>"
+            active_peers_html += f"<h3>Interfejs: {iface}</h3>"
             active_peers_html += "<table><tr><th>PublicKey</th><th>Endpoint</th><th>AllowedIPs</th><th>Handshake</th><th>RX/TX</th></tr>"
             
             for peer in peers:
@@ -156,15 +157,15 @@ def generate_html_report(data: Dict[str, Any], comparison: Dict[str, Any]) -> st
                 allowed = peer.get('allowed_ips', 'N/A')
                 handshake = peer.get('latest_handshake', 0)
                 
-                # Форматирование времени handshake
+                # Formatowanie czasu handshake
                 if handshake > 0:
                     from datetime import datetime, timedelta
                     hs_time = datetime.now() - timedelta(seconds=handshake)
-                    handshake_str = f"{handshake}s назад"
+                    handshake_str = f"{handshake}s temu"
                 else:
-                    handshake_str = "Нет"
+                    handshake_str = "Brak"
                 
-                # Форматирование трафика
+                # Formatowanie ruchu
                 rx_mb = peer.get('rx_bytes', 0) / (1024 * 1024)
                 tx_mb = peer.get('tx_bytes', 0) / (1024 * 1024)
                 traffic = f"↓{rx_mb:.2f} MB / ↑{tx_mb:.2f} MB"
@@ -182,14 +183,14 @@ def generate_html_report(data: Dict[str, Any], comparison: Dict[str, Any]) -> st
             active_peers_html += "</table>"
     
     if not active_peers_html:
-        active_peers_html = "<p>Нет активных подключений</p>"
+        active_peers_html = "<p>Brak aktywnych połączeń</p>"
     
     html = f"""<!DOCTYPE html>
-<html lang="ru">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VPN AI Diagnostics Report</title>
+    <title>Raport diagnostyki VPN AI</title>
     <style>
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -289,54 +290,54 @@ def generate_html_report(data: Dict[str, Any], comparison: Dict[str, Any]) -> st
 </head>
 <body>
     <div class="container">
-        <button class="print-btn" onclick="window.print()">🖨️ Печать / Сохранить как PDF</button>
+        <button class="print-btn" onclick="window.print()">🖨️ Drukuj / Zapisz jako PDF</button>
         
-        <h1>🚀 VPN AI Diagnostics Report</h1>
+        <h1>🚀 Raport diagnostyki VPN AI</h1>
         
-        <p><strong>Сервер:</strong> {data.get('hostname')}<br>
-        <strong>Дата:</strong> {data.get('timestamp')}<br>
-        <strong>Uptime:</strong> {data.get('uptime')}</p>
+        <p><strong>Serwer:</strong> {data.get('hostname')}<br>
+        <strong>Data:</strong> {data.get('timestamp')}<br>
+        <strong>Czas pracy:</strong> {data.get('uptime')}</p>
         
-        <h2>📡 Общий статус</h2>
+        <h2>📡 Ogólny status</h2>
         <div class="status-box {'status-ok' if data.get('wg_active') > 0 else 'status-error'}">
-            WireGuard: {data.get('wg_active')}/{data.get('wg_total')} активны
+            WireGuard: {data.get('wg_active')}/{data.get('wg_total')} aktywnych
         </div>
         <div class="status-box {'status-ok' if nat.get('ok') else 'status-error'}">
-            {nat_icon} NAT: {'OK' if nat.get('ok') else 'Проблема'}
+            {nat_icon} NAT: {'OK' if nat.get('ok') else 'Problem'}
         </div>
         <div class="status-box {'status-ok' if fw.get('active') == 'running' else 'status-error'}">
             {fw_icon} Firewalld: {fw.get('active')}
         </div>
         <div class="status-box {'status-ok' if data.get('health', {}).get('ollama_ok') else 'status-error'}">
-            {ollama_icon} Ollama AI: {'Доступен' if data.get('health', {}).get('ollama_ok') else 'Недоступен'}
+            {ollama_icon} Ollama AI: {'Dostępny' if data.get('health', {}).get('ollama_ok') else 'Niedostępny'}
         </div>
         
         {changes_html}
         
-        <h2>🔧 WireGuard интерфейсы</h2>
-        <ul>{wg_html if wg_html else '<li>Нет активных интерфейсов</li>'}</ul>
+        <h2>🔧 Interfejsy WireGuard</h2>
+        <ul>{wg_html if wg_html else '<li>Brak aktywnych interfejsów</li>'}</ul>
         
-        <h2>👥 Статистика Peers</h2>
+        <h2>👥 Statystyka Peers</h2>
         <table>
             <tr>
-                <th>Параметр</th>
-                <th>Значение</th>
+                <th>Parametr</th>
+                <th>Wartość</th>
             </tr>
             <tr>
-                <td>Активных peers (подключены сейчас)</td>
+                <td>Aktywnych peers (połączonych teraz)</td>
                 <td><strong>{data.get('peers_active', 0)}</strong></td>
             </tr>
             <tr>
-                <td>Настроено peers (в /etc/wireguard/*.conf)</td>
+                <td>Skonfigurowanych peers (w /etc/wireguard/*.conf)</td>
                 <td><strong>{data.get('peers_configured', 0)}</strong></td>
             </tr>
             <tr>
-                <td>Пользовательских конфигов (user/configs/)</td>
+                <td>Konfiguracji użytkowników (user/configs/)</td>
                 <td><strong>{user_peers.get('total', 0)}</strong></td>
             </tr>
         </table>
         
-        <h2>🔗 Активные подключения</h2>
+        <h2>🔗 Aktywne połączenia</h2>
         {active_peers_html}
         
         {user_peers_html}
@@ -344,45 +345,45 @@ def generate_html_report(data: Dict[str, Any], comparison: Dict[str, Any]) -> st
         <h2>🔥 Firewall & NAT</h2>
         <table>
             <tr>
-                <th>Параметр</th>
-                <th>Значение</th>
+                <th>Parametr</th>
+                <th>Wartość</th>
             </tr>
             <tr>
-                <td>Firewalld статус</td>
+                <td>Status Firewalld</td>
                 <td>{fw.get('active')}</td>
             </tr>
             <tr>
-                <td>WG порт открыт</td>
-                <td>{'✅ Да' if fw.get('wg_port_open') else '❌ Нет'} (порт: {fw.get('wg_port', 'N/A')})</td>
+                <td>Port WG otwarty</td>
+                <td>{'✅ Tak' if fw.get('wg_port_open') else '❌ Nie'} (port: {fw.get('wg_port', 'N/A')})</td>
             </tr>
             <tr>
                 <td>IP Forwarding</td>
-                <td>{'✅ Включён' if nat.get('ip_forward') else '❌ Выключен'}</td>
+                <td>{'✅ Włączony' if nat.get('ip_forward') else '❌ Wyłączony'}</td>
             </tr>
             <tr>
                 <td>NAT Masquerade</td>
-                <td>{'✅ Настроен' if nat.get('ok') else '❌ Не настроен'}</td>
+                <td>{'✅ Skonfigurowany' if nat.get('ok') else '❌ Nieskonfigurowany'}</td>
             </tr>
             <tr>
-                <td>NAT детали</td>
+                <td>Szczegóły NAT</td>
                 <td><code>{nat.get('reason', '')}</code></td>
             </tr>
         </table>
         
-        <h2>📊 Конфигурационные файлы</h2>
-        <p>Всего конфигов WireGuard: <strong>{len(data.get('wg_confs', []))}</strong></p>
+        <h2>📊 Pliki konfiguracyjne</h2>
+        <p>Łącznie konfiguracji WireGuard: <strong>{len(data.get('wg_confs', []))}</strong></p>
         <ul>
             {''.join([f"<li><code>{conf}</code></li>" for conf in data.get('wg_confs', [])])}
         </ul>
         
         <div class="footer">
-            <p>Отчёт сгенерирован AI Assistant VPN | pyWGgen v2.4</p>
-            <p>Полные данные диагностики сохранены в JSON логе</p>
+            <p>Raport wygenerowany przez Asystenta AI VPN | pyWGgen v2.4</p>
+            <p>Pełne dane diagnostyczne zapisane w logu JSON</p>
         </div>
     </div>
     
     <script>
-        // Автоматически открыть диалог печати (опционально)
+        // Automatycznie otworzyć okno drukowania (opcjonalnie)
         // window.onload = function() {{ window.print(); }}
     </script>
 </body>
@@ -392,17 +393,17 @@ def generate_html_report(data: Dict[str, Any], comparison: Dict[str, Any]) -> st
 
 
 def generate_report(data: Dict[str, Any]) -> str:
-    """Главная функция генерации отчёта."""
+    """Główna funkcja generowania raportu."""
     report_dir = get_report_dir()
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    # Получить предыдущие диагностики
+    # Pobierz poprzednie diagnostyki
     previous_logs = get_previous_logs(limit=5)
     comparison = compare_diagnostics(data, previous_logs)
     
-    # Генерация HTML
+    # Generowanie HTML
     html_content = generate_html_report(data, comparison)
-    html_path = report_dir / f"report_{ts}.html"
+    html_path = report_dir / f"raport_{ts}.html"
     
     with open(html_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
@@ -411,18 +412,18 @@ def generate_report(data: Dict[str, Any]) -> str:
 
 
 def show_report_menu(data: Dict[str, Any]):
-    """Интерактивное меню генерации отчёта."""
-    print("\n📄 AI REPORT GENERATOR")
+    """Interaktywne menu generowania raportu."""
+    print("\n📄 GENERATOR RAPORTÓW AI")
     print("=" * 72)
-    print("Генерация HTML отчёта...")
+    print("Generowanie raportu HTML...")
     
     html_path = generate_report(data)
     
-    print("\n✅ Отчёт сгенерирован!")
+    print("\n✅ Raport wygenerowany!")
     print("=" * 72)
     print(f"📄 HTML: {html_path}")
-    print(f"\n💡 Открой в браузере:")
+    print(f"\n💡 Otwórz w przeglądarce:")
     print(f"   file://{html_path}")
-    print(f"\n🖨️  Для сохранения в PDF:")
-    print(f"   Открой HTML → Ctrl+P → Сохранить как PDF")
-    print(f"\n💾 Все отчёты: {get_report_dir()}")
+    print(f"\n🖨️  Aby zapisać jako PDF:")
+    print(f"   Otwórz HTML → Ctrl+P → Zapisz jako PDF")
+    print(f"\n💾 Wszystkie raporty: {get_report_dir()}")
