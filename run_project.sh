@@ -1,176 +1,176 @@
 #!/bin/bash
 # run_project.sh
-## Installation and startup script for the pyWGgen project
+## Skrypt instalacyjny i uruchomieniowy projektu pyWGgen
 
-# Repository and directory names
+# Nazwy repozytorium i katalogów
 GITHUB_REPO="https://github.com/licht8/pyWGgen.git"
 PROJECT_DIR="pyWGgen"
-VENV_DIR="venv" # Ensure the path is relative to create it within $PROJECT_DIR
+VENV_DIR="venv" # Upewnij się, że ścieżka jest względna aby utworzyć ją w $PROJECT_DIR
 # WIREGUARD_INSTALL_SCRIPT="wireguard-install.sh"
 WIREGUARD_BINARY="/usr/bin/wg"
 
-# Check if debug mode is enabled
+# Sprawdź czy włączony jest tryb debugowania
 DEBUG=false
 if [[ $1 == "--debug" ]]; then
     DEBUG=true
 fi
 
-# Output colors
+# Kolory wyjścia
 RESET='\033[0m'
 RED='\033[1;31m'
 GREEN='\033[1;32m'
 BOLD='\033[1m'
 UNDERLINE='\033[4m'
 
-echo -e "\n=== Installing the pyWGgen Project ===\n"
+echo -e "\n=== Instalacja projektu pyWGgen ===\n"
 
-# Function to parse the Gradio port from settings.py
+# Funkcja do parsowania portu Gradio z settings.py
 get_gradio_port() {
     local file_path="pyWGgen/settings.py"
     local port
 
-    # Extract GRADIO_PORT value
+    # Wyodrębnij wartość GRADIO_PORT
     port=$(grep -oP 'GRADIO_PORT\s*=\s*\K\d+' "$file_path")
 
-    # Check if the port was found
+    # Sprawdź czy port został znaleziony
     if [[ -n "$port" ]]; then
         echo "$port"
     else
-        echo "Port not found."
+        echo "Port nie został znaleziony."
     fi
 }
 
-# Call the function
+# Wywołaj funkcję
 GRADIO_PORT=$(get_gradio_port)
 
-# Ensure the script is run with superuser privileges
+# Upewnij się że skrypt jest uruchamiany z uprawnieniami superużytkownika
 if [ "$EUID" -ne 0 ]; then
-    echo -e "${RED} ❌ Please run the script with superuser privileges (sudo).${RESET}"
-    echo "For example: sudo $0"
+    echo -e "${RED} ❌ Uruchom skrypt z uprawnieniami superużytkownika (sudo).${RESET}"
+    echo "Na przykład: sudo $0"
     exit 1
 fi
 
-# Check if Git is installed
+# Sprawdź czy Git jest zainstalowany
 if ! command -v git &>/dev/null; then
-  echo -e "${RED} ❌ Git is not installed. Please install it and try again.${RESET}"
+  echo -e "${RED} ❌ Git nie jest zainstalowany. Zainstaluj go i spróbuj ponownie.${RESET}"
   exit 1
 fi
 
-# Check and install Node.js if necessary
+# Sprawdź i zainstaluj Node.js jeśli potrzeba
 if ! command -v node &>/dev/null; then
-  echo " 🔄 Node.js is not installed. Installing..."
-  curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - &>/dev/null || { echo -e "${RED} ❌ Error adding the Node.js repository.${RESET}"; exit 1; }
-  sudo dnf install -y nodejs &>/dev/null || { echo -e "${RED} ❌ Error installing Node.js.${RESET}"; exit 1; }
-  echo -e "\n ✅ Node.js successfully installed."
+  echo " 🔄 Node.js nie jest zainstalowany. Instalowanie..."
+  curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - &>/dev/null || { echo -e "${RED} ❌ Błąd dodawania repozytorium Node.js.${RESET}"; exit 1; }
+  sudo dnf install -y nodejs &>/dev/null || { echo -e "${RED} ❌ Błąd instalowania Node.js.${RESET}"; exit 1; }
+  echo -e "\n ✅ Node.js pomyślnie zainstalowany."
 else
-  echo " ✅ Node.js is already installed. Version: $(node --version)"
+  echo " ✅ Node.js jest już zainstalowany. Wersja: $(node --version)"
 fi
 
-# Restore Python 3.11 priority if it was altered
+# Przywróć priorytet Python 3.11 jeśli był zmieniony
 PYTHON_PATH="/usr/bin/python3.11"
 if [ -f "$PYTHON_PATH" ]; then
-  sudo alternatives --set python3 $PYTHON_PATH || { echo -e "${RED} ❌ Error setting Python 3.11.${RESET}"; exit 1; }
-  echo " ✅ Python 3.11 set as the default version."
+  sudo alternatives --set python3 $PYTHON_PATH || { echo -e "${RED} ❌ Błąd ustawiania Python 3.11.${RESET}"; exit 1; }
+  echo " ✅ Python 3.11 ustawiony jako domyślna wersja."
 else
-  echo -e "${RED} ❌ Python 3.11 not found. Please install it manually.${RESET}"
+  echo -e "${RED} ❌ Python 3.11 nie znaleziony. Zainstaluj ręcznie.${RESET}"
   exit 1
 fi
 
-# Check for the bc utility and install it if not found
+# Sprawdź narzędzie bc i zainstaluj jeśli brak
 install_bc_if_not_found() {
     if ! command -v bc &>/dev/null; then
-        echo " 🔄 'bc' utility not found. Installing..."
-        sudo dnf install -y bc &>/dev/null || { echo -e "${RED} ❌ Error installing 'bc'.${RESET}"; exit 1; }
-        echo " ✅ 'bc' utility successfully installed."
+        echo " 🔄 Narzędzie 'bc' nie znalezione. Instalowanie..."
+        sudo dnf install -y bc &>/dev/null || { echo -e "${RED} ❌ Błąd instalowania 'bc'.${RESET}"; exit 1; }
+        echo " ✅ Narzędzie 'bc' pomyślnie zainstalowane."
     else
-        echo " ✅ 'bc' utility is already installed."
+        echo " ✅ Narzędzie 'bc' jest już zainstalowane."
     fi
 }
 
 install_bc_if_not_found
 
-# Check Python version
+# Sprawdź wersję Pythona
 PYTHON_MAJOR=$(python3 -c 'import sys; print(sys.version_info.major)')
 PYTHON_MINOR=$(python3 -c 'import sys; print(sys.version_info.minor)')
 
 if (( PYTHON_MAJOR < 3 || (PYTHON_MAJOR == 3 && PYTHON_MINOR < 8) )); then
-  echo -e "${RED} ❌ Python 3.8 or higher is required. Please install the appropriate version.${RESET}"
+  echo -e "${RED} ❌ Wymagany jest Python 3.8 lub wyższy. Zainstaluj odpowiednią wersję.${RESET}"
   exit 1
 else
-  echo " ✅ Python version $PYTHON_MAJOR.$PYTHON_MINOR detected."
+  echo " ✅ Wykryto Python wersja $PYTHON_MAJOR.$PYTHON_MINOR."
 fi
 
-# Clone or update the repository
+# Sklonuj lub zaktualizuj repozytorium
 if [ ! -d "$PROJECT_DIR" ]; then
-  echo " 🔄 Cloning the repository..."
-  git clone "$GITHUB_REPO" || { echo -e "${RED} ❌ Error cloning the repository.${RESET}"; exit 1; }
+  echo " 🔄 Klonowanie repozytorium..."
+  git clone "$GITHUB_REPO" || { echo -e "${RED} ❌ Błąd klonowania repozytorium.${RESET}"; exit 1; }
   FIRST_INSTALL=true
 else
-  echo " 🔄 Repository already exists. Updating..."
+  echo " 🔄 Repo już istnieje. Aktualizacja..."
   echo "=========================================="
-  git -C "$PROJECT_DIR" pull || { echo -e "${RED} ❌ Error updating the repository.${RESET}"; exit 1; }
+  git -C "$PROJECT_DIR" pull || { echo -e "${RED} ❌ Błąd aktualizacji repozytorium.${RESET}"; exit 1; }
   FIRST_INSTALL=false
 fi
 
-# Navigate to the project directory
+# Przejdź do katalogu projektu
 cd "$PROJECT_DIR" || exit
 
-# Create and activate a virtual environment
+# Utwórz i aktywuj środowisko wirtualne
 if [ ! -d "$VENV_DIR" ]; then
-  echo " 🔧 Creating a virtual environment..."
-  python3 -m venv "$VENV_DIR" || { echo -e "${RED} ❌ Error creating the virtual environment.${RESET}"; exit 1; }
+  echo " 🔧 Tworzenie środowiska wirtualnego..."
+  python3 -m venv "$VENV_DIR" || { echo -e "${RED} ❌ Błąd tworzenia środowiska wirtualnego.${RESET}"; exit 1; }
 fi
 
-# Activate the virtual environment
+# Aktywuj środowisko wirtualne
 echo "=========================================="
-echo -e " 🔄 Activating the virtual environment..."
-source "$VENV_DIR/bin/activate" || { echo -e "${RED} ❌ Failed to activate the virtual environment.${RESET}"; exit 1; }
+echo -e " 🔄 Aktywowanie środowiska wirtualnego..."
+source "$VENV_DIR/bin/activate" || { echo -e "${RED} ❌ Nie udało się aktywować środowiska wirtualnego.${RESET}"; exit 1; }
 
-# Install dependencies
-echo " 📦 Installing dependencies..."
+# Zainstaluj zależności
+echo " 📦 Instalowanie zależności..."
 if [ "$FIRST_INSTALL" = true ] || [ "$DEBUG" = true ]; then
   pip install --upgrade pip
-  pip install -r "requirements.txt" || { echo -e "${RED} ❌ Error installing dependencies.${RESET}"; exit 1; }
+  pip install -r "requirements.txt" || { echo -e "${RED} ❌ Błąd instalowania zależności.${RESET}"; exit 1; }
 else
   pip install --upgrade pip &>/dev/null
   pip install -r "requirements.txt" &>/dev/null
-  echo " ✅ All dependencies are already installed."
+  echo " ✅ Wszystkie zależności są już zainstalowane."
 fi
 
-# Check if menu.py exists
+# Sprawdź czy istnieje menu.py
 if [ ! -f "menu.py" ]; then
-  echo -e "${RED} ❌ menu.py file not found. Ensure it is located in the $PROJECT_DIR folder.${RESET}"
+  echo -e "${RED} ❌ Plik menu.py nie znaleziony. Upewnij się że znajduje się w folderze $PROJECT_DIR.${RESET}"
   exit 1
 fi
 
-# System information before launching the menu
-echo -e "\n=== System Information ==="
-echo -e "\n 🖥️  OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
-echo -e " 🧰 Kernel: $(uname -r)"
+# Informacje systemowe przed uruchomieniem menu
+echo -e "\n=== Informacje systemowe ==="
+echo -e "\n 🖥️  System: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
+echo -e " 🧰 Jądro: $(uname -r)"
 EXTERNAL_IP=$(curl -s ifconfig.me)
-echo -e " 🌍 External IP Address: ${EXTERNAL_IP}"
+echo -e " 🌍 Zewnętrzny adres IP: ${EXTERNAL_IP}"
 FIREWALL_PORTS=$(sudo firewall-cmd --list-ports)
 if [ -z "$FIREWALL_PORTS" ]; then
-  echo -e " 🔓 Open ports in firewalld: None. Check the settings."
+  echo -e " 🔓 Otwarte porty w firewalld: Brak. Sprawdź ustawienia."
 else
-  echo -e " 🔓 Open ports in firewalld: ${FIREWALL_PORTS}"
+  echo -e " 🔓 Otwarte porty w firewalld: ${FIREWALL_PORTS}"
 fi
 
 if ! systemctl is-active --quiet wg-quick@wg0; then
-  echo -e " 🛡️  WireGuard status: inactive. Install and configure WireGuard for proper functionality."
+  echo -e " 🛡️  Status WireGuard: nieaktywny. Zainstaluj i skonfiguruj WireGuard dla pełnej funkcjonalności."
 else
-  echo -e " 🛡️  WireGuard status: active"
+  echo -e " 🛡️  Status WireGuard: aktywny"
 fi
 
-echo -e " ⚙️  WireGuard configuration file: /etc/wireguard/wg0.conf"
-echo -e " 🌐 Gradio admin panel: http://${EXTERNAL_IP}:${GRADIO_PORT}"
-echo -e " 📂 Repository: https://github.com/licht8/pyWGgen"
+echo -e " ⚙️  Plik konfiguracyjny WireGuard: /etc/wireguard/wg0.conf"
+echo -e " 🌐 Panel administracyjny Gradio: http://${EXTERNAL_IP}:${GRADIO_PORT}"
+echo -e " 📂 Repozytorium: https://github.com/licht8/pyWGgen"
 echo -e "\n=========================================="
 
-# Display a success message
-echo -e "\n ✅ Installation complete. The project is ready to use."
+# Wyświetl komunikat o powodzeniu
+echo -e "\n ✅ Instalacja zakończona. Projekt gotowy do użycia."
 
-# Launch the menu
-echo -e " 🔄 Launching the menu...\n"
+# Uruchom menu
+echo -e " 🔄 Uruchamianie menu...\n"
 sleep 1 && clear
-python3 menu.py || { echo -e "${RED} ❌ Error launching the menu.${RESET}"; exit 1; }
+python3 menu.py || { echo -e "${RED} ❌ Błąd uruchamiania menu.${RESET}"; exit 1; }
