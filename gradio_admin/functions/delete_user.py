@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # delete_user.py
-# Script for deleting users in the pyWGgen project
+# Skrypt do usuwania użytkowników w projekcie pyWGgen
 
 import os
 import subprocess
@@ -8,97 +8,97 @@ from datetime import datetime
 from modules.utils import read_json, write_json, get_wireguard_config_path
 from settings import WG_CONFIG_DIR, QR_CODE_DIR, SERVER_WG_NIC
 
-# Logging function (similar to log_debug)
+# Funkcja logowania (podobna do log_debug)
 def log_debug(message):
     """
-    Simple function to output messages to the console with timestamp in milliseconds.
-    :param message: Message to output.
+    Prosta funkcja do wyświetlania komunikatów na konsoli z timestampem w milisekundach.
+    :param message: Wiadomość do wyświetlenia.
     """
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]  # Keep milliseconds
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]  # Zachowaj milisekundy
     print(f"{timestamp} - DEBUG    ℹ️  {message}")
 
 def delete_user(username):
     """
-    Deletes a user from the WireGuard configuration and associated files.
-    :param username: The username to delete.
-    :return: Message about the result of the operation.
+    Usuwa użytkownika z konfiguracji WireGuard i powiązanych plików.
+    :param username: Nazwa użytkownika do usunięcia.
+    :return: Komunikat o wyniku operacji.
     """
-    log_debug("---------- 🔥 User deletion process activated ----------")
+    log_debug("---------- 🔥 Proces usuwania użytkownika uruchomiony ----------")
 
     base_dir = os.getcwd()
     user_records_path = os.path.join(base_dir, "user", "data", "user_records.json")
     wg_config_path = get_wireguard_config_path()
 
-    log_debug(f"➡️ Starting deletion of user: '{username}'.")
+    log_debug(f"➡️ Rozpoczynam usuwanie użytkownika: '{username}'.")
 
     if not os.path.exists(user_records_path):
-        log_debug(f"❌ User data file not found: {user_records_path}")
-        log_debug("---------- 🔥 User deletion process finished ---------------\n")
-        return "❌ Error: User data file is missing."
+        log_debug(f"❌ Plik danych użytkowników nie znaleziony: {user_records_path}")
+        log_debug("---------- 🔥 Proces usuwania użytkownika zakończony ---------------\n")
+        return "❌ Błąd: Brak pliku danych użytkowników."
 
     try:
-        # Load user data
+        # Wczytaj dane użytkowników
         user_data = read_json(user_records_path)
-        log_debug(f"📂 User data successfully loaded.")
+        log_debug(f"📂 Dane użytkowników pomyślnie wczytane.")
 
         if username not in user_data:
-            log_debug(f"❌ User '{username}' not found in data.")
-            log_debug("---------- 🔥 User deletion process finished ---------------\n")
-            return f"❌ User '{username}' does not exist."
+            log_debug(f"❌ Użytkownik '{username}' nie znaleziony w danych.")
+            log_debug("---------- 🔥 Proces usuwania użytkownika zakończony ---------------\n")
+            return f"❌ Użytkownik '{username}' nie istnieje."
 
-        # Remove user record from user_records.json
+        # Usuń rekord użytkownika z user_records.json
         user_info = user_data.pop(username)
         user_info["removed_at"] = datetime.now().isoformat()
         write_json(user_records_path, user_data)
-        log_debug(f"📝 User record '{username}' removed from data.")
+        log_debug(f"📝 Rekord użytkownika '{username}' usunięty z danych.")
 
-        # Delete user's configuration file
+        # Usuń plik konfiguracyjny użytkownika
         wg_config_file = os.path.join(WG_CONFIG_DIR, f"{username}.conf")
         if os.path.exists(wg_config_file):
             os.remove(wg_config_file)
-            log_debug(f"🗑️ User's configuration file '{wg_config_file}' deleted.")
+            log_debug(f"🗑️ Plik konfiguracji użytkownika '{wg_config_file}' usunięty.")
 
-        # Delete user's QR code
+        # Usuń kod QR użytkownika
         qr_code_file = os.path.join(QR_CODE_DIR, f"{username}.png")
         if os.path.exists(qr_code_file):
             os.remove(qr_code_file)
-            log_debug(f"🗑️ User's QR code '{qr_code_file}' deleted.")
+            log_debug(f"🗑️ Kod QR użytkownika '{qr_code_file}' usunięty.")
 
-        # Extract user's public key
+        # Wyodrębnij klucz publiczny użytkownika
         public_key = extract_public_key(username, wg_config_path)
         if not public_key:
-            log_debug(f"❌ Public key for user '{username}' not found in WireGuard configuration.")
-            log_debug("---------- 🔥 User deletion process finished ---------------\n")
-            return f"❌ Public key for user '{username}' is missing."
+            log_debug(f"❌ Klucz publiczny użytkownika '{username}' nie znaleziony w konfiguracji WireGuard.")
+            log_debug("---------- 🔥 Proces usuwania użytkownika zakończony ---------------\n")
+            return f"❌ Brak klucza publicznego dla użytkownika '{username}'."
 
-        # Remove user from WireGuard
+        # Usuń użytkownika z WireGuard
         subprocess.run(["sudo", "wg", "set", "wg0", "peer", public_key, "remove"], check=True)
-        log_debug(f"🔐 User '{username}' removed from WireGuard.")
+        log_debug(f"🔐 Użytkownik '{username}' usunięty z WireGuard.")
 
-        # Update WireGuard configuration
+        # Aktualizuj konfigurację WireGuard
         remove_peer_from_config(public_key, wg_config_path, username)
-        log_debug(f"✅ WireGuard configuration successfully updated.")
+        log_debug(f"✅ Konfiguracja WireGuard pomyślnie zaktualizowana.")
 
-        # Sync WireGuard
+        # Zsynchronizuj WireGuard
         sync_command = f'wg syncconf "{SERVER_WG_NIC}" <(wg-quick strip "{SERVER_WG_NIC}")'
         subprocess.run(sync_command, shell=True, check=True, executable='/bin/bash')
-        print(f"WireGuard synced for interface {SERVER_WG_NIC}")
+        print(f"WireGuard zsynchronizowany dla interfejsu {SERVER_WG_NIC}")
 
-        log_debug("---------- 🔥 User deletion process finished ---------------\n")
-        return f"✅ User '{username}' successfully deleted."
+        log_debug("---------- 🔥 Proces usuwania użytkownika zakończony ---------------\n")
+        return f"✅ Użytkownik '{username}' pomyślnie usunięty."
     except Exception as e:
-        log_debug(f"⚠️ Error deleting user '{username}': {str(e)}")
-        log_debug("---------- 🔥 User deletion process finished ---------------\n")
-        return f"❌ Error deleting user '{username}': {str(e)}"
+        log_debug(f"⚠️ Błąd usuwania użytkownika '{username}': {str(e)}")
+        log_debug("---------- 🔥 Proces usuwania użytkownika zakończony ---------------\n")
+        return f"❌ Błąd usuwania użytkownika '{username}': {str(e)}"
 
 def extract_public_key(username, config_path):
     """
-    Extracts the public key of a user from the WireGuard configuration.
-    :param username: Username.
-    :param config_path: Path to the WireGuard configuration file.
-    :return: User's public key.
+    Wyodrębnia klucz publiczny użytkownika z konfiguracji WireGuard.
+    :param username: Nazwa użytkownika.
+    :param config_path: Ścieżka do pliku konfiguracji WireGuard.
+    :return: Klucz publiczny użytkownika.
     """
-    log_debug(f"🔍 Searching for public key for user '{username}' in {config_path}.")
+    log_debug(f"🔍 Wyszukiwanie klucza publicznego dla użytkownika '{username}' w {config_path}.")
     try:
         with open(config_path, "r") as f:
             lines = f.readlines()
@@ -109,51 +109,51 @@ def extract_public_key(username, config_path):
                 found_username = True
             elif found_username and line.strip().startswith("PublicKey"):
                 public_key = line.split("=", 1)[1].strip()
-                log_debug(f"🔑 Found public key for '{username}': {public_key}")
+                log_debug(f"🔑 Znaleziono klucz publiczny dla '{username}': {public_key}")
                 return public_key
-        log_debug(f"❌ Public key for '{username}' not found.")
+        log_debug(f"❌ Klucz publiczny dla '{username}' nie znaleziony.")
         return None
     except Exception as e:
-        log_debug(f"⚠️ Error finding public key: {str(e)}")
+        log_debug(f"⚠️ Błąd wyszukiwania klucza publicznego: {str(e)}")
         return None
 
 def remove_peer_from_config(public_key, config_path, client_name):
     """
-    Removes the [Peer] block and associated comment from the WireGuard configuration file.
-    Deletes the comment and 4 lines starting from it.
-    :param public_key: User's public key.
-    :param config_path: Path to the WireGuard configuration file.
-    :param client_name: Client name.
+    Usuwa blok [Peer] i powiązany komentarz z pliku konfiguracji WireGuard.
+    Usuwa komentarz i 4 kolejne linie od niego.
+    :param public_key: Klucz publiczny użytkownika.
+    :param config_path: Ścieżka do pliku konfiguracji WireGuard.
+    :param client_name: Nazwa klienta.
     """
-    log_debug(f"🛠️ Removing configuration for user '{client_name}' from {config_path}.")
+    log_debug(f"🛠️ Usuwanie konfiguracji użytkownika '{client_name}' z {config_path}.")
 
     try:
         with open(config_path, "r") as f:
             lines = f.readlines()
 
         updated_lines = []
-        skip_lines = 0  # Line skip counter
+        skip_lines = 0  # Licznik pomijanych linii
 
         for i, line in enumerate(lines):
-            # If client comment is found
+            # Jeśli znaleziono komentarz klienta
             if line.strip() == f"### Client {client_name}":
-                log_debug(f"📌 Found block for '{client_name}' on line {i}. Removing...")
-                skip_lines = 5  # Skip 5 lines starting from here
+                log_debug(f"📌 Znaleziono blok dla '{client_name}' w linii {i}. Usuwanie...")
+                skip_lines = 5  # Pomiń 5 linii od tego miejsca
                 continue
 
-            # Skip lines related to the removed block
+            # Pomiń linie związane z usuwanym blokiem
             if skip_lines > 0:
-                log_debug(f"⏩ Skipping line {i}: {line.strip()}")
+                log_debug(f"⏩ Pomijam linię {i}: {line.strip()}")
                 skip_lines -= 1
                 continue
 
-            # Save remaining lines
+            # Zapisz pozostałe linie
             updated_lines.append(line)
 
-        # Write updated configuration
+        # Zapisz zaktualizowaną konfigurację
         with open(config_path, "w") as f:
             f.writelines(updated_lines)
 
-        log_debug(f"✅ Configuration for user '{client_name}' removed.")
+        log_debug(f"✅ Konfiguracja użytkownika '{client_name}' usunięta.")
     except Exception as e:
-        log_debug(f"⚠️ Error updating configuration: {str(e)}")
+        log_debug(f"⚠️ Błąd aktualizacji konfiguracji: {str(e)}")
