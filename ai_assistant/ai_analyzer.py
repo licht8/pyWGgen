@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AI анализатор для диагностики VPN."""
+"""Analizator AI dla diagnostyki VPN."""
 
 import json
 import os
@@ -13,55 +13,55 @@ from .utils import run_cmd, check_ollama
 
 
 def prepare_prompt(data: Dict[str, Any]) -> str:
-    """Подготовка промпта для AI анализа."""
+    """Przygotowuje prompt dla analizy AI."""
     
     nat = data.get("nat", {})
     fw = data.get("firewalld", {})
     wg_status = data.get("wg_status", {})
     
-    # Список интерфейсов
+    # Lista interfejsów
     wg_interfaces = []
     for iface, info in wg_status.items():
-        status = "активен" if info.get("service_active") else "неактивен"
+        status = "aktywny" if info.get("service_active") else "nieaktywny"
         wg_interfaces.append(f"{iface} ({status})")
     
-    prompt = f"""Ты эксперт по WireGuard VPN. Проанализируй диагностику и дай краткий структурированный ответ.
+    prompt = f"""Jesteś ekspertem WireGuard VPN. Przeanalizuj diagnostykę i podaj krótki strukturalny raport.
 
-СОСТОЯНИЕ СИСТЕМЫ:
-- Сервер: {data.get('hostname')}
-- WireGuard интерфейсы: {', '.join(wg_interfaces)}
+STAN SYSTEMU:
+- Serwer: {data.get('hostname')}
+- Interfejsy WireGuard: {', '.join(wg_interfaces)}
 - Firewalld: {fw.get('active')}
-- WG порт открыт: {'Да' if fw.get('wg_port_open') else 'Нет'}
-- NAT: {'OK' if nat.get('ok') else 'ПРОБЛЕМА'}
-- NAT причина: {nat.get('reason')}
-- IP Forwarding: {'Включён' if nat.get('ip_forward') else 'Выключен'}
-- Peers активных: {data.get('peers_active', 0)}
-- Peers настроено: {data.get('peers_configured', 0)}
-- Пользовательских конфигов: {data.get('user_peer_files', {}).get('total', 0)}
+- Port WG otwarty: {'Tak' if fw.get('wg_port_open') else 'Nie'}
+- NAT: {'OK' if nat.get('ok') else 'PROBLEM'}
+- Przyczyna NAT: {nat.get('reason')}
+- IP Forwarding: {'Włączony' if nat.get('ip_forward') else 'Wyłączony'}
+- Aktywne Peers: {data.get('peers_active', 0)}
+- Skonfigurowane Peers: {data.get('peers_configured', 0)}
+- Konfiguracji użytkowników: {data.get('user_peer_files', {}).get('total', 0)}
 
-ФОРМАТ ОТВЕТА:
-🟢 Статус: [OK/WARNING/ERROR] | Оценка: [0-100]/100
+FORMAT ODPOWIEDZI:
+🟢 Status: [OK/OSTRZEŻENIE/BŁĄD] | Ocena: [0-100]/100
 
-📝 [Краткое описание состояния системы в 1-2 предложениях]
+📝 [Krótki opis stanu systemu w 1-2 zdaniach]
 
-✅ Работает:
-• [Что работает правильно]
-• [Что настроено корректно]
+✅ Działa:
+• [Co działa poprawnie]
+• [Co jest skonfigurowane prawidłowo]
 
-{'⚠️ Проблемы:' if not nat.get('ok') or data.get('wg_active', 0) < data.get('wg_total', 0) else '✨ Всё в порядке! Система работает корректно.'}
+{'⚠️ Problemy:' if not nat.get('ok') or data.get('wg_active', 0) < data.get('wg_total', 0) else '✨ Wszystko w porządku! System działa poprawnie.'}
 
-Дай анализ:"""
+Podaj analizę:"""
     
     return prompt
 
 
 def analyze_with_ai(data: Dict[str, Any]) -> str:
-    """Анализ данных с помощью AI."""
+    """Analiza danych za pomocą AI."""
     
-    # Подготовка промпта
+    # Przygotowanie promptu
     prompt = prepare_prompt(data)
     
-    # Формирование запроса для curl
+    # Formowanie zapytania dla curl
     json_data = {
         "model": settings.MODEL_NAME,
         "prompt": prompt,
@@ -71,65 +71,65 @@ def analyze_with_ai(data: Dict[str, Any]) -> str:
         }
     }
     
-    # Сохранить в временный файл для curl
+    # Zapis do pliku tymczasowego dla curl
     import tempfile
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         json.dump(json_data, f)
         temp_file = f.name
     
     try:
-        # Curl команда
+        # Komenda Curl
         cmd = f"curl -s -X POST {settings.OLLAMA_HOST}/api/generate -d @{temp_file}"
         
-        print("🔄 Запрос к AI...")
+        print("🔄 Zapytanie do AI...")
         result = run_cmd(cmd, timeout=settings.AI_TIMEOUT)
         
-        # Очистка временного файла
+        # Czyszczenie pliku tymczasowego
         os.unlink(temp_file)
         
         if not result or result.startswith("Error"):
-            print(f"❌ Ошибка запроса: {result}")
-            return "Ошибка запроса к AI"
+            print(f"❌ Błąd zapytania: {result}")
+            return "Błąd zapytania do AI"
         
-        # Парсинг ответа
+        # Parsowanie odpowiedzi
         try:
             response = json.loads(result)
-            ai_response = response.get('response', 'Нет ответа')
+            ai_response = response.get('response', 'Brak odpowiedzi')
             
             print(ai_response)
             print("=" * 72)
             return ai_response
         
         except json.JSONDecodeError as e:
-            print(f"❌ Ошибка парсинга JSON: {e}")
-            print(f"Ответ: {result[:200]}...")
-            return "Ошибка парсинга ответа"
+            print(f"❌ Błąd parsowania JSON: {e}")
+            print(f"Odpowiedź: {result[:200]}...")
+            return "Błąd parsowania odpowiedzi"
     
     except Exception as e:
-        # Очистка при ошибке
+        # Czyszczenie przy błędzie
         if os.path.exists(temp_file):
             os.unlink(temp_file)
         
-        print(f"❌ Ошибка: {e}")
-        return f"Ошибка: {str(e)}"
+        print(f"❌ Błąd: {e}")
+        return f"Błąd: {str(e)}"
 
 
 def interactive_question(data: Dict[str, Any], question: str) -> str:
-    """Интерактивный вопрос к AI."""
+    """Interaktywne pytanie do AI."""
     
-    # Контекст из диагностики
-    context = f"""КОНТЕКСТ ДИАГНОСТИКИ:
-- WireGuard: {data.get('wg_active')}/{data.get('wg_total')} активны
-- NAT: {'OK' if data.get('nat', {}).get('ok') else 'ПРОБЛЕМА'}
+    # Kontekst z diagnostyki
+    context = f"""KONTEXT DIAGNOSTYKI:
+- WireGuard: {data.get('wg_active')}/{data.get('wg_total')} aktywnych
+- NAT: {'OK' if data.get('nat', {}).get('ok') else 'PROBLEM'}
 - Firewalld: {data.get('firewalld', {}).get('active')}
-- Peers: {data.get('peers_active', 0)} активных, {data.get('peers_configured', 0)} настроено
+- Peers: {data.get('peers_active', 0)} aktywnych, {data.get('peers_configured', 0)} skonfigurowanych
 
-ВОПРОС ПОЛЬЗОВАТЕЛЯ:
+PYTANIE UŻYTKOWNIKA:
 {question}
 
-ОТВЕТ (кратко и по делу):"""
+ODPOWIEDŹ (krótko i konkretnie):"""
     
-    # Формирование запроса
+    # Formowanie zapytania
     json_data = {
         "model": settings.MODEL_NAME,
         "prompt": context,
@@ -139,7 +139,7 @@ def interactive_question(data: Dict[str, Any], question: str) -> str:
         }
     }
     
-    # Сохранить в временный файл
+    # Zapis do pliku tymczasowego
     import tempfile
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         json.dump(json_data, f)
@@ -154,13 +154,13 @@ def interactive_question(data: Dict[str, Any], question: str) -> str:
         if result and not result.startswith("Error"):
             try:
                 response = json.loads(result)
-                return response.get('response', 'Нет ответа')
+                return response.get('response', 'Brak odpowiedzi')
             except json.JSONDecodeError:
-                return "Ошибка парсинга ответа"
+                return "Błąd parsowania odpowiedzi"
         
-        return "Ошибка запроса"
+        return "Błąd zapytania"
     
     except Exception as e:
         if os.path.exists(temp_file):
             os.unlink(temp_file)
-        return f"Ошибка: {str(e)}"
+        return f"Błąd: {str(e)}"
