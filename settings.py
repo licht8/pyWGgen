@@ -1,54 +1,54 @@
 #!/usr/bin/env python3
 # pyWGgen/settings.py
 # ===========================================
-# Settings for the pyWGgen project
+# Ustawienia projektu pyWGgen
 # ===========================================
-# This file contains the main settings for the project, including file paths,
-# directories, configurations, and global parameters.
-# It centralizes all important variables to simplify project maintenance.
+# Ten plik zawiera główne ustawienia projektu, w tym ścieżki plików,
+# katalogi, konfiguracje i parametry globalne.
+# Centralizuje wszystkie ważne zmienne aby uprościć utrzymanie projektu.
 #
-# Example usage:
+# Przykład użycia:
 # ---------------------
 # from settings import BASE_DIR, WG_CONFIG_DIR, GRADIO_PORT
 # 
-# print(f"Project base directory: {BASE_DIR}")
-# print(f"WireGuard configuration directory: {WG_CONFIG_DIR}")
-# print(f"Port for running Gradio: {GRADIO_PORT}")
+# print(f"Katalog główny projektu: {BASE_DIR}")
+# print(f"Katalog konfiguracji WireGuard: {WG_CONFIG_DIR}")
+# print(f"Port dla Gradio: {GRADIO_PORT}")
 #
-# IMPORTANT: All paths and parameters should be specified relative to BASE_DIR.
+# WAŻNE: Wszystkie ścieżki i parametry powinny być określone względem BASE_DIR.
 # ===========================================
-# Logging:
-# The logging module is used to manage logging in the project.
-# You can change the logging level through the LOG_LEVEL variable:
-# - DEBUG: Displays all messages, including debug information.
-# - INFO: Main actions without debug messages.
-# - WARNING: Only warnings and errors.
-# - ERROR: Only errors.
-# Logs are written to both the console and a file specified in LOG_FILE_PATH.
+# Logowanie:
+# Moduł logging jest używany do zarządzania logami w projekcie.
+# Możesz zmienić poziom logowania przez zmienną LOG_LEVEL:
+# - DEBUG: Wyświetla wszystkie wiadomości, włączając informacje debugowania.
+# - INFO: Główne akcje bez wiadomości debugowania.
+# - WARNING: Tylko ostrzeżenia i błędy.
+# - ERROR: Tylko błędy.
+# Logi są zapisywane zarówno do konsoli jak i do pliku określonego w LOG_FILE_PATH.
 #
-# Version: 1.7 (2026-01-10) 6:39
+# Wersja: 1.7 (2026-01-10) 6:39
 
 from pathlib import Path
 import os
 import configparser
 
-# Define the base path to the project root
-BASE_DIR = Path(__file__).resolve().parent  # Path to the pyWGgen root directory
-PROJECT_DIR = BASE_DIR  # For compatibility, PROJECT_DIR equals BASE_DIR
+# Zdefiniuj ścieżkę główną do katalogu projektu
+BASE_DIR = Path(__file__).resolve().parent  # Ścieżka do katalogu głównego pyWGgen
+PROJECT_DIR = BASE_DIR  # Dla kompatybilności, PROJECT_DIR = BASE_DIR
 
-# File and directory paths
-WG_CONFIG_DIR = BASE_DIR / "user/data/wg_configs"  # Path to user WireGuard configurations
-QR_CODE_DIR = BASE_DIR / "user/data/qrcodes"      # Path to saved QR codes
-STALE_CONFIG_DIR = BASE_DIR / "user/data/usr_stale_config"  # Path to stale user configurations
-USER_DB_PATH = BASE_DIR / "user/data/user_records.json"  # User database
-#IP_DB_PATH = BASE_DIR / "user/data/ip_records.json"      # IP address database
-SERVER_CONFIG_FILE = Path("/etc/wireguard/wg0.conf")     # Path to WireGuard server configuration file
-SERVER_BACKUP_CONFIG_FILE = Path("/etc/wireguard/wg0.conf.bak") # Path to WireGuard server backup configuration file
-PARAMS_FILE = Path("/etc/wireguard/params")             # Path to WireGuard parameters file
+# Ścieżki plików i katalogów
+WG_CONFIG_DIR = BASE_DIR / "user/data/wg_configs"  # Ścieżka do konfiguracji WireGuard użytkowników
+QR_CODE_DIR = BASE_DIR / "user/data/qrcodes"       # Ścieżka do zapisanych kodów QR
+STALE_CONFIG_DIR = BASE_DIR / "user/data/usr_stale_config"  # Ścieżka do nieaktualnych konfiguracji użytkowników
+USER_DB_PATH = BASE_DIR / "user/data/user_records.json"  # Baza danych użytkowników
+#IP_DB_PATH = BASE_DIR / "user/data/ip_records.json"      # Baza danych adresów IP
+SERVER_CONFIG_FILE = Path("/etc/wireguard/wg0.conf")     # Ścieżka do pliku konfiguracyjnego serwera WireGuard
+SERVER_BACKUP_CONFIG_FILE = Path("/etc/wireguard/wg0.conf.bak") # Ścieżka do pliku kopii zapasowej konfiguracji serwera WireGuard
+PARAMS_FILE = Path("/etc/wireguard/params")             # Ścieżka do pliku parametrów WireGuard
 
-# WireGuard parameters
-DEFAULT_TRIAL_DAYS = 30  # Default account validity in days
-WIREGUARD_PORT = 51820   # WireGuard server port (default) range [1-65535]
+# Parametry WireGuard
+DEFAULT_TRIAL_DAYS = 30  # Domyślna ważność konta w dniach
+WIREGUARD_PORT = 51820   # Port serwera WireGuard (domyślny) zakres [1-65535]
 DEFAULT_SUBNET = "10.66.66.0/24"
 USER_SET_SUBNET = DEFAULT_SUBNET
 DNS_WIREGUAED = "1.1.1.1, 1.0.0.1, 8.8.8.8"
@@ -57,7 +57,7 @@ DNS_WIREGUAED = "1.1.1.1, 1.0.0.1, 8.8.8.8"
 OLLAMA_HOST = "http://10.99.0.2:11434"
 MODEL_NAME = "qwen2.5:3b"
 
-# Логи
+# Logi
 AI_ASSISTANT_LOG_DIR = "ai_assistant/logs"
 
 # WireGuard
@@ -67,75 +67,75 @@ WG_PORT = "51820/udp"
 # Firewalld
 FIREWALLD_ZONES = ["public", "internal", "external", "home", "trusted", "work", "dmz", "wg"]
 
-# AI
+# AI Ustawienia
 AI_TEMPERATURE = 0.1
 AI_TIMEOUT = 120
 CHAT_TEMPERATURE = 0.2
 CHAT_TIMEOUT = 90
 
-# Logging settings
-LOG_DIR = BASE_DIR / "user/data/logs"  # Directory for storing logs
-DIAGNOSTICS_LOG = LOG_DIR / "diagnostics.log"  # Diagnostics log file
-SUMMARY_REPORT_PATH = LOG_DIR / "summary_report.txt"  # File for storing summary reports
-LOG_FILE_PATH = LOG_DIR / "app.log"  # Application log file
-LOG_LEVEL = "DEBUG"  # Logging level: DEBUG, INFO, WARNING, ERROR
+# Ustawienia logowania
+LOG_DIR = BASE_DIR / "user/data/logs"  # Katalog do przechowywania logów
+DIAGNOSTICS_LOG = LOG_DIR / "diagnostics.log"  # Plik logu diagnostycznego
+SUMMARY_REPORT_PATH = LOG_DIR / "summary_report.txt"  # Plik do przechowywania raportów podsumowujących
+LOG_FILE_PATH = LOG_DIR / "app.log"  # Plik logu aplikacji
+LOG_LEVEL = "DEBUG"  # Poziom logowania: DEBUG, INFO, WARNING, ERROR
 
-# Paths for reports and message database
-TEST_REPORT_PATH = BASE_DIR / "logs/test_report.txt"    # Path to test report
+# Ścieżki dla raportów i bazy wiadomości
+TEST_REPORT_PATH = BASE_DIR / "logs/test_report.txt"    # Ścieżka do raportu testów
 
-# Additional paths for modules and utilities
-MODULES_DIR = BASE_DIR / "modules"            # Directory containing modules
-# AI_DIAGNOSTICS_DIR = BASE_DIR / "ai_diagnostics"  # Directory with diagnostic files
+# Dodatkowe ścieżki dla modułów i narzędzi
+MODULES_DIR = BASE_DIR / "modules"            # Katalog zawierający moduły
+# AI_DIAGNOSTICS_DIR = BASE_DIR / "ai_diagnostics"  # Katalog z plikami diagnostycznymi
 
-# Port for Gradio
-GRADIO_PORT = 7860  # Port for running the Gradio interface
+# Port dla Gradio
+GRADIO_PORT = 7860  # Port do uruchamiania interfejsu Gradio
 
-# Animation and print speed settings
-ANIMATION_SPEED = 0.2  # Delay between animation iterations (in seconds)
-# Examples:
-# - 0.1: Accelerated animation, suitable for short messages.
-# - 0.2 (default): Standard speed, smooth animation for comfortable perception.
-# - 0.3: Slightly slower, even smoother effect.
-# - 0.5: Slow animation, emphasizes importance or draws attention.
+# Ustawienia animacji i prędkości drukowania
+ANIMATION_SPEED = 0.2  # Opóźnienie między iteracjami animacji (w sekundach)
+# Przykłady:
+# - 0.1: Przyspieszona animacja, odpowiednia dla krótkich wiadomości.
+# - 0.2 (domyślnie): Standardowa prędkość, płynna animacja dla komfortowego odbioru.
+# - 0.3: Nieco wolniejsza, jeszcze płynniejszy efekt.
+# - 0.5: Wolna animacja, podkreśla ważność lub przyciąga uwagę.
 
-PRINT_SPEED = 0.02  # Speed of character output (in seconds)
-# Examples:
-# - 0.02 (default): Standard speed, mimics manual typing.
-# - 0.01: Fast typing, almost instantaneous.
-# - 0.05: Slow typing, creates a thoughtful text effect.
+PRINT_SPEED = 0.02  # Prędkość wyświetlania znaków (w sekundach)
+# Przykłady:
+# - 0.02 (domyślnie): Standardowa prędkość, imituje ręczne pisanie.
+# - 0.01: Szybkie pisanie, prawie natychmiastowe.
+# - 0.05: Wolne pisanie, tworzy efekt przemyślanego tekstu.
 
-LINE_DELAY = 0.1  # Delay between lines (in seconds)
-# Examples:
-# - 0.1 (default): Smooth transition between lines.
-# - 0.05: Fast transition between lines, reduces output time.
-# - 0.2: Slow transition, draws attention to the new line.
+LINE_DELAY = 0.1  # Opóźnienie między liniami (w sekundach)
+# Przykłady:
+# - 0.1 (domyślnie): Płynne przejście między liniami.
+# - 0.05: Szybkie przejście między liniami, skraca czas wyświetlania.
+# - 0.2: Wolne przejście, przyciąga uwagę do nowej linii.
 
-# Function to read SERVER_WG_NIC from the params file
+# Funkcja do odczytu SERVER_WG_NIC z pliku params
 def get_server_wg_nic(params_file):
     """
-    Extracts the SERVER_WG_NIC value from the params file.
-    :param params_file: Path to the params file
-    :return: SERVER_WG_NIC value
+    Wyodrębnia wartość SERVER_WG_NIC z pliku params.
+    :param params_file: Ścieżka do pliku params
+    :return: Wartość SERVER_WG_NIC
     """
     if not os.path.exists(params_file):
-        raise FileNotFoundError(f"File {params_file} not found.")
+        raise FileNotFoundError(f"Nie znaleziono pliku {params_file}.")
 
     with open(params_file, "r") as f:
         for line in f:
             if line.startswith("SERVER_WG_NIC="):
-                # Extract the value after "=" and strip spaces
+                # Wyodrębnij wartość po "=" i usuń spacje
                 return line.split("=")[1].strip()
-    raise ValueError("SERVER_WG_NIC not found in the params file.")
+    raise ValueError("Nie znaleziono SERVER_WG_NIC w pliku params.")
 
-# Define SERVER_WG_NIC
+# Zdefiniuj SERVER_WG_NIC
 try:
     SERVER_WG_NIC = get_server_wg_nic(PARAMS_FILE)
 except (FileNotFoundError, ValueError) as e:
     SERVER_WG_NIC = None
-    print(f"⚠️ Failed to load SERVER_WG_NIC: {e}")
+    print(f"⚠️ Nie udało się wczytać SERVER_WG_NIC: {e}")
 
 def check_paths():
-    """Checks the existence of files and directories."""
+    """Sprawdza istnienie plików i katalogów."""
     paths = {
         "BASE_DIR": BASE_DIR,
         "PROJECT_DIR": PROJECT_DIR,
@@ -153,16 +153,16 @@ def check_paths():
     }
     status = []
     for name, path in paths.items():
-        exists = " ✅  Available" if path.exists() else " ❌  Missing"
+        exists = " ✅  Dostępny" if path.exists() else " ❌  Brakuje"
         status.append(f"{name}: {exists} ({path})")
     return "\n".join(status)
 
 
 if __name__ == "__main__":
-    print(f"\n === 🛠️  pyWGgen Project Status ===\n")
-    print(f"  Project base directory: {BASE_DIR}")
-    print(f"  Gradio port: {GRADIO_PORT}")
-    print(f"  WireGuard port: {WIREGUARD_PORT}\n")
-    print(f" === 📂  Checking files and directories ===\n")
+    print(f"\n === 🛠️  Status projektu pyWGgen ===\n")
+    print(f"  Katalog główny projektu: {BASE_DIR}")
+    print(f"  Port Gradio: {GRADIO_PORT}")
+    print(f"  Port WireGuard: {WIREGUARD_PORT}\n")
+    print(f" === 📂  Sprawdzanie plików i katalogów ===\n")
     print(check_paths())
     print(f"\n")
