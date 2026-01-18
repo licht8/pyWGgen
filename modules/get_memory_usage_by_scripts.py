@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-
 """
 get_memory_usage_by_scripts.py
-Script to analyze memory consumption of the pyWGgen project with detailed breakdown.
+Skrypt do analizy zużycia pamięci projektu pyWGgen z szczegółowym podziałem.
 """
 
 import psutil
@@ -14,28 +13,28 @@ import objgraph
 from pathlib import Path
 from memory_profiler import memory_usage
 
-# Add the project's root directory to sys.path
+# Dodajemy katalog główny projektu do sys.path
 CURRENT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = CURRENT_DIR.parent
 sys.path.append(str(PROJECT_DIR))
 
-# Import project settings
+# Import ustawień projektu
 try:
     from settings import BASE_DIR
 except ImportError:
-    print("❌ Unable to find settings.py. Ensure the file is located in the project's root directory.")
+    print("❌ Nie można znaleźć settings.py. Upewnij się, że plik znajduje się w katalogu głównym projektu.")
     sys.exit(1)
 
 
 def get_memory_usage_by_scripts(project_dir):
     """
-    Collects memory usage information for project scripts and sorts by memory consumption.
+    Zbiera informacje o zużyciu pamięci dla skryptów projektu i sortuje według zużycia pamięci.
     
     Args:
-        project_dir (str): The root directory of the project.
+        project_dir (str): Katalog główny projektu.
 
     Returns:
-        list: Sorted list of processes with their memory usage.
+        list: Posortowana lista procesów z ich zużyciem pamięci.
     """
     project_dir = os.path.abspath(project_dir)
     processes_info = []
@@ -45,10 +44,10 @@ def get_memory_usage_by_scripts(project_dir):
             pid = proc.info['pid']
             name = proc.info['name']
             cmdline = proc.info['cmdline']
-            cwd = proc.info.get('cwd')  # Current working directory of the process
-            memory_usage = proc.info['memory_info'].rss  # Memory usage in bytes
+            cwd = proc.info.get('cwd')  # Aktualny katalog roboczy procesu
+            memory_usage = proc.info['memory_info'].rss  # Zużycie pamięci w bajtach
 
-            # Check if the process belongs to the project
+            # Sprawdza czy proces należy do projektu
             if (
                 cmdline and any(project_dir in arg for arg in cmdline)
                 or (cwd and project_dir in cwd)
@@ -62,32 +61,32 @@ def get_memory_usage_by_scripts(project_dir):
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
 
-    # Sort processes by memory usage in descending order
+    # Sortuje procesy według zużycia pamięci malejąco
     sorted_processes = sorted(processes_info, key=lambda x: x['memory_usage'], reverse=True)
     return sorted_processes
 
 
 def analyze_memory_objects():
     """
-    Analyzes objects in memory, displaying their growth and memory consumption.
+    Analizuje obiekty w pamięci, wyświetlając ich wzrost i zużycie pamięci.
     """
-    print("\n🔍 Analyzing live objects:")
-    print("Object Type              Count")
+    print("\n🔍 Analiza aktywnych obiektów:")
+    print("Typ obiektu           Liczba")
     print("-" * 50)
     for obj_type, count in objgraph.most_common_types(limit=10):
         print(f"{obj_type:<25}{count}")
 
-    print("\n🔍 Object growth:")
+    print("\n🔍 Wzrost obiektów:")
     objgraph.show_growth(limit=10)
 
 
 def display_memory_usage(project_dir, interval=1):
     """
-    Displays real-time memory usage information for the project's scripts.
+    Wyświetla informacje o zużyciu pamięci dla skryptów projektu w czasie rzeczywistym.
 
     Args:
-        project_dir (str): The root directory of the project.
-        interval (int): The time interval in seconds for updates.
+        project_dir (str): Katalog główny projektu.
+        interval (int): Interwał czasowy w sekundach dla aktualizacji.
     """
     try:
         while True:
@@ -95,30 +94,30 @@ def display_memory_usage(project_dir, interval=1):
             processes = get_memory_usage_by_scripts(project_dir)
 
             if not processes:
-                print(f"No processes associated with the project: {project_dir}")
+                print(f"Brak procesów powiązanych z projektem: {project_dir}")
                 time.sleep(interval)
                 continue
 
             total_memory = sum(proc['memory_usage'] for proc in processes)
 
-            print(f"{'ID':<10}{'Name':<20}{'Memory Usage (MB)':<20}{'Command Line':<50}")
+            print(f"{'PID':<10}{'Nazwa':<20}{'Zużycie pamięci (MB)':<20}{'Linia poleceń':<50}")
             print("-" * 100)
             for proc in processes:
                 print(f"{proc['pid']:<10}{proc['name']:<20}{proc['memory_usage'] / (1024 ** 2):<20.2f}{proc['cmdline']:<50}")
             print("-" * 100)
-            print(f"{'Total':<30}{total_memory / (1024 ** 2):<20.2f}{'MB':<50}")
+            print(f"{'Razem':<30}{total_memory / (1024 ** 2):<20.2f}{'MB':<50}")
 
             analyze_memory_objects()
 
-            print(f"\nUpdating every {interval} seconds...")
+            print(f"\nAktualizacja co {interval} sekund...")
             time.sleep(interval)
 
     except KeyboardInterrupt:
-        print("\nProgram stopped by user.")
+        print("\nProgram zatrzymany przez użytkownika.")
 
 
 if __name__ == "__main__":
-    # Use BASE_DIR from settings.py
+    # Używa BASE_DIR z settings.py
     project_directory = str(BASE_DIR)
-    print(f"🔍 Collecting memory usage information for the project: {project_directory}")
+    print(f"🔍 Zbieranie informacji o zużyciu pamięci dla projektu: {project_directory}")
     display_memory_usage(project_directory, interval=1)
