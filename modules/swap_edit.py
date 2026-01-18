@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-
 """
-swap_edit.py - Utility for managing the swap file in Linux
+swap_edit.py - Narzędzie do zarządzania plikiem swap w Linuksie
 
-Features:
-- Check and optimize swap.
-- Supports parameters for flexible configuration:
-  * `--memory_required` or `--mr`: Allocates swap up to 10% of disk space.
-  * `--min_swap` or `--ms`: Creates a minimal fixed swap (64 MB).
-  * `--eco_swap`: Creates a swap file of 2% of disk space.
-  * `--erase_swap`: Completely removes swap.
+Funkcje:
+- Sprawdzenie i optymalizacja swap.
+- Obsługa parametrów dla elastycznej konfiguracji:
+  * `--memory_required` lub `--mr`: Tworzy swap do 10% miejsca na dysku.
+  * `--min_swap` lub `--ms`: Tworzy minimalny swap (64 MB).
+  * `--eco_swap`: Tworzy plik swap 2% miejsca na dysku.
+  * `--erase_swap`: Kompletnie usuwa swap.
 """
 
 import os
@@ -28,7 +27,7 @@ sys.path.append(str(PROJECT_DIR))
 
 from settings import PRINT_SPEED, LOG_LEVEL, LOG_FILE_PATH
 
-# Configure logging
+# Konfiguracja logowania
 logging.basicConfig(
     filename=LOG_FILE_PATH,
     level=getattr(logging, LOG_LEVEL.upper(), logging.DEBUG),
@@ -40,29 +39,29 @@ logger = logging.getLogger(__name__)
 
 def display_message_slowly(message, print_speed=None, end="\n", indent=True):
     """
-    Prints a message line by line with optional indentation and custom speed.
+    Wyświetla wiadomość znak po znaku z opcjonalnym wcięciem i niestandardową prędkością.
 
-    :param message: Message to display.
-    :param print_speed: Character printing speed (in seconds). If None, global PRINT_SPEED is used.
-    :param end: End character for the line (default: "\\n").
-    :param indent: If True, adds a 3-space indent before each line.
+    :param message: Wiadomość do wyświetlenia.
+    :param print_speed: Prędkość wyświetlania znaków (w sekundach). Jeśli None, używany PRINT_SPEED.
+    :param end: Końcowy znak linii (domyślnie: "\n").
+    :param indent: Jeśli True, dodaje wcięcie 3-spacji przed każdą linią.
     """
-    # Retrieve PRINT_SPEED from settings, or use default if not available
+    # Pobierz PRINT_SPEED z ustawień lub użyj domyślnej wartości
     try:
         effective_speed = print_speed if print_speed is not None else PRINT_SPEED
     except NameError:
-        effective_speed = print_speed if print_speed is not None else 0.001  # default fallback
+        effective_speed = print_speed if print_speed is not None else 0.001  # domyślna wartość zapasowa
 
-    # LINE_DELAY - define locally if not in settings
+    # LINE_DELAY - zdefiniuj lokalnie jeśli brak w ustawieniach
     try:
         from settings import LINE_DELAY
         line_delay = LINE_DELAY
     except (ImportError, NameError):
-        line_delay = 0.05  # default fallback
+        line_delay = 0.05  # domyślna wartość zapasowa
 
     for line in message.split("\n"):
         if indent:
-            print("   ", end="")  # Add indent if indent=True
+            print("   ", end="")  # Dodaj wcięcie jeśli indent=True
         for char in line:
             print(char, end="", flush=True)
             time.sleep(effective_speed)
@@ -71,26 +70,26 @@ def display_message_slowly(message, print_speed=None, end="\n", indent=True):
 
 
 def run_command(command, check=True):
-    """Execute a command in the terminal and return the output."""
+    """Wykonuje polecenie w terminalu i zwraca wynik."""
     try:
         result = subprocess.run(
             command, shell=True, text=True, check=check, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        print(f"   ❌ Error: {e.stderr.strip()}")
+        print(f"   ❌ Błąd: {e.stderr.strip()}")
         return None
 
 
 def check_root():
-    """Check if the script is run as root."""
+    """Sprawdza czy skrypt jest uruchamiany jako root."""
     if os.geteuid() != 0:
-        display_message_slowly("🚨 This script must be run as root.", indent=False)
+        display_message_slowly("🚨 Ten skrypt musi być uruchomiony jako root.", indent=False)
         exit(1)
 
 
 def display_table(data, headers):
-    """Display a table with data."""
+    """Wyświetla tabelę z danymi."""
     table = PrettyTable(headers)
     for row in data:
         table.add_row(row)
@@ -98,12 +97,12 @@ def display_table(data, headers):
 
 
 def get_swap_info():
-    """Retrieve information about swap and memory."""
+    """Pobiera informacje o swap i pamięci."""
     output = run_command("free -h")
     if not output:
         return None
 
-    headers = ["Type", "Total", "Used", "Free"]
+    headers = ["Typ", "Razem", "Używane", "Wolne"]
     rows = []
     for line in output.split("\n"):
         parts = line.split()
@@ -114,136 +113,136 @@ def get_swap_info():
 
 
 def disable_existing_swap(swap_file="/swap"):
-    """Disable and remove the existing swap file if it is in use."""
+    """Wyłącza i usuwa istniejący plik swap jeśli jest używany."""
     if os.path.exists(swap_file):
-        display_message_slowly(f"\n   🔍 Detected existing swap file: {swap_file}")
+        display_message_slowly(f"\n   🔍 Wykryto istniejący plik swap: {swap_file}")
         run_command(f"swapoff {swap_file}", check=False)
         try:
             os.remove(swap_file)
-            display_message_slowly(f"   🗑️  Removed existing swap file: {swap_file}")
+            display_message_slowly(f"   🗑️  Usunięto istniejący plik swap: {swap_file}")
         except Exception as e:
-            display_message_slowly(f"   ❌  Failed to remove file: {e}")
+            display_message_slowly(f"   ❌  Nie udało się usunąć pliku: {e}")
 
 
 def create_swap_file(size_mb, reason=None):
-    """Create and activate a swap file."""
+    """Tworzy i aktywuje plik swap."""
     try:
         swap_file = "/swap"
         disable_existing_swap(swap_file)
 
-        display_message_slowly(f"   🛠️  Creating swap file of size {size_mb} MB...")
+        display_message_slowly(f"   🛠️  Tworzenie pliku swap o rozmiarze {size_mb} MB...")
         run_command(f"dd if=/dev/zero of={swap_file} bs=1M count={size_mb}", check=True)
 
-        display_message_slowly("   🎨 Formatting swap file...")
+        display_message_slowly("   🎨 Formatowanie pliku swap...")
         run_command(f"mkswap {swap_file}", check=True)
 
-        display_message_slowly("   ⚡ Activating swap file...")
+        display_message_slowly("   ⚡ Aktywacja pliku swap...")
         run_command(f"swapon {swap_file}", check=True)
 
-        display_message_slowly(f"\n   ✅ Swap created. Size: {size_mb} MB")
+        display_message_slowly(f"\n   ✅ Swap utworzony. Rozmiar: {size_mb} MB")
         if reason:
-            display_message_slowly(f"   🔍 Reason: {reason}")
+            display_message_slowly(f"   🔍 Powód: {reason}")
 
     except Exception as e:
-        display_message_slowly(f"   ❌ An error occurred: {e}")
+        display_message_slowly(f"   ❌ Wystąpił błąd: {e}")
 
 
 def check_swap_edit(size_mb, action=None, silent=True, tolerance=2):
     """
-    Checks the state of swap and invokes swap_edit if necessary.
+    Sprawdza stan swap i wywołuje swap_edit jeśli potrzeba.
 
-    :param size_mb: Required swap size (in MB).
-    :param action: Action to perform (e.g., "micro", "min").
-    :param silent: If True, operates in silent mode.
-    :param tolerance: Allowed difference between current and required swap (in MB).
+    :param size_mb: Wymagany rozmiar swap (w MB).
+    :param action: Akcja do wykonania (np. "micro", "min").
+    :param silent: Jeśli True, działa w trybie cichym.
+    :param tolerance: Dopuszczalna różnica między aktualnym a wymaganym swap (w MB).
     """
     try:
-        # Check current swap
+        # Sprawdź aktualny swap
         current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
         current_swap = int(current_swap) if current_swap and current_swap.isdigit() else 0
 
-        # Log current swap
-        logger.debug(f"Current swap: {current_swap} MB")
-        logger.debug(f"Required swap: {size_mb} MB")
+        # Loguj aktualny swap
+        logger.debug(f"Aktualny swap: {current_swap} MB")
+        logger.debug(f"Wymagany swap: {size_mb} MB")
 
-        # Check condition with tolerance
+        # Sprawdź warunek z tolerancją
         if current_swap >= size_mb - tolerance:
             if not silent:
-                display_message_slowly(f"✅ Current swap ({current_swap} MB) is sufficient. No changes required.")
-            logger.info(f"Swap ({current_swap} MB) is sufficient or within tolerance ({tolerance} MB).")
+                display_message_slowly(f"✅ Aktualny swap ({current_swap} MB) jest wystarczający. Brak zmian.")
+            logger.info(f"Swap ({current_swap} MB) jest wystarczający lub w tolerancji ({tolerance} MB).")
             return
 
-        # If swap is less than required
-        logger.info(f"Swap ({current_swap} MB) is less than required ({size_mb} MB). Invoking swap configuration.")
+        # Jeśli swap jest za mały
+        logger.info(f"Swap ({current_swap} MB) jest mniejszy niż wymagany ({size_mb} MB). Wywołanie konfiguracji swap.")
         swap_edit(size_mb=size_mb, action=action, silent=silent)
 
     except Exception as e:
-        # Log errors
-        logger.error(f"Error checking or configuring swap: {e}")
+        # Loguj błędy
+        logger.error(f"Błąd sprawdzania lub konfiguracji swap: {e}")
         if not silent:
-            display_message_slowly(f"❌ Error: {e}")
+            display_message_slowly(f"❌ Błąd: {e}")
 
 
 def interactive_swap_edit():
     """
-    Interactive mode for managing swap.
+    Tryb interaktywny zarządzania swap.
     """
     check_root()
 
     while True:
-        display_message_slowly(f"\n📊 Current memory state:")
+        display_message_slowly(f"\n📊 Aktualny stan pamięci:")
         swap_info = get_swap_info()
         if swap_info:
             print(swap_info)
 
-        print("\nChoose an action:")
-        print("1. Set new swap")
-        print("2. Remove current swap")
-        print("0. Exit")
+        print("\nWybierz akcję:")
+        print("1. Ustaw nowy swap")
+        print("2. Usuń aktualny swap")
+        print("0. Wyjście")
 
-        choice = input("Your choice: ").strip()
+        choice = input("Twój wybór: ").strip()
         if choice == "1":
-            size_mb = input("Enter swap size (in MB): ").strip()
+            size_mb = input("Wprowadź rozmiar swap (w MB): ").strip()
             if size_mb.isdigit():
                 size_mb = int(size_mb)
-                create_swap_file(size_mb, reason="interactive")
+                create_swap_file(size_mb, reason="interaktywny")
             else:
-                print("❌ Invalid input. Please try again.")
+                print("❌ Nieprawidłowe dane. Spróbuj ponownie.")
         elif choice == "2":
             disable_existing_swap()
         elif choice == "0":
-            print("👋 Exiting.")
+            print("👋 Wyjście.")
             break
         else:
-            print("❌ Invalid input. Please try again.")
+            print("❌ Nieprawidłowe dane. Spróbuj ponownie.")
 
 
 def swap_edit(size_mb=None, action=None, silent=False):
     """
-    Main function for configuring swap.
+    Główna funkcja konfiguracji swap.
 
-    :param size_mb: Required swap size in MB.
-    :param action: Action type ("min", "eco", "erase", "memory_required").
-    :param silent: If True, suppresses message output.
+    :param size_mb: Wymagany rozmiar swap w MB.
+    :param action: Typ akcji ("min", "eco", "erase", "memory_required").
+    :param silent: Jeśli True, tłumi komunikaty.
     """
     check_root()
 
-    # Check current swap state
+    # Sprawdź aktualny stan swap
     current_swap = run_command("free -m | awk '/^Swap:/ {print $2}'")
     current_swap = int(current_swap) if current_swap and current_swap.isdigit() else 0
 
-    # "erase" action
+    # Akcja "erase"
     if action == "erase":
         if current_swap > 0:
             disable_existing_swap()
             if not silent:
-                display_message_slowly("🗑️ Swap successfully removed.")
+                display_message_slowly("🗑️ Swap pomyślnie usunięty.")
         else:
             if not silent:
-                display_message_slowly("🔍 No swap detected.")
+                display_message_slowly("🔍 Nie wykryto swap.")
         return
 
-    # Actions to set up swap
+    # Akcje ustawiające swap
     if action == "micro":
         size_mb = 512
         silent = True
@@ -251,40 +250,40 @@ def swap_edit(size_mb=None, action=None, silent=False):
         size_mb = 64
     elif action == "eco":
         total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
-        size_mb = total_disk // 50  # 2% of disk space
+        size_mb = total_disk // 50  # 2% miejsca na dysku
     elif action == "memory_required" and size_mb is None:
         total_disk = int(run_command("df --total | tail -1 | awk '{print $2}'")) // 1024
-        size_mb = min(1024, total_disk // 10)  # 10% of disk space, but no more than 1024 MB
+        size_mb = min(1024, total_disk // 10)  # 10% miejsca na dysku, ale max 1024 MB
 
     if size_mb is None:
-        raise ValueError("Swap size or action must be specified.")
+        raise ValueError("Musisz podać rozmiar swap lub akcję.")
 
-    # Check: swap already exists and meets requirements
+    # Sprawdź: swap już istnieje i spełnia wymagania
     if current_swap >= size_mb:
         if not silent:
-            display_message_slowly(f"\n✅ Current swap ({current_swap} MB) is sufficient. No changes made.")
+            display_message_slowly(f"\n✅ Aktualny swap ({current_swap} MB) jest wystarczający. Brak zmian.")
         return
 
-    # Create new swap
+    # Utwórz nowy swap
     create_swap_file(size_mb, reason=action)
 
-    # Final memory state (only if not silent)
+    # Końcowy stan pamięci (tylko jeśli nie cichy)
     if not silent:
-        display_message_slowly(f"\n 📊 Final memory state:")
+        display_message_slowly(f"\n 📊 Końcowy stan pamięci:")
         final_swap_info = get_swap_info()
         if final_swap_info:
             print(final_swap_info)
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(description="Utility for managing the swap file.")
-    parser.add_argument(f"--memory_required", "--mr", type=int, help="Specify minimum swap size in MB.")
-    parser.add_argument(f"--min_swap", "--ms", action="store_true", help="Create minimal swap (64 MB).")
-    parser.add_argument(f"--eco_swap", action="store_true", help="Create eco swap (2%% of disk space).")
-    parser.add_argument(f"--micro_swap", action="store_true", help="Create 64 MB swap in silent mode.")
-    parser.add_argument(f"--erase_swap", action="store_true", help="Remove the current swap.\n")
+    parser = ArgumentParser(description="Narzędzie do zarządzania plikiem swap.")
+    parser.add_argument("--memory_required", "--mr", type=int, help="Podaj minimalny rozmiar swap w MB.")
+    parser.add_argument("--min_swap", "--ms", action="store_true", help="Utwórz minimalny swap (64 MB).")
+    parser.add_argument("--eco_swap", action="store_true", help="Utwórz eco swap (2% miejsca na dysku).")
+    parser.add_argument("--micro_swap", action="store_true", help="Utwórz 64 MB swap w trybie cichym.")
+    parser.add_argument("--erase_swap", action="store_true", help="Usuń aktualny swap.\n")
 
-    args = parser.parse_args()  # Parse command-line arguments
+    args = parser.parse_args()  # Parsuj argumenty wiersza poleceń
 
     if args.erase_swap:
         swap_edit(action="erase")
