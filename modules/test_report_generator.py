@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # modules/test_report_generator.py
-# Script for generating a complete report on the state of the pyWGgen project
-# Version: 2.1
-# Updated: 2024-12-10
-# Purpose: Generate a detailed report for diagnosing the project's state.
+# Skrypt do generowania kompletnego raportu o stanie projektu pyWGgen
+# Wersja: 2.1
+# Aktualizacja: 2024-12-10
+# Cel: Generowanie szczegółowego raportu diagnostycznego stanu projektu.
 
 import os
 import json
@@ -13,109 +13,109 @@ from datetime import datetime
 from pathlib import Path
 from prettytable import PrettyTable
 
-# Add the project root directory to sys.path
+# Dodaj katalog główny projektu do sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-# Import settings
+# Import ustawień
 from settings import TEST_REPORT_PATH, USER_DB_PATH, WG_CONFIG_DIR, GRADIO_PORT
 
 def load_json(filepath):
-    """Loads data from a JSON file."""
+    """Wczytuje dane z pliku JSON."""
     try:
         with open(filepath, "r") as file:
             return json.load(file)
     except FileNotFoundError:
-        return f" ❌  File {filepath} is missing."
+        return f" ❌  Plik {filepath} nie istnieje."
     except json.JSONDecodeError:
-        return f" ❌  File {filepath} is corrupted."
+        return f" ❌  Plik {filepath} jest uszkodzony."
 
 def run_command(command):
-    """Executes a command and returns the output."""
+    """Wykonuje polecenie i zwraca wynik."""
     try:
         return subprocess.check_output(command, text=True).strip()
     except FileNotFoundError:
-        return f" ❌  Command '{command[0]}' not found."
+        return f" ❌  Polecenie '{command[0]}' nie znalezione."
     except subprocess.CalledProcessError as e:
-        return f" ❌  Error executing command {' '.join(command)}: {e}"
+        return f" ❌  Błąd wykonywania polecenia {' '.join(command)}: {e}"
 
 def get_gradio_status():
-    """Checks the status of Gradio."""
+    """Sprawdza status Gradio."""
     try:
         output = subprocess.check_output(["ps", "-eo", "pid,cmd"], text=True)
         for line in output.splitlines():
             if "gradio" in line and str(GRADIO_PORT) in line:
-                return f" 🟢  Gradio is running (line: {line})"
-        return " ❌  Gradio is not running"
+                return f" 🟢  Gradio działa (linia: {line})"
+        return " ❌  Gradio nie działa"
     except Exception as e:
-        return f" ❌  Error checking Gradio: {e}"
+        return f" ❌  Błąd sprawdzania Gradio: {e}"
 
 def generate_report():
-    """Generates a complete report on the project's state."""
+    """Generuje kompletny raport o stanie projektu."""
     timestamp = datetime.utcnow().isoformat()
     user_records = load_json(USER_DB_PATH)
 
     report_lines = [
-        f"\n === 📝  Project _generator Status Report  ===",
-        f" 📅  Date and Time: {timestamp}\n"
+        f"\n === 📝  Raport statusu generatora projektu  ===",
+        f" 📅  Data i czas: {timestamp}\n"
     ]
 
-    # Project structure check
-    report_lines.append(" === 📂  Project Structure Check  ===")
+    # Sprawdzenie struktury projektu
+    report_lines.append(" === 📂  Sprawdzenie struktury projektu  ===")
     required_files = {
         "user_records.json": USER_DB_PATH,
         "wg_configs": WG_CONFIG_DIR,
     }
     for name, path in required_files.items():
-        report_lines.append(f"- {name}: {' 🟢  Present' if Path(path).exists() else ' ❌  Missing'}")
+        report_lines.append(f"- {name}: {' 🟢  Istnieje' if Path(path).exists() else ' ❌  Brakuje'}")
 
     required_dirs = ["logs", "user/data", "user/data/qrcodes", "user/data/wg_configs"]
     for folder in required_dirs:
-        report_lines.append(f"- {folder}: {' 🟢  Exists' if os.path.exists(folder) else ' ❌  Missing'}")
+        report_lines.append(f"- {folder}: {' 🟢  Istnieje' if os.path.exists(folder) else ' ❌  Brakuje'}")
 
-    # Data from JSON
-    report_lines.append("\n === 📄  Data from user_records.json  ===")
+    # Dane z JSON
+    report_lines.append("\n === 📄  Dane z user_records.json  ===")
     if isinstance(user_records, dict):
-        table = PrettyTable(["User", "peer", "telegram_id"])
+        table = PrettyTable(["Użytkownik", "peer", "telegram_id"])
         for username, data in user_records.items():
             table.add_row([username, data.get('peer', 'N/A'), data.get('telegram_id', 'N/A')])
         report_lines.append(str(table))
     else:
         report_lines.append(f"{user_records}\n")
 
-    # WireGuard check
-    report_lines.append("\n === 🔒  WireGuard Results (wg show)  ===")
+    # Sprawdzenie WireGuard
+    report_lines.append("\n === 🔒  Wyniki WireGuard (wg show)  ===")
     wg_show_output = run_command(["wg", "show"])
-    report_lines.append(wg_show_output if wg_show_output else " ❌  WireGuard is not running or encountered an error.\n")
+    report_lines.append(wg_show_output if wg_show_output else " ❌  WireGuard nie działa lub wystąpił błąd.\n")
 
-    # WireGuard status
-    report_lines.append("\n === 🔧  WireGuard Status  ===")
+    # Status WireGuard
+    report_lines.append("\n === 🔧  Status WireGuard  ===")
     wg_status_output = run_command(["systemctl", "status", "wg-quick@wg0"])
     report_lines.append(wg_status_output)
 
-    # Open ports check
-    report_lines.append("\n === 🔍  Open Ports Check  ===")
+    # Sprawdzenie otwartych portów
+    report_lines.append("\n === 🔍  Sprawdzenie otwartych portów  ===")
     firewall_ports = run_command(["sudo", "firewall-cmd", "--list-ports"])
-    report_lines.append(f"Open Ports: {firewall_ports}")
+    report_lines.append(f"Otwarte porty: {firewall_ports}")
 
-    # Gradio status
-    report_lines.append("\n === 🌐  Gradio Status  ===")
+    # Status Gradio
+    report_lines.append("\n === 🌐  Status Gradio  ===")
     gradio_status = get_gradio_status()
     report_lines.append(f"Gradio: {gradio_status}")
 
-    # Active processes
-    report_lines.append("\n === 🖥️  Active Processes  ===")
+    # Aktywne procesy
+    report_lines.append("\n === 🖥️  Aktywne procesy  ===")
     try:
         ps_output = subprocess.check_output(["ps", "-eo", "pid,cmd"], text=True)
         report_lines.append(ps_output)
     except subprocess.CalledProcessError:
-        report_lines.append(" ❌  Error fetching process list.")
+        report_lines.append(" ❌  Błąd pobierania listy procesów.")
 
-    # Save the report
+    # Zapisz raport
     with open(TEST_REPORT_PATH, "w", encoding="utf-8") as report_file:
         report_file.write("\n".join(report_lines))
 
-    print(f"  ✅  Report saved at:\n  📂 {TEST_REPORT_PATH}")
+    print(f"  ✅  Raport zapisany w:\n  📂 {TEST_REPORT_PATH}")
 
 if __name__ == "__main__":
     generate_report()
