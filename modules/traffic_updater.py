@@ -4,23 +4,23 @@
 import json
 import os
 import subprocess
-from settings import SERVER_WG_NIC  # Import WireGuard interface from settings
+from settings import SERVER_WG_NIC  # Import interfejsu WireGuard z ustawień
 from settings import USER_DB_PATH
 
 def update_traffic_data(user_records_path):
     """
-    Updates user traffic data, recording the same values for transfer and total_transfer in user_records.json.
+    Aktualizuje dane o ruchu użytkowników, zapisując te same wartości dla transfer i total_transfer w user_records.json.
     """
     if not os.path.exists(USER_DB_PATH):
-        print(f"File {USER_DB_PATH} not found.")
+        print(f"Plik {USER_DB_PATH} nie istnieje.")
         return
 
-    # Load user data
+    # Wczytaj dane użytkowników
     with open(USER_DB_PATH, "r") as f:
         user_records = json.load(f)
 
     try:
-        # Retrieve traffic data from WireGuard
+        # Pobierz dane o ruchu z WireGuard
         output = subprocess.check_output(["wg", "show", SERVER_WG_NIC, "transfer"], text=True)
         lines = output.strip().split("\n")
 
@@ -28,22 +28,22 @@ def update_traffic_data(user_records_path):
             parts = line.split()
             if len(parts) >= 3:
                 public_key = parts[0]
-                received = int(parts[1])  # Current received data
+                received = int(parts[1])  # Aktualne odebrane dane
                 sent = int(parts[2])
 
-                # Find the user by public_key
+                # Znajdź użytkownika po kluczu publicznym
                 for username, user_data in user_records.items():
                     if user_data.get("public_key") == public_key:
-                        # Update the transfer field
-                        transfer_str = f"{received / (1024 ** 2):.2f} MiB received, {sent / (1024 ** 2):.2f} MiB sent"
+                        # Aktualizuj pole transfer
+                        transfer_str = f"{received / (1024 ** 2):.2f} MiB odebrano, {sent / (1024 ** 2):.2f} MiB wysłano"
                         user_data["transfer"] = transfer_str
-                        user_data["total_transfer"] = transfer_str  # Duplicate the value
+                        user_data["total_transfer"] = transfer_str  # Powtórz wartość
                         break
 
     except Exception as e:
-        print(f"Error updating traffic data: {e}")
+        print(f"Błąd aktualizacji danych o ruchu: {e}")
         return
 
-    # Save updated data
+    # Zapisz zaktualizowane dane
     with open(USER_DB_PATH, "w") as f:
         json.dump(user_records, f, indent=4)
