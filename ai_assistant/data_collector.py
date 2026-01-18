@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Сборщик данных для AI диагностики."""
+"""Kompilator danych dla diagnostyki AI."""
 
 import json
 import os
@@ -14,7 +14,7 @@ from .utils import run_cmd
 
 
 def parse_wg_config(config_path: Path) -> Dict[str, Any]:
-    """Парсинг WireGuard конфига для извлечения peer информации."""
+    """Parsowanie konfiguracji WireGuard w celu wyciągnięcia informacji o peerach."""
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
             content = f.read()
@@ -44,7 +44,7 @@ def parse_wg_config(config_path: Path) -> Dict[str, Any]:
                 elif key == 'Endpoint':
                     current_peer['endpoint'] = value
         
-        # Добавить последний peer
+        # Dodaj ostatniego peera
         if current_peer:
             peers.append(current_peer)
         
@@ -59,14 +59,14 @@ def parse_wg_config(config_path: Path) -> Dict[str, Any]:
 
 
 def get_all_peer_configs() -> List[Dict[str, Any]]:
-    """Получить все peer конфиги из файлов."""
+    """Pobiera wszystkie konfiguracje peerów z plików."""
     peer_configs = []
     wg_conf_dir = Path('/etc/wireguard')
     
     if not wg_conf_dir.exists():
         return peer_configs
     
-    # Парсинг всех .conf файлов
+    # Parsowanie wszystkich plików .conf
     for conf_file in wg_conf_dir.glob('*.conf'):
         config_data = parse_wg_config(conf_file)
         if 'peers' in config_data and config_data['peers']:
@@ -76,26 +76,26 @@ def get_all_peer_configs() -> List[Dict[str, Any]]:
 
 
 def get_user_peer_files() -> Dict[str, Any]:
-    """Получить информацию о peer файлах пользователей из user/configs/."""
+    """Pobiera informacje o plikach peerów użytkowników z user/configs/."""
     try:
-        # Правильный путь из settings
+        # Poprawna ścieżka z settings
         user_configs_dir = settings.WG_CONFIG_DIR
         
         if not user_configs_dir.exists():
             return {
                 'total': 0,
                 'peers': [],
-                'error': f'Директория {user_configs_dir} не существует'
+                'error': f'Katalog {user_configs_dir} nie istnieje'
             }
         
         peer_files = []
         
-        # Поиск всех .conf файлов в user/configs/
+        # Wyszukiwanie wszystkich plików .conf w user/configs/
         for conf_file in user_configs_dir.rglob('*.conf'):
             try:
                 stat = conf_file.stat()
                 
-                # Попробовать прочитать PublicKey из файла
+                # Próba odczytania PublicKey z pliku
                 public_key = None
                 allowed_ips = None
                 
@@ -137,10 +137,10 @@ def get_user_peer_files() -> Dict[str, Any]:
 
 
 def get_wg_status() -> Dict[str, Any]:
-    """Детальный статус WireGuard интерфейсов."""
+    """Szczegółowy status interfejsów WireGuard."""
     result = {}
     
-    # Все интерфейсы
+    # Wszystkie interfejsy
     interfaces = run_cmd("wg show interfaces")
     if not interfaces:
         return result
@@ -150,24 +150,24 @@ def get_wg_status() -> Dict[str, Any]:
         if not iface:
             continue
         
-        # Статус сервиса
+        # Status serwisu
         service_status = run_cmd(f"systemctl is-active wg-quick@{iface}")
         service_enabled = run_cmd(f"systemctl is-enabled wg-quick@{iface}")
         
-        # IP link статус
+        # Status IP link
         link_status = run_cmd(f"ip link show {iface}")
         link_up = "UP" in link_status if link_status else False
         
-        # Listening port
+        # Port nasłuchiwania
         listen_port = run_cmd(f"wg show {iface} listen-port")
         
-        # Peers dump (детальная инфа)
+        # Peers dump (szczegółowe info)
         peers_dump = run_cmd(f"wg show {iface} dump")
         
-        # Парсинг peers
+        # Parsowanie peers
         peers = []
         if peers_dump:
-            lines = peers_dump.strip().split('\n')[1:]  # Пропустить заголовок
+            lines = peers_dump.strip().split('\n')[1:]  # Pomiń nagłówek
             for line in lines:
                 parts = line.split('\t')
                 if len(parts) >= 8:
@@ -196,26 +196,26 @@ def get_wg_status() -> Dict[str, Any]:
 
 
 def get_firewalld_status() -> Dict[str, Any]:
-    """Статус firewalld."""
+    """Status firewalld."""
     active = run_cmd("systemctl is-active firewalld")
     zones = run_cmd("firewall-cmd --get-active-zones")
     
-    # Проверка WireGuard порта
+    # Sprawdzenie portu WireGuard
     wg_port_open = False
     wg_port = run_cmd("wg show all listen-port")
     
     if wg_port:
-        # Проверка в портах
+        # Sprawdzenie w portach
         port_check = run_cmd(f"firewall-cmd --list-ports | grep {wg_port}")
         wg_port_open = bool(port_check)
         
-        # Если не нашли, проверяем в rich rules
+        # Jeśli nie znaleziono, sprawdź w rich rules
         if not wg_port_open:
             rich_rules = run_cmd("firewall-cmd --list-rich-rules")
             if rich_rules and wg_port in rich_rules:
                 wg_port_open = True
     
-    # Список открытых портов
+    # Lista otwartych portów
     ports = run_cmd("firewall-cmd --list-ports")
     
     return {
@@ -228,16 +228,16 @@ def get_firewalld_status() -> Dict[str, Any]:
 
 
 def get_nat_status() -> Dict[str, Any]:
-    """Проверка NAT/Masquerade - расширенная."""
+    """Sprawdzenie NAT/Masquerade - rozszerzone."""
     ip_forward = run_cmd("sysctl -n net.ipv4.ip_forward")
     
-    # Проверка iptables NAT
+    # Sprawdzenie iptables NAT
     iptables_nat = run_cmd("iptables -t nat -L POSTROUTING -n -v")
     
-    # Проверка nftables NAT
+    # Sprawdzenie nftables NAT
     nft_nat = run_cmd("nft list ruleset | grep -i masquerade")
     
-    # Проверка firewalld masquerade по зонам
+    # Sprawdzenie firewalld masquerade według stref
     zones_masq = {}
     zones_output = run_cmd("firewall-cmd --get-active-zones")
     if zones_output:
@@ -247,11 +247,11 @@ def get_nat_status() -> Dict[str, Any]:
                 masq_check = run_cmd(f"firewall-cmd --zone={zone} --query-masquerade")
                 zones_masq[zone] = (masq_check == "yes")
     
-    # Проверка rich rules
+    # Sprawdzenie rich rules
     rich_rules = run_cmd("firewall-cmd --list-rich-rules")
     rich_masq = "masquerade" in rich_rules.lower() if rich_rules else False
     
-    # Детальная проверка NAT
+    # Szczegółowe sprawdzenie NAT
     nat_checks = {
         'ip_forward': ip_forward == "1",
         'iptables_masquerade': "MASQUERADE" in iptables_nat or "SNAT" in iptables_nat,
@@ -260,15 +260,15 @@ def get_nat_status() -> Dict[str, Any]:
         'rich_rules_masquerade': rich_masq
     }
     
-    # Общая оценка NAT - исправлено!
+    # Ogólna ocena NAT - poprawione!
     nat_ok = nat_checks['ip_forward'] and (
         nat_checks['iptables_masquerade'] or 
         nat_checks['nft_masquerade'] or 
         nat_checks['zone_masquerade'] or
-        nat_checks['rich_rules_masquerade']  # Добавлена проверка rich rules!
+        nat_checks['rich_rules_masquerade']  # Dodano sprawdzenie rich rules!
     )
     
-    # Причина
+    # Przyczyna
     reasons = []
     reasons.append(f"ip_forward={1 if nat_checks['ip_forward'] else 0}")
     
@@ -287,14 +287,14 @@ def get_nat_status() -> Dict[str, Any]:
     if nat_checks['iptables_masquerade']:
         reasons.append("iptables_masquerade=yes")
     
-    nat_reason = "; ".join(reasons) if reasons else "Нет NAT правил"
+    nat_reason = "; ".join(reasons) if reasons else "Brak reguł NAT"
     
     return {
         'ip_forward': nat_checks['ip_forward'],
         'iptables_nat': iptables_nat[:500],
-        'nft_nat': nft_nat[:500] if nft_nat else "Нет nft правил",
+        'nft_nat': nft_nat[:500] if nft_nat else "Brak reguł nft",
         'zones_masquerade': zones_masq,
-        'rich_rules': rich_rules[:500] if rich_rules else "Нет rich rules",
+        'rich_rules': rich_rules[:500] if rich_rules else "Brak rich rules",
         'checks': nat_checks,
         'ok': nat_ok,
         'reason': nat_reason
@@ -302,28 +302,28 @@ def get_nat_status() -> Dict[str, Any]:
 
 
 def collect_all_data() -> Dict[str, Any]:
-    """Собрать все данные для диагностики."""
+    """Zbiera wszystkie dane do diagnostyki."""
     
-    # Базовая информация
+    # Podstawowe informacje
     hostname = run_cmd("hostname")
     uptime = run_cmd("uptime -p")
     
-    # WireGuard статус
+    # Status WireGuard
     wg_status = get_wg_status()
     wg_active = sum(1 for iface in wg_status.values() if iface.get('service_active'))
     wg_total = len(wg_status)
     
-    # Подсчёт активных peers
+    # Liczenie aktywnych peers
     total_active_peers = sum(iface.get('peers_active', 0) for iface in wg_status.values())
     
-    # Все peer конфиги из /etc/wireguard/*.conf
+    # Wszystkie konfiguracje peerów z /etc/wireguard/*.conf
     all_peer_configs = get_all_peer_configs()
     total_configured_peers = sum(cfg.get('peers_count', 0) for cfg in all_peer_configs)
     
-    # Peer файлы пользователей из user/configs/
+    # Pliki peerów użytkowników z user/configs/
     user_peers = get_user_peer_files()
     
-    # Конфиги WireGuard
+    # Konfiguracje WireGuard
     wg_confs = run_cmd("ls -1 /etc/wireguard/*.conf 2>/dev/null")
     wg_confs_list = wg_confs.split('\n') if wg_confs else []
     
@@ -331,12 +331,12 @@ def collect_all_data() -> Dict[str, Any]:
     firewalld = get_firewalld_status()
     nat = get_nat_status()
     
-    # Ollama health check
+    # Health check Ollama
     from .utils import check_ollama
     try:
         ollama_ok = check_ollama(settings.OLLAMA_HOST)
     except Exception as e:
-        print(f"⚠️  Ollama check failed: {e}")
+        print(f"⚠️  Sprawdzenie Ollama nieudane: {e}")
         ollama_ok = False
     
     return {
