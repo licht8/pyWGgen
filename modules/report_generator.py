@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# modules/test_report_generator.py
+# modules/report_generator.py
 # Skrypt do generowania kompletnego raportu o stanie projektu pyWGgen
 # Wersja: 2.1
 # Aktualizacja: 2024-12-10
