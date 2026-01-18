@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # menu.py
-# Main menu for managing the pyWGgen project
+# Menu główne do zarządzania projektem pyWGgen
 # ===========================================
-# This file provides a convenient interface
-# for managing various project functions,
-# including WireGuard installation, removal, and more.
-# Version: 1.2
-# Updated: 2026-01-10
+# Ten plik zapewnia wygodny interfejs
+# do zarządzania różnymi funkcjami projektu,
+# w tym instalacją, usuwaniem WireGuard i więcej.
+# Wersja: 1.2
+# Zaktualizowano: 2026-01-10
 # ===========================================
 
 import os
@@ -22,23 +22,23 @@ from modules.wireguard_utils import check_wireguard_installed
 from modules.swap_edit import check_swap_edit, swap_edit
 from modules.report_utils import create_summary_report
 
-# LINE_DELAY constant
+# Stała LINE_DELAY
 LINE_DELAY = 0.05
 
 
 def display_message_slowly(message, print_speed=None, end="\n", indent=True):
     """
-    Prints a message line by line with optional indentation and custom speed.
+    Wyświetla wiadomość linia po linii z opcjonalnym wcięciem i niestandardową prędkością.
 
-    :param message: Message to display.
-    :param print_speed: Character printing speed (in seconds). If None, global PRINT_SPEED is used.
-    :param end: End character for the line (default: "\\n").
-    :param indent: If True, adds a 3-space indent before each line.
+    :param message: Wiadomość do wyświetlenia.
+    :param print_speed: Prędkość wyświetlania znaków (w sekundach). Jeśli None, używana jest globalna PRINT_SPEED.
+    :param end: Znak końcowy linii (domyślnie: "\\n").
+    :param indent: Jeśli True, dodaje 3-spacjowe wcięcie przed każdą linią.
     """
     effective_speed = print_speed if print_speed is not None else PRINT_SPEED
     for line in message.split("\n"):
         if indent:
-            print("   ", end="")  # Add indent if indent=True
+            print("   ", end="")  # Dodaj wcięcie jeśli indent=True
         for char in line:
             print(char, end="", flush=True)
             time.sleep(effective_speed)
@@ -46,183 +46,183 @@ def display_message_slowly(message, print_speed=None, end="\n", indent=True):
         time.sleep(LINE_DELAY)
 
 
-# Check and create a swap file of size 512 MB if needed
+# Sprawdź i utwórz plik swap o rozmiarze 512 MB jeśli potrzeba
 check_swap_edit(size_mb=512, action="micro", silent=True)
 
-# Set the project root path
+# Ustaw ścieżkę główną projektu
 project_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 
 def show_diagnostics_log():
-    """Displays the diagnostics log."""
+    """Wyświetla dziennik diagnostyczny."""
     if os.path.exists(DIAGNOSTICS_LOG):
-        print("\n === 🛠️  Diagnostics Log  ===\n")
+        print("\n === 🛠️  Dziennik diagnostyczny  ===\n")
         with open(DIAGNOSTICS_LOG, "r") as log_file:
             print(log_file.read())
     else:
-        print("\n ❌  Diagnostics log not found.\n")
+        print("\n ❌  Dziennik diagnostyczny nie został znaleziony.\n")
 
 
 def initialize_project():
-    """Initialize the project: create necessary directories and files."""
+    """Inicjalizuje projekt: tworzy niezbędne katalogi i pliki."""
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     if not LOG_FILE_PATH.exists():
         LOG_FILE_PATH.touch()
-        print(f"Created an empty log file: {LOG_FILE_PATH}")
+        print(f"Utworzono pusty plik dziennika: {LOG_FILE_PATH}")
 
 
-# Call the initialization function
+# Wywołaj funkcję inicjalizacji
 initialize_project()
 create_summary_report()
 
 
 def show_main_menu():
-    """Display the main menu."""
+    """Wyświetl menu główne."""
     local_print_speed = 0.005
     while True:
         wireguard_installed = check_wireguard_installed()
         display_message_slowly(f"\n🛡️  ======  Menu pyWGgen  ======= 🛡️\n", print_speed=local_print_speed, indent=False)
         display_message_slowly(f" ------------------------------------------", print_speed=local_print_speed, indent=False)
-        print(f"  g. 🌐  Open Gradio Admin Panel")
-        print(f"  u. 👤  Manage Users")
-        print(f" sy. 📡  Synchronize Users")
-        print(f" du. 🧹  Clear User Database")
+        print(f"  g. 🌐  Otwórz Panel Administracyjny Gradio")
+        print(f"  u. 👤  Zarządzaj Użytkownikami")
+        print(f" sy. 📡  Synchronizuj Użytkowników")
+        print(f" du. 🧹  Wyczyść Bazę Użytkowników")
         display_message_slowly(f" ------------------------------------------", print_speed=local_print_speed, indent=False)
         if wireguard_installed:
-            print(f" rw. ♻️   Reinstall WireGuard")
-            print(f" dw. 🗑️   Remove WireGuard")
+            print(f" rw. ♻️   Przeinstaluj WireGuard")
+            print(f" dw. 🗑️   Usuń WireGuard")
         else:
-            print(f" iw. ⚙️   Install WireGuard")
-        print(f" up. 🔄  Update Dependencies")
+            print(f" iw. ⚙️   Zainstaluj WireGuard")
+        print(f" up. 🔄  Aktualizuj Zależności")
         display_message_slowly(f" ------------------------------------------", print_speed=local_print_speed, indent=False)
-        print(f"  s. 📊  Project Status & Report")
-        print(f"  d. 🛠️   System Diagnostics")
+        print(f"  s. 📊  Status Projektu i Raport")
+        print(f"  d. 🛠️   Diagnostyka Systemu")
 
-        display_message_slowly(f"\n🤖  ======  AI Assistant   ======  🤖\n", print_speed=local_print_speed, indent=False)
-        print(f" aid. 🚀  AI VPN Diagnostics")
-        print(f" aic. 💬  AI Chat")
-        print(f" air. 📄  AI Generate Report")
+        display_message_slowly(f"\n🤖  ======  Asystent AI   ======  🤖\n", print_speed=local_print_speed, indent=False)
+        print(f" aid. 🚀  Diagnostyka VPN z AI")
+        print(f" aic. 💬  Czat z AI")
+        print(f" air. 📄  Generuj Raport z AI")
 
-        print(f"\n\t 0 or q. Exit")
+        print(f"\n\t 0 lub q. Wyjście")
         display_message_slowly(f" =========================================""\n", print_speed=local_print_speed, indent=False)
 
-        choice = input_with_history(" Select an action: ").strip().lower()
+        choice = input_with_history(" Wybierz akcję: ").strip().lower()
 
         if choice in {"0", "q"}:
-            print("\n 👋  Exiting. Goodbye!\n")
+            print("\n 👋  Wyjście. Do widzenia!\n")
             break
 
-        # Project Status & Report (объединено: i + rg + fr)
+        # Status Projektu i Raport (połączone: i + rg + fr)
         elif choice == "s":
             from modules.report_utils import display_summary_report, show_project_status, generate_project_report, display_test_report
-            print("\n📊 Generating project status...\n")
+            print("\n📊 Generowanie statusu projektu...\n")
             try:
                 display_summary_report()
                 show_project_status()
-                print("\n📋 Full report:\n")
+                print("\n📋 Pełny raport:\n")
                 generate_project_report()
                 display_test_report()
             except Exception as e:
-                print(f"⚠️  Error: {e}")
-            input("\n Press Enter to continue...")
+                print(f"⚠️  Błąd: {e}")
+            input("\n Naciśnij Enter aby kontynuować...")
 
-        # System Diagnostics (объединено: dg + sd)
+        # Diagnostyka Systemu (połączone: dg + sd)
         elif choice == "d":
             from modules.debugger import run_diagnostics
-            print("\n🛠️  Running diagnostics...\n")
+            print("\n🛠️  Uruchamianie diagnostyki...\n")
             try:
                 run_diagnostics()
-                print("\n📜 Diagnostics log:\n")
+                print("\n📜 Dziennik diagnostyczny:\n")
                 show_diagnostics_log()
             except Exception as e:
-                print(f"⚠️  Error: {e}")
-            input("\n Press Enter to continue...")
+                print(f"⚠️  Błąd: {e}")
+            input("\n Naciśnij Enter aby kontynuować...")
 
-        # Update Dependencies
+        # Aktualizuj Zależności
         elif choice == "up":
             from modules.update_utils import update_project
             update_project()
 
-        # Gradio Admin Panel
+        # Panel Administracyjny Gradio
         elif choice == "g":
             from modules.gradio_utils import run_gradio_admin_interface
             port = 7860
-            print(f"\n ✅  Launching Gradio interface http://{get_external_ip()}:{port}")
+            print(f"\n ✅  Uruchamianie interfejsu Gradio http://{get_external_ip()}:{port}")
             run_gradio_admin_interface(port=port)
 
-        # Manage Users
+        # Zarządzaj Użytkownikami
         elif choice == "u":
             from modules.manage_users_menu import manage_users_menu
             manage_users_menu()
 
-        # Reinstall WireGuard
+        # Przeinstaluj WireGuard
         elif choice == "rw":
             install_wireguard()
 
-        # Install WireGuard
+        # Zainstaluj WireGuard
         elif choice == "iw":
             install_wireguard()
 
-        # Remove WireGuard
+        # Usuń WireGuard
         elif choice == "dw":
             uninstall_wireguard()
 
-        # Clear User Database
+        # Wyczyść Bazę Użytkowników
         elif choice == "du":
             from modules.user_data_cleaner import clean_user_data
             clean_user_data()
 
-        # Synchronize Users
+        # Synchronizuj Użytkowników
         elif choice == "sy":
             from modules.sync import sync_users_from_config
             sync_users_from_config()
 
-        # ========== AI ASSISTANT ==========
-        # AI VPN Diagnostics (Full)
+        # ========== ASYSTENT AI ==========
+        # Diagnostyka VPN z AI (Pełna)
         elif choice == "aid":
-            print("\n🚀 Запуск AI VPN Diagnostics...\n")
+            print("\n🚀 Uruchamianie Diagnostyki VPN z AI...\n")
             try:
                 subprocess.run(["python3", "ai_assistant/diagnostics.py"])
             except Exception as e:
-                print(f"⚠️  Error: {e}")
-            input("\n Press Enter to continue...")
+                print(f"⚠️  Błąd: {e}")
+            input("\n Naciśnij Enter aby kontynuować...")
 
-        # AI Chat Mode
+        # Tryb Czatu z AI
         elif choice == "aic":
-            print("\n💬 Запуск AI Chat...\n")
+            print("\n💬 Uruchamianie Czatu z AI...\n")
             try:
                 from ai_assistant.data_collector import collect_all_data
                 from ai_assistant.ai_chat import interactive_mode
-                print("🔄 Сбор данных VPN сервера...")
+                print("🔄 Zbieranie danych serwera VPN...")
                 data = collect_all_data()
-                print("✅ Данные собраны. Запуск чата...\n")
+                print("✅ Dane zebrane. Uruchamianie czatu...\n")
                 interactive_mode(data)
             except Exception as e:
-                print(f"⚠️  Error: {e}")
-            input("\n Press Enter to continue...")
+                print(f"⚠️  Błąd: {e}")
+            input("\n Naciśnij Enter aby kontynuować...")
 
-        # AI Generate Report
+        # Generowanie Raportu z AI
         elif choice == "air":
-            print("\n📄 Запуск AI Report Generator...\n")
+            print("\n📄 Uruchamianie Generatora Raportów AI...\n")
             try:
                 from ai_assistant.data_collector import collect_all_data
                 from ai_assistant.ai_report import show_report_menu
-                print("🔄 Сбор данных для отчёта...")
+                print("🔄 Zbieranie danych do raportu...")
                 data = collect_all_data()
                 show_report_menu(data)
             except Exception as e:
-                print(f"⚠️  Error: {e}")
-            input("\n Press Enter to continue...")
+                print(f"⚠️  Błąd: {e}")
+            input("\n Naciśnij Enter aby kontynuować...")
         # ==================================
 
         else:
-            print(f"\n  ⚠️  Invalid choice. Please try again.")
+            print(f"\n  ⚠️  Nieprawidłowy wybór. Spróbuj ponownie.")
 
 
 def main():
-    """Main function."""
+    """Funkcja główna."""
     initialize_project()
     show_main_menu()
 
