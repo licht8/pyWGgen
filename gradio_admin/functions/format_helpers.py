@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # gradio_admin/functions/format_helpers.py
-# Helper functions for formatting data in the pyWGgen project
+# Funkcje pomocnicze do formatowania danych w projekcie pyWGgen
 
 from datetime import datetime
 
 def format_time(iso_time):
-    """Formats time from ISO 8601 to a readable format."""
+    """Formatuje czas z ISO 8601 do czytelnego formatu."""
     try:
         dt = datetime.fromisoformat(iso_time)
         return dt.strftime("%Y-%m-%d %H:%M:%S")
@@ -13,24 +13,24 @@ def format_time(iso_time):
         return "N/A"
 
 def calculate_time_remaining(expiry_time):
-    """Calculates the remaining time until expiration."""
+    """Oblicza pozostały czas do wygaśnięcia."""
     try:
         dt_expiry = datetime.fromisoformat(expiry_time)
         delta = dt_expiry - datetime.now()
         if delta.days >= 0:
-            return f"{delta.days} days"
-        return "Expired"
+            return f"{delta.days} dni"
+        return "Wygasło"
     except Exception:
         return "N/A"
 
 def format_user_info(username, user_data, table_row):
     """
-    Formats user information for display in the interface.
+    Formatuje informacje o użytkowniku do wyświetlenia w interfejsie.
 
-    :param username: Username
-    :param user_data: Dictionary containing user information
-    :param table_row: List of table row data
-    :return: Formatted string with user information
+    :param username: Nazwa użytkownika
+    :param user_data: Słownik z informacjami o użytkowniku
+    :param table_row: Lista danych wiersza tabeli
+    :return: Sformatowany ciąg z informacjami o użytkowniku
     """
     created = user_data.get("created_at", "N/A")
     expires = user_data.get("expires_at", "N/A")
@@ -40,16 +40,16 @@ def format_user_info(username, user_data, table_row):
     down = table_row[5] if len(table_row) > 5 else "N/A"
     state = table_row[6] if len(table_row) > 6 else "N/A"
 
-    # Construct the textual output
+    # Skonstruuj tekstowy wynik
     user_info = f"""
-👤 User: {username}
-📧 Email: user@mail.wg
-🌱 Created: {format_time(created)}
-🔥 Expires: {format_time(expires)}
-🌐 Internal IP: {int_ip}
-🌎 External IP: {ext_ip}
-💾 Uploaded: {up}
-💽 Downloaded: {down}
+👤 Użytkownik: {username}
+📧 Email: [user@mail.wg](mailto:user@mail.wg)
+🌱 Utworzony: {format_time(created)}
+🔥 Wygaśnie: {format_time(expires)}
+🌐 IP wewnętrzne: {int_ip}
+🌎 IP zewnętrzne: {ext_ip}
+💾 Wysłane: {up}
+💽 Odbite: {down}
 ✅ Status: {state}
 """
     return user_info.strip()
