@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Утилиты для AI Assistant."""
+"""Narzędzia dla Asystenta AI."""
 
 import json
 import os
@@ -15,14 +15,14 @@ import settings
 
 
 def get_log_dir() -> Path:
-    """Получить директорию для AI логов."""
+    """Pobiera katalog dla logów AI."""
     log_dir = Path(settings.AI_ASSISTANT_LOG_DIR)
     log_dir.mkdir(parents=True, exist_ok=True)
     return log_dir
 
 
 def run_cmd(cmd: str, timeout: int = 30) -> str:
-    """Выполнить shell команду и вернуть результат."""
+    """Wykonuje polecenie shell i zwraca wynik."""
     try:
         result = subprocess.run(
             cmd,
@@ -33,13 +33,13 @@ def run_cmd(cmd: str, timeout: int = 30) -> str:
         )
         return result.stdout.strip()
     except subprocess.TimeoutExpired:
-        return f"Error: Command timeout after {timeout}s"
+        return f"Błąd: Przekroczono czas po {timeout}s"
     except Exception as e:
-        return f"Error: {str(e)}"
+        return f"Błąd: {str(e)}"
 
 
 def check_ollama(host: str) -> bool:
-    """Проверка доступности Ollama API."""
+    """Sprawdza dostępność API Ollama."""
     try:
         response = requests.get(f"{host}/api/tags", timeout=5)
         return response.status_code == 200
@@ -48,7 +48,7 @@ def check_ollama(host: str) -> bool:
 
 
 def save_json_log(data: Dict[str, Any], prefix: str = "diag") -> str:
-    """Сохранить JSON лог."""
+    """Zapisuje log JSON."""
     log_dir = get_log_dir()
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_file = log_dir / f"{prefix}_{ts}.json"
@@ -60,7 +60,7 @@ def save_json_log(data: Dict[str, Any], prefix: str = "diag") -> str:
 
 
 def load_json_log(log_file: str) -> Dict[str, Any]:
-    """Загрузить JSON лог."""
+    """Wczytuje log JSON."""
     try:
         with open(log_file, 'r', encoding='utf-8') as f:
             return json.load(f)
@@ -69,7 +69,7 @@ def load_json_log(log_file: str) -> Dict[str, Any]:
 
 
 def get_latest_log(prefix: str = "diag") -> str:
-    """Получить путь к последнему логу."""
+    """Pobiera ścieżkę do najnowszego logu."""
     log_dir = get_log_dir()
     logs = sorted(log_dir.glob(f"{prefix}_*.json"), reverse=True)
     
