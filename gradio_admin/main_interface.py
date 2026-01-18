@@ -24,7 +24,7 @@ with gr.Blocks(title="pyWGgen - Menedżer VPN") as admin_interface:
         manage_user_tab()
     
     with gr.Tab(label="📊 Statystyki"):
-        statistics_tab()
+        create_statistics_tab()
     
     with gr.Tab(label="🚀 Diagnostyka AI"):
         ai_diagnostics_tab()
