@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 # gradio_admin/tabs/create_user_tab.py
-# Tab for creating users
+# Zakładka do tworzenia użytkowników
 
 import gradio as gr
 from gradio_admin.functions.create_user import create_user
 
 def create_user_tab():
     """
-    Tab for creating WireGuard users.
+    Zakładka do tworzenia użytkowników WireGuard.
     """
-    gr.Markdown("# 🌱 Create User - Создание пользователя\n\nСоздай нового WireGuard пользователя с конфигом и QR кодом")
+    gr.Markdown("# 🌱 Tworzenie użytkownika\n\nUtwórz nowego użytkownika WireGuard z konfiguracją i kodem QR")
     
-    username_input = gr.Textbox(label="Username", placeholder="Enter username...")
-    email_input = gr.Textbox(label="Email (optional)", placeholder="Enter email...")
-    telegram_input = gr.Textbox(label="Telegram ID (optional)", placeholder="Enter Telegram ID...")
-    create_button = gr.Button("Create User")
-    output_message = gr.Textbox(label="Result", interactive=False)
-    qr_code_display = gr.Image(label="QR Code", visible=False)
+    username_input = gr.Textbox(label="Nazwa użytkownika", placeholder="Wpisz nazwę użytkownika...")
+    email_input = gr.Textbox(label="Email (opcjonalnie)", placeholder="Wpisz email...")
+    telegram_input = gr.Textbox(label="ID Telegram (opcjonalnie)", placeholder="Wpisz ID Telegram...")
+    create_button = gr.Button("Utwórz użytkownika")
+    output_message = gr.Textbox(label="Wynik", interactive=False)
+    qr_code_display = gr.Image(label="Kod QR", visible=False)
 
     def handle_create_user(username, email, telegram_id):
         result, qr_code_path = create_user(username, email, telegram_id)
         
-        # Разделяем успешные и ошибочные сообщения
+        # Rozdziel komunikaty sukcesu i błędu
         if result.startswith("✅"):
             return result, gr.update(visible=True, value=qr_code_path) if qr_code_path else gr.update(visible=False)
         else:
