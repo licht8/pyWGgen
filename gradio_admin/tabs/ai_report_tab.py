@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AI Report Tab для Gradio."""
+"""Zakładka generatora raportów AI dla Gradio."""
 
 import gradio as gr
 import sys
@@ -14,67 +14,67 @@ from ai_assistant.ai_report import generate_report, get_report_dir
 
 
 def generate_html_report():
-    """Генерация HTML отчёта."""
+    """Generuje raport HTML."""
     try:
-        # Сбор данных
+        # Zbierz dane
         data = collect_all_data()
         
-        # Генерация отчёта
+        # Wygeneruj raport
         report_path = generate_report(data)
         
-        # Читаем размер файла
+        # Sprawdź rozmiar pliku
         file_size_kb = os.path.getsize(report_path) / 1024
         
-        info = f"""✅ **Отчёт успешно сгенерирован!**
+        info = f"""✅ **Raport pomyślnie wygenerowany!**
 
-**📄 Файл:** `{report_path}`
+**📄 Plik:** `{report_path}`
 
-**📊 Размер:** {file_size_kb:.1f} KB
+**📊 Rozmiar:** {file_size_kb:.1f} KB
 
-**💡 Используй кнопку "Скачать" ниже**
+**💡 Użyj przycisku "Pobierz" poniżej**
 """
         
         return info, report_path
     
     except Exception as e:
-        error_info = f"❌ **Ошибка:** {str(e)}"
+        error_info = f"❌ **Błąd:** {str(e)}"
         return error_info, None
 
 
 def list_previous_reports():
-    """Список предыдущих отчётов."""
+    """Lista poprzednich raportów."""
     try:
         report_dir = get_report_dir()
         reports = sorted(report_dir.glob("report_*.html"), reverse=True)
         
         if not reports:
-            return "📭 **Нет сохранённых отчётов**", None
+            return "📭 **Brak zapisanych raportów**", None
         
-        report_list = "## 📋 Предыдущие отчёты\n\n"
+        report_list = "## 📋 Poprzednie raporty\n\n"
         for i, report in enumerate(reports[:10], 1):
             size_kb = report.stat().st_size / 1024
             report_list += f"{i}. `{report.name}` — {size_kb:.1f} KB\n"
         
-        report_list += f"\n**Всего отчётов:** {len(reports)}"
+        report_list += f"\n**Łącznie raportów:** {len(reports)}"
         
         return report_list, None
     
     except Exception as e:
-        return f"❌ **Ошибка:** {str(e)}", None
+        return f"❌ **Błąd:** {str(e)}", None
 
 
 def ai_report_tab():
-    """Создание таба AI Report."""
+    """Tworzy zakładkę generatora raportów AI."""
     
-    gr.Markdown("# 📄 AI Report Generator\n\nГенерация подробных HTML отчётов о состоянии VPN сервера")
+    gr.Markdown("# 📄 Generator raportów AI\n\nGenerowanie szczegółowych raportów HTML o stanie serwera VPN")
     
     with gr.Row():
-        generate_btn = gr.Button("Сгенерировать отчёт", size="lg")
-        list_btn = gr.Button("Список отчётов", size="lg")
+        generate_btn = gr.Button("Wygeneruj raport", size="lg")
+        list_btn = gr.Button("Lista raportów", size="lg")
     
-    info_output = gr.Markdown(value="Нажми **Сгенерировать отчёт** для создания нового отчёта")
+    info_output = gr.Markdown(value="Naciśnij **Wygeneruj raport** aby utworzyć nowy raport")
     
-    download_file = gr.File(label="💾 Скачать HTML отчёт")
+    download_file = gr.File(label="💾 Pobierz raport HTML")
     
     generate_btn.click(
         fn=generate_html_report,
