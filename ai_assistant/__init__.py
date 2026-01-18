@@ -1,4 +1,4 @@
-"""AI Assistant для pyWGgen VPN диагностики."""
+"""Asystent AI dla diagnostyki VPN pyWGgen."""
 
 from .data_collector import collect_all_data
 from .ai_chat import interactive_mode, ask_question
