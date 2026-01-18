@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 # gradio_admin/tabs/statistics_tab.py
-# Zakładka Statystyki - pełna wersja z poprawkami
+# "Statistics" tab for the Gradio interface of the pyWGgen project
 
 import gradio as gr  # type: ignore
 import pandas as pd  # type: ignore
@@ -14,157 +13,156 @@ from modules.traffic_updater import update_traffic_data
 from settings import USER_DB_PATH
 from settings import QR_CODE_DIR
 
-def get_initial_data():
-    """Pobiera początkowe dane dla zakładki Statystyki."""
-    update_traffic_data(USER_DB_PATH)
-    table = update_table(True)
+def statistics_tab():
+    """Creates a statistics tab for WireGuard users."""
     
-    # Zawsze zapewnij poprawne kolumny
-    columns = ["👤 Użytkownik", "📊 Zużyto", "📦 Limit", "🌐 Adres IP", "⚡ Stan", "💳 Cena", "UID"]
+    gr.Markdown("# 🔍 Statistics - Статистика пользователей\n\nПросмотр статистики, трафика и информации о пользователях")
     
-    if table.empty:
-        print("[DEBUG] Tabela początkowa jest pusta.")
-        table = pd.DataFrame([], columns=columns)
-        user_list = ["Wybierz użytkownika"]
-    else:
-        print(f"[DEBUG] Początkowa tabela:\n{table}")
-        user_list = ["Wybierz użytkownika"] + table["👤 Użytkownik"].tolist()
-    
-    return table, user_list
+    # Fetch initial data
+    def get_initial_data():
+        update_traffic_data(USER_DB_PATH)
+        table = update_table(True)
+        user_list = ["Select a user"] + table["👤 User"].tolist() if not table.empty else ["Select a user"]
+        return table, user_list
 
-def refresh_table(show_inactive):
-    """Odświeża tabelę użytkowników z aktualnymi danymi."""
-    update_traffic_data(USER_DB_PATH)
-    table = update_table(show_inactive)
+    initial_table, initial_user_list = get_initial_data()
     
-    columns = ["👤 Użytkownik", "📊 Zużyto", "📦 Limit", "🌐 Adres IP", "⚡ Stan", "💳 Cena", "UID"]
-    
-    if table.empty:
-        print("[DEBUG] Tabela jest pusta po aktualizacji.")
-        empty_table = pd.DataFrame([], columns=columns)
-        return (
-            "", 
-            df_to_html(empty_table), 
-            gr.update(choices=["Wybierz użytkownika"], value="Wybierz użytkownika"), 
-            "", 
-            None
-        )
-    
-    print(f"[DEBUG] Zaktualizowana tabela:\n{table}")
-    user_list = ["Wybierz użytkownika"] + table["👤 Użytkownik"].tolist()
-    print(f"[DEBUG] Lista użytkowników: {user_list}")
-    
-    return (
-        "", 
-        df_to_html(table), 
-        gr.update(choices=user_list, value="Wybierz użytkownika"), 
-        "", 
-        None
+    # Функция для конвертации DataFrame в HTML
+    def df_to_html(df):
+        if df.empty:
+            return "<p style='text-align: center; padding: 20px; color: #9ca3af;'>No data available</p>"
+        
+        html = """
+        <div style="width: 100%; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-family: system-ui, -apple-system, sans-serif; font-size: 14px;">
+                <thead>
+                    <tr style="background-color: #0f0f11; color: #d1d5db;">
+        """
+        
+        for idx, col in enumerate(df.columns):
+            border_style = "border-bottom: 1px solid #3f3f46;"
+            if idx < len(df.columns) - 1:
+                border_style += " border-right: 1px solid #3f3f46;"
+            html += f'<th style="padding: 12px 16px; text-align: left; font-weight: 600; {border_style}">{col}</th>'
+        
+        html += """
+                    </tr>
+                </thead>
+                <tbody>
+        """
+        
+        for row_idx, row in df.iterrows():
+            # Чередование: #27272a и немного светлее (#2d2d30)
+            bg_color = "#27272a" if row_idx % 2 == 0 else "#2d2d30"
+            html += f'<tr style="background-color: {bg_color}; color: #d1d5db;">'
+            for col_idx, val in enumerate(row):
+                border_style = ""
+                if row_idx < len(df) - 1:
+                    border_style += "border-bottom: 1px solid #3f3f46;"
+                if col_idx < len(row) - 1:
+                    border_style += " border-right: 1px solid #3f3f46;"
+                html += f'<td style="padding: 10px 16px; {border_style}">{val}</td>'
+            html += '</tr>'
+        
+        html += """
+                </tbody>
+            </table>
+        </div>
+        """
+        return html
+
+    # Show inactive checkbox and Refresh button
+    with gr.Row():
+        show_inactive = gr.Checkbox(label="Show blocked", value=True, scale=1)
+        refresh_button = gr.Button("Refresh", scale=0, min_width=150)
+
+    # Search field
+    search_input = gr.Textbox(label="Search", placeholder="Enter text to filter table...", interactive=True)
+
+    # User selection and display of information and QR code
+    with gr.Row(equal_height=True):
+        with gr.Column(scale=3):
+            user_selector = gr.Dropdown(
+                label="Select User",
+                choices=initial_user_list,
+                value="Select a user",
+                interactive=True
+            )
+            user_info_display = gr.Textbox(
+                label="User Details",
+                value="",
+                lines=10,
+                interactive=False
+            )
+        with gr.Column(scale=1, min_width=200):
+            qr_code_display = gr.Image(
+                label="User QR Code",
+                type="filepath",
+                interactive=False,
+                height=200
+            )
+
+    # HTML таблица вместо Dataframe
+    stats_table_html = gr.HTML(value=df_to_html(initial_table), elem_id="statistics_table")
+
+    # Function to refresh the table and reset data
+    def refresh_table(show_inactive):
+        update_traffic_data(USER_DB_PATH)
+        table = update_table(show_inactive)
+        if table.empty:
+            print("[DEBUG] Table is empty after update.")
+        else:
+            print(f"[DEBUG] Updated table:\n{table}")
+        user_list = ["Select a user"] + table["👤 User"].tolist() if not table.empty else ["Select a user"]
+        print(f"[DEBUG] User list: {user_list}")
+        return "", df_to_html(table), gr.update(choices=user_list, value="Select a user"), "", None
+
+    refresh_button.click(
+        fn=refresh_table,
+        inputs=[show_inactive],
+        outputs=[search_input, stats_table_html, user_selector, user_info_display, qr_code_display]
     )
 
-def get_user_stats(selected_user):
-    """Pobiera szczegółowe statystyki wybranego użytkownika."""
-    if selected_user == "Wybierz użytkownika" or not selected_user:
-        return "", "", "", None
-    
-    print(f"[DEBUG] Wybrano użytkownika: {selected_user}")
-    
-    # Tutaj możesz dodać logikę pobierania szczegółowych danych użytkownika
-    # Na razie zwracamy placeholder
-    stats_info = f"""
-    📊 Szczegóły użytkownika: **{selected_user}**
-    
-    🔄 Status: aktywny
-    📈 Zużycie danych: 0.00 MiB
-    ⏱️ Ostatnie logowanie: -
-    🌐 IP: -
-    💳 Subskrypcja: 0.00 PLN/miesiąc
-    """
-    
-    return (
-        f"Wybrano: {selected_user}",
-        stats_info,
-        "", 
-        None
+    def search_table(query):
+        table = update_table(True)
+        if query:
+            filtered_table = table.loc[
+                table.apply(lambda row: query.lower() in " ".join(map(str, row)).lower(), axis=1)
+            ]
+            print(f"[DEBUG] Filtered table:\n{filtered_table}")
+            return df_to_html(filtered_table)
+        return df_to_html(table)
+
+    search_input.change(
+        fn=search_table,
+        inputs=[search_input],
+        outputs=[stats_table_html]
     )
 
-def create_statistics_tab():
-    """Tworzy zakładkę Statystyki z pełnym interfejsem."""
-    with gr.TabItem("📊 Statystyka", id="statistics"):
-        gr.Markdown("# 📊 Statystyka użytkowników WireGuard")
-        
-        with gr.Row():
-            with gr.Column(scale=2):
-                # Checkbox do pokazywania nieaktywnych
-                show_inactive_cb = gr.Checkbox(
-                    label="Pokaż nieaktywnych użytkowników", 
-                    value=False
-                )
-                
-                # Przycisk odświeżania
-                refresh_btn = gr.Button("🔄 Odśwież dane", variant="primary")
-                
-                gr.Markdown("### 📋 Lista wszystkich użytkowników")
-                
-                # Tabela główny widok
-                table_output = gr.HTML()
-                
-            with gr.Column(scale=1):
-                gr.Markdown("### 👤 Wybierz użytkownika")
-                
-                # Dropdown wyboru użytkownika
-                user_dropdown = gr.Dropdown(
-                    label="Użytkownicy",
-                    choices=["Wybierz użytkownika"],
-                    value="Wybierz użytkownika"
-                )
-                
-                # Szczegóły użytkownika
-                selected_user_info = gr.Textbox(
-                    label="Wybrany użytkownik", 
-                    interactive=False
-                )
-                
-                user_details = gr.Markdown()
-        
-        # Ładowanie początkowych danych
-        table_data, user_choices = get_initial_data()
-        user_dropdown.change(
-            get_user_stats,
-            inputs=user_dropdown,
-            outputs=[selected_user_info, user_details]
-        )
-        
-        # Odświeżanie tabeli
-        refresh_btn.click(
-            refresh_table,
-            inputs=show_inactive_cb,
-            outputs=[table_output, user_dropdown]
-        ).then(
-            get_user_stats,
-            inputs=user_dropdown,
-            outputs=[selected_user_info, user_details]
-        )
-        
-        # show_inactive_cb.change(
-        #     refresh_table,
-        #     inputs=show_inactive_cb,
-        #     outputs=[table_output, user_dropdown]
-        # )
-        
-        # Inicjalizacja
-        return (
-            table_output,
-            user_dropdown,
-            selected_user_info,
-            user_details,
-            refresh_btn,
-            show_inactive_cb
-        )
+    def find_qr_code(username):
+        qr_code_file = QR_CODE_DIR / f"{username}.png"
+        if qr_code_file.exists():
+            return str(qr_code_file)
+        return None
 
-# Uruchomienie zakładki (jeśli plik jest uruchamiany bezpośrednio)
-if __name__ == "__main__":
-    demo = gr.Blocks()
-    with demo:
-        create_statistics_tab()
-    demo.launch()
+    def display_user_info(selected_user):
+        if isinstance(selected_user, list):
+            if len(selected_user) > 0:
+                selected_user = selected_user[0]
+            else:
+                selected_user = "Select a user"
+
+        if not selected_user or selected_user == "Select a user":
+            return "", None
+
+        user_info = show_user_info(selected_user)
+        qr_code_path = find_qr_code(selected_user)
+        print(f"[DEBUG] User info:\n{user_info}")
+        print(f"[DEBUG] QR Code path for {selected_user}: {qr_code_path}")
+        return user_info, qr_code_path
+
+    user_selector.change(
+        fn=display_user_info,
+        inputs=[user_selector],
+        outputs=[user_info_display, qr_code_display]
+    )
