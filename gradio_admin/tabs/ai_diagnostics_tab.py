@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AI Diagnostics Tab для Gradio."""
+"""Zakładka diagnostyki AI dla Gradio."""
 
 import gradio as gr
 import sys
@@ -15,59 +15,59 @@ from ai_assistant.utils import save_json_log, check_ollama
 
 
 def format_diagnostics_summary(data: dict) -> str:
-    """Форматирование summary диагностики для Gradio."""
+    """Formatuje podsumowanie diagnostyki dla Gradio."""
     
     nat = data.get("nat", {})
     fw = data.get("firewalld", {})
     wg_status = data.get("wg_status", {})
     
-    # Иконки статусов
+    # Ikony statusów
     nat_icon = "🟢" if nat.get("ok") else "🔴"
-    fw_status = fw.get("active", "unknown")
+    fw_status = fw.get("active", "nieznany")
     fw_icon = "🟢" if fw_status in ["running", "active"] else "🔴"
     wg_port_icon = "🟢" if fw.get("wg_port_open") else "🔴"
     ollama_icon = "🟢" if data.get("health", {}).get("ollama_ok") else "🔴"
     
-    # WireGuard интерфейсы
+    # Interfejsy WireGuard
     wg_lines = []
     for iface, info in wg_status.items():
         status_icon = "🟢" if info.get("service_active") else "🔴"
         wg_lines.append(f"  {status_icon} {iface} ({info.get('service_status')})")
     
-    # Формирование вывода
-    summary = f"""## 🚀 VPN ДИАГНОСТИКА
+    # Formatowanie wyniku
+    summary = f"""## 🚀 Diagnostyka VPN
 
-**🖥️  Сервер:** {data.get('hostname')}  
-**📅 Дата:** {data.get('timestamp')}  
+**🖥️  Serwer:** {data.get('hostname')}  
+**📅 Data:** {data.get('timestamp')}  
 **⏱️  Uptime:** {data.get('uptime')}
 
 ---
 
-### 📡 WireGuard: {data.get('wg_active')}/{data.get('wg_total')} активны
+### 📡 WireGuard: {data.get('wg_active')}/{data.get('wg_total')} aktywnych
 
 {chr(10).join(wg_lines)}
 
 ---
 
-### 🔥 Сеть & Firewall
+### 🔥 Sieć & Firewall
 
 - **Firewalld:** {fw_icon} {fw_status}
-- **WG порт:** {wg_port_icon} {fw.get('wg_port', 'N/A')}
-- **NAT:** {nat_icon} {nat.get('reason', 'Нет данных')}
+- **Port WG:** {wg_port_icon} {fw.get('wg_port', 'N/A')}
+- **NAT:** {nat_icon} {nat.get('reason', 'Brak danych')}
 
 ---
 
 ### 👥 Peers
 
-- **Активных (подключено):** {data.get('peers_active', 0)}
-- **Настроено (всего):** {data.get('peers_configured', 0)}
-- **Пользовательских конфигов:** {data.get('user_peer_files', {}).get('total', 0)}
+- **Aktywnych (połączonych):** {data.get('peers_active', 0)}
+- **Skonfigurowanych (łącznie):** {data.get('peers_configured', 0)}
+- **Plików konfiguracyjnych użytkowników:** {data.get('user_peer_files', {}).get('total', 0)}
 
 ---
 
-### 🤖 AI Assistant
+### 🤖 Asystent AI
 
-- **Ollama:** {ollama_icon} {'Доступен' if data.get('health', {}).get('ollama_ok') else 'Недоступен'}
+- **Ollama:** {ollama_icon} {'Dostępny' if data.get('health', {}).get('ollama_ok') else 'Niedostępny'}
 - **Host:** {settings.OLLAMA_HOST}
 - **Model:** {settings.MODEL_NAME}
 """
@@ -76,47 +76,47 @@ def format_diagnostics_summary(data: dict) -> str:
 
 
 def run_diagnostics():
-    """Запуск полной диагностики."""
+    """Uruchamia pełną diagnostykę."""
     try:
-        # Сбор данных
+        # Zbierz dane
         data = collect_all_data()
         
-        # Сохранение лога
+        # Zapisz log
         log_file = save_json_log(data, prefix="diag")
         
-        # Форматирование summary
+        # Sformatuj podsumowanie
         summary = format_diagnostics_summary(data)
         
-        # AI анализ
+        # Analiza AI
         if not check_ollama(settings.OLLAMA_HOST):
-            ai_analysis = f"❌ **Ollama недоступен**\n\nПроверь: {settings.OLLAMA_HOST}"
+            ai_analysis = f"❌ **Ollama niedostępny**\n\nSprawdź: {settings.OLLAMA_HOST}"
         else:
             ai_analysis = analyze_with_ai(data)
         
-        # Добавляем AI анализ к summary
-        full_report = f"{summary}\n\n---\n\n## 🤖 АНАЛИЗ AI\n\n{ai_analysis}\n\n---\n\n**📄 Лог сохранён:** `{log_file}`"
+        # Połącz podsumowanie z analizą AI
+        full_report = f"{summary}\n\n---\n\n## 🤖 ANALIZA AI\n\n{ai_analysis}\n\n---\n\n**📄 Log zapisany:** `{log_file}`"
         
         return full_report
     
     except Exception as e:
-        return f"❌ **Ошибка диагностики:**\n\n```\n{str(e)}\n```"
+        return f"❌ **Błąd diagnostyki:**\n\n```\n{str(e)}\n```"
 
 
 def ai_diagnostics_tab():
-    """Создание таба AI Diagnostics."""
+    """Tworzy zakładkę Diagnostyki AI."""
     
-    # Убрали with gr.Tab() - таб уже создан в main_interface.py
-    gr.Markdown("# 🚀 AI VPN Diagnostics\n\nПолная диагностика VPN сервера с AI анализом")
+    # Bez with gr.Tab() - zakładka utworzona w main_interface.py
+    gr.Markdown("# 🚀 Diagnostyka VPN AI\n\nPełna diagnostyka serwera VPN z analizą AI")
     
     with gr.Row():
-        run_btn = gr.Button("Запустить диагностику", scale=2)
-        refresh_btn = gr.Button("Обновить", scale=1)
+        run_btn = gr.Button("Uruchom diagnostykę", scale=2)
+        refresh_btn = gr.Button("Odśwież", scale=1)
     
     output = gr.Markdown(
-        value="Нажми **Запустить диагностику** для начала анализа",
-        label="Результат диагностики"
+        value="Naciśnij **Uruchom diagnostykę** aby rozpocząć analizę",
+        label="Wynik diagnostyki"
     )
     
-    # Привязка кнопок
+    # Powiązanie przycisków
     run_btn.click(fn=run_diagnostics, outputs=output)
     refresh_btn.click(fn=run_diagnostics, outputs=output)
