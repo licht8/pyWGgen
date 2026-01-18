@@ -6,7 +6,7 @@ from gradio_admin.functions.delete_user import delete_user
 from gradio_admin.functions.user_records import load_user_records
 from gradio_admin.functions.block_user import block_user, unblock_user
 
-# Import the new synchronization function
+# Import funkcji synchronizacji
 from modules.sync import sync_users_from_config_paths
 
 import os
@@ -14,6 +14,7 @@ import os
 WG_CONFIGS_PATH = "/root/pyWGgenerator/pyWGgen/user/data/wg_configs"
 
 def get_user_config_path(username):
+    """Pobiera ścieżkę do pliku konfiguracyjnego użytkownika."""
     possible_files = [
         f"{username}.conf",
         f"{username}_local.conf"
@@ -25,80 +26,86 @@ def get_user_config_path(username):
     return None
 
 def handle_download_config(selected_user):
-    if not selected_user or selected_user == "Select a user":
-        return None, "Сначала выберите пользователя."
+    """Obsługuje pobieranie konfiguracji użytkownika."""
+    if not selected_user or selected_user == "Wybierz użytkownika":
+        return None, "Najpierw wybierz użytkownika."
     username = selected_user.split(" ")[0]
     config_path = get_user_config_path(username)
     if config_path:
-        return config_path, f"Файл конфига для пользователя {username} готов к скачиванию."
-    return None, f"Конфиг для {username} не найден."
+        return config_path, f"Plik konfiguracji dla użytkownika {username} gotowy do pobrania."
+    return None, f"Konfiguracja dla {username} nie znaleziona."
 
 def manage_user_tab():
-    """Creates a tab for user management (deletion, blocking, unblocking)."""
+    """Tworzy zakładkę zarządzania użytkownikami (usuwanie, blokowanie, odblokowywanie)."""
     
-    gr.Markdown("# 🛠️ Manage Users - Управление пользователями\n\nУдаление, блокировка, разблокировка и скачивание конфигов")
+    gr.Markdown("# 🛠️ Zarządzanie użytkownikami\n\nUsuwanie, blokowanie, odblokowywanie i pobieranie konfiguracji")
 
     def get_user_list():
+        """Pobiera listę użytkowników z rekordów."""
         records = load_user_records()
         user_list = []
         for username, user_data in records.items():
-            status = user_data.get("status", "unknown")
+            status = user_data.get("status", "nieznany")
             display_status = f"({status.capitalize()})" if status else ""
             user_list.append(f"{username} {display_status}".strip())
-        return ["Select a user"] + user_list
+        return ["Wybierz użytkownika"] + user_list
 
     def refresh_user_list():
-        return gr.update(choices=get_user_list(), value="Select a user"), "User list updated."
+        return gr.update(choices=get_user_list(), value="Wybierz użytkownika"), "Lista użytkowników zaktualizowana."
 
     def handle_user_deletion(selected_user):
+        """Obsługuje usuwanie użytkownika."""
         username = selected_user.split(" ")[0]
         success = delete_user(username)
         if success:
-            return gr.update(choices=get_user_list(), value="Select a user"), f"User '{username}' deleted successfully."
-        return gr.update(), f"Failed to delete user '{username}'."
+            return gr.update(choices=get_user_list(), value="Wybierz użytkownika"), f"Użytkownik '{username}' został usunięty."
+        return gr.update(), f"Nie udało się usunąć użytkownika '{username}'."
 
     def handle_user_block(selected_user):
+        """Obsługuje blokowanie użytkownika."""
         username = selected_user.split(" ")[0]
         success, message = block_user(username)
-        return gr.update(choices=get_user_list(), value="Select a user"), message
+        return gr.update(choices=get_user_list(), value="Wybierz użytkownika"), message
 
     def handle_user_unblock(selected_user):
+        """Obsługuje odblokowywanie użytkownika."""
         username = selected_user.split(" ")[0]
         success, message = unblock_user(username)
-        return gr.update(choices=get_user_list(), value="Select a user"), message
+        return gr.update(choices=get_user_list(), value="Wybierz użytkownika"), message
 
-    # New function for the "Synchronize" button
+    # Nowa funkcja dla przycisku "Synchronizuj"
     def handle_sync(config_dir_str, qr_dir_str):
+        """Obsługuje synchronizację użytkowników."""
         success, log = sync_users_from_config_paths(config_dir_str, qr_dir_str)
-        return log  # Return the synchronization logs
+        return log  # Zwraca logi synchronizacji
 
-    # Row with dropdown and "Refresh" button
+    # Wiersz z dropdownem i przyciskiem "Odśwież"
     with gr.Row():
-        user_selector = gr.Dropdown(choices=get_user_list(), value="Select a user", interactive=True)
-        refresh_button = gr.Button("Refresh List")
+        user_selector = gr.Dropdown(choices=get_user_list(), value="Wybierz użytkownika", interactive=True)
+        refresh_button = gr.Button("Odśwież listę")
 
-    # Row with Delete, Block, and Unblock buttons + Download Config
+    # Wiersz z przyciskami Usuń, Blokuj, Odblokuj + Pobierz konfigurację
     with gr.Row():
-        delete_button = gr.Button("Delete User")
-        block_button = gr.Button("Block User")
-        unblock_button = gr.Button("Unblock User")
-        download_button = gr.Button("Скачать конфиг")
+        delete_button = gr.Button("Usuń użytkownika")
+        block_button = gr.Button("Blokuj użytkownika")
+        unblock_button = gr.Button("Odblokuj użytkownika")
+        download_button = gr.Button("Pobierz konfigurację")
 
-    # Field to display the result (deletion, blocking, unblocking, download)
+    # Pole do wyświetlania wyniku (usuwanie, blokowanie, odblokowywanie, pobieranie)
     with gr.Row():
-        result_display = gr.Textbox(label="Result", value="", lines=2, interactive=False)
+        result_display = gr.Textbox(label="Wynik", value="", lines=2, interactive=False)
 
-    # Download output row
+    # Wiersz z wynikiem pobierania
     with gr.Row():
-        download_output = gr.File(label="Файл для скачивания")
+        download_output = gr.File(label="Plik do pobrania")
 
-    # ========= New fields and "Synchronize" button =========
+    # ========= Nowe pola i przycisk "Synchronizuj" =========
     with gr.Row():
-        config_dir_input = gr.Textbox(label="Path to the config directory", value="", lines=1)
-        qr_dir_input = gr.Textbox(label="Path to the QR code directory", value="", lines=1)
-        sync_button = gr.Button("Synchronize")
+        config_dir_input = gr.Textbox(label="Ścieżka do katalogu konfiguracji", value="", lines=1)
+        qr_dir_input = gr.Textbox(label="Ścieżka do katalogu kodów QR", value="", lines=1)
+        sync_button = gr.Button("Synchronizuj")
 
-    # Define button click behaviors
+    # Definiowanie zachowań przycisków
     refresh_button.click(
         fn=refresh_user_list,
         inputs=[],
