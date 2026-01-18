@@ -2,11 +2,10 @@
 # modules/debugger.py
 # -*- coding: utf-8 -*-
 """
-Debugger Module for pyWGgen
+Moduł debugera dla pyWGgen
 ===================================
-This module generates a diagnostic report to help identify potential
-issues within the project structure, dependencies, and functionality.
-
+Ten moduł generuje raport diagnostyczny pomagający zidentyfikować potencjalne
+problemy ze strukturą projektu, zależnościami i funkcjonalnością.
 """
 
 import os
@@ -14,7 +13,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# Добавляем корневую директорию проекта в sys.path
+# Dodajemy katalog główny projektu do sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
@@ -31,15 +30,17 @@ ICONS = {
 
 
 def get_python_environment():
+    """Pobiera informacje o środowisku Python."""
     return {
-        "Python Executable": sys.executable,
-        "Python Version": sys.version,
+        "Ścieżka Python": sys.executable,
+        "Wersja Python": sys.version,
         "PYTHONPATH": sys.path,
     }
 
 
 def get_project_structure(root_dir, exclude_dirs, max_visible_files):
-    structure = ["=== Project Structure ==="]
+    """Analizuje strukturę projektu."""
+    structure = ["=== Struktura projektu ==="]
     for root, dirs, files in os.walk(root_dir):
         dirs[:] = [d for d in dirs if d not in exclude_dirs]
         relative_path = os.path.relpath(root, root_dir)
@@ -47,7 +48,7 @@ def get_project_structure(root_dir, exclude_dirs, max_visible_files):
         total_items = len(dirs) + len(files)
 
         if total_items > max_visible_files:
-            structure.append(f"  ├── 📂 Contains {len(dirs)} folders and {len(files)} files")
+            structure.append(f"  ├── 📂 Zawiera {len(dirs)} folderów i {len(files)} plików")
         else:
             for d in dirs:
                 structure.append(f"  ├── {ICONS['dir']} {d}")
@@ -57,30 +58,33 @@ def get_project_structure(root_dir, exclude_dirs, max_visible_files):
 
 
 def check_required_items(required_items):
+    """Sprawdza wymagane elementy projektu."""
     results = []
     for item in required_items:
         item_path = PROJECT_ROOT / item
         if item_path.exists():
-            results.append(f"{ICONS['check']} Exists: {item}")
+            results.append(f"{ICONS['check']} Istnieje: {item}")
         else:
-            results.append(f"{ICONS['cross']} Missing: {item}")
+            results.append(f"{ICONS['cross']} Brakuje: {item}")
             if item_path.suffix:
                 item_path.parent.mkdir(parents=True, exist_ok=True)
                 item_path.write_text("{}")
-                results.append(f"{ICONS['check']} File created: {item}")
+                results.append(f"{ICONS['check']} Plik utworzony: {item}")
             else:
                 item_path.mkdir(parents=True, exist_ok=True)
-                results.append(f"{ICONS['check']} Directory created: {item}")
+                results.append(f"{ICONS['check']} Katalog utworzony: {item}")
     return "\n".join(results)
 
 
 def write_report(report_data, output_file):
+    """Zapisuje raport diagnostyczny."""
     os.makedirs(output_file.parent, exist_ok=True)
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(report_data)
 
 
 def run_diagnostics():
+    """Uruchamia pełną diagnostykę projektu."""
     timestamp = datetime.now().isoformat()
     required_items = [
         "user/data/qrcodes",
@@ -102,20 +106,20 @@ def run_diagnostics():
     required_checks = check_required_items(required_items)
 
     report = [
-        f"=== Diagnostic Report ===",
-        f"Timestamp: {timestamp}",
+        f"=== Raport diagnostyczny ===",
+        f"Data i czas: {timestamp}",
         "",
-        "=== Python Environment ===",
+        "=== Środowisko Python ===",
         "\n".join([f"{key}: {value}" for key, value in python_env.items()]),
         "",
         project_structure,
         "",
-        "=== Required Files/Dirs Status ===",
+        "=== Status wymaganych plików/katalogów ===",
         required_checks
     ]
     report_data = "\n".join(report)
     write_report(report_data, DIAGNOSTICS_LOG)
-    print(f"  ✅  Отчёт сохранён в:\n 📂  {DIAGNOSTICS_LOG}")
+    print(f"  ✅  Raport zapisany w:\n 📂  {DIAGNOSTICS_LOG}")
 
 
 if __name__ == "__main__":
