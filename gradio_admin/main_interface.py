@@ -4,7 +4,7 @@
 import gradio as gr
 from gradio_admin.tabs.create_user_tab import create_user_tab
 from gradio_admin.tabs.manage_user_tab import manage_user_tab
-from gradio_admin.tabs.statistics_tab import create_statistics_tab
+from gradio_admin.tabs.statistics_tab import statistics_tab
 from gradio_admin.tabs.ollama_chat_tab import ollama_chat_tab
 from gradio_admin.tabs.ai_diagnostics_tab import ai_diagnostics_tab
 from gradio_admin.tabs.ai_report_tab import ai_report_tab
@@ -24,7 +24,7 @@ with gr.Blocks(title="pyWGgen - Menedżer VPN") as admin_interface:
         manage_user_tab()
     
     with gr.Tab(label="📊 Statystyki"):
-        create_statistics_tab()
+        statistics_tab()
     
     with gr.Tab(label="🚀 Diagnostyka AI"):
         ai_diagnostics_tab()
