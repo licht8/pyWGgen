@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # modules/main_registration_fields.py
-## Main module for generating user fields
+## Główny moduł do generowania pól użytkownika
 
 import uuid
 from datetime import datetime, timedelta
@@ -15,45 +15,45 @@ def create_user_record(
     telegram_id="N/A",
     referral_id=None,
     coupon_id=None,
-    group="guest",
-    subscription_plan="free",
+    group="gość",
+    subscription_plan="darmowy",
     payment_method="N/A",
-    preferred_language="en"
+    preferred_language="pl"
 ):
     """
-    Creates and returns a user data structure.
+    Tworzy i zwraca strukturę danych użytkownika.
 
     Args:
-        username (str): The username of the user.
-        address (str): The user's allowed IP address.
-        public_key (str): The user's public key.
-        preshared_key (str): The pre-shared key for the user.
-        qr_code_path (str): Path to the user's QR code.
-        email (str, optional): User's email address. Defaults to "N/A".
-        telegram_id (str, optional): User's Telegram ID. Defaults to "N/A".
-        referral_id (str, optional): Referral ID. Defaults to None.
-        coupon_id (str, optional): Coupon ID. Defaults to None.
-        group (str, optional): User group. Defaults to "guest".
-        subscription_plan (str, optional): Subscription plan. Defaults to "free".
-        payment_method (str, optional): Payment method. Defaults to "N/A".
-        preferred_language (str, optional): Preferred language. Defaults to "en".
+        username (str): Nazwa użytkownika.
+        address (str): Dozwolony adres IP użytkownika.
+        public_key (str): Klucz publiczny użytkownika.
+        preshared_key (str): Klucz współdzielony użytkownika.
+        qr_code_path (str): Ścieżka do kodu QR użytkownika.
+        email (str, optional): Adres email użytkownika. Domyślnie "N/A".
+        telegram_id (str, optional): ID Telegram użytkownika. Domyślnie "N/A".
+        referral_id (str, optional): ID polecenia. Domyślnie None.
+        coupon_id (str, optional): ID kuponu. Domyślnie None.
+        group (str, optional): Grupa użytkownika. Domyślnie "gość".
+        subscription_plan (str, optional): Plan subskrypcji. Domyślnie "darmowy".
+        payment_method (str, optional): Metoda płatności. Domyślnie "N/A".
+        preferred_language (str, optional): Preferowany język. Domyślnie "pl".
 
     Returns:
-        dict: A dictionary representing the user's data structure.
+        dict: Słownik reprezentujący strukturę danych użytkownika.
     """
     current_time = datetime.now()
     user_record = {
         "username": username,
-        "user_id": str(uuid.uuid4()),  # Generate a unique UUID
+        "user_id": str(uuid.uuid4()),  # Generuje unikalny UUID
         "group": group,
-        "tags": ["default-user"],
+        "tags": ["domyślny-użytkownik"],
         "priority": 1,
         "created_at": current_time.isoformat(),
-        "expires_at": (current_time + timedelta(days=30)).isoformat(),  # Validity period: 30 days
+        "expires_at": (current_time + timedelta(days=30)).isoformat(),  # Okres ważności: 30 dni
         "auto_suspend_date": (current_time + timedelta(days=30)).isoformat(),
         "auto_delete_date": (current_time + timedelta(days=30)).isoformat(),
         "last_config_update": current_time.isoformat(),
-        "status": "active",
+        "status": "aktywny",
         "blocked_reason": "N/A",
         "renewal_requested": False,
         "allowed_ips": address,
@@ -65,7 +65,7 @@ def create_user_record(
         "last_handshake": "N/A",
         "uploaded": "N/A",
         "downloaded": "N/A",
-        "transfer": "0.0 KiB received, 0.0 KiB sent",
+        "transfer": "0.0 KiB odebrano, 0.0 KiB wysłano",
         "total_transfer": "0.0 KiB",
         "data_limit": "100.0 GB",
         "data_used": "0.0 KiB",
@@ -83,7 +83,7 @@ def create_user_record(
         "payment_method": payment_method,
         "last_payment_date": "N/A",
         "next_payment_date": "N/A",
-        "payment_status": "inactive",
+        "payment_status": "nieaktywny",
         "total_spent": "0.00 USD",
         "auto_renew": False,
         "transaction_history": [],
