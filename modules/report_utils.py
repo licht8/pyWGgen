@@ -20,7 +20,7 @@ from termcolor import colored
 from pathlib import Path
 from modules.firewall_utils import get_external_ip
 from settings import SUMMARY_REPORT_PATH, TEST_REPORT_PATH
-from modules.test_report_generator import generate_report
+from modules.report_generator import generate_report
 
 # Ścieżka do skryptu tworzącego summary_report
 SUMMARY_SCRIPT = Path(__file__).resolve().parent.parent / "modules" / "diagnostics_summary.py"
