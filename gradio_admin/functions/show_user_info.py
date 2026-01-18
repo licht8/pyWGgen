@@ -5,18 +5,18 @@ from gradio_admin.functions.user_records import load_user_records
 from gradio_admin.functions.format_helpers import format_time
 
 def show_user_info(username):
-    """Displays detailed information about a user."""
-    print(f"[DEBUG] Username: {username}")
+    """Wyświetla szczegółowe informacje o użytkowniku."""
+    print(f"[DEBUG] Nazwa użytkownika: {username}")
 
-    # Load data from user_records.json
+    # Wczytaj dane z user_records.json
     records = load_user_records()
     user_data = records.get(username)
 
     if not user_data:
-        print(f"[DEBUG] User '{username}' not found in records.")
-        return f"User '{username}' not found in records."
+        print(f"[DEBUG] Użytkownik '{username}' nie znaleziony w rekordach.")
+        return f"Użytkownik '{username}' nie znaleziony w rekordach."
 
-    # Format user information
+    # Sformatuj informacje o użytkowniku
     created = user_data.get("created_at", "N/A")
     expires = user_data.get("expires_at", "N/A")
     int_ip = user_data.get("allowed_ips", "N/A")
@@ -26,20 +26,20 @@ def show_user_info(username):
     email = user_data.get("email", "N/A")
     subscription_plan = user_data.get("subscription_plan", "N/A")
     total_spent = user_data.get("total_spent", "N/A")
-    notes = user_data.get("user_notes", "No notes provided")
+    notes = user_data.get("user_notes", "Brak notatek")
 
     user_info = f"""
-👤 User: {username}
+👤 Użytkownik: {username}
 📧 Email: {email}
-🌱 Created: {format_time(created)}
-🔥 Expires: {format_time(expires)}
-🌐 Internal IP: {int_ip}
-📊 Total Transfer: {total_transfer}
-🤝 Last Handshake: {last_handshake}
+🌱 Utworzony: {format_time(created)}
+🔥 Wygaśnie: {format_time(expires)}
+🌐 IP wewnętrzne: {int_ip}
+📊 Całkowity transfer: {total_transfer}
+🤝 Ostatni handshake: {last_handshake}
 ⚡ Status: {status}
-📜 Subscription Plan: {subscription_plan}
-💳 Total Spent: {total_spent}
-📝 Notes: {notes}
+📜 Plan subskrypcji: {subscription_plan}
+💳 Wydane łącznie: {total_spent}
+📝 Notatki: {notes}
 """
-    print(f"[DEBUG] User info:\n{user_info}")
+    print(f"[DEBUG] Informacje o użytkowniku:\n{user_info}")
     return user_info.strip()
