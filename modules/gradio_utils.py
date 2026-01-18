@@ -7,19 +7,19 @@ from gradio_admin.main_interface import admin_interface
 from modules.firewall_utils import open_firewalld_port, close_firewalld_port, handle_port_conflict, get_external_ip
 
 custom_css = """
-/* Центрирование контейнера */
+/* Wyśrodkowanie kontenera */
 .gradio-container {
     max-width: 75% !important;
     width: 75% !important;
     margin: 0 auto !important;
 }
 
-/* Компактные кнопки */
+/* Kompaktowe przyciski */
 button {
     max-width: 220px !important;
 }
 
-/* Убираем обводку у HTML элемента таблицы */
+/* Usuwanie obramowania tabeli HTML */
 #statistics_table table {
     border: none !important;
 }
@@ -28,7 +28,7 @@ button {
     border: none !important;
 }
 
-/* Красивые Accordion БЕЗ рамки - только заголовок */
+/* Eleganckie Accordiony BEZ ramki - tylko nagłówek */
 #server_context_accordion,
 #ai_settings_accordion,
 #ai_help_accordion,
@@ -40,7 +40,7 @@ button {
     margin-bottom: 6px !important;
 }
 
-/* Заголовок Accordion - серый блок */
+/* Nagłówek Accordiona - szary blok */
 #server_context_accordion .label-wrap,
 #ai_settings_accordion .label-wrap,
 #ai_help_accordion .label-wrap,
@@ -78,7 +78,7 @@ button {
     flex-shrink: 0 !important;
 }
 
-/* Содержимое Accordion - без рамки */
+/* Zawartość Accordiona - bez ramki */
 #server_context_accordion > div:last-child,
 #ai_settings_accordion > div:last-child,
 #ai_help_accordion > div:last-child,
@@ -88,7 +88,7 @@ button {
     border: none !important;
 }
 
-/* AI Report HTML Container - КЛЮЧЕВЫЕ СТИЛИ */
+/* Kontener HTML Raportu AI - KLUCZOWE STYLE */
 #report_html_container {
     min-height: 600px !important;
     max-height: 800px !important;
@@ -100,7 +100,7 @@ button {
     margin-top: 10px !important;
 }
 
-/* Фикс для iframe внутри HTML компонента */
+/* Poprawka dla iframe wewnątrz komponentu HTML */
 #report_html_container iframe {
     background-color: #ffffff !important;
     width: 100% !important;
@@ -108,12 +108,12 @@ button {
     border: none !important;
 }
 
-/* Фикс для самого HTML элемента */
+/* Poprawka dla samego elementu HTML */
 #report_html_container > div {
     background-color: #ffffff !important;
 }
 
-/* Scrollbar для HTML контейнера */
+/* Pasek przewijania dla kontenera HTML */
 #report_html_container::-webkit-scrollbar {
     width: 10px !important;
 }
@@ -138,11 +138,13 @@ hr {
 """
 
 def run_gradio_admin_interface(port):
-    """Launches the Gradio interface on the specified port."""
+    """
+    Uruchamia interfejs Gradio na określonym porcie.
+    """
     handle_port_conflict(port)
     
     open_firewalld_port(port)
-    print(f"\n  🌐  Launching Gradio:  http://{get_external_ip()}:{port}")
+    print(f"\n  🌐  Uruchamianie Gradio:  http://{get_external_ip()}:{port}")
     
     admin_interface.launch(
         server_name="0.0.0.0", 
