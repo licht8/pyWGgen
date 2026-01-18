@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import json
 import shutil
 from pathlib import Path
@@ -7,14 +8,16 @@ from modules.main_registration_fields import create_user_record
 from modules.qr_generator import generate_qr_code
 
 def get_valid_path(prompt):
+    """Pobiera poprawną ścieżkę do katalogu."""
     while True:
         path_str = input(prompt).strip()
         path = Path(path_str)
         if path.exists() and path.is_dir():
             return path
-        print(f"Error: Directory '{path_str}' does not exist. Please try again.\n")
+        print(f"Błąd: Katalog '{path_str}' nie istnieje. Spróbuj ponownie.\n")
 
 def find_user_files(username, config_dir, qr_dir):
+    """Znajduje pliki konfiguracyjne i QR użytkownika."""
     config_path = next(
         (f for ext in ['.conf', '.txt'] 
          if (f := config_dir / f"{username}{ext}").exists()),
@@ -28,20 +31,21 @@ def find_user_files(username, config_dir, qr_dir):
     return config_path, qr_path
 
 def sync_users_from_config_paths(config_dir_str: str, qr_dir_str: str):
+    """Synchronizuje użytkowników z plików konfiguracyjnych i QR."""
     logs = []
     try:
         config_dir = Path(config_dir_str)
         qr_dir = Path(qr_dir_str)
 
         if not config_dir.is_dir():
-            raise ValueError(f"Config directory not found: {config_dir}")
+            raise ValueError(f"Katalog konfiguracji nie znaleziony: {config_dir}")
         if not qr_dir.is_dir():
-            raise ValueError(f"QR directory not found: {qr_dir}")
+            raise ValueError(f"Katalog kodów QR nie znaleziony: {qr_dir}")
 
-        logs.append("=== 🛠 Starting User Synchronization ===")
-        logs.append(f"Config dir: {config_dir}\nQR dir: {qr_dir}\n")
+        logs.append("=== 🛠 Rozpoczynanie synchronizacji użytkowników ===")
+        logs.append(f"Katalog konfiguracji: {config_dir}\nKatalog QR: {qr_dir}\n")
 
-        # Parse server config
+        # Parsowanie konfiguracji serwera
         with open(SERVER_CONFIG_FILE, "r") as f:
             config_content = f.read()
 
@@ -75,7 +79,7 @@ def sync_users_from_config_paths(config_dir_str: str, qr_dir_str: str):
         if current_user:
             users.append(current_user)
 
-        # Load existing records
+        # Wczytaj istniejące rekordy
         user_records = {}
         if USER_DB_PATH.exists():
             with open(USER_DB_PATH, "r") as f:
@@ -84,51 +88,51 @@ def sync_users_from_config_paths(config_dir_str: str, qr_dir_str: str):
         new_users = 0
         for user in users:
             username = user["username"]
-            logs.append(f"Processing: {username}")
+            logs.append(f"Przetwarzanie: {username}")
 
             config_path, qr_path = find_user_files(username, config_dir, qr_dir)
             
-            # Skip if no files found
+            # Pomiń jeśli brak plików
             if not config_path and not qr_path:
-                logs.append(f"  ❗ Skipping - no config/QR found")
+                logs.append(f"  ❗ Pomijanie - brak konfiguracji/QR")
                 continue
 
             target_config = Path(f"user/data/wg_configs/{username}.conf")
             target_qr = Path(f"user/data/qrcodes/{username}.png")
             
-            # Create directories if needed
+            # Utwórz katalogi jeśli potrzeba
             target_config.parent.mkdir(parents=True, exist_ok=True)
             target_qr.parent.mkdir(parents=True, exist_ok=True)
 
-            # Handle config file
+            # Obsługa pliku konfiguracyjnego
             config_processed = False
             if config_path:
                 shutil.copy(config_path, target_config)
-                logs.append(f"  ✅ Copied config: {config_path.name}")
+                logs.append(f"  ✅ Skopiowano konfigurację: {config_path.name}")
                 config_processed = True
             else:
-                logs.append(f"  ⚠️ No config found")
+                logs.append(f"  ⚠️ Brak pliku konfiguracyjnego")
 
-            # Handle QR code
+            # Obsługa kodu QR
             qr_processed = False
             if qr_path:
                 shutil.copy(qr_path, target_qr)
-                logs.append(f"  ✅ Copied QR: {qr_path.name}")
+                logs.append(f"  ✅ Skopiowano QR: {qr_path.name}")
                 qr_processed = True
             elif config_processed:
                 try:
                     generate_qr_code(target_config.read_text(), str(target_qr))
-                    logs.append("  🔄 Generated QR from config")
+                    logs.append("  🔄 Wygenerowano QR z konfiguracji")
                     qr_processed = True
                 except Exception as e:
-                    logs.append(f"  ❗ QR generation failed: {str(e)}")
+                    logs.append(f"  ❗ Błąd generowania QR: {str(e)}")
 
-            # Skip if no files were processed
+            # Pomiń jeśli brak przetworzonych plików
             if not config_processed and not qr_processed:
-                logs.append(f"  ❗ Skipping - no files processed")
+                logs.append(f"  ❗ Pomijanie - brak przetworzonych plików")
                 continue
 
-            # Update user records
+            # Aktualizuj rekordy użytkowników
             if username not in user_records:
                 user_record = create_user_record(
                     username=username,
@@ -141,29 +145,30 @@ def sync_users_from_config_paths(config_dir_str: str, qr_dir_str: str):
                 user_records[username] = user_record
                 new_users += 1
 
-        # Save updated database
+        # Zapisz zaktualizowaną bazę
         with open(USER_DB_PATH, "w") as f:
             json.dump(user_records, f, indent=4)
 
-        logs.append(f"\n✅ Sync complete! New users: {new_users}")
+        logs.append(f"\n✅ Synchronizacja zakończona! Nowi użytkownicy: {new_users}")
         return True, "\n".join(logs)
 
     except Exception as e:
-        logs.append(f"❌ Critical error: {str(e)}")
+        logs.append(f"❌ Krytyczny błąd: {str(e)}")
         return False, "\n".join(logs)
 
 def sync_users_from_config():
+    """Synchronizacja użytkowników w trybie konsolowym."""
     try:
-        print("\n=== 🔄 User Sync (Console Mode) ===")
-        config_dir = get_valid_path("Path to client configs: ")
-        qr_dir = get_valid_path("Path to QR codes: ")
+        print("\n=== 🔄 Synchronizacja użytkowników (tryb konsolowy) ===")
+        config_dir = get_valid_path("Ścieżka do konfiguracji klientów: ")
+        qr_dir = get_valid_path("Ścieżka do kodów QR: ")
         
         success, log = sync_users_from_config_paths(str(config_dir), str(qr_dir))
         print(log)
         return success
         
     except KeyboardInterrupt:
-        print("\n🚫 Operation cancelled by user")
+        print("\n🚫 Operacja anulowana przez użytkownika")
         return False
 
 if __name__ == "__main__":
