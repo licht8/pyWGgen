@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # pyWGgen/modules/uninstall_wg.py
 # ===========================================
-# Script for uninstalling WireGuard
+# Skrypt do odinstalowywania WireGuard
 # ===========================================
 
 import os
@@ -12,7 +12,7 @@ import logging
 from pathlib import Path
 from settings import PRINT_SPEED, LINE_DELAY
 
-# Import project settings
+# Import ustawień projektu
 try:
     from settings import (
         SERVER_CONFIG_FILE,
@@ -23,10 +23,10 @@ try:
         LOG_DIR,
     )
 except ImportError:
-    print("❌ Could not import settings. Ensure this script is run from the project root.")
+    print("❌ Nie można zaimportować ustawień. Upewnij się, że skrypt jest uruchamiany z katalogu głównego projektu.")
     exit(1)
 
-# Setup logging
+# Konfiguracja logowania
 logging.basicConfig(
     filename=LOG_FILE_PATH,
     level=getattr(logging, LOG_LEVEL, "INFO"),
@@ -35,23 +35,25 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def uninstall_wireguard():
-    local_print_speed = PRINT_SPEED  # Local speed for adjustment
-    """Function to uninstall WireGuard."""
+    local_print_speed = PRINT_SPEED  # Lokalna prędkość dla dostosowania
+    """Funkcja do odinstalowywania WireGuard."""
     
-    def confirm_action(prompt="Are you sure? (yes/no): "):
-        """Asks the user for confirmation to proceed."""
+    def confirm_action(prompt="Czy na pewno? (tak/nie): "):
+        """Pyta użytkownika o potwierdzenie kontynuacji."""
         while True:
             choice = input(prompt).strip().lower()
-            if choice in {"yes", "no"}:
-                return choice == "yes"
-            print("⚠️  Invalid input. Enter 'yes' or 'no'.")
+            if choice in {"tak", "t", "yes", "y"}:
+                return True
+            elif choice in {"nie", "n", "no"}:
+                return False
+            print("⚠️  Nieprawidłowe dane. Wpisz 'tak' lub 'nie'.")
 
     def is_wireguard_installed():
-        """Check if WireGuard is installed."""
+        """Sprawdza czy WireGuard jest zainstalowany."""
         return shutil.which("wg") is not None
 
     def detect_package_manager():
-        """Detect the package manager based on the operating system."""
+        """Wykrywa menedżer pakietów na podstawie systemu operacyjnego."""
         distro = platform.system()
         if distro == "Linux":
             with open("/etc/os-release", "r") as f:
@@ -60,78 +62,90 @@ def uninstall_wireguard():
                     return "apt"
                 elif "CentOS" in os_release or "Stream" in os_release:
                     return "dnf"
-        print("❌ Unsupported OS or distribution. Exiting.")
-        logger.error("Unsupported OS or distribution.")
+        print("❌ Nieobsługiwany system lub dystrybucja. Wyjście.")
+        logger.error("Nieobsługiwany system lub dystrybucja.")
         exit(1)
 
     def stop_wireguard():
-        """Stop WireGuard service."""
+        """Zatrzymuje usługę WireGuard."""
         try:
-            logger.info("Stopping WireGuard service...")
+            logger.info("Zatrzymywanie usługi WireGuard...")
             result = subprocess.run(["systemctl", "is-active", "--quiet", "wg-quick@wg0"])
-            if result.returncode == 0:  # Service is active
+            if result.returncode == 0:  # Usługa jest aktywna
                 subprocess.run(["systemctl", "stop", "wg-quick@wg0"], check=True)
-                logger.info("WireGuard service stopped.")
-                print("✅ WireGuard service stopped.")
+                logger.info("Usługa WireGuard zatrzymana.")
+                print("✅ Usługa WireGuard zatrzymana.")
             else:
-                logger.info("WireGuard service is not active or already stopped.")
-                print("⚠️ WireGuard service is not active or already stopped.")
+                logger.info("Usługa WireGuard nie jest aktywna lub już zatrzymana.")
+                print("⚠️ Usługa WireGuard nie jest aktywna lub już zatrzymana.")
         except subprocess.CalledProcessError as e:
-            logger.error("Failed to stop WireGuard service: %s", e)
-            print("❌ Failed to stop WireGuard service. Check logs for details.")
+            logger.error("Nie udało się zatrzymać usługi WireGuard: %s", e)
+            print("❌ Nie udało się zatrzymać usługi WireGuard. Sprawdź logi.")
             return False
         return True
 
     def remove_config_files():
-        """Remove WireGuard configuration files."""
+        """Usuwa pliki konfiguracyjne WireGuard."""
         try:
             if SERVER_CONFIG_FILE.exists():
                 SERVER_CONFIG_FILE.unlink()
-                logger.info(f"Removed server config file: {SERVER_CONFIG_FILE}")
+                logger.info(f"Usunięto plik konfiguracji serwera: {SERVER_CONFIG_FILE}")
+                print("✅ Usunięto plik konfiguracji serwera.")
             else:
-                print("⚠️ Server config file not found.")
+                print("⚠️ Plik konfiguracji serwera nie znaleziony.")
+                
             if PARAMS_FILE.exists():
                 PARAMS_FILE.unlink()
-                logger.info(f"Removed params file: {PARAMS_FILE}")
+                logger.info(f"Usunięto plik parametrów: {PARAMS_FILE}")
+                print("✅ Usunięto plik parametrów.")
             else:
-                print("⚠️ Params file not found.")
+                print("⚠️ Plik parametrów nie znaleziony.")
+                
             if WG_CONFIG_DIR.exists():
                 shutil.rmtree(WG_CONFIG_DIR)
-                logger.info(f"Removed WireGuard user config directory: {WG_CONFIG_DIR}")
+                logger.info(f"Usunięto katalog konfiguracji użytkowników WireGuard: {WG_CONFIG_DIR}")
+                print("✅ Usunięto katalog konfiguracji WireGuard.")
             else:
-                print("⚠️ WireGuard config directory not found.")
-            print("✅ Configuration files removed.")
+                print("⚠️ Katalog konfiguracji WireGuard nie znaleziony.")
+                
+            print("✅ Pliki konfiguracyjne usunięte.")
         except Exception as e:
-            logger.error("Failed to remove configuration files: %s", e)
-            print("❌ Failed to remove configuration files. Check logs for details.")
+            logger.error("Nie udało się usunąć plików konfiguracyjnych: %s", e)
+            print("❌ Nie udało się usunąć plików konfiguracyjnych. Sprawdź logi.")
 
     def remove_firewall_rules():
-        """Remove firewall rules associated with WireGuard."""
+        """Usuwa reguły firewalla powiązane z WireGuard."""
         try:
-            logger.info("Removing WireGuard firewall rules...")
+            logger.info("Usuwanie reguł firewalla WireGuard...")
             if subprocess.run(["firewall-cmd", "--zone=public", "--remove-interface=wg0"], check=False).returncode != 0:
-                print("⚠️ Firewall interface 'wg0' not found or already removed.")
-                logger.warning("Firewall interface 'wg0' not found or already removed.")
-            # Add additional rules if necessary
-            print("✅ Firewall rules removed.")
+                print("⚠️ Interfejs firewalla 'wg0' nie znaleziony lub już usunięty.")
+                logger.warning("Interfejs firewalla 'wg0' nie znaleziony lub już usunięty.")
+            print("✅ Reguły firewalla usunięte.")
         except Exception as e:
-            logger.error("Failed to remove firewall rules: %s", e)
-            print("❌ Failed to remove firewall rules. Check logs for details.")
+            logger.error("Nie udało się usunąć reguł firewalla: %s", e)
+            print("❌ Nie udało się usunąć reguł firewalla. Sprawdź logi.")
 
-    # Main logic for uninstalling WireGuard
+    # Główna logika odinstalowywania WireGuard
     if not is_wireguard_installed():
-        print("❌ WireGuard is not installed. Exiting.")
+        print("❌ WireGuard nie jest zainstalowany. Wyjście.")
         return
 
-    if not confirm_action("Are you sure you want to uninstall WireGuard? (yes/no): "):
-        print("❌ Uninstallation canceled.")
+    if not confirm_action("Czy na pewno chcesz odinstalować WireGuard? (tak/nie): "):
+        print("❌ Odinstalowywanie anulowane.")
         return
 
+    print("🔄 Rozpoczynanie procesu odinstalowywania...")
     stop_wireguard()
     remove_config_files()
     remove_firewall_rules()
-    print("✅ WireGuard has been successfully uninstalled.")
+    
+    # Opcjonalnie: usuń pakiety WireGuard
+    package_manager = detect_package_manager()
+    print(f"💡 Aby całkowicie usunąć pakiety WireGuard, użyj: sudo {package_manager} remove wireguard-tools kmod-wireguard")
+    
+    print("\n✅ WireGuard został pomyślnie odinstalowany.")
+    print("📝 Szczegóły w logach: " + str(LOG_FILE_PATH))
 
-# Call the function if the script is run directly
+# Wywołaj funkcję jeśli skrypt jest uruchamiany bezpośrednio
 if __name__ == "__main__":
     uninstall_wireguard()
