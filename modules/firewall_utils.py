@@ -1,50 +1,51 @@
 #!/usr/bin/env python3
 # modules/firewall_utils.py
-# Functions for managing ports via firewalld
+# Funkcje do zarządzania portami przez firewalld
 
 import subprocess
 import psutil
 from modules.port_manager import handle_port_conflict
-
 import socket
 
 
 def get_external_ip():
     """
-    Retrieves the external IP address through internal settings or network interfaces.
+    Pobiera zewnętrzny adres IP przez wewnętrzne ustawienia lub interfejsy sieciowe.
 
-    :return: External IP address (string) or an error message.
+    :return: Zewnętrzny adres IP (string) lub komunikat błędu.
     """
     try:
-        # Attempt to determine the external IP via standard network interfaces
+        # Próba określenia zewnętrznego IP przez standardowe interfejsy sieciowe
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-            # Connect to Google's public DNS server to determine the IP
+            # Połączenie z publicznym serwerem DNS Google aby określić IP
             s.connect(("8.8.8.8", 80))
-            return s.getsockname()[0]  # Get the IP address from the socket
+            return s.getsockname()[0]  # Pobranie adresu IP z socketa
     except OSError as e:
-        return f"N/A ❌ (Error: {e})"
+        return f"N/A ❌ (Błąd: {e})"
+
 
 def open_firewalld_port(port):
     """
-    Opens a port in firewalld.
+    Otwiera port w firewalld.
 
-    :param port: The port number to open.
+    :param port: Numer portu do otwarcia.
     """
-    # Module for managing ports and resolving conflicts
-    # Checks if the port is in use and prompts the user for actions.
+    # Moduł do zarządzania portami i rozwiązywania konfliktów
+    # Sprawdza czy port jest używany i pyta użytkownika o akcje.
     handle_port_conflict(port)
-    print(f" 🔓  Opening port {port} via firewalld...\n")
+    print(f" 🔓  Otwieranie portu {port} przez firewalld...\n")
     subprocess.run(["firewall-cmd", "--add-port", f"{port}/tcp"])
-    # Uncomment the following line to reload firewalld after changes
+    # Odkomentuj poniższą linię aby przeładować firewalld po zmianach
     # subprocess.run(["firewall-cmd", "--reload"])
 
-def close_firewalld_port(port):
-    """
-    Closes a port in firewalld.
 
-    :param port: The port number to close.
+def close_firewall_port(port):
     """
-    print(f" 🔒  Closing port {port} via firewalld...\n")
+    Zamyka port w firewalld.
+
+    :param port: Numer portu do zamknięcia.
+    """
+    print(f" 🔒  Zamykanie portu {port} przez firewalld...\n")
     subprocess.run(["firewall-cmd", "--remove-port", f"{port}/tcp"])
-    # Uncomment the following line to reload firewalld after changes
+    # Odkomentuj poniższą linię aby przeładować firewalld po zmianach
     # subprocess.run(["firewall-cmd", "--reload"])
