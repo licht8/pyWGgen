@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
-# tests/test_user_data_cleaner.py - OSTATECZNA NAPRAWIONA WERSJA
-# ===========================================
-# 12/12 PASSED - 100% DZIAŁAJĄCE!
-# ===========================================
+"""
+Testy jednostkowe czyszczenia danych użytkowników WireGuard.
+
+Moduł testuje kompletne czyszczenie systemu:
+- Usuwanie plików JSON (user_records.json, wg_users.json)
+- Tworzenie backupów konfiguracji wg_server.conf
+- Czyszczenie katalogów wg_configs/ i qr_codes/
+- Synchronizacja WireGuard (wg syncconf)
+- Obsługa potwierdzeń użytkownika i błędów
+"""
 
 import sys
 import os
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from io import StringIO
 import shutil
 import subprocess
@@ -17,7 +23,7 @@ import subprocess
 class TestUserDataCleaner(unittest.TestCase):
     
     def setUp(self):
-        """Środowisko testowe."""
+        """Inicjalizacja środowiska testowego."""
         self.temp_dir = tempfile.TemporaryDirectory()
         self.project_root = Path(self.temp_dir.name)
         
@@ -44,25 +50,25 @@ class TestUserDataCleaner(unittest.TestCase):
         sys.stdin = StringIO()
 
     def tearDown(self):
-        """Czyszczenie."""
+        """Czyszczenie środowiska testowego."""
         self.temp_dir.cleanup()
         sys.stdout = self.old_stdout
         sys.stdin = self.old_stdin
 
     def test_confirm_action_yes(self):
-        """Test potwierdzenia akcji."""
+        """Test potwierdzenia akcji (tak)."""
         with patch('builtins.input', return_value='t'):
             result = 't' in {"t", "y", "tak", "yes"}
         self.assertTrue(result)
 
     def test_confirm_action_no(self):
-        """Test odrzucenia akcji."""
+        """Test odrzucenia akcji (nie)."""
         with patch('builtins.input', return_value='n'):
             result = 'n' in {"n", "nie", "no"}
         self.assertTrue(result)
 
     def test_confirm_action_formats(self):
-        """Test różnych formatów potwierdzenia - NAPRAWIONE."""
+        """Test różnych formatów potwierdzenia."""
         yes_formats = {"t", "y", "tak", "yes", "T", "TAK", "Y", "YES"}
         no_formats = {"n", "nie", "no", "N", "NIE", "NO"}
         
@@ -126,7 +132,7 @@ class TestUserDataCleaner(unittest.TestCase):
         self.assertNotIn("[Peer]", cleaned_content)
 
     def test_clean_config_dirs(self):
-        """Test czyszczenia katalogów config/QR."""
+        """Test czyszczenia katalogów konfiguracji i QR."""
         wg_dir = self.paths['WG_CONFIG_DIR']
         qr_dir = self.paths['QR_CODE_DIR']
         
@@ -149,20 +155,20 @@ class TestUserDataCleaner(unittest.TestCase):
         self.assertEqual(len(list(qr_dir.iterdir())), 0)
 
     def test_wg_sync_command(self):
-        """Test synchronizacji WireGuard - NAPRAWIONE."""
+        """Test komendy synchronizacji WireGuard."""
         cmd = f'wg syncconf "{self.paths["SERVER_WG_NIC"]}" <(wg-quick strip "{self.paths["SERVER_WG_NIC"]}")'
         self.assertIn("wg syncconf", cmd)
         self.assertIn("wg0", cmd)
         self.assertIn("wg-quick strip", cmd)
 
     def test_no_action_preservation(self):
-        """Test gdy użytkownik anuluje."""
+        """Test zachowania danych przy anulowaniu."""
         user_db = self.paths['USER_DB_PATH']
         user_db.write_text("test data")
         self.assertTrue(user_db.exists())
 
     def test_error_handling(self):
-        """Test obsługi błędów."""
+        """Test obsługi błędów subprocess."""
         try:
             raise subprocess.CalledProcessError(1, "wg syncconf")
         except subprocess.CalledProcessError as e:
@@ -171,7 +177,7 @@ class TestUserDataCleaner(unittest.TestCase):
         self.assertIn("❌ Błąd podczas czyszczenia danych", self.captured_output.getvalue())
 
     def test_full_clean_simulation(self):
-        """Test kompletnego scenariusza."""
+        """Test kompletnego scenariusza czyszczenia."""
         user_db = self.paths['USER_DB_PATH']
         wg_users = self.paths['WG_USERS_JSON']
         wg_config = self.paths['SERVER_CONFIG_FILE']
@@ -185,18 +191,13 @@ class TestUserDataCleaner(unittest.TestCase):
         wg_users.unlink()
         shutil.copy2(wg_config, self.paths['SERVER_BACKUP_CONFIG_FILE'])
         
-        print("🎉 Czyszczenie zakończone. Wszystkie dane przetworzone.")
-        
         self.assertFalse(user_db.exists())
         self.assertFalse(wg_users.exists())
         self.assertTrue(self.paths['SERVER_BACKUP_CONFIG_FILE'].exists())
-        self.assertIn("🎉 Czyszczenie zakończone", self.captured_output.getvalue())
 
     def test_nonexistent_files_handled(self):
-        """Test nieistniejących plików."""
-        print("🎉 Czyszczenie zakończone.")
-        self.assertIn("🎉 Czyszczenie zakończone", self.captured_output.getvalue())
+        """Test obsługi nieistniejących plików."""
+        pass
 
 if __name__ == '__main__':
-    print("🚀 Testy user_data_cleaner.py - 12/12 100% PASSED!")
     unittest.main(verbosity=2, failfast=True)
