@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-# tests/test_gradio_admin/test_ollama_chat_tab.py - 🎉 9/9 GREEN! NO GRADIO!
+"""
+Testy jednostkowe zakładki czatu Ollama w interfejsie Gradio.
+
+Moduł testuje zakładkę chatu AI:
+- Importy AI (collect_all_data, ask_question, check_ollama)
+- Ustawienia AI (temperature, max_tokens)
+- 5 funkcji wewnętrznych + komponenty Gradio (ChatInterface)
+- Przykłady pytań diagnostycznych
+- Event handlers i reset ustawień
+- Kontekst serwera (IP, WG status, Ollama)
+"""
 
 import pytest
 import os
@@ -7,21 +17,19 @@ from pathlib import Path
 import sys
 import re
 
-# Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 class TestOllamaChatTab:
-    """🎉 Testy dla ollama_chat_tab.py - 9/9 GREEN! ⚡ 0.04s ⚡"""
+    """Testy jednostkowe ollama_chat_tab.py."""
 
     MAIN_FILE = 'gradio_admin/tabs/ollama_chat_tab.py'
 
     def test_file_exists(self):
-        """✅ Plik istnieje"""
+        """Test istnienia pliku."""
         assert os.path.exists(self.MAIN_FILE)
-        print("✅ File exists!")
 
     def test_imports_present(self):
-        """✅ Kluczowe importy"""
+        """Test obecności kluczowych importów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
@@ -31,11 +39,10 @@ class TestOllamaChatTab:
         ]
         
         for imp in required_imports:
-            assert imp in content, f"Missing: {imp}"
-        print("✅ All imports OK!")
+            assert imp in content, f"Brakuje: {imp}"
 
     def test_ai_settings_dict(self):
-        """✅ Globalne ustawienia AI"""
+        """Test globalnych ustawień AI."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -43,10 +50,9 @@ class TestOllamaChatTab:
         assert '"temperature": 0.7' in content
         assert '"max_tokens": 2000' in content
         assert 'WireGuard VPN' in content and 'po polsku' in content
-        print("✅ AI settings dict OK!")
 
     def test_internal_functions(self):
-        """✅ 5 głównych funkcji"""
+        """Test obecności głównych funkcji."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -59,11 +65,10 @@ class TestOllamaChatTab:
         ]
         
         for func in functions:
-            assert func in content, f"Missing: {func}"
-        print("✅ All functions OK!")
+            assert func in content, f"Brakuje: {func}"
 
     def test_gradio_components(self):
-        """✅ Gradio komponenty"""
+        """Test komponentów Gradio."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -73,11 +78,10 @@ class TestOllamaChatTab:
         ]
         
         for comp in components:
-            assert comp in content, f"Missing: {comp}"
-        print("✅ All Gradio components OK!")
+            assert comp in content, f"Brakuje: {comp}"
 
     def test_chat_examples(self):
-        """✅ Przykłady pytań w ChatInterface"""
+        """Test przykładów pytań w ChatInterface."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -88,11 +92,10 @@ class TestOllamaChatTab:
         ]
         
         for ex in examples:
-            assert ex in content, f"Missing example: {ex}"
-        print("✅ Chat examples OK!")
+            assert ex in content, f"Brakuje przykładu: {ex}"
 
     def test_event_handlers(self):
-        """✅ Event handlers"""
+        """Test event handlers."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -103,45 +106,40 @@ class TestOllamaChatTab:
         ]
         
         for event in events:
-            assert event in content, f"Missing event: {event}"
-        print("✅ All events OK!")
+            assert event in content, f"Brakuje zdarzenia: {event}"
 
     def test_server_context_features(self):
-        """✅ Kontekst serwera"""
+        """Test kontekstu serwera."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         context_features = [
-            'curl -s ifconfig.me',  # Zewnętrzny IP
-            'ip addr show',         # Wewnętrzny IP
-            'wg-mgmt',              # Skip mgmt interface
-            'ollama_ok',            # Ollama status
-            'MODEL_NAME'            # Model name
+            'curl -s ifconfig.me',
+            'ip addr show',
+            'wg-mgmt',
+            'ollama_ok',
+            'MODEL_NAME'
         ]
         
         for feature in context_features:
-            assert feature in content, f"Missing context feature: {feature}"
-        print("✅ Server context OK!")
+            assert feature in content, f"Brakuje funkcji kontekstu: {feature}"
 
     def test_reset_settings(self):
-        """✅ Funkcja reset_settings"""
+        """Test funkcji reset_settings."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'def reset_settings():' in content
         assert '0.7,' in content and '2000,' in content
         assert '🔄 Ustawienia zresetowane' in content
-        print("✅ Reset settings OK!")
 
     def test_help_file_path(self):
-        """✅ Ścieżka do pliku pomocy"""
+        """Test ścieżki do pliku pomocy."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'ai_help.md' in content
         assert 'load_ai_help()' in content
-        print("✅ Help file path OK!")
-
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
