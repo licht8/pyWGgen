@@ -86,7 +86,7 @@ def write_params_file(subnet, port, private_key, public_key):
     server_wg_ipv4 = str(ipaddress.ip_network(subnet, strict=False).network_address + 1)
 
     params_content = f"""
-[serwer]
+[server]
 SERVER_PUB_IP={server_pub_ip}
 SERVER_PUB_NIC={server_pub_nic}
 SERVER_WG_NIC=wg0
