@@ -1,33 +1,39 @@
 #!/usr/bin/env python3
-# tests/test_gradio_admin/test_main_interface.py - 🎉 6/6 GREEN! ULTRA-SIMPLE!
+"""
+Testy jednostkowe głównego interfejsu Gradio Admin WireGuard VPN.
+
+Moduł testuje główny plik interfejsu:
+- Istnienie i czytelność pliku main_interface.py
+- 6 importów zakładek (create_user, manage_user, statistics, AI)
+- Strukturę 6+ tabów gr.Tab
+- Tytuł i header z lokalizacją PL
+- Strukturę gr.Blocks
+"""
 
 import pytest
 import os
 import sys
 from pathlib import Path
 
-# Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 class TestMainInterface:
-    """🎉 Testy dla Gradio Admin - TYLKO PLIK! 6/6 GREEN!"""
+    """Testy jednostkowe głównego interfejsu Gradio."""
 
     MAIN_FILE = 'gradio_admin/main_interface.py'
 
     def test_file_exists(self):
-        """✅ Plik istnieje"""
+        """Test istnienia pliku."""
         assert os.path.exists(self.MAIN_FILE)
-        print("✅ File exists!")
 
     def test_file_readable(self):
-        """✅ Plik czytelny"""
+        """Test czytelności pliku."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         assert len(content) > 0
-        print("✅ File readable!")
 
     def test_imports_present(self):
-        """✅ 6 importów tabów"""
+        """Test obecności 6 importów tabów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
@@ -41,38 +47,33 @@ class TestMainInterface:
         ]
         
         for imp in required_imports:
-            assert imp in content, f"Missing import: {imp}"
-        print("✅ All 6 tab imports OK!")
+            assert imp in content, f"Brakuje importu: {imp}"
 
     def test_tabs_structure(self):
-        """✅ 6 tabów w kodzie"""
+        """Test struktury 6 tabów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
         tab_lines = [line.strip() for line in content.split('\n') if 'gr.Tab' in line]
-        assert len(tab_lines) >= 6, f"Expected 6+ tabs, found {len(tab_lines)}"
-        print(f"✅ Found {len(tab_lines)} tabs OK!")
+        assert len(tab_lines) >= 6, f"Oczekiwano 6+ tabów, znaleziono {len(tab_lines)}"
 
     def test_title_and_header(self):
-        """✅ Tytuł + header"""
+        """Test tytułu i nagłówka."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
         assert 'title="pyWGgen - Menedżer VPN"' in content
         assert '# 🛡️ pyWGgen - Menedżer VPN WireGuard' in content
         assert 'Zarządzanie serwerem VPN z asystentem AI' in content
-        print("✅ Title + header OK!")
 
     def test_blocks_structure(self):
-        """✅ Struktura Blocks"""
+        """Test struktury Blocks."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
         assert 'with gr.Blocks' in content
         assert 'as admin_interface:' in content
         assert content.count('with gr.Tab') >= 6
-        print("✅ Blocks structure OK!")
-
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
