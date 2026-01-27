@@ -1,22 +1,31 @@
 #!/usr/bin/env python3
-# tests/test_gradio_admin/test_table_helpers.py - 🎉 9/9 GREEN! NO GRADIO!
+"""
+Testy jednostkowe funkcji pomocniczych tabel WireGuard VPN.
+
+Moduł testuje funkcje table_helpers:
+- Importy (json, pandas, USER_DB_PATH)
+- Wczytywanie danych z user_records.json
+- Filtrowanie nieaktywnych użytkowników
+- Struktura tabeli (7 kolumn z danymi transferu)
+- Pandas DataFrame z emoji nagłówkami
+- Wartości domyślne (N/A, 0.0 KiB, 100.0 GB)
+"""
 
 import pytest
 import os
 from pathlib import Path
 
 class TestTableHelpers:
-    """🎉 Testy dla table_helpers.py - 9/9 GREEN! ⚡ 0.04s ⚡"""
+    """Testy jednostkowe table_helpers.py."""
 
     MAIN_FILE = 'gradio_admin/functions/table_helpers.py'
 
     def test_file_exists(self):
-        """✅ Plik istnieje"""
+        """Test istnienia pliku."""
         assert os.path.exists(self.MAIN_FILE)
-        print("✅ File exists!")
 
     def test_imports_present(self):
-        """✅ Kluczowe importy"""
+        """Test obecności kluczowych importów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
@@ -26,11 +35,10 @@ class TestTableHelpers:
         ]
         
         for imp in required_imports:
-            assert imp in content, f"Missing: {imp}"
-        print("✅ All imports OK!")
+            assert imp in content, f"Brakuje: {imp}"
 
     def test_internal_functions(self):
-        """✅ 2 główne funkcje"""
+        """Test obecności głównych funkcji."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -40,11 +48,10 @@ class TestTableHelpers:
         ]
         
         for func in functions:
-            assert func in content, f"Missing: {func}"
-        print("✅ All functions OK!")
+            assert func in content, f"Brakuje: {func}"
 
     def test_json_loading(self):
-        """✅ Wczytywanie JSON"""
+        """Test wczytywania JSON."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -55,11 +62,10 @@ class TestTableHelpers:
         ]
         
         for feature in json_features:
-            assert feature in content, f"Missing JSON: {feature}"
-        print("✅ JSON loading OK!")
+            assert feature in content, f"Brakuje JSON: {feature}"
 
     def test_data_filtering(self):
-        """✅ Filtrowanie nieaktywnych"""
+        """Test filtrowania nieaktywnych."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -69,11 +75,10 @@ class TestTableHelpers:
         ]
         
         for logic in filter_logic:
-            assert logic in content, f"Missing filter: {logic}"
-        print("✅ Data filtering OK!")
+            assert logic in content, f"Brakuje filtra: {logic}"
 
     def test_table_structure(self):
-        """✅ Struktura tabeli"""
+        """Test struktury tabeli."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -88,11 +93,10 @@ class TestTableHelpers:
         ]
         
         for field in table_fields:
-            assert field in content, f"Missing field: {field}"
-        print("✅ Table structure OK!")
+            assert field in content, f"Brakuje pola: {field}"
 
     def test_pandas_dataframe(self):
-        """✅ Pandas DataFrame"""
+        """Test Pandas DataFrame."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -104,11 +108,10 @@ class TestTableHelpers:
         ]
         
         for feature in pandas_features:
-            assert feature in content, f"Missing pandas: {feature}"
-        print("✅ Pandas DataFrame OK!")
+            assert feature in content, f"Brakuje pandas: {feature}"
 
     def test_column_headers(self):
-        """✅ Nagłówki kolumn"""
+        """Test nagłówków kolumn."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -123,11 +126,10 @@ class TestTableHelpers:
         ]
         
         for header in headers:
-            assert header in content, f"Missing header: {header}"
-        print("✅ Column headers OK!")
+            assert header in content, f"Brakuje nagłówka: {header}"
 
     def test_default_values(self):
-        """✅ Wartości domyślne"""
+        """Test wartości domyślnych."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -140,9 +142,7 @@ class TestTableHelpers:
         ]
         
         for default in defaults:
-            assert default in content, f"Missing default: {default}"
-        print("✅ Default values OK!")
-
+            assert default in content, f"Brakuje domyślnej: {default}"
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
