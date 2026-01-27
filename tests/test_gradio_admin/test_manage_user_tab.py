@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-# tests/test_gradio_admin/test_manage_user_tab.py - 🎉 10/10 GREEN! NO GRADIO!
+"""
+Testy jednostkowe zakładki zarządzania użytkownikami w interfejsie Gradio.
+
+Moduł testuje zakładkę zarządzania użytkownikami:
+- Importy funkcji (delete_user, block_user, sync_users)
+- Stała WG_CONFIGS_PATH
+- 6 funkcji wewnętrznych + komponenty Gradio
+- 6 przycisków akcji i event handlers
+- Logika plików konfiguracji i parsowanie listy
+- Funkcja synchronizacji katalogów
+"""
 
 import pytest
 import os
@@ -7,21 +17,19 @@ from pathlib import Path
 import sys
 import re
 
-# Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 class TestManageUserTab:
-    """🎉 Testy dla manage_user_tab.py - 10/10 GREEN! ⚡ 0.05s ⚡"""
+    """Testy jednostkowe manage_user_tab.py."""
 
     MAIN_FILE = 'gradio_admin/tabs/manage_user_tab.py'
 
     def test_file_exists(self):
-        """✅ Plik istnieje"""
+        """Test istnienia pliku."""
         assert os.path.exists(self.MAIN_FILE)
-        print("✅ File exists!")
 
     def test_imports_present(self):
-        """✅ Kluczowe importy"""
+        """Test obecności kluczowych importów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
@@ -31,19 +39,17 @@ class TestManageUserTab:
         ]
         
         for imp in required_imports:
-            assert imp in content, f"Missing: {imp}"
-        print("✅ All imports OK!")
+            assert imp in content, f"Brakuje: {imp}"
 
     def test_constants(self):
-        """✅ Stała WG_CONFIGS_PATH"""
+        """Test stałej WG_CONFIGS_PATH."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'WG_CONFIGS_PATH = "/root/pyWGgenerator/pyWGgen/user/data/wg_configs"' in content
-        print("✅ WG_CONFIGS_PATH OK!")
 
     def test_internal_functions(self):
-        """✅ 6 głównych funkcji"""
+        """Test obecności głównych funkcji."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -57,11 +63,10 @@ class TestManageUserTab:
         ]
         
         for func in functions:
-            assert func in content, f"Missing: {func}"
-        print("✅ All functions OK!")
+            assert func in content, f"Brakuje: {func}"
 
     def test_gradio_components(self):
-        """✅ Gradio komponenty"""
+        """Test komponentów Gradio."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -70,11 +75,10 @@ class TestManageUserTab:
         ]
         
         for comp in components:
-            assert comp in content, f"Missing: {comp}"
-        print("✅ All Gradio components OK!")
+            assert comp in content, f"Brakuje: {comp}"
 
     def test_buttons_present(self):
-        """✅ 6 przycisków akcji"""
+        """Test 6 przycisków akcji."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -84,11 +88,10 @@ class TestManageUserTab:
         ]
         
         for btn in buttons:
-            assert f'{btn} = gr.Button' in content, f"Missing button: {btn}"
-        print("✅ All buttons OK!")
+            assert f'{btn} = gr.Button' in content, f"Brakuje przycisku: {btn}"
 
     def test_event_handlers(self):
-        """✅ 6 event handlers"""
+        """Test 6 event handlers."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -98,47 +101,41 @@ class TestManageUserTab:
         ]
         
         for event in events:
-            assert event in content, f"Missing event: {event}"
-        print("✅ All events OK!")
+            assert event in content, f"Brakuje zdarzenia: {event}"
 
     def test_config_files_logic(self):
-        """✅ Logika plików konfiguracji"""
+        """Test logiki plików konfiguracji."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         config_files = ['"{username}.conf"', '"{username}_local.conf"']
         for conf in config_files:
-            assert conf in content, f"Missing config: {conf}"
-        print("✅ Config files logic OK!")
+            assert conf in content, f"Brakuje konfiguracji: {conf}"
 
     def test_user_list_parsing(self):
-        """✅ Parsowanie listy użytkowników"""
+        """Test parsowania listy użytkowników."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'status = user_data.get("status"' in content
         assert 'f"{username} {display_status}"' in content
-        print("✅ User list parsing OK!")
 
     def test_sync_function_inputs(self):
-        """✅ Funkcja synchronizacji"""
+        """Test funkcji synchronizacji."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'handle_sync(config_dir_str, qr_dir_str)' in content
         assert 'config_dir_input = gr.Textbox' in content
         assert 'qr_dir_input = gr.Textbox' in content
-        print("✅ Sync function OK!")
 
     def test_main_function(self):
-        """✅ Główna funkcja manage_user_tab()"""
+        """Test głównej funkcji manage_user_tab()."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'def manage_user_tab():' in content
-        assert content.count('gr.') >= 10  # Wiele komponentów Gradio
-        print("✅ Main function OK!")
-
+        assert content.count('gr.') >= 10
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
