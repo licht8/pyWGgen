@@ -1,26 +1,33 @@
 #!/usr/bin/env python3
-# tests/test_gradio_admin/test_delete_user.py - 🎉 12/12 GREEN! NO GRADIO!
+"""
+Testy jednostkowe funkcji usuwania użytkownika WireGuard VPN.
+
+Moduł testuje implementację usuwania użytkownika:
+- System logowania z timestamp
+- Operacje plików (user_records.json, wg configs, QR)
+- Komendy WireGuard (wg set peer, wg syncconf)
+- Parsowanie konfiguracji wg_server.conf
+- Obsługa błędów i walidacja
+"""
 
 import pytest
 import os
 from pathlib import Path
 import sys
 
-# Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 class TestDeleteUser:
-    """🎉 Testy dla delete_user.py - 12/12 GREEN! ⚡ 0.06s ⚡"""
+    """Testy jednostkowe funkcji usuwania użytkownika."""
 
     MAIN_FILE = 'gradio_admin/functions/delete_user.py'
 
     def test_file_exists(self):
-        """✅ Plik istnieje"""
+        """Test istnienia pliku."""
         assert os.path.exists(self.MAIN_FILE)
-        print("✅ File exists!")
 
     def test_imports_present(self):
-        """✅ Kluczowe importy"""
+        """Test obecności kluczowych importów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
@@ -31,11 +38,10 @@ class TestDeleteUser:
         ]
         
         for imp in required_imports:
-            assert imp in content, f"Missing: {imp}"
-        print("✅ All imports OK!")
+            assert imp in content, f"Brakuje: {imp}"
 
     def test_internal_functions(self):
-        """✅ 3 główne funkcje"""
+        """Test obecności głównych funkcji."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -47,11 +53,10 @@ class TestDeleteUser:
         ]
         
         for func in functions:
-            assert func in content, f"Missing: {func}"
-        print("✅ All functions OK!")
+            assert func in content, f"Brakuje: {func}"
 
     def test_logging_system(self):
-        """✅ System logowania z timestamp"""
+        """Test systemu logowania z timestamp."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -63,11 +68,10 @@ class TestDeleteUser:
         ]
         
         for feature in log_features:
-            assert feature in content, f"Missing log: {feature}"
-        print("✅ Logging system OK!")
+            assert feature in content, f"Brakuje logowania: {feature}"
 
     def test_file_operations(self):
-        """✅ Operacje plików"""
+        """Test operacji plików."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -79,11 +83,10 @@ class TestDeleteUser:
         ]
         
         for op in file_ops:
-            assert op in content, f"Missing file op: {op}"
-        print("✅ File operations OK!")
+            assert op in content, f"Brakuje operacji pliku: {op}"
 
     def test_wireguard_commands(self):
-        """✅ Komendy WireGuard"""
+        """Test komend WireGuard."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -95,11 +98,10 @@ class TestDeleteUser:
         ]
         
         for cmd in wg_commands:
-            assert cmd in content, f"Missing WG cmd: {cmd}"
-        print("✅ WireGuard commands OK!")
+            assert cmd in content, f"Brakuje komendy WG: {cmd}"
 
     def test_json_handling(self):
-        """✅ Obsługa JSON"""
+        """Test obsługi JSON."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -110,11 +112,10 @@ class TestDeleteUser:
         ]
         
         for op in json_ops:
-            assert op in content, f"Missing JSON: {op}"
-        print("✅ JSON handling OK!")
+            assert op in content, f"Brakuje JSON: {op}"
 
     def test_config_parsing(self):
-        """✅ Parsowanie konfiguracji"""
+        """Test parsowania konfiguracji."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -125,11 +126,10 @@ class TestDeleteUser:
         ]
         
         for feature in parsing:
-            assert feature in content, f"Missing parsing: {feature}"
-        print("✅ Config parsing OK!")
+            assert feature in content, f"Brakuje parsowania: {feature}"
 
     def test_error_handling(self):
-        """✅ Obsługa błędów"""
+        """Test obsługi błędów."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -141,11 +141,10 @@ class TestDeleteUser:
         ]
         
         for error in errors:
-            assert error in content, f"Missing error: {error}"
-        print("✅ Error handling OK!")
+            assert error in content, f"Brakuje błędu: {error}"
 
     def test_success_patterns(self):
-        """✅ Wzorce sukcesu"""
+        """Test wzorców sukcesu."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -156,18 +155,15 @@ class TestDeleteUser:
         ]
         
         for pattern in success:
-            assert pattern in content, f"Missing success: {pattern}"
-        print("✅ Success patterns OK!")
+            assert pattern in content, f"Brakuje sukcesu: {pattern}"
 
     def test_return_values(self):
-        """✅ Wartości zwrotne"""
+        """Test wartości zwrotnych."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'return f"✅' in content
         assert 'return f"❌' in content
-        print("✅ Return values OK!")
-
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
