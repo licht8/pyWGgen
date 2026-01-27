@@ -65,10 +65,11 @@ class TestCreateUser:
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
-        assert 'subprocess.run(\\n' in content
+        assert 'subprocess.run(\n' in content
         assert '"python3", "main.py", username,' in content
         assert 'cwd=str(base_dir),' in content
         assert 'capture_output=True,' in content
+        print("✅ Subprocess call OK!")
 
     def test_error_handling(self):
         """Test obsługi błędów."""
@@ -109,3 +110,4 @@ class TestCreateUser:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
