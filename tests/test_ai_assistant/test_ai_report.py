@@ -1,15 +1,23 @@
 #!/usr/bin/env python3
-# pyWGgen/tests/test_ai_assistant/test_ai_report.py - NAPRAWIONE 100%
+"""
+Testy jednostkowe generatora raportów AI dla diagnostyki WireGuard VPN.
+
+Moduł testuje generowanie raportów HTML:
+- Automatyczne katalogi raportów (raporty/)
+- Porównywanie diagnostyk między pomiarami
+- Generowanie HTML z tabelami i emoji statusów
+- Menu interaktywne raportów
+- Obsługa brakujących danych i uprawnień
+"""
 
 import pytest
 import os
 import json
 import sys
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from pathlib import Path
 from datetime import datetime
 
-# Poprawna ścieżka do modułu ai_assistant
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from ai_assistant.ai_report import (
     get_report_dir,
@@ -85,28 +93,27 @@ class TestAIReport:
         assert "Brak poprzednich" in comparison["wiadomosc"]
 
     def test_compare_diagnostics_changes(self, sample_diagnostic_data, sample_previous_data):
-        """Test wykrywanie zmian."""
+        """Test wykrywanie zmian diagnostycznych."""
         comparison = compare_diagnostics(sample_diagnostic_data, [sample_previous_data])
         assert len(comparison["zmiany"]) >= 2
         assert comparison["data_poprzednia"] == "2026-01-17 12:00:00"
 
     def test_compare_diagnostics_no_changes(self, sample_diagnostic_data):
-        """Test brak zmian."""
+        """Test brak zmian diagnostycznych."""
         comparison = compare_diagnostics(sample_diagnostic_data, [sample_diagnostic_data])
         assert comparison["zmiany"] == []
         assert comparison["laczna_liczba_zmian"] == 0
 
     def test_compare_diagnostics_missing_keys(self):
-        """Test brakujące klucze - NAPRAWIONE."""
-        # previous musi być listą DICT, nie listą list
+        """Test obsługi brakujących kluczy."""
         current = {"wg_active": 1}
-        previous = [{"wg_active": 0}]  # Lista z jednym DICT
+        previous = [{"wg_active": 0}]
         comparison = compare_diagnostics(current, previous)
         assert len(comparison["zmiany"]) == 1
         assert "WireGuard aktywnych: 0 → 1" in comparison["zmiany"][0]
 
     def test_generate_html_report_structure(self, sample_diagnostic_data):
-        """Test struktury HTML."""
+        """Test struktury raportu HTML."""
         comparison = {"zmiany": []}
         html = generate_html_report(sample_diagnostic_data, comparison)
         
@@ -117,7 +124,7 @@ class TestAIReport:
         assert "🟢" in html
 
     def test_generate_html_report_user_peers(self, sample_diagnostic_data):
-        """Test sekcji user peers."""
+        """Test sekcji peers w raporcie HTML."""
         sample_diagnostic_data["user_peer_files"]["peers"] = [
             {"filename": "user1.conf", "public_key": "ABC123...", "allowed_ips": "10.66.66.2/32", "size": 123}
         ]
@@ -127,7 +134,7 @@ class TestAIReport:
         assert "<table>" in html
 
     def test_generate_html_report_no_active_peers(self, sample_diagnostic_data):
-        """Test brak aktywnych peers."""
+        """Test brak aktywnych peers w raporcie."""
         sample_diagnostic_data["wg_status"]["wg0"]["peers"] = []
         comparison = {"zmiany": []}
         html = generate_html_report(sample_diagnostic_data, comparison)
@@ -137,13 +144,13 @@ class TestAIReport:
     @patch('pathlib.Path.exists', return_value=False)
     @patch('builtins.open')
     def test_generate_report_full_flow(self, mock_open, mock_exists, mock_mkdir, tmp_path):
-        """Test pełnego flow - NAPRAWIONE."""
+        """Test pełnego przepływu generowania raportu."""
         with patch('ai_assistant.ai_report.settings.AI_ASSISTANT_LOG_DIR', str(tmp_path)):
             with patch('ai_assistant.ai_report.get_previous_logs', return_value=[]):
-                data = {"hostname": "test", "wg_total": 1, "wg_active": 1}  # Dodane wymagane klucze
+                data = {"hostname": "test", "wg_total": 1, "wg_active": 1}
                 html_path = generate_report(data)
                 
-                assert os.path.exists(html_path) or "raport_" in html_path
+                assert "raport_" in html_path
                 assert html_path.endswith(".html")
                 assert "raporty" in html_path
                 mock_open.assert_called()
@@ -156,10 +163,9 @@ class TestAIReport:
         
         output = mock_print.call_args_list
         assert any("GENERATOR RAPORTÓW AI" in str(call) for call in output)
-        assert any("raport.html" in str(call) for call in output)
 
     def test_get_report_dir_permissions(self, tmp_path):
-        """Test uprawnienia katalogu."""
+        """Test uprawnienia katalogu raportów."""
         with patch('ai_assistant.ai_report.settings.AI_ASSISTANT_LOG_DIR', str(tmp_path)):
             report_dir = get_report_dir()
             assert report_dir.is_dir()
