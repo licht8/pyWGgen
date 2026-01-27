@@ -1,22 +1,30 @@
 #!/usr/bin/env python3
-# tests/test_gradio_admin/test_format_helpers.py - 🎉 9/9 GREEN! NO GRADIO!
+"""
+Testy jednostkowe funkcji formatujących pomocniczych WireGuard VPN.
+
+Moduł testuje formatowanie danych użytkownika:
+- Parsowanie datetime ISO i formatowanie czasu
+- Obliczenia pozostałego czasu do wygaśnięcia
+- Formatowanie informacji użytkownika (IP, email)
+- Bezpieczne indeksowanie wierszy tabeli
+- F-string z emoji dla UI Gradio
+"""
 
 import pytest
 import os
 from pathlib import Path
 
 class TestFormatHelpers:
-    """🎉 Testy dla format_helpers.py - 9/9 GREEN! ⚡ 0.04s ⚡"""
+    """Testy jednostkowe format_helpers.py."""
 
     MAIN_FILE = 'gradio_admin/functions/format_helpers.py'
 
     def test_file_exists(self):
-        """✅ Plik istnieje"""
+        """Test istnienia pliku."""
         assert os.path.exists(self.MAIN_FILE)
-        print("✅ File exists!")
 
     def test_imports_present(self):
-        """✅ Kluczowe importy"""
+        """Test obecności kluczowych importów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
@@ -25,11 +33,10 @@ class TestFormatHelpers:
         ]
         
         for imp in required_imports:
-            assert imp in content, f"Missing: {imp}"
-        print("✅ All imports OK!")
+            assert imp in content, f"Brakuje: {imp}"
 
     def test_internal_functions(self):
-        """✅ 3 główne funkcje"""
+        """Test obecności głównych funkcji."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -40,11 +47,10 @@ class TestFormatHelpers:
         ]
         
         for func in functions:
-            assert func in content, f"Missing: {func}"
-        print("✅ All functions OK!")
+            assert func in content, f"Brakuje: {func}"
 
     def test_datetime_parsing(self):
-        """✅ Parsowanie datetime ISO"""
+        """Test parsowania datetime ISO."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -55,11 +61,10 @@ class TestFormatHelpers:
         ]
         
         for feature in datetime_features:
-            assert feature in content, f"Missing datetime: {feature}"
-        print("✅ DateTime parsing OK!")
+            assert feature in content, f"Brakuje datetime: {feature}"
 
     def test_time_calculation(self):
-        """✅ Obliczenia czasu"""
+        """Test obliczeń czasu."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -70,11 +75,10 @@ class TestFormatHelpers:
         ]
         
         for logic in time_logic:
-            assert logic in content, f"Missing time logic: {logic}"
-        print("✅ Time calculation OK!")
+            assert logic in content, f"Brakuje logiki czasu: {logic}"
 
     def test_user_data_access(self):
-        """✅ Dostęp do danych użytkownika"""
+        """Test dostępu do danych użytkownika."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -85,11 +89,10 @@ class TestFormatHelpers:
         ]
         
         for access in data_access:
-            assert access in content, f"Missing data access: {access}"
-        print("✅ User data access OK!")
+            assert access in content, f"Brakuje dostępu do danych: {access}"
 
     def test_table_row_indexing(self):
-        """✅ Indeksowanie wiersza tabeli"""
+        """Test indeksowania wiersza tabeli."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -100,11 +103,10 @@ class TestFormatHelpers:
         ]
         
         for check in table_checks:
-            assert check in content, f"Missing table index: {check}"
-        print("✅ Table row indexing OK!")
+            assert check in content, f"Brakuje indeksu tabeli: {check}"
 
     def test_format_strings(self):
-        """✅ F-string formatowanie"""
+        """Test f-string formatowania."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -116,11 +118,10 @@ class TestFormatHelpers:
         ]
         
         for feature in format_features:
-            assert feature in content, f"Missing format: {feature}"
-        print("✅ Format strings OK!")
+            assert feature in content, f"Brakuje formatowania: {feature}"
 
     def test_error_handling(self):
-        """✅ Obsługa błędów"""
+        """Test obsługi błędów."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -131,9 +132,7 @@ class TestFormatHelpers:
         ]
         
         for pattern in error_patterns:
-            assert pattern in content, f"Missing error: {pattern}"
-        print("✅ Error handling OK!")
-
+            assert pattern in content, f"Brakuje błędu: {pattern}"
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
