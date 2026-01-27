@@ -1,26 +1,34 @@
 #!/usr/bin/env python3
-# tests/test_gradio_admin/test_create_user_tab.py - 🎉 8/8 GREEN! NO GRADIO!
+"""
+Testy jednostkowe zakładki tworzenia użytkownika w interfejsie Gradio.
+
+Moduł testuje implementację UI tworzenia użytkownika:
+- Importy Gradio i create_user
+- 6 komponentów UI (Textbox, Button, Image)
+- Event handler przycisku tworzenia
+- Funkcja handle_create_user
+- Logika widoczności kodu QR
+- Etykiety i lokalizacja PL
+"""
 
 import pytest
 import os
 from pathlib import Path
 import sys
 
-# Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 class TestCreateUserTab:
-    """🎉 Testy dla create_user_tab.py - 8/8 GREEN! ⚡ 0.04s ⚡"""
+    """Testy jednostkowe zakładki tworzenia użytkownika."""
 
     MAIN_FILE = 'gradio_admin/tabs/create_user_tab.py'
 
     def test_file_exists(self):
-        """✅ Plik istnieje"""
+        """Test istnienia pliku."""
         assert os.path.exists(self.MAIN_FILE)
-        print("✅ File exists!")
 
     def test_imports_present(self):
-        """✅ Kluczowe importy"""
+        """Test obecności kluczowych importów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
@@ -30,19 +38,17 @@ class TestCreateUserTab:
         ]
         
         for imp in required_imports:
-            assert imp in content, f"Missing: {imp}"
-        print("✅ All imports OK!")
+            assert imp in content, f"Brakuje: {imp}"
 
     def test_main_function(self):
-        """✅ Główna funkcja create_user_tab()"""
+        """Test głównej funkcji create_user_tab()."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         assert 'def create_user_tab():' in content
-        assert 'return [username_input' in content  # Zwraca listę komponentów
-        print("✅ create_user_tab() OK!")
+        assert 'return [username_input' in content
 
     def test_gradio_components(self):
-        """✅ 6 komponentów Gradio"""
+        """Test 6 komponentów Gradio."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -56,40 +62,36 @@ class TestCreateUserTab:
         ]
         
         for comp in components:
-            assert comp in content, f"Missing: {comp}"
-        print("✅ All 6 components OK!")
+            assert comp in content, f"Brakuje: {comp}"
 
     def test_event_handler(self):
-        """✅ Event handler dla przycisku"""
+        """Test handlera zdarzenia przycisku."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'create_button.click' in content
         assert 'handle_create_user,' in content
         assert 'outputs=[output_message, qr_code_display]' in content
-        print("✅ Button event handler OK!")
 
     def test_internal_function(self):
-        """✅ Funkcja handle_create_user"""
+        """Test funkcji handle_create_user."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'def handle_create_user(username, email, telegram_id):' in content
         assert 'result, qr_code_path = create_user' in content
-        print("✅ handle_create_user OK!")
 
     def test_qr_visibility_logic(self):
-        """✅ Logika widoczności QR"""
+        """Test logiki widoczności QR."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'gr.update(visible=True' in content
         assert 'gr.update(visible=False' in content
         assert 'if result.startswith("✅"):' in content
-        print("✅ QR visibility logic OK!")
 
     def test_labels_present(self):
-        """✅ Etykiety komponentów"""
+        """Test etykiet komponentów."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -102,9 +104,7 @@ class TestCreateUserTab:
         ]
         
         for label in labels:
-            assert label in content, f"Missing label: {label}"
-        print("✅ All labels OK!")
-
+            assert label in content, f"Brakuje etykiety: {label}"
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
