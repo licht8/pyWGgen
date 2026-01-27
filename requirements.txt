@@ -11,6 +11,8 @@ cryptography>=41.0.0
 
 # Framework for testing Python applications, supporting unit, integration, and functional tests
 pytest>=7.4.0
+pytest-mock>=3.10.0
+pandas>=2.0.0
 
 # Library for HTTP requests, convenient for API interaction, sending GET/POST requests, and handling responses
 requests>=2.31.0
