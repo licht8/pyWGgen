@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-# tests/test_gradio_admin/test_statistics_tab.py - 🎉 8/8 GREEN! FIXED!
+"""
+Testy jednostkowe zakładki statystyk WireGuard VPN w interfejsie Gradio.
+
+Moduł testuje zakładkę statystyk z tabelą pandas:
+- Importy (pandas, load_user_records, format_user_info)
+- Definicja kolumn tabeli z emoji
+- Komponenty Gradio (Checkbox, HTML tabela, Image)
+- Event handlers (refresh, search, user_selector)
+- HTML styling tabeli
+- 6 funkcji wewnętrznych (df_to_html, refresh_table)
+"""
 
 import pytest
 import os
@@ -7,21 +17,19 @@ from pathlib import Path
 import sys
 import re
 
-# Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 class TestStatisticsTab:
-    """🎉 Testy dla statistics_tab.py - 8/8 GREEN! ⚡ 0.04s ⚡"""
+    """Testy jednostkowe statistics_tab.py."""
 
     MAIN_FILE = 'gradio_admin/tabs/statistics_tab.py'
 
     def test_file_exists(self):
-        """✅ Plik istnieje"""
+        """Test istnienia pliku."""
         assert os.path.exists(self.MAIN_FILE)
-        print("✅ File exists!")
 
     def test_imports_present(self):
-        """✅ Kluczowe importy"""
+        """Test obecności kluczowych importów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
@@ -39,29 +47,25 @@ class TestStatisticsTab:
         ]
         
         for imp in required_imports:
-            assert imp in content, f"Missing: {imp}"
-        print("✅ All imports OK!")
+            assert imp in content, f"Brakuje: {imp}"
 
     def test_function_exists(self):
-        """✅ Funkcja statistics_tab()"""
+        """Test funkcji statistics_tab()."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         assert 'def statistics_tab():' in content
-        print("✅ statistics_tab() OK!")
 
     def test_columns_definition(self):
-        """✅ Stałe kolumny tabeli - regex match"""
+        """Test definicji kolumn tabeli."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
-        # Szukaj listy kolumn przez pattern
-        pattern = r'columns\s*=\s*\[\s*"👤 Użytkownik",\s*"📊 Zużyto",\s*"📦 Limit",\s*"🌐 Adres IP",\s*"⚡ Stan",\s*"💳 Cena",\s*"UID"'
+        pattern = r'columns\s*=\s*\[\s*"👤 Użytkownik",\s*"📊 Zużyto",\s*"📦 Limit",\s*"🌐 Adres IP",\s*"⚡ Stan",\s*"💳 Cena",\s*"UID'
         match = re.search(pattern, content, re.DOTALL)
-        assert match is not None, "Columns definition not found"
-        print("✅ Table columns OK!")
+        assert match is not None, "Brak definicji kolumn"
 
     def test_components_count(self):
-        """✅ Gradio komponenty"""
+        """Test komponentów Gradio."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -71,11 +75,10 @@ class TestStatisticsTab:
         ]
         
         for comp in components:
-            assert comp in content, f"Missing: {comp}"
-        print("✅ All Gradio components OK!")
+            assert comp in content, f"Brakuje: {comp}"
 
     def test_event_handlers(self):
-        """✅ Event handlers"""
+        """Test event handlers."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -84,11 +87,10 @@ class TestStatisticsTab:
         ]
         
         for event in events:
-            assert event in content, f"Missing event: {event}"
-        print("✅ All events OK!")
+            assert event in content, f"Brakuje zdarzenia: {event}"
 
     def test_html_table_styling(self):
-        """✅ HTML tabela ze stylami"""
+        """Test stylizacji HTML tabeli."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -99,11 +101,10 @@ class TestStatisticsTab:
         ]
         
         for style in styles:
-            assert style in content, f"Missing style: {style}"
-        print("✅ HTML styling OK!")
+            assert style in content, f"Brakuje stylu: {style}"
 
     def test_functions_defined(self):
-        """✅ Wewnętrzne funkcje"""
+        """Test wewnętrznych funkcji."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -117,9 +118,7 @@ class TestStatisticsTab:
         ]
         
         for func in functions:
-            assert func in content, f"Missing function: {func}"
-        print("✅ All internal functions OK!")
-
+            assert func in content, f"Brakuje funkcji: {func}"
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
