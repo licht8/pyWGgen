@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
-# test_menu.py - PEŁNA WERSJA Z MOCKAMI ZALEŻNOŚCI
-# ===========================================
-# Testy działają BEZ INSTALACJI dodatkowych pakietów!
-# ===========================================
+"""
+Testy jednostkowe modułu menu głównego pyWGgen.
+
+Moduł testuje interfejs użytkownika:
+- Powolne wyświetlanie komunikatów (display_message_slowly)
+- Inicjalizację struktury projektu
+- Wyświetlanie logów diagnostycznych
+- Integrację komponentów menu
+- Wydajność wyświetlania
+"""
 
 import sys
 import os
@@ -164,3 +170,4 @@ if __name__ == '__main__':
     print("🚀 Testy menu.py - BEZ ZALEŻNOŚCI ZEWNĘTRZNYCH!")
     print(f"ROOT_DIR: {ROOT_DIR}")
     unittest.main(verbosity=2, failfast=True)
+
