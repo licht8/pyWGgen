@@ -1,26 +1,34 @@
 #!/usr/bin/env python3
-# tests/test_gradio_admin/test_ai_report_tab.py - 🎉 8/8 GREEN! FIXED!
+"""
+Testy jednostkowe zakładki AI Report w interfejsie Gradio.
+
+Moduł testuje implementację UI generatora raportów:
+- Obecność pliku i kluczowych importów
+- Strukturę funkcji (generowanie HTML, lista raportów, tab)
+- Komponenty Gradio (Button, Markdown, File)
+- Event handlers (click)
+- Logika generowania raportów HTML
+- Lista poprzednich raportów z metadanymi
+"""
 
 import pytest
 import os
 from pathlib import Path
 import sys
 
-# Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 class TestAIReportTab:
-    """🎉 Testy dla ai_report_tab.py - 8/8 GREEN! ⚡ 0.04s ⚡"""
+    """Testy jednostkowe zakładki generatora raportów AI."""
 
     MAIN_FILE = 'gradio_admin/tabs/ai_report_tab.py'
 
     def test_file_exists(self):
-        """✅ Plik istnieje"""
+        """Test istnienia pliku."""
         assert os.path.exists(self.MAIN_FILE)
-        print("✅ File exists!")
 
     def test_imports_present(self):
-        """✅ Kluczowe importy"""
+        """Test obecności kluczowych importów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
@@ -30,11 +38,10 @@ class TestAIReportTab:
         ]
         
         for imp in required_imports:
-            assert imp in content, f"Missing: {imp}"
-        print("✅ All imports OK!")
+            assert imp in content, f"Brakuje: {imp}"
 
     def test_internal_functions(self):
-        """✅ 3 główne funkcje"""
+        """Test obecności głównych funkcji."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -45,11 +52,10 @@ class TestAIReportTab:
         ]
         
         for func in functions:
-            assert func in content, f"Missing: {func}"
-        print("✅ All functions OK!")
+            assert func in content, f"Brakuje: {func}"
 
     def test_gradio_components(self):
-        """✅ Gradio komponenty"""
+        """Test komponentów Gradio."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -58,11 +64,10 @@ class TestAIReportTab:
         ]
         
         for comp in components:
-            assert comp in content, f"Missing: {comp}"
-        print("✅ All Gradio components OK!")
+            assert comp in content, f"Brakuje: {comp}"
 
     def test_event_handlers(self):
-        """✅ 2 event handlers"""
+        """Test handlerów zdarzeń."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -72,23 +77,20 @@ class TestAIReportTab:
         ]
         
         for event in events:
-            assert event in content, f"Missing event: {event}"
-        print("✅ All events OK!")
+            assert event in content, f"Brakuje zdarzenia: {event}"
 
     def test_report_generation_logic(self):
-        """✅ Logika generowania raportu - FIXED"""
+        """Test logiki generowania raportu."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
-        # Dokładne dopasowanie do f-string multiline
         assert 'collect_all_data()' in content
         assert 'generate_report(data)' in content
         assert 'os.path.getsize(report_path)' in content
-        assert '✅ **Raport pomyślnie wygenerowany!**' in content  # Dokładny tekst z f-string
-        print("✅ Report generation logic OK!")
+        assert '✅ **Raport pomyślnie wygenerowany!**' in content
 
     def test_reports_list_logic(self):
-        """✅ Logika listy raportów"""
+        """Test logiki listy raportów."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -100,18 +102,16 @@ class TestAIReportTab:
         ]
         
         for logic in list_logic:
-            assert logic in content, f"Missing list logic: {logic}"
-        print("✅ Reports list logic OK!")
+            assert logic in content, f"Brakuje logiki listy: {logic}"
 
     def test_buttons_labels(self):
-        """✅ Etykiety przycisków"""
+        """Test etykiet przycisków."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert '"Wygeneruj raport"' in content
         assert '"Lista raportów"' in content
         assert '"💾 Pobierz raport HTML"' in content
-        print("✅ Button labels OK!")
 
 
 if __name__ == "__main__":
