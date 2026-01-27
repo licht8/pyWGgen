@@ -1,69 +1,74 @@
+#!/usr/bin/env python3
+"""
+Testy jednostkowe menedżera portów WireGuard.
+
+Moduł testuje rozwiązywanie konfliktów portów:
+- Wykrywanie procesów na portach 51820 (WireGuard), 7860 (Gradio)
+- Obsługa interaktywna (kill/exit/restart)
+- Sprawdzanie psutil.net_connections()
+- Graceful degradation dla błędów i wyjątków
+"""
+
 import pytest
 import sys
 import os
 from unittest.mock import patch, Mock, MagicMock
 
-# Добавляем путь к проекту
+# Dodajemy ścieżkę do projektu
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pyWGgen.modules.port_manager import handle_port_conflict
 
 class TestPortManager:
     
-    @patch('builtins.input', side_effect=['3'])  # Выбираем "exit" вместо kill
+    @patch('builtins.input', side_effect=['3'])  # Wybór "exit"
     @patch('psutil.net_connections', return_value=[MagicMock(laddr=MagicMock(port=51820), pid=1234)])
     @patch('psutil.Process')
     def test_handle_port_conflict_exit(self, mock_process, mock_connections, mock_input):
-        """Тест выхода в меню"""
+        """Test wyjścia do menu bez zabijania procesu."""
         mock_process.return_value.name.return_value = "python3"
         
         result = handle_port_conflict(51820)
         
         assert result == "exit"
-        print("✅ handle_port_conflict() возвращает exit!")
 
-    @patch('builtins.input', return_value='2')  # Выбираем "restart"
+    @patch('builtins.input', return_value='2')  # Wybór "restart"
     @patch('psutil.net_connections', return_value=[])
     def test_handle_port_conflict_restart_port_free(self, mock_connections, mock_input):
-        """Тест повторной проверки - порт свободен"""
+        """Test ponownego sprawdzenia - port wolny."""
         result = handle_port_conflict(51820)
         
-        assert result == "ok"  # Порт свободен = "ok"
-        print("✅ handle_port_conflict() restart + свободный порт!")
+        assert result == "ok"
 
-    @patch('builtins.input', return_value='4')  # Неверный выбор
+    @patch('builtins.input', return_value='4')  # Nieprawidłowy wybór
     @patch('psutil.net_connections', return_value=[])
     def test_handle_port_conflict_invalid_choice(self, mock_connections, mock_input):
-        """Тест неверного выбора"""
+        """Test nieprawidłowego wyboru użytkownika."""
         result = handle_port_conflict(51820)
         
         assert result == "ok"
-        print("✅ handle_port_conflict() неверный ввод + свободный порт!")
 
-    @patch('psutil.net_connections', return_value=[])  # Порт свободен
+    @patch('psutil.net_connections', return_value=[])  # Port wolny
     def test_handle_port_conflict_port_free(self, mock_connections):
-        """Тест свободного порта"""
+        """Test gdy port jest wolny od początku."""
         result = handle_port_conflict(51820)
         
         assert result == "ok"
-        print("✅ handle_port_conflict() порт свободен!")
 
     @patch('psutil.net_connections')
     def test_handle_port_conflict_exception(self, mock_connections):
-        """Тест обработки исключения"""
+        """Test obsługi wyjątków psutil."""
         mock_connections.side_effect = Exception("Test error")
         
         with patch('builtins.input'):
             result = handle_port_conflict(51820)
             
         assert result == "exit"
-        print("✅ handle_port_conflict() ловит исключения!")
 
-    @patch('builtins.input', side_effect=['1', '3'])  # Сначала kill, потом exit
+    @patch('builtins.input', side_effect=['1', '3'])  # Najpierw kill, potem exit
     @patch('psutil.net_connections', return_value=[MagicMock(laddr=MagicMock(port=51820), pid=None)])
     def test_handle_port_conflict_no_pid(self, mock_connections, mock_input):
-        """Тест без PID процесса"""
+        """Test braku PID procesu na porcie."""
         result = handle_port_conflict(51820)
         
         assert result == "exit"
-        print("✅ handle_port_conflict() без PID!")
