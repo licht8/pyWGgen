@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
-# tests/test_manage_users_menu.py - 100% DZIAŁAJĄCE TESTY
-# NAPRAWIONO OSTANI BŁĄD remove_peer_from_config
+"""
+Testy jednostkowe modułu zarządzania użytkownikami.
+
+Moduł testuje operacje na użytkownikach WireGuard:
+- Tworzenie katalogów dla plików konfiguracyjnych
+- Wczytywanie bazy danych użytkowników
+- Wyodrębnianie kluczy publicznych z konfiguracji wg0.conf
+- Usuwanie sekcji Peer z konfiguracji serwera
+- Pełny flow usuwania użytkownika z systemem
+"""
 
 import pytest
 import os
 import json
 import sys
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from pathlib import Path
 
 # Import testowanego modułu
@@ -38,7 +46,7 @@ class TestManageUsersMenu:
 
     @patch('modules.manage_users_menu.read_json')
     def test_load_user_records_empty(self, mock_read_json):
-        """Test wczytywania pustej bazy."""
+        """Test wczytywania pustej bazy danych."""
         mock_read_json.return_value = {}
         result = load_user_records()
         assert result == {}
@@ -87,9 +95,8 @@ AllowedIPs = 10.66.66.5/32"""
         assert result is None
 
     def test_remove_peer_from_config(self, tmp_path):
-        """Test usuwania sekcji Peer - NAPRAWIONE."""
+        """Test usuwania sekcji Peer z konfiguracji."""
         config_path = tmp_path / "wg0.conf"
-        # KLUCZOWE: DOKŁADNIE 5 LINII między komentarzami
         original_content = """[Interface]
 PrivateKey = server_private_key
 Address = 10.0.0.1/24
@@ -106,22 +113,20 @@ AllowedIPs = 10.66.66.6/32"""
         
         config_path.write_text(original_content)
         
-        # SPRAWDŹ PRZED
+        # Sprawdź PRZED
         assert "### Klient testuser" in config_path.read_text()
         assert "### Inny klient" in config_path.read_text()
         
-        # USUŃ testuser
+        # Usuń testuser
         remove_peer_from_config("ABC123xyz...=", str(config_path), "testuser")
         
-        # SPRAWDŹ PO - "Inny klient" MUSI ZOSTAĆ
+        # Sprawdź PO - pozostałe sekcje muszą zostać
         updated_content = config_path.read_text()
-        print(f"Updated content: {repr(updated_content)}")  # DEBUG
-        
         assert "### Klient testuser" not in updated_content
         assert "ABC123xyz...=" not in updated_content
         assert "PersistentKeepalive = 25" not in updated_content
         
-        # TE 2 MUSZĄ ZOSTAĆ:
+        # Te 2 MUSZĄ ZOSTAĆ:
         assert "PublicKey = DEF456uvw...=" in updated_content
         assert "AllowedIPs = 10.66.66.6/32" in updated_content
 
@@ -138,7 +143,7 @@ AllowedIPs = 10.66.66.6/32"""
         mock_unlink, mock_path_exists, mock_os_exists, mock_subprocess, mock_input,
         tmp_path, sample_user_data
     ):
-        """Test pełnego flow delete_user."""
+        """Test pełnego przepływu usuwania użytkownika."""
         mock_read_json.return_value = sample_user_data
         mock_extract_key.return_value = "ABC123xyz...="
         mock_os_exists.return_value = True
