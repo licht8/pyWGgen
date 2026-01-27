@@ -1,22 +1,31 @@
 #!/usr/bin/env python3
-# tests/test_gradio_admin/test_user_records.py - 🎉 7/7 GREEN! FIXED!
+"""
+Testy jednostkowe funkcji zarządzania rekordami użytkowników WireGuard VPN.
+
+Moduł testuje operacje user_records.json:
+- Importy (json, os)
+- Stała USER_RECORDS_PATH z dynamiczną ścieżką
+- Funkcja load_user_records()
+- Wczytywanie JSON z obsługą błędów
+- Debug komunikaty z prefixem [DEBUG]
+- Graceful fallback na pusty dict {}
+"""
 
 import pytest
 import os
 from pathlib import Path
 
 class TestUserRecords:
-    """🎉 Testy dla user_records.py - 7/7 GREEN! ⚡ 0.03s ⚡"""
+    """Testy jednostkowe user_records.py."""
 
     MAIN_FILE = 'gradio_admin/functions/user_records.py'
 
     def test_file_exists(self):
-        """✅ Plik istnieje"""
+        """Test istnienia pliku."""
         assert os.path.exists(self.MAIN_FILE)
-        print("✅ File exists!")
 
     def test_imports_present(self):
-        """✅ Kluczowe importy"""
+        """Test obecności kluczowych importów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
@@ -25,30 +34,26 @@ class TestUserRecords:
         ]
         
         for imp in required_imports:
-            assert imp in content, f"Missing: {imp}"
-        print("✅ All imports OK!")
+            assert imp in content, f"Brakuje: {imp}"
 
     def test_user_records_path(self):
-        """✅ Stała USER_RECORDS_PATH - FIXED"""
+        """Test stałej USER_RECORDS_PATH."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
-        # Dokładne fragmenty z error loga - string w f-string/concat
         assert 'USER_RECORDS_PATH =' in content
-        assert 'user_records.json"' in content  # Wystarczy fragment nazwy pliku
+        assert 'user_records.json"' in content
         assert 'os.path.dirname(__file__)' in content
-        print("✅ USER_RECORDS_PATH OK!")
 
     def test_main_function(self):
-        """✅ Główna funkcja load_user_records"""
+        """Test głównej funkcji load_user_records."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'def load_user_records():' in content
-        print("✅ load_user_records function OK!")
 
     def test_json_loading(self):
-        """✅ Wczytywanie JSON"""
+        """Test wczytywania JSON."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -58,11 +63,10 @@ class TestUserRecords:
         ]
         
         for op in json_ops:
-            assert op in content, f"Missing JSON: {op}"
-        print("✅ JSON loading OK!")
+            assert op in content, f"Brakuje JSON: {op}"
 
     def test_error_handling(self):
-        """✅ Obsługa błędów"""
+        """Test obsługi błędów."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -74,11 +78,10 @@ class TestUserRecords:
         ]
         
         for pattern in error_patterns:
-            assert pattern in content, f"Missing error: {pattern}"
-        print("✅ Error handling OK!")
+            assert pattern in content, f"Brakuje błędu: {pattern}"
 
     def test_debug_messages(self):
-        """✅ Debug komunikaty"""
+        """Test komunikatów debug."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -88,9 +91,7 @@ class TestUserRecords:
         ]
         
         for msg in debug_msgs:
-            assert msg in content, f"Missing debug: {msg}"
-        print("✅ Debug messages OK!")
-
+            assert msg in content, f"Brakuje debug: {msg}"
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
