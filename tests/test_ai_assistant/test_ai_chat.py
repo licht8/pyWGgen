@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
-# pyWGgen/tests/test_ai_assistant/test_ai_chat.py - NAPRAWIONE 100%
+"""
+Testy jednostkowe trybu czatu AI dla diagnostyki WireGuard VPN.
+
+Moduł testuje interaktywny chat z lokalnym AI (Ollama):
+- Wyświetlanie pełnego kontekstu serwera (IP, uptime, WG status)
+- Zadawanie pytań diagnostycznych z automatycznym kontekstem
+- Obsługę błędów timeout/JSON i cleanup plików tymczasowych
+- Tryb interaktywny z pętlą pytań
+"""
 
 import pytest
 import os
 import json
 import sys
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from pathlib import Path
 
-# Poprawna ścieżka do modułu ai_assistant
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from ai_assistant.ai_chat import (
     show_server_context,
@@ -47,7 +54,7 @@ class TestAIChat:
 
     @patch('ai_assistant.ai_chat.run_cmd')
     def test_show_server_context_full(self, mock_run_cmd, sample_server_data, capsys):
-        """Test pełnego kontekstu serwera - NAPRAWIONY."""
+        """Test pełnego kontekstu serwera."""
         mock_run_cmd.side_effect = [
             "203.0.113.1",           # curl ifconfig.me
             "10.66.66.1/24",         # ip addr wg0
@@ -66,7 +73,7 @@ class TestAIChat:
 
     @patch('ai_assistant.ai_chat.run_cmd', return_value="N/A")
     def test_show_server_context_minimal(self, mock_run_cmd, capsys):
-        """Test minimalnych danych."""
+        """Test minimalnych danych serwera."""
         minimal_data = {"hostname": "test-server"}
         show_server_context(minimal_data)
         captured = capsys.readouterr()
@@ -74,9 +81,7 @@ class TestAIChat:
 
     @patch('ai_assistant.ai_chat.run_cmd')
     def test_ask_question_success(self, mock_run_cmd, sample_server_data):
-        """Test ask_question - sukces NAPRAWIONY."""
-        # POPRAWNA kolejność wywołań run_cmd w ask_question:
-        # 1. ip addr wg0, 2. ip addr wg1, 3. curl ifconfig.me, 4. curl ollama
+        """Test zadawania pytania - sukces."""
         mock_run_cmd.side_effect = [
             "10.66.66.1/24",     # ip addr wg0
             "N/A",               # ip addr wg1  
@@ -90,17 +95,17 @@ class TestAIChat:
 
     @patch('ai_assistant.ai_chat.run_cmd')
     def test_ask_question_json_error(self, mock_run_cmd, sample_server_data):
-        """Test ask_question - błąd JSON NAPRAWIONY."""
+        """Test błędu parsowania JSON."""
         mock_run_cmd.side_effect = [
-            "N/A", "N/A", "N/A",    # ip addr, curl ifconfig, ...
-            '{"invalid": "json"} garbage'  # curl ollama - zły JSON
+            "N/A", "N/A", "N/A",    
+            '{"invalid": "json"} garbage'  
         ]
         result = ask_question(sample_server_data, "test")
         assert "Błąd parsowania" in result
 
     @patch('ai_assistant.ai_chat.run_cmd', return_value="Error: timeout")
     def test_ask_question_timeout(self, mock_run_cmd, sample_server_data):
-        """Test ask_question - timeout."""
+        """Test timeout zapytania."""
         result = ask_question(sample_server_data, "test")
         assert "Błąd zapytania" in result
 
@@ -110,7 +115,7 @@ class TestAIChat:
         "N/A", "N/A", "N/A", Exception("ollama timeout")
     ])
     def test_ask_question_cleanup(self, mock_run_cmd, mock_unlink, mock_exists, sample_server_data):
-        """Test cleanup przy błędzie NAPRAWIONY."""
+        """Test cleanup przy błędzie."""
         result = ask_question(sample_server_data, "test")
         mock_unlink.assert_called_once()
 
@@ -125,13 +130,13 @@ class TestAIChat:
     @patch('builtins.input', side_effect=['test', ''])  
     @patch('ai_assistant.ai_chat.ask_question')
     def test_interactive_mode_flow(self, mock_ask, mock_input, mock_check, sample_server_data, capsys):
-        """Test flow interaktywnego."""
+        """Test przepływu trybu interaktywnego."""
         mock_ask.return_value = "Test OK"
         interactive_mode(sample_server_data)
         assert mock_ask.called
 
     def test_show_server_context_no_wg(self, capsys):
-        """Test bez interfejsów WG."""
+        """Test bez interfejsów WireGuard."""
         data = {"hostname": "no-wg", "wg_status": {"wg-mgmt": {"service_active": True}}}
         with patch('ai_assistant.ai_chat.run_cmd', return_value="N/A"):
             show_server_context(data)
