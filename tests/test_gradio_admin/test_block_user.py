@@ -1,26 +1,33 @@
 #!/usr/bin/env python3
-# tests/test_gradio_admin/test_block_user.py - 🎉 10/10 GREEN! NO GRADIO!
+"""
+Testy jednostkowe funkcji blokowania użytkowników WireGuard VPN.
+
+Moduł testuje implementację blokady/odblokowania użytkowników:
+- Operacje JSON (user_records.json)
+- Parsowanie i modyfikacja wg_server.conf
+- Komentowanie/odkomentowywanie bloków [Peer]
+- Synchronizacja WireGuard (wg syncconf)
+- Obsługa błędów i rollback
+"""
 
 import pytest
 import os
 from pathlib import Path
 import sys
 
-# Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 class TestBlockUser:
-    """🎉 Testy dla block_user.py - 10/10 GREEN! ⚡ 0.05s ⚡"""
+    """Testy jednostkowe funkcji blokowania użytkowników."""
 
     MAIN_FILE = 'gradio_admin/functions/block_user.py'
 
     def test_file_exists(self):
-        """✅ Plik istnieje"""
+        """Test istnienia pliku."""
         assert os.path.exists(self.MAIN_FILE)
-        print("✅ File exists!")
 
     def test_imports_present(self):
-        """✅ Kluczowe importy"""
+        """Test obecności kluczowych importów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
@@ -30,11 +37,10 @@ class TestBlockUser:
         ]
         
         for imp in required_imports:
-            assert imp in content, f"Missing: {imp}"
-        print("✅ All imports OK!")
+            assert imp in content, f"Brakuje: {imp}"
 
     def test_internal_functions(self):
-        """✅ 5 głównych funkcji"""
+        """Test obecności głównych funkcji."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -47,20 +53,18 @@ class TestBlockUser:
         ]
         
         for func in functions:
-            assert func in content, f"Missing: {func}"
-        print("✅ All functions OK!")
+            assert func in content, f"Brakuje: {func}"
 
     def test_status_logic(self):
-        """✅ Logika statusów 'blocked'/'active'"""
+        """Test logiki statusów 'blocked'/'active'."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert '["status"] = "blocked"' in content
         assert '["status"] = "active"' in content
-        print("✅ Status logic OK!")
 
     def test_wireguard_parsing(self):
-        """✅ Parsowanie konfiguracji WireGuard"""
+        """Test parsowania konfiguracji WireGuard."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -72,11 +76,10 @@ class TestBlockUser:
         ]
         
         for feature in wg_features:
-            assert feature in content, f"Missing WG feature: {feature}"
-        print("✅ WireGuard parsing OK!")
+            assert feature in content, f"Brakuje funkcji WG: {feature}"
 
     def test_error_handling(self):
-        """✅ Obsługa błędów"""
+        """Test obsługi błędów."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -87,11 +90,10 @@ class TestBlockUser:
         ]
         
         for pattern in error_patterns:
-            assert pattern in content, f"Missing error handling: {pattern}"
-        print("✅ Error handling OK!")
+            assert pattern in content, f"Brakuje obsługi błędu: {pattern}"
 
     def test_json_operations(self):
-        """✅ Operacje JSON"""
+        """Test operacji JSON."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -102,36 +104,32 @@ class TestBlockUser:
         ]
         
         for op in json_ops:
-            assert op in content, f"Missing JSON op: {op}"
-        print("✅ JSON operations OK!")
+            assert op in content, f"Brakuje operacji JSON: {op}"
 
     def test_config_update_logic(self):
-        """✅ Logika aktualizacji konfiguracji"""
+        """Test logiki aktualizacji konfiguracji."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
-        assert 'updated_lines.append(f"# {line}")' in content  # Blokowanie
-        assert 'updated_lines.append(line[2:])' in content     # Odblokowanie
-        print("✅ Config update logic OK!")
+        assert 'updated_lines.append(f"# {line}")' in content
+        assert 'updated_lines.append(line[2:])' in content
 
     def test_wg_sync_command(self):
-        """✅ Komenda synchronizacji WireGuard"""
+        """Test komendy synchronizacji WireGuard."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'wg syncconf' in content
         assert 'SERVER_WG_NIC' in content
         assert 'wg-quick strip' in content
-        print("✅ WG sync command OK!")
 
     def test_return_patterns(self):
-        """✅ Wzorce zwracanych wartości"""
+        """Test wzorców zwracanych wartości."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'return True,' in content
         assert 'return False,' in content
-        print("✅ Return patterns OK!")
 
 
 if __name__ == "__main__":
