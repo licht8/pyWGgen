@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
-# tests/test_ai_diagnostics_summary.py - OSTATECZNA NAPRAWIONA WERSJA
-# ===========================================
-# 16/16 PASSED - 100% DZIAŁAJĄCE BEZ BŁĘDÓW!
-# ===========================================
+"""
+Testy jednostkowe dla modułu ai_diagnostics_summary.
+
+Moduł testuje funkcjonalność diagnostyki systemu WireGuard, w tym:
+- Sprawdzanie statusu portów (51820, 7860)
+- Weryfikację zapory ogniowej
+- Zliczanie użytkowników i peerów WireGuard
+- Generowanie raportów podsumowujących
+"""
 
 import sys
 import os
@@ -231,3 +236,4 @@ peer: DEF="""
 if __name__ == '__main__':
     print("🚀 Testy ai_diagnostics_summary.py - 16/16 100% PASSED!")
     unittest.main(verbosity=2, failfast=True)
+
