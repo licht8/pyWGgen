@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
-# pyWGgen/tests/test_ai_assistant/test_ai_analyzer.py - NAPRAWIONE 100%
+"""
+Testy jednostkowe analizatora AI dla diagnostyki WireGuard VPN.
+
+Moduł testuje integrację z lokalnym AI (Ollama):
+- Przygotowywanie promptów diagnostycznych
+- Analiza danych systemowych (WireGuard, firewall, NAT, peers)
+- Obsługa błędów JSON i timeoutów
+- Interaktywne pytania do AI
+"""
 
 import pytest
 import os
 import json
 import sys
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from pathlib import Path
 
-# Poprawna ścieżka do modułu ai_assistant
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from ai_assistant.ai_analyzer import (
     prepare_prompt, 
@@ -67,14 +74,14 @@ class TestAIAnalyzer:
         assert "NAT: PROBLEM" in prompt
 
     def test_prepare_prompt_missing_keys(self):
-        """Test brakujących kluczy."""
+        """Test obsługi brakujących kluczy w danych."""
         minimal_data = {"hostname": "minimal"}
         prompt = prepare_prompt(minimal_data)
         assert "Jesteś ekspertem WireGuard VPN" in prompt
 
     @patch('ai_assistant.ai_analyzer.run_cmd')
     def test_analyze_with_ai_success(self, mock_run_cmd, sample_diagnostic_data):
-        """Test analyze_with_ai - sukces NAPRAWIONY."""
+        """Test analizy AI - sukces."""
         mock_run_cmd.return_value = json.dumps({
             "model": "llama3.2", 
             "response": "🟢 Status: OK | Ocena: 95/100"
@@ -87,26 +94,26 @@ class TestAIAnalyzer:
 
     @patch('ai_assistant.ai_analyzer.run_cmd')
     def test_analyze_with_ai_json_error(self, mock_run_cmd):
-        """Test analyze_with_ai - błąd JSON NAPRAWIONY."""
+        """Test błędu parsowania JSON."""
         mock_run_cmd.return_value = '{"invalid": "json"} invalid'
         result = analyze_with_ai({})
         assert "Błąd parsowania odpowiedzi" in result
 
     @patch('ai_assistant.ai_analyzer.run_cmd', return_value="Error: timeout")
     def test_analyze_with_ai_run_error(self, mock_run_cmd):
-        """Test analyze_with_ai - błąd run_cmd NAPRAWIONY."""
+        """Test błędu polecenia run_cmd."""
         result = analyze_with_ai({})
         assert "Błąd zapytania do AI" in result
 
     @patch('ai_assistant.ai_analyzer.run_cmd', side_effect=Exception("Connection error"))
     def test_analyze_with_ai_cleanup(self, mock_run_cmd):
-        """Test cleanup - uproszczony."""
+        """Test obsługi wyjątków."""
         result = analyze_with_ai({})
         assert "Błąd: Connection error" in result
 
     @patch('ai_assistant.ai_analyzer.run_cmd')
     def test_interactive_question_success(self, mock_run_cmd):
-        """Test interactive_question NAPRAWIONY."""
+        """Test interaktywnego pytania - sukces."""
         mock_run_cmd.return_value = json.dumps({
             "response": "Włącz iptables MASQUERADE"
         })
@@ -116,12 +123,12 @@ class TestAIAnalyzer:
 
     @patch('ai_assistant.ai_analyzer.run_cmd', return_value="Error")
     def test_interactive_question_error(self, mock_run_cmd):
-        """Test interaktywnego błędu NAPRAWIONY."""
+        """Test błędu interaktywnego pytania."""
         result = interactive_question({}, "test")
         assert "Błąd zapytania" in result
 
     def test_prepare_prompt_empty_wg_status(self):
-        """Test pustego wg_status."""
+        """Test pustego statusu WireGuard."""
         data = {"hostname": "empty", "wg_status": {}}
         prompt = prepare_prompt(data)
         assert "Interfejsy WireGuard:" in prompt
