@@ -1,22 +1,31 @@
 #!/usr/bin/env python3
-# tests/test_gradio_admin/test_show_user_info.py - 🎉 8/8 GREEN! NO GRADIO!
+"""
+Testy jednostkowe funkcji wyświetlania informacji o użytkowniku WireGuard VPN.
+
+Moduł testuje funkcję show_user_info:
+- Importy (load_user_records, format_time)
+- Debug logging z prefixem [DEBUG]
+- Dostęp do rekordów użytkownika z user_records.json
+- Wyciąganie pól (created_at, expires_at, allowed_ips, status)
+- Użycie format_time dla dat
+- F-string formatowanie z emoji
+"""
 
 import pytest
 import os
 from pathlib import Path
 
 class TestShowUserInfo:
-    """🎉 Testy dla show_user_info.py - 8/8 GREEN! ⚡ 0.04s ⚡"""
+    """Testy jednostkowe show_user_info.py."""
 
     MAIN_FILE = 'gradio_admin/functions/show_user_info.py'
 
     def test_file_exists(self):
-        """✅ Plik istnieje"""
+        """Test istnienia pliku."""
         assert os.path.exists(self.MAIN_FILE)
-        print("✅ File exists!")
 
     def test_imports_present(self):
-        """✅ Kluczowe importy"""
+        """Test obecności kluczowych importów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
@@ -27,19 +36,17 @@ class TestShowUserInfo:
         ]
         
         for imp in required_imports:
-            assert imp in content, f"Missing: {imp}"
-        print("✅ All imports OK!")
+            assert imp in content, f"Brakuje: {imp}"
 
     def test_main_function(self):
-        """✅ Główna funkcja show_user_info"""
+        """Test głównej funkcji show_user_info."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'def show_user_info(username):' in content
-        print("✅ show_user_info function OK!")
 
     def test_debug_logging(self):
-        """✅ Debug logging"""
+        """Test debug logging."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -50,11 +57,10 @@ class TestShowUserInfo:
         ]
         
         for pattern in debug_patterns:
-            assert pattern in content, f"Missing debug: {pattern}"
-        print("✅ Debug logging OK!")
+            assert pattern in content, f"Brakuje debug: {pattern}"
 
     def test_user_records_access(self):
-        """✅ Dostęp do rekordów użytkownika"""
+        """Test dostępu do rekordów użytkownika."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -65,11 +71,10 @@ class TestShowUserInfo:
         ]
         
         for access in records_access:
-            assert access in content, f"Missing records: {access}"
-        print("✅ User records access OK!")
+            assert access in content, f"Brakuje rekordów: {access}"
 
     def test_data_extraction(self):
-        """✅ Wyciąganie danych użytkownika"""
+        """Test wyciągania danych użytkownika."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -81,20 +86,18 @@ class TestShowUserInfo:
         ]
         
         for field in data_fields:
-            assert field in content, f"Missing field: {field}"
-        print("✅ Data extraction OK!")
+            assert field in content, f"Brakuje pola: {field}"
 
     def test_format_time_usage(self):
-        """✅ Użycie format_time"""
+        """Test użycia format_time."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'format_time(created)' in content
         assert 'format_time(expires)' in content
-        print("✅ format_time usage OK!")
 
     def test_user_info_formatting(self):
-        """✅ Formatowanie informacji użytkownika"""
+        """Test formatowania informacji użytkownika."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -107,17 +110,14 @@ class TestShowUserInfo:
         ]
         
         for feature in format_features:
-            assert feature in content, f"Missing format: {feature}"
-        print("✅ User info formatting OK!")
+            assert feature in content, f"Brakuje formatowania: {feature}"
 
     def test_return_value(self):
-        """✅ Wartość zwrotna"""
+        """Test wartości zwrotnej."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'return user_info.strip()' in content
-        print("✅ Return value OK!")
-
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
