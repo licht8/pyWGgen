@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-# pyWGgen/tests/test_ai_assistant/test_data_collector.py - 🎉 FINAL FIX 13/13 GREEN!
+"""
+Testy jednostkowe kolektora danych diagnostycznych WireGuard VPN.
+
+Moduł testuje zbieranie danych systemowych:
+- Parsowanie konfiguracji wg*.conf (liczba peers)
+- Status usług WireGuard (systemd, network status)
+- Status firewalld i otwarte porty (51820)
+- Status NAT/masquerade i ip_forward
+- Kompletne zbieranie danych diagnostycznych
+"""
 
 import pytest
 from unittest.mock import Mock, patch, mock_open
@@ -7,7 +16,6 @@ from pathlib import Path
 import sys
 import os
 
-# Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from ai_assistant.data_collector import (
@@ -21,10 +29,10 @@ from ai_assistant.data_collector import (
 )
 
 class TestDataCollector:
-    """🎉 Testy Data Collector - WSZYSTKIE 13 ZIELONYCH!"""
+    """Testy jednostkowe kolektora danych diagnostycznych."""
 
     def test_parse_wg_config_valid(self):
-        """Test valid WireGuard config parsing - 2 peers"""
+        """Test parsowania poprawnej konfiguracji WireGuard - 2 peers."""
         config_content = """[Interface]
 PrivateKey = ABC...
 Address = 10.66.66.1/24
@@ -42,27 +50,26 @@ AllowedIPs = 10.66.66.3/32"""
         assert result['peers_count'] == 2
 
     def test_parse_wg_config_empty(self):
-        """Test empty config parsing"""
+        """Test parsowania pustej konfiguracji."""
         with patch('builtins.open', mock_open(read_data="")):
             result = parse_wg_config(Path("empty.conf"))
         assert result['peers_count'] == 0
 
     def test_parse_wg_config_error(self, tmp_path):
-        """Test non-existent file parsing"""
+        """Test parsowania nieistniejącego pliku."""
         non_existent = tmp_path / "nonexistent.conf"
         result = parse_wg_config(non_existent)
         assert 'error' in result
 
     @patch('ai_assistant.data_collector.parse_wg_config')
     def test_get_all_peer_configs(self, mock_parse):
-        """🎯 FINAL FIX: Mock konkretne zachowanie wg_conf_dir"""
+        """Test zbierania wszystkich konfiguracji peers."""
         mock_parse.return_value = {
             'config_file': '/etc/wireguard/wg0.conf',
             'peers_count': 3,
             'peers': [{'public_key': 'test'}]
         }
         
-        # Mock wg_conf_dir.exists() i .glob()
         with patch('ai_assistant.data_collector.Path') as mock_path:
             mock_wg_dir = mock_path.return_value
             mock_wg_dir.exists.return_value = True
@@ -70,7 +77,6 @@ AllowedIPs = 10.66.66.3/32"""
             
             result = get_all_peer_configs()
             
-            # Assertions
             mock_path.assert_called_once_with('/etc/wireguard')
             mock_wg_dir.exists.assert_called_once()
             mock_wg_dir.glob.assert_called_once_with('*.conf')
@@ -79,22 +85,22 @@ AllowedIPs = 10.66.66.3/32"""
             assert result[0]['peers_count'] == 3
 
     def test_get_user_peer_files_success(self):
-        """Test user peer files collection structure"""
+        """Test struktury zbierania plików user peer."""
         result = get_user_peer_files()
         assert 'total' in result
 
     @patch('ai_assistant.data_collector.settings.WG_CONFIG_DIR')
     def test_get_user_peer_files_missing_dir(self, mock_wg_dir):
-        """Test missing WG config directory"""
+        """Test brak katalogu konfiguracji WG."""
         mock_wg_dir.exists.return_value = False
         result = get_user_peer_files()
         assert result['total'] == 0
 
     @patch('ai_assistant.data_collector.run_cmd')
     def test_get_wg_status_full(self, mock_run_cmd):
-        """Test complete WireGuard status collection"""
+        """Test kompletnego statusu WireGuard."""
         mock_run_cmd.side_effect = [
-            "wg0\n", "active", "enabled", "state UP", "51820/udp", "interface: wg0\n..."
+            "wg0\\n", "active", "enabled", "state UP", "51820/udp", "interface: wg0\\n..."
         ]
         result = get_wg_status()
         assert 'wg0' in result
@@ -102,27 +108,27 @@ AllowedIPs = 10.66.66.3/32"""
 
     @patch('ai_assistant.data_collector.run_cmd', return_value="")
     def test_get_wg_status_empty(self, mock_run_cmd):
-        """Test empty WireGuard status"""
+        """Test pustego statusu WireGuard."""
         result = get_wg_status()
         assert len(result) == 0
 
     @patch('ai_assistant.data_collector.run_cmd')
     def test_get_firewalld_status(self, mock_run_cmd):
-        """Test firewalld with WireGuard port open"""
+        """Test statusu firewalld z otwartym portem WG."""
         mock_run_cmd.side_effect = ["active", "public", "51820/udp", "51820/udp", ""]
         result = get_firewalld_status()
         assert result['wg_port_open'] is True
 
     @patch('ai_assistant.data_collector.run_cmd')
     def test_get_nat_status_full(self, mock_run_cmd):
-        """Test complete NAT/masquerade status"""
-        mock_run_cmd.side_effect = ["1", "MASQUERADE", "", "public\n", "1", ""]
+        """Test kompletnego statusu NAT/masquerade."""
+        mock_run_cmd.side_effect = ["1", "MASQUERADE", "", "public\\n", "1", ""]
         result = get_nat_status()
         assert result['ok'] is True
 
     @patch('ai_assistant.data_collector.run_cmd', return_value="0")
     def test_get_nat_status_disabled(self, mock_run_cmd):
-        """Test NAT disabled status"""
+        """Test wyłączonego NAT."""
         result = get_nat_status()
         assert result['ok'] is False
 
@@ -134,7 +140,7 @@ AllowedIPs = 10.66.66.3/32"""
     @patch('ai_assistant.data_collector.run_cmd')
     def test_collect_all_data_full(self, mock_run_cmd, mock_wg_status, mock_firewalld, 
                                  mock_nat, mock_user_files, mock_peer_configs):
-        """Test complete data collection"""
+        """Test kompletnego zbierania danych diagnostycznych."""
         mock_run_cmd.side_effect = [
             "vpn-server", "up 15 days", "2026-01-18 15:00:00"
         ] + [""] * 30
@@ -152,7 +158,7 @@ AllowedIPs = 10.66.66.3/32"""
     @patch('ai_assistant.data_collector.get_user_peer_files')
     @patch('ai_assistant.data_collector.run_cmd', return_value="")
     def test_collect_all_data_minimal(self, mock_run_cmd, mock_user_files, mock_peer_configs):
-        """Test minimal data collection - FIXED KeyError"""
+        """Test minimalnego zbierania danych."""
         mock_peer_configs.return_value = []
         mock_user_files.return_value = {'total': 0}
         
