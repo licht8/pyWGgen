@@ -1,8 +1,18 @@
 #!/usr/bin/env python3
-# tests/test_data_sync.py - 🎯 OSTATECZNIE NAPRAWIONE 10/10
-# ===========================================
-# WSZYSTKIE TESTY PRZECHODZĄ 100%!
-# ===========================================
+"""
+Testy jednostkowe synchronizacji danych WireGuard.
+
+Moduł testuje funkcjonalność synchronizacji danych między:
+- Plikiem user_records.json (dane użytkowników)
+- wg_users.json (peerzy WireGuard) 
+- Wyjściem polecenia `wg show`
+
+Sprawdzane scenariusze:
+- Wczytywanie/zapisywanie plików JSON (poprawne/uszkodzone/brakujące)
+- Parsowanie outputu `wg show` (pełny/częściowy/błąd subprocess)
+- Synchronizacja statusów peerów (aktywny/nieaktywny/nowy)
+- Pełne scenariusze integracyjne z mockami
+"""
 
 import sys
 import os
@@ -233,3 +243,4 @@ peer: XYZ789=
 if __name__ == '__main__':
     print("🚀 Testy data_sync.py - 10/10 100% PASSED!")
     unittest.main(verbosity=2, failfast=True)
+
