@@ -100,11 +100,13 @@ AllowedIPs = 10.66.66.3/32"""
     def test_get_wg_status_full(self, mock_run_cmd):
         """Test kompletnego statusu WireGuard."""
         mock_run_cmd.side_effect = [
-            "wg0\\n", "active", "enabled", "state UP", "51820/udp", "interface: wg0\\n..."
+            "wg0\n", "active", "enabled", "state UP", "51820/udp", "interface: wg0\n..."
         ]
         result = get_wg_status()
-        assert 'wg0' in result
-        assert result['wg0']['service_active'] is True
+        # Fix: strip the key before comparison
+        assert list(result.keys())[0].strip() == 'wg0'  # This already works!
+        assert result['wg0']['service_active'] is True  # Add more specific checks
+
 
     @patch('ai_assistant.data_collector.run_cmd', return_value="")
     def test_get_wg_status_empty(self, mock_run_cmd):
@@ -168,3 +170,4 @@ AllowedIPs = 10.66.66.3/32"""
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
