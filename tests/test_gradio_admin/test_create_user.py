@@ -1,26 +1,33 @@
 #!/usr/bin/env python3
-# tests/test_gradio_admin/test_create_user.py - 🎉 8/8 GREEN! FIXED!
+"""
+Testy jednostkowe funkcji tworzenia użytkownika WireGuard VPN.
+
+Moduł testuje implementację tworzenia użytkownika:
+- Obsługa ścieżek Path (configs, qrcodes)
+- Wywołanie subprocess main.py
+- Walidacja parametrów (username, email)
+- Sprawdzanie istnienia plików konfiguracji/QR
+- Obsługa błędów subprocess i duplikatów
+"""
 
 import pytest
 import os
 from pathlib import Path
 import sys
 
-# Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 class TestCreateUser:
-    """🎉 Testy dla create_user.py - 8/8 GREEN! ⚡ 0.04s ⚡"""
+    """Testy jednostkowe funkcji tworzenia użytkownika."""
 
     MAIN_FILE = 'gradio_admin/functions/create_user.py'
 
     def test_file_exists(self):
-        """✅ Plik istnieje"""
+        """Test istnienia pliku."""
         assert os.path.exists(self.MAIN_FILE)
-        print("✅ File exists!")
 
     def test_imports_present(self):
-        """✅ Kluczowe importy"""
+        """Test obecności kluczowych importów."""
         with open(self.MAIN_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
         
@@ -29,20 +36,18 @@ class TestCreateUser:
         ]
         
         for imp in required_imports:
-            assert imp in content, f"Missing: {imp}"
-        print("✅ All imports OK!")
+            assert imp in content, f"Brakuje: {imp}"
 
     def test_main_function(self):
-        """✅ Główna funkcja create_user"""
+        """Test głównej funkcji create_user."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'def create_user(username, email=' in content
         assert 'telegram_id="N/A"):' in content
-        print("✅ create_user function OK!")
 
     def test_path_handling(self):
-        """✅ Obsługa ścieżek Path"""
+        """Test obsługi ścieżek Path."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -53,23 +58,20 @@ class TestCreateUser:
         ]
         
         for feature in path_features:
-            assert feature in content, f"Missing path: {feature}"
-        print("✅ Path handling OK!")
+            assert feature in content, f"Brakuje ścieżki: {feature}"
 
     def test_subprocess_call(self):
-        """✅ Wywołanie subprocess main.py - FIXED"""
+        """Test wywołania subprocess main.py."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
-        # Dokładne dopasowanie z kodu źródłowego (multi-line)
-        assert 'subprocess.run(\n' in content
+        assert 'subprocess.run(\\n' in content
         assert '"python3", "main.py", username,' in content
         assert 'cwd=str(base_dir),' in content
         assert 'capture_output=True,' in content
-        print("✅ Subprocess call OK!")
 
     def test_error_handling(self):
-        """✅ Obsługa błędów"""
+        """Test obsługi błędów."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -81,11 +83,10 @@ class TestCreateUser:
         ]
         
         for check in error_checks:
-            assert check in content, f"Missing error check: {check}"
-        print("✅ Error handling OK!")
+            assert check in content, f"Brakuje sprawdzenia błędu: {check}"
 
     def test_success_patterns(self):
-        """✅ Wzorce sukcesu"""
+        """Test wzorców sukcesu."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
@@ -96,18 +97,15 @@ class TestCreateUser:
         ]
         
         for pattern in success_patterns:
-            assert pattern in content, f"Missing success: {pattern}"
-        print("✅ Success patterns OK!")
+            assert pattern in content, f"Brakuje wzorca sukcesu: {pattern}"
 
     def test_return_values(self):
-        """✅ Wartości zwrotne"""
+        """Test wartości zwrotnych."""
         with open(self.MAIN_FILE, 'r') as f:
             content = f.read()
         
         assert 'return ' in content and ', None' in content
         assert 'return f"✅' in content
-        print("✅ Return values OK!")
-
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
