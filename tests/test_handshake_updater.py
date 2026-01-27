@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-# tests/test_handshake_updater.py - 100% DZIAŁAJĄCE (FINAL)
+"""
+Testy jednostkowe aktualizacji handshake'ów WireGuard.
+
+Moduł testuje zarządzanie handshake'ami:
+- Konwersję timestampów na czytelny format
+- Pobieranie danych z `wg show latest handshakes`
+- Aktualizację plików JSON z handshake'ami użytkowników
+- Obsługę błędów subprocess i plików JSON
+"""
 
 import pytest
 import os
@@ -122,3 +130,4 @@ DEF456uvw... 1732339500"""
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
